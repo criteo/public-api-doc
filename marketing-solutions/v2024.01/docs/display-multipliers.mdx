@@ -1,0 +1,142 @@
+---
+title: "Display Multipliers"
+---
+
+1. Marketing Solutions Endpoints
+2. [Campaigns](/marketing-solutions/v2024.01/docs/campaigns)
+
+## **Introduction**
+
+Criteo has historically permitted **bid customization for each category** of products associated with your Ad Set.
+
+Previously, each product category had its own separate, absolute bid level. For example, an **Ad Set** with a bid level of `$2.00 USD` might have a bid level of `$1.00 USD` set for **Category A** and `$4.00 USD` for **Category B**.
+
+ 
+
+With the Criteo API, this bidding behavior can be achieved with **display multipliers**.
+
+With **display multipliers**, these values are now expressed as a **fraction** of the overall Ad Set bid level.
+
+In the example above, **Category A** would have a display multiplier value of `0.5` and **Category B** would have a display multiplier value of `2`.
+
+ 
+
+## **Retrieve Display Multipliers for an Ad Set**
+
+The display multipliers associated with a specific Ad Set can be retrieved via a `GET` request to the `/ad-sets` endpoint, with the Ad Set ID as a URL parameter and `/display-multipliers` specified.
+
+ 
+
+![](/images/marketing-solutions/v2024.01/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/2023-01/marketing-solutions/ad-sets/{adSetId}/display-multipliers
+```
+
+The API will return an array of categories associated with the campaign:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "ReadAdSetDisplayMultiplier",
+              "attributes": {
+                  "id": "12345|1",
+                  "categoryName": "Shoes",
+                  "displayMultiplier": 1.2
+              }
+          },
+          {
+              "type": "ReadAdSetDisplayMultiplier",
+              "attributes": {
+                  "id": "12345|2",
+                  "categoryName": "Scarves",
+                  "displayMultiplier": 0.8
+              }
+          }
+      ],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Update Display Multipliers**
+
+The fields of one or more of an Ad Set's display multipliers can be updated by making a `PATCH` request to the `/ad-sets` endpoint, with the Ad Set ID as a URL parameter and `/display-multipliers` specified.
+
+For example, the following call would update the `displayMultiplier` values for the category IDs `1` and `2`:
+
+ 
+
+![](/images/marketing-solutions/v2024.01/docs/04a928f-patch.png)
+
+```
+https://api.criteo.com/2023-01/marketing-solutions/ad-sets/{adSetId}/display-multipliers
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "WriteAdSetDisplayMultipliers",
+              "attributes": {
+                  "id": "12345|1",
+                  "displayMultiplier": 2.0
+              }
+          }, 
+          {
+              "type": "WriteAdSetDisplayMultiplier",
+              "attributes": {
+                  "id": "12345|2",
+                  "displayMultiplier": 1.1
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+ 
+
+The API will return an array of Ad Sets that have been updated successfully in the response `data`. These will contain only two parameters, `type` and `id`.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "ReadAdSetDisplayMultiplier",
+              "id": "12345|1"
+          },
+          {
+              "type": "ReadAdSetDisplayMultiplier",
+              "id": "12345|2"
+          }
+      ],
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+<Warning>
+  ### Updating Multiple Display Multiplayers
+
+  This endpoint allows you to update several display multipliers within a single call. Thus it\`s important to understand the [partial success behavior](doc:partial-success-for-bulk-operations).
+</Warning>
+
+## **Validation Errors**
+
+In addition to [general API errors](doc:api-error-types) , you may encounter validation errors when updating a display multiplier.
+
+Below is a list of error codes for display multiplier validation and a more detailed description of their meaning.
+
+  **`campaign--display-multiplier-update-check--category-not-enabled`** The category targeted by the display multiplier is not enabled.     **`campaign--display-multiplier-update-check--invalid-display-multiplier`** The value provided in the display multiplier field is not valid. Expected values are between 0.5 and 2.0, inclusive.  \\
+
+***
+
+[Ad Set](/marketing-solutions/v2024.01/docs/ad-set)
+
+[Category Bids](/marketing-solutions/v2024.01/docs/category-bids)

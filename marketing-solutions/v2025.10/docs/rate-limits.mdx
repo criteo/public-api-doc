@@ -1,0 +1,112 @@
+---
+title: "Rate Limits"
+---
+
+1. Concepts
+
+# Introduction
+
+The Criteo API enforces a rate limit, which consists of a limitation in the number of calls you're able to perform on any of its endpoints.
+
+This limitation is enforced to provide all our API clients with stability towards our API infrastructure.
+
+***
+
+# Rate Limits
+
+Criteo provides different rate limits depending on the OAuth method used by your application.
+
+| OAuth Method                                           | Rate limit           | Rate limit applies at level |
+| ------------------------------------------------------ | -------------------- | --------------------------- |
+| [Client Credentials](doc:oauth-app-client-credentials) | 250 calls per minute | Application level           |
+| [Authorization Code](doc:oauth-app-authorization-code) | 10 calls per minute  | Account                     |
+
+<Info>
+  ### Rate limit exceptions
+
+  Note that some resource-sensitive endpoints may have specific rate limits applied at the endpoint level.
+</Info>
+
+***
+
+# Response
+
+If your application access token exceeds the given rate limit, you will receive a `429` HTTP response and be blocked from executing the action.
+
+The following information will be provided in the header:
+
+| Header                  | Description                                                    | Example response with alimit set at 20 calls/minute |
+| ----------------------- | -------------------------------------------------------------- | --------------------------------------------------- |
+| `x-ratelimit-limit`     | the currently authorized limit for this caller                 | 20                                                  |
+| `x-ratelimit-remaining` | the remaining calls for this caller (so, limit - current rate) | 0                                                   |
+| `x-ratelimit-reset`     | the timestamp at which a new call could be performed           | 1628249355                                          |
+
+***
+
+# Rate Limit Best Practices
+
+For the best experience, while using Criteo API, we strongly encourage implementing best practices methods to help you attain the best API experience.
+
+In the steps below, we will provide guidance to help you manage your application rate limits.
+
+***
+
+## Implement Backoff Mechanics
+
+Exponential backoff mechanisms helps your application handle rate limit exceeded errors by introducing increasing intervals between retry attempts. This approach reduces the likelihood of overwhelming the API server with repeated requests, mitigating the risk of rate limit penalties.
+
+By gradually increasing the time between retries, exponential backoff allows the server to recover from transient failures or temporary congestion more effectively.
+
+In the event that your application runs into a `429` error, we recommend your application waits one second before retrying the call again. When a second error is experienced, have your application wait two seconds before attempting a new retry.
+
+Setting your application to gradually repeat these exponential backoff mechanisms will allow the server to recover from an overload of calls.
+
+***
+
+## Distribute load using access token best practices
+
+### Client Credentials
+
+![](/images/marketing-solutions/v2025.10/docs/1dc5ae4-image.png)
+
+Managing a platform with multiple concurrent users using client credentials can be challenging when maintaining a stable rate limit. This is because client credentials rely on **a singleaccess token** , which can severely constrain the number of calls your application can make as the number of concurrent users increases.
+
+For example, if you have ten users logged in concurrently, the rate limit maximum for your platform would be 250 calls per minute. This means that each user can only make about 25 calls per minute (250 divided by 10).
+
+During peak hours, when more concurrent users are logged in, this number will decrease significantly, affecting the performance of your platform. However, with the right approach, you can ensure that your platform remains stable, even with many concurrent users logging into your platform.
+
+![](/images/marketing-solutions/v2025.10/docs/003b7eb1b75f7ac44f26f4036ec8220ad4ee2d49bbf6ab9cb1e36a4b0745babe-image.png)
+
+***
+
+### Authorization Code
+
+Self-service platforms provide users with a convenient way to manage their own data. However, when an application handles data for multiple users, it's crucial to ensure that each account (i.e., advertiser/retailer who grants access) can only access their own information and is subject to their own resource limits.
+
+To support this, Criteo enforces **rate limiting per accounts consented to**.
+
+Each account receives a dedicated **access token** and is assigned an individual rate limit. All API calls made with that token are counted against the account's quota, not a shared or global one.
+
+By choosing the authorization code workflow for your application, you ensure that activity from one account does not affect the experience of others. This isolation provides a more stable and predictable environment for all users.
+
+![](/images/marketing-solutions/v2025.10/docs/d27a3e6dcb5cdb5499666e1496c36669b4bd4b39ae0912f5f5d9d1c85c1fca4d-image.png)
+
+***
+
+## Export only the data you need, and avoid unnecessary calls
+
+We understand that having the most up-to-date data is essential to help advertisers make the best decisions. But in this section, we will explain how calls to analytics APIs may be unnecessary and can cause your access token to exceed its limits.
+
+**Limit your queries to attribution settings users most often look at, instead of pulling all potential combinations of settings**
+
+* Pulling all possible attribution settings will increase your needed API calls. Instead of pulling all combinations, allow users to draw the most commonly used settings
+
+**Limit your queries to four (4) days of consecutive data**
+
+* Pulling more than four (4) days worth of data may be unnecessary, as data won't change beyond this period. Spend and attribution data are both final after 72 hours. Attributed sales are assigned to days on a sale-day basis, not event-day. So, multiple reporting calls can be reduced to ensure that you're getting just the data that you need to cache within your system.
+
+***
+
+[Managing My App](/marketing-solutions/v2025.10/docs/managing-my-app)
+
+[Criteo API Swagger](/marketing-solutions/v2025.10/docs/criteo-api-swagger)

@@ -1,0 +1,775 @@
+---
+title: "Ad Set"
+---
+
+1. Marketing Solutions Endpoints
+2. [Campaigns](/marketing-solutions/v2023.10/docs/campaigns)
+
+Criteo's **Campaign API** allows you to retrieve information about the current configuration of your advertising Ad Sets.
+
+This API allows you to **create** adSets, **search** for Ad Sets based on filters, **start and stop** Ad Sets, and **update** your Ad Sets' names, start and end dates, bid amounts, frequency capping, and other targeting controls.
+
+## **Ad Set Example**
+
+The following is an example of the JSON data structure of an Ad Set.
+
+Additional details about the individual attributes of Ad Sets can be found below.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "type": "ReadAdSet",
+      "id": "123467",
+      "attributes": {
+          "name": "Campaign A",
+          "advertiserId": "12345",
+          "objective": "conversions",
+          "destinationEnvironment": "app",
+          "mediaType": "Display",
+          "datasetId": "6789",
+          "campaignId": "1485",
+          "schedule": {
+              "startDate": "2018-07-04T00:00:00Z",
+              "endDate": "2018-07-26T00:00:00Z",
+              "activationStatus": "on",
+              "deliveryStatus": "live"
+          },
+          "bidding": {
+              "bidAmount": 0.9,
+              "costController": "CPC",
+          },
+          "targeting": {
+              "frequencyCapping": {
+                  "frequency": "hourly",
+                  "maximumImpressions": 3
+              },
+              "geoLocation": {
+                  "countries": {"values": ["FR"], "operand": "in"},
+                  "subdivisions":  {"values": ["FR-01", "FR-38"], "operand": "notIn"},
+                  "zipCodes":  null
+              },
+              "deliveryLimitations": {
+                  "devices": ["mobile", "tablet"],
+                  "operatingSystems": ["ios"],
+                  "environments": []
+              }
+          },
+          "budget": {
+              "budgetStrategy": "capped",
+              "budgetRenewal": "daily",
+              "budgetDeliverySmoothing": "accelerated",
+              "budgetDeliveryWeek": "mondayToSunday",
+              "budgetAmount": {"value": 123.45}
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+## **Ad Set Attributes**
+
+**`name`** The Ad Set name, set by the advertiser.
+
+**`destinationEnvironment`** Read-only. The environment that an ad click will lead a user to.
+
+**`objective`** The intended optimization for the Ad Set. Can be `customAction`, `clicks`, `conversions`, `displays`, `appPromotion`, `revenue`, `storeConversions`, `value`, `reach`, `visits` or `videoViews` (only when mediaType is set to Video)
+
+**`mediaType`** The type of media the ad set will deliver on. Can be `Display` or `Video`
+
+**`datasetId`** Data Set Id associated with the specified advertiser ID. See [Datasets](https://developers.criteo.com/marketing-solutions/v2024.01/docs/datasets) for how to find datasets associated to advertisers.
+
+**`campaignId`** Id of the marketing campaign associated to the ad set. See [Search for Campaigns](doc:campaign#searching-campaigns) for how to search for campaigns.
+
+### Ad Set Schedule
+
+**`schedule.startDate`** ISO 8601 format. It must always be earlier than the `schedule.endDate`. It's a mandatory parameter of the Schedule object. This condition applies only if an `endDate` is defined.
+
+**`schedule.endDate`** ISO 8601 format. `null` by default. (`null` is a valid value.)
+
+**`schedule.activationStatus`** Can be `on` or `off`. `off` by default. Set by the advertiser, this represents the intent to deliver ads. See [Start and Stop Ad Sets](doc:ad-set#start-an-ad-set) for how to change this value.
+
+**`schedule.deliveryStatus`** Can be `draft`, `inactive`, `live`, `notLive`, `pausing`, `paused`, `scheduled`, `ended`, `notDelivering`, or `archived`. The initial value for a newly created Ad Set is `draft`. This is a **computed value** and is read-only.
+
+<Warning>
+  ### `activationStatus` vs `deliveryStatus`
+
+  `deliveryStatus` is a computed value. It is affected by factors other than the value of `activationStatus`, such as budget consumption, start date, and end date.
+</Warning>
+
+### Ad Set Bidding
+
+**`bidding.bidAmount`** Decimal value target relating to the `objective` specified. May be `null` for strategies that do not require a target value.
+
+**`bidding.costController`** How spend is controlled and optimized. Can be `COS` (Cost of Sale), `CPC` (Cost per Click), `CPI` (Cost per Install), `CPM` (Cost per Mille), `CPO` (Cost per Order), `CPSV` (Cost per Site Visit), `CPV` (Cost per View), or `dailyBudget`.
+
+### Ad Set Targeting
+
+**`targeting.frequencyCapping.maximumImpressions`** Integer value. The maximum impressions allowed for the specified `frequencyCapping.frequency`.
+
+**`targeting.frequencyCapping.frequency`** The period by which the maximum impression limit is calculated. Can be `hourly`, `daily`, `lifetime`, or `advanced` (for custom set-ups configured by Criteo). It is not possible to set the value to `advanced`.
+
+**`targeting.geoLocation.countries`** Contains an array of `values`, two letter country codes, [ISO-3166 format](https://www.iso.org/iso-3166-country-codes.html). Also specifies an `operand` which can be `in` or `notIn` depending on the desired behavior for the `values`.
+
+**`targeting.geoLocation.subdivisions`** Contains an array of `values`, geographical subdivisions following [ISO-3166 format](https://www.iso.org/iso-3166-country-codes.html). Also specifies an `operand` which can be `in` or `notIn` depending on the desired behavior for the `values`.
+
+**`targeting.geoLocation.zipCodes`** Contains an array of `values`, zip codes. Also specifies an `operand` which can be `in` or `notIn` depending on the desired behavior for the `values`.
+
+<Warning>
+  ### Geolocation Targeting
+
+  Geolocation settings do not support an empty array for their `values`. If a geolocation setting like `geoLocation.countries` is `null`, then the filter is inactive. Otherwise, the filter is active and must have a non-empty list for `values`.
+</Warning>
+
+**`targeting.deliveryLimitations.devices`** List of device types that the Ad Set should target. Can contain `desktop`, `tablet`, `mobile` and `other`.
+
+**`targeting.deliveryLimitations.operatingSystems`** List of operating systems that the Ad Set should target. Can contain `android`, `ios`, and `other`.
+
+**`targeting.deliveryLimitations.environments`** List of display environments that the Ad Set should target. Can contain `inApp` and `web`.
+
+### Ad Set Budget
+
+**`budget.budgetStrategy`** Whether budget is capped or not. Can be `capped` or `uncapped`. Currently read-only.
+
+**`budget.budgetRenewal`** The cadence of budget reneweal. Can be `daily`, `monthly`, `lifetime`, or `undefined`. Currently read-only.
+
+**`budget.budgetDeliverySmoothing`** The pace at which budget can be spent. Can be `accelerated` or `standard`. Currently read-only.
+
+**`budget.budgetDeliveryWeek`** The seven day period for budget delivery. Can be `mondayToSunday`, `tuesdayToMonday`, `wednesdayToTuesday`, `thursdayToWednesday`, `fridayToThursday`, `saturdayToFriday`, or `sundayToSaturday`. Currently read-only.
+
+**`budget.budgetAmount`** A decimal value showing the remaining budget value for Ad Sets with `Capped` budget strategies. For uncapped budgets, the value will be `null`.
+
+## **Searching Ad Sets**
+
+### Retrieving Ad Sets by Filtering
+
+Ad Sets can be retrieved by specifying filters to apply to the set of all Ad Sets in your portfolio.
+
+Current available filters are `adSetIds` (which allows you to specify a list of Ad Set IDs to retrieve), `campaignIds` (which allows you retrieve Ad Sets belonging to a list of Campaigns) and `advertiserIds` (which allows you retrieve Ad Sets belonging to a list of Advertisers).
+
+For example, to retrieve two existing Ad Sets in your portfolio, filter by `adSetIds`:
+
+![](/images/marketing-solutions/v2023.10/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/ad-sets/search
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "filters": {
+          "adSetIds": ["12345", "67890"] 
+      }
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of Ad Sets that match the provided filters:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "ReadAdSet",
+              "id": "12345",
+              "attributes": { ... }
+          },
+              "type": "ReadAdSet",
+              "id": "67890",
+              "attributes": { ... }
+          }
+      ],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+The response above is truncated for clarity.
+
+Note: the *type* field is the type of entity e.g. ReadAdSet and the *id* field is the unique id of the Adset
+
+### Retrieving All Ad Sets
+
+When no filters are specified in the JSON payload, all Ad Sets in your portfolio will be returned, as in the example below:
+
+![](/images/marketing-solutions/v2023.10/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/ad-sets/search
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "filters": {}
+  }
+  ```
+</CodeGroup>
+
+### Retrieving One Specific Ad Set
+
+You can also fetch the details for a single Ad Set using a GET request:
+
+![](/images/marketing-solutions/v2023.10/docs/8a6bfd9-get.png)
+
+```
+/marketing-solutions/ad-sets/{adSetId}
+```
+
+The response `data` will be a single object containing the Ad Set details.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "ReadAdSet",
+          "id": "12345",
+          "attributes": { ... }
+      },
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Create an Ad Set**
+
+A new ad set can be created for a specific advertiser by making a POST call to the ad set endpoint. The request body should specify the type (`Adset`) and the ad set attributes.
+
+<Warning>
+  The following attributes are required to create a new Ad Set: `name`, `campaignId`,`objective`, `datasetId`, `targeting`, `budget`, `schedule`, `bidding`
+</Warning>
+
+For example, the following call would create a new Ad Set targeting lookalike audiences:
+
+![](/images/marketing-solutions/v2023.10/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/ad-sets
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "AdSet",
+      "attributes": {
+        "name": "API created Ad Set",
+        "datasetId": "56789",
+        "objective": "conversions",
+        "campaignId": "12789",
+        "mediaType": "Display",
+        "schedule": {
+          "startDate": "2018-07-04T00:00:00Z",
+          "endDate": "2018-07-26T00:00:00Z"
+        },
+        "bidding": {
+          "bidamount": 0.9,
+          "costcontroller": "CPC"
+        },
+        "targeting": {
+          "frequencyCapping": {
+            "frequency": "daily",
+            "maximumImpressions": 3
+          },
+          "geoLocation": {
+            "countries": {
+              "values": [
+                "FR"
+              ],
+              "operand": "In"
+            },
+            "subdivisions": {
+              "values": [
+                "FR-01",
+                "FR-38"
+              ],
+              "operand": "NotIn"
+            },
+            "zipCodes": {
+              "values": [],
+              "operand": "NotIn"
+            }
+          },
+          "deliveryLimitations": {
+            "devices": [
+              "Mobile",
+              "Tablet"
+            ],
+            "operatingSystems": [
+              "iOS"
+            ],
+            "environments": []
+          }
+        },
+        "budget": {
+          "budgetStrategy": "Capped",
+          "budgetRenewal": "Daily",
+          "budgetDeliverySmoothing": "Accelerated",
+          "budgetDeliveryWeek": "MondayToSunday",
+          "budgetAmount": 123.5
+        }
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of the ID and attributes of the new ad set. The ad set attributes include the name, data set ID, campaign ID, advertiser ID, destination environment, activation status, delivery status, bid strategy and cost controller.
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "AdSet",
+      "id": "987634",
+      "attributes": {
+        "name": "API created Ad Set",
+        "objective": "conversions",
+        "datasetId": "56789",
+        "campaignId": "12789",
+        "advertiserId": "456",
+        "destinationEnvironment": "web",
+        "schedule": {
+          "activationStatus": "off",
+          "deliveryStatus": "draft"
+        },
+        "bidding": {
+          "costController": "CPC"
+        }
+      }
+    },
+    "errors": [ ],    /* omitted if no errors */
+  	"warnings": [ ]    /* omitted if no warnings*/
+  }
+  ```
+</CodeGroup>
+
+#### Ad Set General Info
+
+At the creation, additional attributes are required:
+
+**`trackingCode`** Required. Click URL parameters. Query string syntax without "?" (eg. *utm\_source=criteo\&utm\_medium=display\&utm\_campaign=mycampaign*)
+
+<Warning>
+  ### Ad Set Audiences
+
+  Newly created Ad Sets will not be linked to any audience. To create an audience, refer to the [Create an Audience](doc:audience#create-audiences) guide. You can link existing audiences following the steps in the [Update Ad Set Audience](doc:ad-set#update-adset-audience) guide.
+</Warning>
+
+## **Update Ad Sets**
+
+The fields of one or more Ad Sets can be updated by making a `PATCH` call to the Ad Sets endpoint. The payload should be an array of partial or whole Ad Sets, each specifying the fields to be modified.
+
+For example, the following call would update the `name`, `startDate`, `endDate`, `bidAmount` and frequency capping settings of an existing Ad Set:
+
+The bid amount value supports a maximum of 4 decimal digits. If more digits are provided, the amount will be rounded.
+
+![](/images/marketing-solutions/v2023.10/docs/04a928f-patch.png)
+
+```
+/marketing-solutions/ad-sets
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "PatchAdSet",
+              "id": "12345",
+              "attributes": {
+                	"name": "Updated Ad Set Name",
+                  "scheduling": {
+                      "startDate": { "value": "2021-01-19T10:18:28.632Z" },
+                      "endDate": { "value": "2021-01-20T10:18:28.632Z" }
+                  },
+                  "bidding": {
+                      "bidAmount": { "value": 0.9 }
+                  },
+                	"frequencyCapping": {
+                      "frequency": "hourly",
+                      "maximumImpressions": 12
+                  }
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of Ad Sets that have been updated successfully in the response `data`. These will contain only two parameters, `type` and `id`.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "AdSetId",
+              "id": "12345"
+          }
+      ],
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+<Warning>
+  ### Ad Set Patch Limit
+
+  Note that there is a limit of 50 ad sets per single request. If you are updating more than 50 ad sets, please split them into chunks of 50 and make multiple requests.
+</Warning>
+
+### Update AdSet Audience
+
+Use this endpoint if you want to link an Audience to an AdSet. Both need to exist beforehand.
+
+<Info>
+  ### Link and Audience, not an Audience Segment
+
+  Audiences are made out of Audience Segments, and only Audiences can be linked to AdSets.
+
+  If you have created an Audience Segment and would like to link it to an existing AdSet, first include it within an Audience, and later use that Audience with this endpoint.
+</Info>
+
+![](/images/marketing-solutions/v2023.10/docs/04a928f-patch.png)
+
+```
+/marketing-solutions/ad-sets/{ad-set-id}/audience
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "1001",
+          "type": "AdSetAudience",
+          "attributes": {
+              "audienceId": "9876"
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "1001", 
+          "type": "AdSetAudience",
+          "attributes": {
+              "audienceId": "9876"
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [
+          {
+              "type": "validation",
+              "code": "audience-not-found",
+              "instance": "/ad-sets/1001/audience",
+              ...
+          }
+      ],
+      "warnings": [	/* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+### Start an Ad Set
+
+One or more Ad Sets can be set to start delivery by making a `POST` call to the Start Ad Sets endpoint shown below. The payload should be an array of Ad Sets, specifying their `type` and `id`:
+
+![](/images/marketing-solutions/v2023.10/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/ad-sets/start
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "AdSetId",
+              "id": "12345"
+          },
+        	{
+              "type": "AdSetId",
+              "id": "67890"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of Ad Sets representing those Ad Sets which were started successfully:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "AdSetId",
+              "id": "12345"
+          },
+          {
+              "type": "AdSetId",
+              "id": "67890"
+          }
+      ],
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+### Stop an Ad Set
+
+Similarly, one or more Ad Sets can be set to stop delivery by making a `POST` call to the Stop Ad Sets endpoint shown below. The payload should be an array of Ad Sets, specifying their `type` and `id`:
+
+![](/images/marketing-solutions/v2023.10/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/ad-sets/stop
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "AdSetId",
+              "id": "12345"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of Ad Sets representing those Ad Sets which were stopped successfully:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "AdSetId",
+              "id": "12345"
+          }
+      ],
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+## **Partial Success / Partial Failure**
+
+Each Ad Set update is processed individually and can succeed or fail without impacting other updates in the same payload.
+
+As a result, those Ad Set updates processed successfully will be returned in the `data` array of the response, while Ad Sets updates that have failed will return as an entry in the `errors` array of the response.
+
+<Warning>
+  ### HTTP Response Codes
+
+  As a result of this individual processing, the API may respond with a `200` HTTP response code, but the result of its processing may have one or more failures.
+</Warning>
+
+For instance, for this payload which intends to update two Ad Sets:
+
+![](/images/marketing-solutions/v2023.10/docs/04a928f-patch.png)
+
+```
+/marketing-solutions/ad-sets
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "PatchAdSet",
+              "id": "12345",
+              "attributes": {
+                  "bidding": {
+                      "bidAmount": { "value": 0.9 }
+                  }
+              }
+          },
+          {
+              "type": "PatchAdSet",
+              "id": "67890",
+              "attributes": {
+                  "bidding": {
+                      "bidAmount": { "value": -2 }
+                  }
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+The response might look like:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "AdSetId",
+              "id": "12345"
+          }
+      ],
+      "errors": [
+          {
+              "traceIdentifier": "56ed4096-f96a-4944-8881-05468efe0ec9",
+              "type": "validation",
+              "code": "campaign--ad-set-update-check--invalid-bid-amount",
+              "instance": "@data/1",
+              "title": "Invalid bid amount",
+              "detail": "The bid amount value is invalid: either it's an adaptative cost controller and it must be null, or it's not the valid interval of values."
+          }
+      ],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+<Info>
+  ### Error `instance`
+
+  The `instance` field for validation errors will specify the index of the related update, beginning with index 0. For the example above, `@data/1` refers to the second requested update in the request's `data` array.
+</Info>
+
+A full list of error codes can be found in the next section.
+
+## **Validation Errors and Warnings**
+
+In addition to [general API errors](doc:api-error-types) , you may encounter validation errors when updating an Ad Set or attempting to start and stop delivery.
+
+Below is a list of error codes for Ad Set validation and a more detailed description of their meaning.
+
+**Ad Set Retrieval Validation Warnings:**
+
+**`cannot-expose-specific-adsets`** The configuration of the Ad Set prevents the retrieval via this API endpoint.
+
+**Ad Set Creation Validation Errors:** **`campaign--ad-set-creation-check--invalid-data`** The Ad Set has invalid configuration or is missing required information.
+
+**`campaign--ad-set-creation-check--invalid-geolocation`** The geolocation is invalid.
+
+**`campaign--ad-set-creation-check--invalid-os-env-configuration`** The configurations of Operating Systems and Environment are invalid.
+
+**`campaign--ad-set-creation-check--start-date-not-valid`** The start date must be before the end date.
+
+**`campaign--ad-set-creation-check--end-date-not-valid`** The end date must be after the start date.
+
+**`campaign--ad-set-creation-check--invalid-bid-amount`** The bid amount value is invalid: either it's an adaptive cost controller and it must be null, or it's not the valid interval of values.
+
+**`campaign--ad-set-creation-check--frequency-cappings-not-valid`** The frequency capping configuration is not valid.
+
+**`campaign--ad-set-creation-check--invalid-dataset-id`** The data set ID is invalid or not associated to your account. See [Datasets](https://developers.criteo.com/marketing-solutions/v2024.01/docs/datasets) for how to find ad sets associated to your account.
+
+**`campaign--ad-set-creation-check--invalid-audience-configuration`** The Ad Set has invalid audience or audience with missing parameters. See [Create an Ad Set](doc:ad-set#create-an-ad-set) for how to configure Ad Set Audience.
+
+**`campaign--ad-set-creation-check--no-audience-config`** The Ad Set has no audience configured. See [Create an Ad Set](doc:ad-set#create-an-ad-set) for how to configure Ad Set Audience.
+
+**`campaign--ad-set-creation-check--multiple-audience-configs`** The Ad Set has multiple audiences configured. Only one audience can be configured per Ad Set. See [Create an Ad Set](doc:ad-set#create-an-ad-set) for how to configure Ad Set Audience.
+
+**`campaign--ad-set-creation-check--invalid-audience-id`** The Ad set has invalid audience ID(s). To create this Ad Set, get in touch with our support team for assistance.
+
+**`campaign--ad-set-creation-check--invalid-spend-strategy`** The Ad Set is configured with an invalid spend strategy. To create this Ad Set, get in touch with our support team for assistance.
+
+**`campaign--ad-set-creation-check--invalid-bidding-configuration`** The bidding configuration is not valid with the selected MediaType.
+
+**Ad Set Update Validation Errors:** **`campaign--ad-set-update-check--ad-set-invalid-geolocation`** The geolocation is invalid.
+
+**`campaign--ad-set-update-check--ad-set-is-archived`** This Ad Set is archived and thus can't be started.
+
+**`campaign--ad-set-update-check--ad-set-invalid-os-env-configuration`** The configurations of Operating Systems and Environment are invalid.
+
+**`campaign--ad-set-update-check--ad-set-not-activable`** This Ad Set is currently activated. Your change would impact negatively its eligibility to be active, so it has been prevented.
+
+**`campaign--ad-set-update-check--name-is-null`** An Ad Set cannot have an empty name.
+
+**`campaign--ad-set-update-check--start-date-is-null`** It's impossible to set an empty start date (though some old Ad Sets could have a null start date).
+
+**`campaign--ad-set-update-check--start-date-not-valid`** The start date must be before the end date.
+
+**`campaign--ad-set-update-check--end-date-not-valid`** The end date must be after the start date.
+
+**`campaign--ad-set-update-check--invalid-bid-amount`** The bid amount value is invalid: either it's an adaptive cost controller and it must be null, or it's not the valid interval of values.
+
+**`campaign--ad-set-update-check--frequency-cappings-not-valid`** The frequency capping configuration is not valid.
+
+**`campaign--ad-set-update-check--too-many-entities`** There are too many ad sets to be updated. A maximum of 50 ad sets can be updated per single request
+
+**Ad Set Start and Stop Validation Errors:** **`campaign--ad-set-start-check--cannot-activate-archived-ad-set`** This Ad Set is archived and thus can't be started.
+
+**`campaign--ad-set-start-check--active-ad-sets-limit-reached`** This Ad Set cannot be started because you reached the limit on the number of simultaneoulsy activated Ad Sets.
+
+**`campaign--ad-set-start-check--ad-set-with-custom-settings`** This Ad Set has some advanced settings and can't be launched directly through the platform. To launch this Ad Set, get in touch with our support team.
+
+**`campaign--ad-set-start-check--data-set-is-in-creative-ab-test`** This Ad Set is configured with a creative A/B test and can't be launched directly through the platform. To launch this Ad Set, get in touch with our support team.
+
+**`campaign--ad-set-start-check--ad-set-is-in-ab-test`** This Ad Set is configured with an A/B test and can't be launched directly through the platform. To launch this Ad Set, get in touch with our support team.
+
+**`campaign--ad-set-start-check--ad-set-with-revenue-optimizer`** This Ad Set is configured with Optimize Revenue. It needs to be switched to Optimize conversions for at least 2 weeks. To edit and launch this Ad Set, get in touch with our support team.
+
+**`campaign--ad-set-start-check--payment-billing-status-declined`** We noticed incorrect information in your billing details or payment information. Please get in touch with our support team to update your details.
+
+**`campaign--ad-set-start-check--payment-billing-status-no-details`** There's no payment & billing information attached to this account. Go to payments & billing to add your information.
+
+**`campaign--ad-set-start-check--ad-set-requiring-data-sharing`** Your Ad Set can't be launched because data sharing isn't activated on your account. Please contact your Criteo representative to activate this feature.
+
+**`campaign--ad-set-start-check--payment-billing-status-no-payment-method`** There's no payment method attached to this account. Go to payments & billing to add your payment details.
+
+**`campaign--ad-set-start-check--advertiser-financial-statuses-not-ok`** There are some unpaid invoices. Go to payments & billing to remit your payments as soon as possible or add a new payment method. If the issue persists, get in touch with our support team.
+
+**`campaign--ad-set-start-check--terms-and-conditions-not-accepted`** You need to accept our Terms & Conditions to launch this Ad Set. To do so, get in touch with our support team.
+
+**`campaign--ad-set-start-check--ad-set-has-no-remaining-budget`** This Ad Set won't run until you add budget to it. Go to Budgets to increase your budget.
+
+**`campaign--ad-set-start-check--no-inventory-placements-for-ad-set`** This Ad Set needs at least one ad placement to get started. Go to Creatives to edit your ad placements.
+
+**`campaign--ad-set-start-check--not-enough-transaction-tag-hits`** We advise you to check your transaction tags in Events Tracking before launching your Ad Set.
+
+**`campaign--ad-set-start-check--no-active-catalog-feed`** As you're not using the auto-import feature, we need to resync your catalog to build dynamic ads. Go to Product catalog to start syncing.
+
+**`campaign--ad-set-start-check--no-design-set-found-for-banner-types`** This Ad Set needs at least one ad to get started. Go to Creatives to add one.
+
+**`campaign--ad-set-start-check--cannot-activate-ad-set-without-revenue`** You didn't specify any cost controller (bid or target KPI) amount for this Ad Set. Add a value for your bid or your target. If the error persists, get in touch with our support team.
+
+**`campaign--ad-set-start-check--context-zero-no-geoloc-filter`** Extensive targeting is enabled on your Ad Set. Reaching too many people could lead to bad performance results. Go to your Ad Set settings to narrow your targeting, by restricting the geolocation to 1 or 2 countries for example. If the error persists, get in touch with our support team.
+
+**`campaign--ad-set-start-check--context-zero-wrong-configuration`** The audience of your Ad Set is too broad. Check its configuration or get in touch with your account strategist for assistance.
+
+**`campaign--ad-set-start-check--desktop-device-not-supported-for-app-install`** Your Ad Set is missing some required information. Please get in touch with our support team.
+
+**`campaign--ad-set-start-check--data-set-logo-required-for-app-install`** Your Ad Set is missing some required information. Please get in touch with our support team.
+
+**`campaign--ad-set-start-check--parallel-click-tracking-incorrectly-set-up`** Parallel click tracking is not configured correctly.
+
+**`campaign--ad-set-start-check--ad-set-has-missing-attribution-url`** Your Ad Set is missing an attribution URL.
+
+**`campaign--ad-set-start-check--crp-ad-set-should-not-have-smoothing-budget`** Your CRP Ad Set should not employ budget smoothing.
+
+**`campaign--ad-set-start-check--misconfigured-ad-set`** This Ad Set has invalid configuration or missing parameters. To launch this Ad Set, get in touch with our support team for assistance.
+
+**`campaign--ad-set-start-check--ad-set-requiring-an-audience`** This Ad Set is not linked to an audience. Check the section [Update Ad Set Audience](doc:ad-set#update-adset-audience).
+
+***
+
+[Campaign](/marketing-solutions/v2023.10/docs/campaign)
+
+[Display Multipliers](/marketing-solutions/v2023.10/docs/display-multipliers)

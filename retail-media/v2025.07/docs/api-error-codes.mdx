@@ -1,0 +1,184 @@
+---
+title: "API Error Codes"
+---
+
+1. API troubleshooting
+
+# Introduction
+
+When working with the API you may encounter errors caused by implementation flaws, wrong input, or environmental differences. Criteo strives to reasonably ensure maximum possible stability of the API system, however in exceptionally rare cases internal server errors may occur.
+
+<Check>
+  This document will help you to navigate through various types of error messages, the error message structure, and advise you on the common recovery mechanisms for the Criteo API.
+</Check>
+
+***
+
+# Criteo API error types
+
+This section gives a high-level description of various error categories that can be generated from your interaction with the API to help you design error handling mechanism of your application. The following sections will explain in more detail how to handle each error type.
+
+### Authorization & Authentication errors
+
+These types of errors may appear if you either don't possess a valid token or the token is lacking access permissions for the endpoint you are trying to reach. This error will also appear if the token has expired. For example, if an account administrator has revoked access for your application you will get HTTP error `403 - Forbidden`. A list of common HTTP errors and the recovery strategy can be found in the next section.
+
+***
+
+### Validation errors
+
+Validation errors are commonly caused by user-initiated requests and can be further classified into the following categories:
+
+* **User input validation**. Typically is evoked when the input supplied by the user is not valid. In this case your application should provide a specific error message to your user based on the error title and error detail. If the error detail is missing, the error title should contain sufficient description.
+* **Business logic validation**. This type of error is evoked when the current action is not possible due to the account configuration state. For example, launching a Campaign without a positive balance is not possible. In the case of business validation failure, the right strategy would be to request an action from the end user of your application.
+
+***
+
+### Dependency failure
+
+Internal error due to temporary unavailability of internal dependency or data persistence failure. This error will have a detailed description of the error in the response body.
+
+***
+
+### Internal server error
+
+Generic server-side errors that are not part of business validation. This could be a temporary network failure or host unavailability. If your application has a UI you should immediately indicate an error in your UI so that the end user can attempt to retry the operation. Alternatively, you can retry automatically within set limit of maximum number of attempts using an exponential back-off strategy (see the next section).
+
+***
+
+# HTTP error codes
+
+The initial information about the success/failure of a request is based on the conformance to the standard HTTP Status Codes. These status codes indicate at a broader level the kind of problem encountered client-side or server-side. The same HTTP status codes are sometimes not sufficient to convey enough information about an error to be helpful.
+
+In order to allow your application be more robust and user-friendly, Criteo provides pertinent information in the response body following [RFC-7807](https://tools.ietf.org/html/rfc7807) standard. This ensures consistency and predictability of integration by providing additional information about a problem encountered.
+
+| HTTP code | Description                 | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `400`     | Bad request, invalid syntax | Generic response will be provided in case of technical failure due to malformed HTTP-request has been received. For example, the request is missing body altogether, has incompatible header and body, or serialization error encountered.In the case of business validation error, fine-grained error information will be provided in the response body.                                                                                                                                                                                                                                                                                                                     |
+| `401`     | Authentication error        | If Criteo API responded with 401 it means that there is an issue with authentication, e.g invalid authentication credentials, or an expired token was supplied with the request.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `403`     | Forbidden                   | The request is forbidden due to missing permission on advertiser or domain. Make sure  your application requests all required permissions. In addition, ensure the consent has been granted on the scope of the requested account. The consent has to be granted by the account owner.If your connector has a UI  you can  relaunch the OAuth2 flow to reestablish your permission set on advertiser's account.  This error type may have additional information in response body.Please note, non-existing resource or not enough permissions in case of request to the **bulk** endpoint requests will result in empty response and 200 response code (see note in the end) |
+| `404`     | Not found                   | Check correctness of the URL being called.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `413`     | Payload too large           | This error may appear if your request payload contains more data then the web-server is set to process in a single request. If you encounter this issue, try breaking up the request into several with smaller chunks of data or use pagination where it's supported.                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `415`     | Unsupported media type      | This error means the wrong value for content-type header has been supplied. For example, you can get this type of error if you supply `'Content-Type: application/xml'` instead of `'Content-Type: application/json'` in the request header.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `429`     | Rate limit reached          | Client Credentials: 250 calls per minute; Authorization Code: 10 calls per minute. More details [here](https://developers.criteo.com/retail-media/docs/rate-limits) .                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `500`     | Internal server error       | Generic internal server error due to temporary unavailability of service. It is recommended to use an exponential backoff policy to ensure you are not overloading API network and the endpoint. For example, if your first request failed, wait 10 seconds before the retry. If the consequent request failed, wait for 20 seconds; then 40 seconds for a third time, and so on.                                                                                                                                                                                                                                                                                             |
+| `503`     | Service unavailable         | Internal error due to overload or maintenance. It is recommended to use an exponential backoff policy to ensure you are not overloading API network and the endpoint.    For example, if your first request failed, wait 10 seconds before the retry. If the consequent request failed, wait for 20 seconds; then 40 seconds for a third time, and so on.                                                                                                                                                                                                                                                                                                                     |
+
+***
+
+# Fine-grained failure response
+
+As already mentioned earlier, the Criteo API error-handling mechanism is based on HTTP protocol to report the errors.  The errors section of the HTTP response is an array of errors providing finer details in conjunction with the error response code. An example where this would be a useful error information, is if you are requesting a Statistics report with the start date later than the end date (see the example below).
+
+If there are no errors, this section may be omitted.
+
+***
+
+## Error structure
+
+ In order to report domain-specific and validation errors  Criteo API responds with JSON-like object with the error details. Following is an example of such type of response:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [
+          {
+              "traceId": "00000000-0000-0000-befd-7e28ff5a4d71",
+              "type": "validation",
+              "code": "start-after-end-date",
+              "instance": "/report",
+              "title": "The start date can not be after the end date."
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+* **traceId**: Technical identifier that allows Criteo engineering team to find correlation between your request and the error in the backend. Include traceId into the report when submitting a support request to us. Mandatory parameter.
+* **type**:  Machine-readable field that specifies error category. Use this value to properly inform your user about the outcome and apply the best recovery tactic.  The list of possible values is given below.
+* **instance**:  Machine-readable reference to the endpoint to help to identify the specific occurrence of the problem.
+* **code**: Machine-readable error code unique to each endpoint.
+* **title**: A human-readable description of the error. If your application has UI this can be displayed in **dialog title**: Mandatory parameter.
+* **detail**: A human-readable explanation of the problem. If your application has UI this can be displayed in dialog content.
+
+***
+
+## Warnings structure
+
+Semantically Criteo-API issued warnings are similar to compiler warnings.
+
+They indicate that problems may occur in the future. Structurally it is represented as an array returned in HTTP response, similar to error structure.
+
+***
+
+### Bulk request VS single entity endpoints
+
+* Bulk requests will always return a `200 OK` response, regardless of individual entity failures. If one or more entities cannot be processed, a warning will be included in the response body detailing the issues. These problematic entities will be excluded from further processing.
+* A `403 Forbidden` response will only be returned when the requested account does not exist or the requester lacks valid permissions (e.g., missing consent).
+* If the search criteria returns empty information, it will return:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "meta": {
+          "totalItems": 0,
+          "limit": 50,
+          "offset": 0
+      },
+      "data": [],
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+* Warnings may be returned even for a successful response.
+
+***
+
+# Error category types
+
+| type           | example code                        | example title                                           | example details                                                                                                                                                                           |
+| -------------- | ----------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| access-control | insufficient-advertiser-permissions | **"insufficient advertiser permissions"**               | "You do not have permission. to access this Advertiser"                                                                                                                                   |
+| availability   | internal-error                      | **"Campaigns are unavailable"**                         | "Campaigns are temporarily unavailable, please try again"                                                                                                                                 |
+| deprecation    | deprecated-field                    | **"A field is deprecated"**                             | "`<field>` is deprecated, please use the field `<field>`""`<field>` is deprecated, please use the value `<default>`" where `<field>` and `<default>` are replaced by their actual values. |
+|                | endpoint-deprecated                 | **"Endpoint deprecated"**                               | "Endpoint `<endpoint>` is deprecated, please upgrade to `<endpoint>`"                                                                                                                     |
+| validation     | required-fieldcampaign-not-found    | **"This field is required"****"Campaign is not found"** | "`<field>` is required""Campaign `3124159` does not exist"                                                                                                                                |
+|                | invalid-date-format                 | **"This field must be YYYY-MM-DD"**                     | Example:"`<field>` must be YYYY-MM-DD format. Value: '`<value>`'"                                                                                                                         |
+|                | invalid                             | **"This field must be in list of required values"**     | "`<field>` must be one of 'a', 'b', or 'c'. Value: '`<value>`' "                                                                                                                          |
+|                | invalid-range                       | **"This field is not in the valid range"**              | "`<field>` must be between `<start>` and `<end>`. Value: '`<value>`'"                                                                                                                     |
+|                | invalid-timespan                    | **"The date span is too large"**                        | "`<start-field>` to `<end-field>` must be no more than `<max-days>` days.  Value: '`<computed-span>`'"                                                                                    |
+
+***
+
+# Authentication Error codes
+
+`authorization-token-missing` The authorization header is missing. Please make sure the authorization header with a valid token is attached to the request.
+
+`authorization-token-expired`
+
+The authorization token is expired. The token lifetime is 900 seconds from the moment of its generation. If a token is used after the expiration date the error will be thrown. If you would like to avoid manual token management consider [Criteo API librairies](https://developers.criteo.com/retail-media/docs/api-client-libraries): the librairies offer the token auto-refresh feature. Before a call to the endpoint, the library checks that the token is not expired and fetches a new one otherwise.
+
+`authorization-token-invalid`
+
+The authorization header is invalid: either the wrong format or wrong content of the authorization header was supplied.
+
+`authorization-issuer-invalid`
+
+The authorization issuer is invalid. The token originator could not be verified. If you receive this error please contact API support.
+
+`authorization-unknown`
+
+Unknown Authorization error. Please contact API support. If you receive this error please contact API support.
+
+***
+
+# Other Error codes
+
+More error code information can be found on the pages dedicated to the corresponding endpoints.
+
+***
+
+[Escalation Guidelines](/retail-media/v2025.07/docs/escalation-guidelines)
+
+[Authentication](/retail-media/v2025.07/docs/authentication)

@@ -1,0 +1,1277 @@
+---
+title: "Audience Segments"
+---
+
+1. Preview Endpoints
+2. [Audiences](/marketing-solutions/v2026-preview/docs/audiences)
+
+Audience Segments are the building blocks of Audiences, as you can mix them together to ensure you target your desired customer base.
+
+An audience segment is the association of an audience segment type with an audience segment value.
+
+## **Audience Segment types**
+
+<Info>
+  ### Static Values on Audience Segments
+
+  Some of the parameters required to define an Audience Segment can take predefined values.
+
+  For example, to get the different values that the field **In-market Brand Id** can take, use the **/audience-segments/in-market-brands** endpoint.
+</Info>
+
+Regardless of the Segment type, segments share the following fields. Some of them are *calculated* so you don't need to define them at the creation but can read them after the Segment is created.
+
+| Field name and type          | Possible value    | Optional / Required / Computed | Description                                                                     |
+| ---------------------------- | ----------------- | ------------------------------ | ------------------------------------------------------------------------------- |
+| id (*String*)                |                   | Required                       | Unique ID of the segment                                                        |
+| name (*String*)              |                   | Required                       | Name of the segment. It must be unique per advertiser.                          |
+| description (*String*)       |                   | Optional                       | Description of the segment                                                      |
+| type (*AudienceSegmentType*) | `AudienceSegment` | Computed                       | Type of audience segment (read-only). Once created, the type cannot be changed. |
+| createdAt (*String*)         |                   | Computed                       | ISO-8601 timestamp in UTC of segment creation (read-only)                       |
+| updatedAt (*String*)         |                   | Computed                       | ISO-8601 timestamp in UTC of segment update (read-only)                         |
+| advertiser Id (*String*)     |                   | Required                       | Advertiser associated to the segment                                            |
+
+### In-market
+
+In-market segments can be used to target users based on high shopping intents and demographics.
+
+| Field name    | Type      | Optional / Required / Computed | Description                                                             |
+| ------------- | --------- | ------------------------------ | ----------------------------------------------------------------------- |
+| **In-market** | In-market | Optional                       | Indicates that this should be an Audience Segment of type **In-market** |
+
+A **In-market** object has the following parameters:
+
+| Field name                                      | Type                                                                         | Optional / Required / Computed | Description                                                                                                                                  |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| country                                         | StringThe ISO 3166-1 alpha-2 country code                                    | Required (if In-market is set) | Reach people of a specific country.                                                                                                          |
+| buyingPower                                     | BuyingPower arrayBuyingPower can be:- `Low`
+- `Medium`
+- `High`
+- `VeryHigh` | Optional                       | Reach people who frequently purchase high price range items to lower price range items. If empty, don't filter people based on buying power. |
+| gender                                          | GenderGender can be:- `Male`
+- `Female`                                      | Optional                       | Reach people who’ve shown interest in products made for a specific gender. If empty, don't filter people based on gender.                    |
+| [interestIds](doc:audience-segments#operations) | String array                                                                 | Required (if In-market is set) | Reach new people based on their commercial interests                                                                                         |
+| [brandIds](doc:audience-segments#operations)    | String array                                                                 | Required (if In-market is set) | Choose the commercial brands your segment might be interested in                                                                             |
+| priceRange                                      | PriceRange arrayPriceRange can be:- `Low`
+- `Medium`
+- `High`                | Optional                       | Reach people who’ve shown interest in products within a specific price range. If empty, don't filter people based on price range.            |
+
+<CodeGroup>
+  ```bash bash
+  {
+      "type": "AudienceSegment",
+      "attributes": {
+          "name": "My In-market  segment",
+          "description": "This is a segment for men in France who look for high priced products",
+          "inMarket": {
+              "country":"FR",
+              "gender": "Male",
+              "interestIds": ["928"],
+              "brandIds": ["289"],
+              "priceRange": ["High"]
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+### Contact List
+
+Contact List segments can be used to target people from your contact lists. First, you define the segment and update the data using other endpoints.
+
+| Field name      | Type        | Optional / Required / Computed | Description                                                                |
+| --------------- | ----------- | ------------------------------ | -------------------------------------------------------------------------- |
+| **contactList** | ContactList | Optional                       | Indicates that this should be an Audience Segment of type **Contact List** |
+
+<Warning>
+  The *contactList* parameter should be empty on the creation of this type of audience segment. More details on [Manage Contact Lists](doc:audience-segments#manage-contact-lists).
+</Warning>
+
+A \*\*Contact List \*\* object has the following parameters:
+
+| Field name | Type    | Optional / Required / Computed | Description                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| isReadOnly | Boolean | Computed                       | True if the contact list-specific information cannot be edited through the public API, false otherwise.Contact Lists can be created through the Public API or through Commerce Growth, and this determines where they’re editable: if created through the Public API, they can only be edited through the Public API; same for Commerce Growth.Segments created in Commerce Growth will show up as `"isReadOnly": true` on the Public API. |
+
+<CodeGroup>
+  ```bash bash
+  {
+              "type": "AudienceSegment",
+              "attributes": {
+                  "name": "My contact list segment",
+                  "description": "An audience segment which targets my customer's database",
+                  "advertiserId": "4949",
+                  "contactList": { },
+              }
+  }
+  ```
+</CodeGroup>
+
+### Location
+
+Location Segments can be used to target users in specific locations.
+
+| Field name   | Type     | Optional / Required / Computed | Description                                                            |
+| ------------ | -------- | ------------------------------ | ---------------------------------------------------------------------- |
+| **location** | Location | Optional                       | Indicates that this should be an Audience Segment of type **Location** |
+
+A **Location** object has the following parameters:
+
+| Field name       | Type                                                                            | Optional / Required / Computed | Description                                                                        |
+| ---------------- | ------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
+| registryType     | RegistryTypeRegistryType can take only one value (for now):- `PointsOfInterest` | Required (if location set)     | The type of location audience segment                                              |
+| pointsOfInterest | PointsOfInterest array.Each point has a *name*, *latitude* and *longitude*      | Required (if location set)     | Reach users which have been historically located in the given coordinates          |
+| → name           | String                                                                          | Required                       | Name of the point of interest                                                      |
+| → latitude       | Decimal                                                                         | Required                       | ISO-6709 latitude                                                                  |
+| → longitude      | Decimal                                                                         | Required                       | ISO-6709 longitude                                                                 |
+| radiusInKm       | Integer                                                                         | Required (if location set)     | The expected maximum distance in kilometers between a user and a point of interest |
+
+<CodeGroup>
+  ```bash bash
+  {
+      "type": "AudienceSegment",
+      "attributes": {
+          "name": "My Location Segment",
+          "description": "Customers close to our main store"
+          "advertiserId": "12345"
+          "location": {
+              "registryType": "PointsOfInterest",
+              "pointsOfInterest": [{
+                  "name": "main store",
+                  "latitude": 56.6,
+                  "longitude": 40.2
+              },{
+                  "name": "second store",
+                  "latitude": 30.6,
+                  "longitude": 20.4
+              }],
+              "radiusInKm": 10
+          }
+
+      }
+  }
+  ```
+</CodeGroup>
+
+### Behavioral
+
+Criteo-provided pre-built segments.
+
+These segments are not created by the user but provided by Criteo. You cannot edit them or delete them, but you can use them to build Audiences (e.g. "People that like shoes", "People that go often to the theater", etc.).
+
+| Field name     | Type       | Optional / Required / Computed | Description                                                              |
+| -------------- | ---------- | ------------------------------ | ------------------------------------------------------------------------ |
+| **behavioral** | Behavioral | Computed                       | Indicates that this should be an Audience Segment of type **Behavioral** |
+
+A **Behavioral** object has the following parameters:
+
+| Field name | Type                                                                                                          | Optional / Required / Computed | Default Value | Description                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------- | ------------------------------------------------------------------------------ |
+| country    | String                                                                                                        | Computed                       |               | The user's country                                                             |
+| category   | BehavioralCategory.Can take any of these values:- `Lifestyles`
+- `LifeEvents`
+- `Seasonal`
+- `BuyingPatterns` | Computed                       |               | The behavioral's category                                                      |
+| startDate  | DateTime                                                                                                      | Computed (can be empty)        | Empty         | The date when this audience segment will start to be filled with audience data |
+| endDate    | DateTime                                                                                                      | Computed (can be empty)        | Empty         | The date when this audience segment will be cleaned of audience data           |
+
+<Info>
+  ### List of Behavioral Segments
+
+  To get the list of the available Behavioral segments you can use the Search endpoint filtering by `Behavioral` type.
+</Info>
+
+### Prospecting
+
+Prospecting segments are used to include users similar to the buyers of the advertiser.
+
+| Field name      | Type        | Optional / Required / Computed | Description                                                               |
+| --------------- | ----------- | ------------------------------ | ------------------------------------------------------------------------- |
+| **Prospecting** | Prospecting | Optional                       | Indicates that this should be an Audience Segment of type **Prospecting** |
+
+A Prospecting object has three mandatory fields
+
+| Field name            | Type                                                             | Optional / Required / Computed           | Description                                                                                                                                                                        |
+| --------------------- | ---------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UsersType             | UsersTypeCan take two values:-`Prospects`-`ProspectsOrNonBuyers` | Required                                 | The type of users included in the segment.If you want clients similar to your visitors select '*prospects*'. If you also want to include non buyers, select *ProspectsOrNonBuyers* |
+| DaysSinceLastVisitMin | int                                                              | Required only for `ProspectsOrNonBuyers` | When non buyers are included, include users who visited your website before this number of days                                                                                    |
+| DaysSinceLastVisitMax | int                                                              | Required only for `ProspectsOrNonBuyers` | When non buyers are included, include users who visited your website after this number of days                                                                                     |
+
+<CodeGroup>
+  ```bash bash
+  {
+      "type": "AudienceSegment",
+      "attributes": {
+          "name": "My Prospecting Segment",
+          "description": "Customers that are similar to my current website visitors"
+          "advertiserId": "12345"
+          "prospecting": {
+             "daysSinceLastVisitMin": 30, 
+             "daysSinceLastVisitMax": 50,
+             "usersType": "ProspectsOrNonBuyers"
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+### Lookalike
+
+Lookalike segments allow you to reach users that are similar to a given segment seed. You will be able to reach people who look like, behave like, or are interested in things similar to another segment.
+
+| Field name    | Type      | Optional / Required / Computed | Description                                                             |
+| ------------- | --------- | ------------------------------ | ----------------------------------------------------------------------- |
+| **Lookalike** | Lookalike | Optional                       | Indicates that this should be an Audience Segment of type **Lookalike** |
+
+A Lookalike Segment object has the following parameters:
+
+| Field         | Type   | Mandatory | Description                                                                  |
+| ------------- | ------ | --------- | ---------------------------------------------------------------------------- |
+| seedSegmentId | string | Yes       | Id of existing Contact List or Event segment that will be treated as a seed. |
+| targetSize    | int64  | No        | The target size of the resulting segment after computation.                  |
+
+<CodeGroup>
+  ```bash bash
+  {
+    "id": "367783",
+    "type": "AudienceSegment",
+    "attributes": {
+      "name": "Sample lookalike",
+      "description": "Sample lookalike segment",
+      "type": "Lookalike",
+      "createdAt": "2023-01-26T19:21:30.76",
+      "updatedAt": "2023-01-26T19:21:30.76",
+      "advertiserId": "44981",
+      "lookalike": {
+        "seedSegmentId": "324415",
+        "targetSize": 5000000
+      }
+    },
+  },
+  ```
+</CodeGroup>
+
+<Warning>
+  ### Updating Lookalike segments
+
+  It's not possible to update the seed of a lookalike segment, if you need to use another seed, create a new segment instead.
+</Warning>
+
+### Retargeting
+
+The retargeting segments enable you to focus on specific groups of website visitors based on the timeframes since their last visit. You have the option to target buyers, non-buyers, or all visitors.
+
+| Field name      | Type        | Optional / Required / Computed | Description                                                               |
+| --------------- | ----------- | ------------------------------ | ------------------------------------------------------------------------- |
+| **Retargeting** | Retargeting | Optional                       | Indicates that this should be an Audience Segment of type **Retargeting** |
+
+| Name                  | Type                                                           | Optional/Required | Description                                                       |
+| --------------------- | -------------------------------------------------------------- | ----------------- | ----------------------------------------------------------------- |
+| visitorsType          | VisitorsTypeCan take three values:-`All`- `Buyers`-`NonBuyers` | Required          | The type of users being targeted.                                 |
+| daysSinceLastVisitMin | Integer                                                        | Required          | Include users who visited your website before this number of days |
+| daysSinceLastVisitMax | Integer                                                        | Required          | Include users who visited your website after this number of days  |
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1002",
+              "type": "AudienceSegment",
+              "attributes": {
+                  "name": "My retargeting segment",
+                  "description": "A segment with buyers",
+                  "retargeting": {
+                      "visitorsType": "Buyers",
+                      "daysSinceLastVisitMin": 10,
+                      "daysSinceLastVisitMax": 60
+                  }
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Operations**
+
+### Get a list of available In-market interests.
+
+![](/images/marketing-solutions/v2026-preview/docs/8a6bfd9-get.png)
+
+```
+ /marketing-solutions/audience-segments/in-market-interests?advertiser-id={advertiser-id}&country={country}
+```
+
+Returns a list with all available In-market interests that can be used to define an In-market audience segment. These In-market interests correspond to the Google product taxonomy. An In-market interest is considered available if there is enough volume for this particular In-market interest in the given country.
+
+| Name          | Required / Optional | Description                         |
+| ------------- | ------------------- | ----------------------------------- |
+| advertiser-id | required            | The Advertiser Id                   |
+| country       | required            | The ISO 3166-1 alpha-2 country code |
+
+### Get a list of available In-market brands.
+
+Returns a list with all available In-market brands that can be used to define an In-market audience segment. An In-market brand is considered available if there is enough volume for this particular In-market brand in the given country.
+
+![](/images/marketing-solutions/v2026-preview/docs/8a6bfd9-get.png)
+
+```
+/marketing-solutions/audience-segments/in-market-brands?advertiser-id={advertiser-id}&country={country}
+```
+
+| Name          | Required / Optional | Description                         |
+| ------------- | ------------------- | ----------------------------------- |
+| advertiser-id | required            | The Advertiser Id                   |
+| country       | required            | The ISO 3166-1 alpha-2 country code |
+
+## **Create Audience Segments**
+
+Create audience segments in bulk mode. Creates all audience segments with a valid configuration and returns their IDs with their advertiser IDs, names, and creation/update dates. One or multiple errors are returned for those that cannot be created.
+
+![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audience-segments/create
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "My contact list segment",
+          "description": "An audience segment which targets my customer's database",
+          "advertiserId": "4949",
+          "contactList": {}
+        }
+      },
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "My In-market segment",
+          "description": "An audience segment which targets people interested in Adidas shoes",
+          "advertiserId": "4949",
+          "inMarket": {
+            "country": "FR",
+            "interestIds": [
+              "928"
+            ],
+            "brandIds": [
+              "289"
+            ]
+          }
+        }
+      },
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "My Prospecting segment",
+          "description": null,
+          "advertiserId": "4949",
+          "prospecting": {
+            "daysSinceLastVisitMin": 30,
+            "daysSinceLastVisitMax": 50,
+            "usersType": "ProspectsOrNonBuyers"
+          }
+        }
+      },
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "Lookalike segment",
+          "description": "Lookalike description",
+          "advertiserId": "4949",
+          "lookalike": {
+            "seedSegmentId": "335274",
+            "targetSize": 5000000
+          }
+        }
+      },
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "My retargeting segment",
+          "description": "A segment including buyers",
+          "retargeting": {
+            "visitorsType": "Buyers",
+            "daysSinceLastVisitMin": 10,
+            "daysSinceLastVisitMax": 60
+          }
+        }
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "id": "1001",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "My contact list segment",
+          "type": "ContactList",
+          "description": "Contact list description",
+          "createdAt": "2023-05-09T16:30:50.4633333",
+          "updatedAt": null,
+          "advertiserId": "4949",
+          "contactList": {
+            "isReadOnly": false
+          }
+        }
+      },
+      {
+        "id": "1002",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "My In-market segment",
+          "type": "InMarket",
+          "description": "In-Market description",
+          "createdAt": "2023-05-09T16:30:50.4633333",
+          "updatedAt": null,
+          "advertiserId": "4949"
+        }
+      },
+      {
+        "id": "1003",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "My Prospecting segment",
+          "type": "Pospecting",
+          "description": null,
+          "createdAt": "2023-05-09T16:30:50.4633333",
+          "updatedAt": "2023-05-09T16:30:50.4633333",
+          "advertiserId": "4949",
+          "prospecting": {
+            "daysSinceLastVisitMin": 30,
+            "daysSinceLastVisitMax": 50,
+            "usersType": "ProspectsOrNonBuyers"
+          }
+        }
+      },
+      {
+        "id": "335275",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "Lookalike segment",
+          "description": "Lookalike description",
+          "type": "Lookalike",
+          "createdAt": "2023-05-09T16:30:50.4633333",
+          "updatedAt": "2023-05-09T16:30:50.4633333",
+          "advertiserId": "4949",
+          "lookalike": {
+            "seedSegmentId": "335274",
+            "targetSize": 5000000
+          }
+        }
+      },
+      {
+        "id": "129221",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "My retargeting segment",
+          "description": "A segment including buyers",
+          "type":"Retargeting",
+          "createdAt": "2023-05-09T16:30:50.4633333",
+          "updatedAt": "2023-05-09T16:30:50.4633333",
+          "retargeting": {
+            "visitorsType": "Buyers",
+            "daysSinceLastVisitMin": 10,
+            "daysSinceLastVisitMax": 60
+          }
+        }
+      }
+    ],
+      "errors": [     /* omitted if no errors */
+          ...
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+<Warning>
+  To create a contact list audience segment, you need to add an empty *contactList* parameter, as you can see in the example. To define the content of this audience segment, you should refer to the section [Manage Contact Lists](doc:audience-segments#manage-contact-lists).
+</Warning>
+
+## **Update Audience Segments**
+
+Update audience segments in bulk mode. Updates the properties of all audience segments with a valid configuration and returns their IDs with their advertiser IDs, names, and creation/update dates. One or multiple errors are returned for those that cannot be updated.
+
+<Info>
+  ### Partial Update Request: Modifying Segment Attributes
+
+  When building the update request, you don't need to include all the fields of the Segment. Provide the Id, type and the attributes you would like to modify.
+</Info>
+
+![](/images/marketing-solutions/v2026-preview/docs/04a928f-patch.png)
+
+```
+/marketing-solutions/audience-segments
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+    data: [
+      {
+        id: "1001",
+        type: "AudienceSegment",
+        attributes: {
+          name: "My contact list segment (v2)",
+        },
+      },
+      {
+        id: "1002",
+        type: "AudienceSegment",
+        attributes: {
+          name: "My In-market segment (v2)",
+          description: {
+            value: "A segment which targets men interested in expensive Adidas shoes",
+          },
+          inMarket: {
+            gender: "Male",
+            priceRange: ["High"],
+          },
+        },
+      },
+      {
+        id: "1003",
+        type: "AudienceSegment",
+        attributes: {
+          name: "My Prospecting segment",
+          type: "Pospecting",
+          description: null,
+          advertiserId: "4949",
+          prospecting: {
+            daysSinceLastVisitMin: 130,
+            daysSinceLastVisitMax: 150,
+            usersType: "ProspectsOrNonBuyers",
+          },
+        },
+      },
+      {
+        id: "335275",
+        type: "AudienceSegment",
+        attributes: {
+          name: "Lookalike segment (v2)",
+          lookalike: {
+            targetSize: 5000000,
+          },
+        },
+      },
+    ],
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+   ... 
+     "data":[
+        {
+           "id":"1001",
+           "type":"AudienceSegment",
+           "attributes":{
+              "name":"My contact list segment (v2)",
+              "createdAt":"2018-07-04T00:00:00Z",
+              "updatedAt":"2022-10-28T11:55:20.77",
+              "advertiserId":"4949",
+              "contactList":{
+                 "isReadOnly":false
+              }
+           }
+        },
+        {
+           "id":"1002",
+           "type":"AudienceSegment",
+           "attributes":{
+              "name":"My In-market segment (v2)",
+             "description":"A segment which targets men interested in expensive Adidas shoes",
+              "createdAt":"2018-07-04T00:00:00Z",
+              "updatedAt":"2022-10-28T11:55:20.77",
+              "advertiserId":"4949"
+           }
+        },
+       {
+          id: "1003",
+          type: "AudienceSegment",
+          attributes: {
+            name: "My Prospecting segment",
+            type: "Pospecting",
+            description: null,
+            createdAt: "2023-05-09T16:30:50.4633333",
+            updatedAt: "2023-07-01T16:30:50.4633333",
+            advertiserId: "4949",
+            prospecting: {
+              daysSinceLastVisitMin: 130,
+              daysSinceLastVisitMax: 150,
+              usersType: "ProspectsOrNonBuyers",
+            },
+          },
+        },
+        {  "id":"335275",
+           "type":"AudienceSegment",
+           "attributes":{
+              "name":"Lookalike update",
+              "description":"lookalike desc update",
+              "type":"Lookalike",
+              "createdAt":"2022-10-28T10:57:13.363",
+              "updatedAt":"2022-10-28T11:55:20.77",
+              "advertiserId":"4949",
+              "lookalike":{
+                 "seedSegmentId":"335274",
+                 "targetSize":5000000
+              }
+           }
+        }
+     ],
+   
+      "errors": [     /* omitted if no errors */
+          ...
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+<Warning>
+  To update contact lists within an audience segment, refer to the section [Manage Contact Lists](doc:audience-segments#manage-contact-lists).
+</Warning>
+
+## **Search Audience Segments**
+
+Search audience segments by audience segment IDs, audience segment types, or advertiser IDs. It returns a list of audience segments that match the provided attributes. If present, the attributes are AND'ed together when applied (will only return the segments that satisfy ALL those conditions).
+
+![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audience-segments/search
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "attributes": {
+              "advertiserIds": [
+                  "44981",
+                  "4949"
+              ],
+              "audienceSegmentIds": null,
+              "audienceSegmentTypes": [
+                  "In-market",
+                  "Location"
+              ]
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "meta": {
+          "totalItems": 400,
+          "limit": 50,
+          "offset": 0
+      },
+      "data": [
+          {
+              "id": "1001",
+              "type": "AudienceSegment",
+              "attributes": {
+                  "name": "My In-market segment",
+                  "description": "A segment which targets people interested in Adidas shoes",
+                  "createdAt": "2018-07-04T00:00:00Z",
+                  "updatedAt": "2018-07-15T00:00:00Z",
+                  "advertiserId": "4949",
+                  "inMarket": {
+                      "country": "FR",
+                      "interestIds": ["928"],
+                      "brandIds": ["289"]
+                  }
+              },
+          },
+          /* more search results */
+      ],
+      "errors": [     /* omitted if no errors */
+          ...
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Delete Audience Segments**
+
+Delete audience segments in bulk mode. Deletes the audience segments associated with the given audience IDs.
+
+![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audience-segments/delete
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1002",
+              "type": "AudienceSegment"
+          },
+          {
+              "id": "1001",
+              "type": "AudienceSegment"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      ...
+      "errors": [     /* omitted if no errors */
+          ...
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Compute Audience Segment sizes**
+
+If you have already created one or more segments, and would like to know their size, you can do so by using tis endpoint. It returns the size of one or more audience segment IDs (if available and if supported). For those whose size cannot be retrieved, one or multiple errors are returned.
+
+![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audience-segments/compute-sizes
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1001", 
+              "type": "AudienceSegmentSize",
+              "attributes": {
+                  "size": 194730
+              }
+          },
+          {
+              "id": "1002", 
+              "type": "AudienceSegmentSize",
+              "attributes": {
+                  "size": 4285
+              }
+          },
+          {
+              "id": "1003", 
+              "type": "AudienceSegmentSize",
+              "attributes": {
+                  "size": 978597
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [
+          {
+              "type": "validation",
+              "code": "audience-segment-not-found",
+              "instance": "@data/0",
+              ...
+          },
+          {
+              "type": "validation",
+              "code": "audience-segment-size-not-available",
+              "instance": "@data/1",
+              ...
+          },
+          {
+              "type": "validation",
+              "code": "audience-segment-size-not-supported",
+              "instance": "@data/2",
+              ...
+          }
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Estimate Audience Segment size**
+
+If you know the structure of your segment, but have not created it yet, and would like to estimate its size, you can use this endpoint. It returs the size estimation for an audience segment (if available and if supported). If the size cannot be estimated, an error is returned. This endpoint is resource-intensive, this is why the bulk workflow is not supported.
+
+![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audience-segments/estimate-size
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "AudienceSegment",
+          "attributes": {
+              "advertiserId": "4949",
+              "inMarket": {
+                  "country": "FR",
+                  "interestIds": ["928"],
+                  "brandIds": ["289"],
+              }
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "AudienceSegmentSize",
+          "attributes": {
+              "size": 194730
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [
+          {
+              "type": "validation",
+              "code": "audience-segment-size-too-small",
+              "instance": "/audience-segments/size-estimation",
+              ...
+          }
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Manage Contact Lists**
+
+After creating an audience segment of the type *contact list*, you can use the following endpoints to update its content.
+
+### Adding and Removing Users
+
+![](/images/marketing-solutions/v2026-preview/docs/04a928f-patch.png)
+
+```
+/marketing-solutions/audience-segments/{audience-segment-id}/contact-list
+```
+
+Users can be added or removed from an audience segment with a PATCH request to the audience contact list endpoint with the specific audience segment id in the URL path. The request body requires the type of operation, the schema of the identifiers, and the list of the user identifiers to be added. In addition, if the identifier type is 'gum', an additional parameter, the `gumCallerId`, must also be included. Please note that the supported identifier types for Criteo audiences include: 'email' (Email Address in plain text, MD5, SHA256 or SHA256MD5-hashed), 'madid' (Mobile Ad Identifier), 'identityLink' (a user's LiveRamp Identity Link), 'gum' (Criteo GUM cookie identifier) and 'customerid' (only for Retail Media Customer Lists).
+
+<Info>
+  GUM ID's allow clients to maintain a correspondence between their user identification system and Criteo's user identification (UID) if they are unable to send emails or mobile ad identifiers.
+
+  Please reach out to your Criteo account team for the appropriate `gumCallerId` or to get more information on this GUM sync, if needed.
+</Info>
+
+#### Adding Users
+
+To add users to an audience segment, use the 'add' operation in the PATCH request as detailed below:
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "ContactlistAmendment",
+      "attributes": {
+          "operation": "add",
+          "identifierType": "email",
+          "identifiers": [
+              "[email protected]"
+          ]
+      }
+    }
+  }
+  ```
+
+  ```bash bash
+  {
+    "data": {
+      "type": "ContactlistAmendment",
+      "attributes": {
+          "operation": "add",
+          "identifierType": "email",
+          "identifiers": [
+              "8614620f4b7591e9270b91928299e1de99456e9f1883eadef140b6fc12c92830",
+              "97e2a275de13f3cef1f16a333baf450fcf3d58ecc7c1e509bfec91462420f3a0"
+          ]
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The API will respond with an array of the **audience-segment-id**, **operation**, **date of request**, **identifierType**, number of valid or invalid identifiers, and a sample of invalid identifiers if applicable.
+
+<CodeGroup>
+  ```bash bash
+  {
+     "data": {
+      "type": "ContactlistAmendment",
+      "attributes": {
+         "contactListId": "12",
+         "operation": "add",
+         "requestDate": "2018-12-10T10:00:50.000Z",
+         "identifierType": "email",
+         "nbValidIdentifiers": 7343,
+         "nbInvalidIdentifiers": 13,
+         "sampleInvalidIdentifiers": [
+               "InvalidIdentifier"
+               ]
+         }
+     },
+     "errors": [],
+     "warnings": []
+  }
+  ```
+</CodeGroup>
+
+#### Removing Users
+
+To remove users from an audience segment, use the 'remove' operation in the PATCH request as detailed below:
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "ContactlistAmendment",
+      "attributes": {
+          "operation": "remove",
+          "identifierType": "email",
+          "identifiers": [
+              "[email protected]"
+          ]
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The API will respond similarly to the add users call, but with 'remove' as the operation.
+
+<CodeGroup>
+  ```bash bash
+  {
+     "data": {
+      "type": "ContactlistAmendment",
+      "attributes": {
+         "contactListId": "12",
+         "operation": "remove",
+         "requestDate": "2018-12-10T10:00:50.000Z",
+         "identifierType": "email",
+         "nbValidIdentifiers": 7342,
+         "nbInvalidIdentifiers": 13,
+         "sampleInvalidIdentifiers": [
+               "InvalidIdentifier"
+         ]
+      }
+    },
+     "errors": [],
+     "warnings": []
+  }
+  ```
+</CodeGroup>
+
+<Warning>
+  ### Identifier List Size Limit
+
+  Note that there is a limit of 50,000 identifiers per single request. If you are adding more than 50,000 users, please split them into chunks of 50,000 and make multiple requests.
+</Warning>
+
+### Deleting All Users
+
+To delete all users from an audience segment, a DELETE request can be made to the audience segment contact list endpoint with the specified audience segment id in the URL path.
+
+![](/images/marketing-solutions/v2026-preview/docs/1e25c4c-delete.png)
+
+```
+/marketing-solutions/audience-segments/{audience-segment-id}/contact-list
+```
+
+The API will return an array with the specified **audience-segment-id** from which all users were deleted.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "ContactListAudienceSegment",
+          "id": "12"
+      },
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+<Info>
+  Note that this will only wipe all of the users from the audience segment and will not delete the audience segment itself.
+</Info>
+
+<Warning>
+  ### Note on Audience Computation
+
+  Audience updates are processed daily at 0h UTC and 12h UTC and can take around 5 hours to reflect on a live campaign. This is important for audiences that are frequently updated as changes should be ready for processing prior to these two times.
+</Warning>
+
+### Get Segment Statistics
+
+Get the statistics of the contact list audience segment associated with the given ID. It returns the size and other statistics available for an audience segment of the type contact list. If the given ID is not of the type contact list, an error is returned.
+
+`audience-segment-id` is the Id of the Contact List segment.
+
+![](/images/marketing-solutions/v2026-preview/docs/8a6bfd9-get.png)
+
+```
+/marketing-solutions/audience-segments/{audience-segment-id}/contact-list/statistics
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "1001",
+          "type": "ContactListAudienceSegment"
+          "attributes": {
+              "numberOfIdentifiers": 1000,
+              "numberOfMatches": 500,
+              "matchRate": 0.50
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<Warning>
+  This statistic is not an estimation of the audience size. For it, refer to the [Estimate Audience Segment Size](doc:audience-segments#estimate-audience-segment-size) section.
+</Warning>
+
+## **Validation Errors**
+
+In addition to general API errors, you may encounter validation errors when creating or managing Audience Segments.
+
+Below is a list of error codes for Audience Segment Endpoints, and a more detailed description of their meaning. For more codes don't hesitate to check also the [Audiences validation errors](doc:audiences#validation-errors)
+
+`advertiser-must-be-opt-in-for-data-sharing`
+
+Advertiser must be opt in for data sharing
+
+`brand-list-must-be-valid`
+
+Brand list must be valid
+
+`buying-power-must-be-valid`
+
+Buying power must be valid
+
+`cannot-create-contact-list`
+
+Contact list creation error
+
+`in-market-settings-must-be-defined`
+
+In-market segment settings must be defined
+
+`contact-list-incompatible-with-file`
+
+Contact list is incompatible with file
+
+`contact-list-statistics-not-supported`
+
+Contact list statistics are not supported on this segment
+
+`country-code-is-required`
+
+Country code is required
+
+`country-code-must-be-authorized`
+
+Country code must be authorized
+
+`country-code-must-be-valid`
+
+Country code must be valid
+
+`days-must-be-in-range`
+
+Days in omnichannel segment must be in range
+
+`event-type-must-be-valid`
+
+Event type must be valid
+
+`file-id-must-be-valid`
+
+File ID must be valid
+
+`gender-must-be-valid`
+
+Gender must be valid
+
+`interests-list-must-be-valid`
+
+Interest list must be valid
+
+`name-must-be-unique`
+
+Name must be unique
+
+`name-must-not-be-empty`
+
+Name must not be empty
+
+`name-must-not-be-too-long`
+
+Segment name property must not be too long
+
+`percentile-must-be-in-range`
+
+Percentile must be in range
+
+`poi-coordinates-must-be-unique`
+
+Points of interest coordinates must be unique
+
+`poi-coordinates-must-be-valid`
+
+Points of interest coordinates must be valid
+
+`poi-list-must-be-not-empty`
+
+Points of interest list must be nor null nor empty
+
+`poi-list-must-be-null-or-empty`
+
+Points of interest list must be null or empty
+
+`poi-radius-must-be-not-null`
+
+Location segment of type 'Unknown' must have a radius
+
+`poi-surface-must-be-valid`
+
+Points of interest surface area must be valid
+
+`price-range-must-be-valid`
+
+Price range must be valid
+
+`radius-must-be-in-range`
+
+RadiusInKm must be in range
+
+`registry-type-must-be-valid`
+
+Registry type must be valid
+
+`retargeting-segment-days-since-last-visit-are-not-compatible`
+
+Retargeting segment MinDaysSinceLastVisit and MaxDaysSinceLastVisit are not compatible
+
+`retargeting-segment-days-since-last-visit-are-not-in-acceptable-range`
+
+Retargeting segment MinDaysSinceLastVisit and MaxDaysSinceLastVisit are not in the range of acceptable values
+
+`segment-has-not-been-found`
+
+Segment does not exist
+
+`segment-must-have-valid-segment-id`
+
+Segment must have a valid segment ID
+
+`segment-must-not-be-used-in-audience`
+
+Segment must not be used in an audience
+
+`segment-not-found`
+
+Segment not found
+
+`segment-size-not-available`
+
+Segment size not available
+
+`segment-size-not-available`
+
+Segment size cannot be calculated
+
+`segment-size-not-supported`
+
+Segment size not supported
+
+`segment-size-too-small`
+
+Segment size is too small
+
+`type-must-be-the-same`
+
+Type must be the same
+
+`Target size must be within the supported rage`
+
+In Lookalike Audience Segments, given target size must be within the supported rage. Lower and Upper bound will be included in error details.
+
+`Seed segment does not belong to the same advertiser`
+
+For Lookalike Audience Segments, the seed segment (seedSegmentId input value) should have the same advertiser Id as the newly created Lookalike segment.
+
+`retargeting-segment-from-to-days-ago-are-not-compatible`
+
+The From days ago value should be lower than To days ago
+
+`retargeting-segment-from-to-days-ago-are-not-in-acceptable-range`
+
+Days must be in range: 400 >= ToDaysAgo > FromDaysAgo >= 0
+
+`audience-with-retargeting-segment-must-be-correctly-specified`
+
+The retargeting segment must be the unique segment in its audience
+
+***
+
+[Audience](/marketing-solutions/v2026-preview/docs/audience)
+
+[Algebra Nodes](/marketing-solutions/v2026-preview/docs/algebra-nodes)

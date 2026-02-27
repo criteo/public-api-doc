@@ -1,0 +1,186 @@
+---
+title: "Video Player Specifications"
+---
+
+## About VAST
+
+Created by the Interactive Advertising Bureau (IAB), [*VAST*](https://www.iab.com/guidelines/vast/) is a Video Ad Serving Template for structuring ad tags that serve ads to video players on the Internet. Using an XML schema, VAST transfers important metadata about an ad from the ad server to a video player.
+
+<Info>
+  The VAST framework has been chosen by Criteo to render Commerce Video ads because **VAST is a market standard**. It allows interoperability with third-party measurement partners, and covers all tracking requirements.
+</Info>
+
+***
+
+## Video Player Requirements
+
+<Warning>
+  **All beacons should be fired only once**
+
+  Except for the interaction beacons that should be fired **every time** the user interacts with these actions (click, mute, unmute, resume, pause). Please refer to the Tracking Ad-related Activity section for more details.
+</Warning>
+
+<Info>
+  The iOS & Android video player specification remains consistent across both Web & App environments
+</Info>
+
+***
+
+### Main Requirements
+
+The VAST video player must support the following requirements:
+
+* Video should load at the load of the page, even if not in the viewport.
+
+* Video must only start playing automatically when the player has 50% of pixels in the viewport.
+
+* Video should pause automatically when the player is in less than 50% of the viewport.
+
+  * the "pause" beacon should **not** be fired in this case scenario.
+
+* Video should resume automatically when the player is back in more than 50% of the viewport
+
+  * the "resume" beacon should **not** be fired in this case scenario.
+
+* Video should repeat indefinitely.
+
+* Video should be muted automatically at launch:
+
+  * The `mute` beacon must not be fired because this mute action does not represent an interaction from the user.
+  * A control button must be available to unmute it.
+
+* Another control button should be available to `pause/resume` the video.
+
+  * The `pause/resume` button is optional, no matter if there is a redirection link available in the VAST XML. This is due to the fact that the video should play automatically when in the viewport and pause when not - and simply takes additional space on the video.
+  * Other controls should be hidden.
+
+* Video cannot be viewed in full screen.
+
+* Video can be clickable and redirect to a page **only if** a redirection link is present (`<VideoClicks>` present in VAST XML).
+
+* The video player used by the client **must be able to read VAST XML files** (e.g., Google Interactive Media Ads player or a native HTML player with an additional JavaScript layer that can handle VAST XML files). Please visit the [Video Player Implementation page](https://developers.criteo.com/retail-media-delivery/docs/video-player-implementation-guide-desktopmobile) for more details.
+
+To ensure a positive user experience and maintain accurate video engagement metrics, video advertisements must adhere to the following behavior:
+
+* Pause playback when the user navigates away from the browser tab or window where the video ad is playing,
+* Resume playback automatically when the user returns to the tab/window, preserving the previous playback state (e.g., mute status, timestamp),
+* Do not count video impressions, play-through events, or viewability metrics while the tab is inactive, in accordance with MRC viewability guidelines.
+
+***
+
+### With / without Redirection Links
+
+#### With no redirection links
+
+<Info>
+  If there is no redirection link provided, the `<VideoClicks>` section will not be present. The `ClickThrough`URL and the associated `ClickTracking` beacon won't appear.
+</Info>
+
+* a click on the video should pause the video, and:
+  * the `Pause` beacon should be fired
+* a new click on the video should resume the video:
+  * the `Resume` beacon should be fired
+
+#### With a redirection link
+
+If there is a redirection link provided in the VAST XML:
+
+* a click on the video should redirect the user to the `Clickthrough` URL, and:
+
+  * the `Clicktracking` beacon must be fired,
+  * the `Pause` beacon must NOT be fired.
+
+<Warning>
+  The Pause beacon should only be used if there is **a manual action from the user** that wants to pause the video.
+</Warning>
+
+* If a video is paused manually (after a click on the `Pause` button or by clicking on the video if there isn't a redirection URL), goes in less than 50% of the viewport and comes back in more than 50% of the viewport, the video should resume.
+  * However, the `Resume` beacon should not be fired because this is not a manual action from the user.
+
+***
+
+### If the User Clicks on Pause/Resume
+
+If the user clicks on pause, the `Pause` beacon should be fired.
+
+* The `Clicktracking` beacon must **not** be fired because this is a click on the pause button, not on the video itself.
+
+* The button should change from ⏸️ to ▶️.
+
+* The `pause` beacon should only be fired when the user clicks on the `Pause `button or clicks on the video if there is no redirection link provided when playing.
+
+* If the user clicks on `Play/Resume` after having paused the video, the `Resume` beacon should be fired.
+
+  * The `Clicktracking` beacon must **not** be fired because this is a click on the `pause` button, not on the video itself.
+  * The button should change from ▶️ to ⏸️.
+  * The `Resume` beacon should only be fired when the user clicks on the `Resume` button or clicks on the video if there is no redirection link provided and video is paused.
+
+***
+
+### Multiple Video Files
+
+* Multiple video files (`MediaFiles`) can be returned in the same VAST XML by Criteo, but only one of them must be rendered per VAST XML. Video files may differ in ratios. Supported video ratios are 16:9, 9:16 and 1:1.
+
+  * If a single video is returned in the VAST XML, it must be selected by default.
+  * If multiple videos are provided, the closest video ratio (compared to the ad placement's video ratio) must be selected.
+
+***
+
+### Closed Caption (CC)
+
+For accessibility requirements, a `Closed Caption (CC)` file can be provided in the VAST XML by Criteo.
+
+* If the CC file is present:
+
+  * it must be rendered by the video player.
+  * a `CC` control button must be available, next to other control buttons (mute/pause).
+
+* If there is no CC file provided in the VAST XML, the `CC` control button should be hidden.
+
+* At video launch, `Closed Captioning `must be enabled automatically.
+
+* Maximum one CC file can be provided in the VAST XML, ensuring a single language support.
+
+<Info>
+  The only file format supported for CC is `.vtt`. CC files will be automatically generated and provided in the VAST XML.
+</Info>
+
+#### VAST XML Example
+
+When Closed Captioning is enabled, the VAST XML response will include a `ClosedCaptionFiles` element nested inside each `MediaFile` element within the `MediaFiles` section.
+
+Each `ClosedCaptionFiles` container holds one or more `ClosedCaptionFile` entries, representing closed captions in different languages and formats (currently, `text/vtt` is supported). These are not video assets themselves and must not be interpreted as part of the video `src`.
+
+<CodeGroup>
+  ```bash bash
+  <MediaFiles>
+    <MediaFile id="c2bf93dcf6e4d6f9dd150c4e4f8c222_discover_miracle_moisture_boost_with_rose_water"
+               delivery="progressive"
+               width="640"
+               height="360"
+               type="video/mp4"
+               scalable="true"
+               maintainAspectRatio="true">
+      <![CDATA[https://static.criteo.net/design/dt/commerce_max/retailer_1209/c2bf593dcf6e4d6f9dd150c4e4f8c222_discover_miracle_moisture_boost_with_rose_water.mp4]]>
+      <ClosedCaptionFiles>
+        <ClosedCaptionFile type="text/vtt" language="en">
+          <![CDATA[https://staticassets-creator-design.criteo.net/captions/45fdce79-5556-4874-b139-bb09648436f2_water.mp4.vtt]]>
+        </ClosedCaptionFile>
+      </ClosedCaptionFiles>
+    </MediaFile>
+  </MediaFiles>
+  ```
+</CodeGroup>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Tracking ad-related activity](/retailer-integration/docs/tracking-ad-related-activity)
+* [Criteo-Owned Video Player Integration](/retailer-integration/docs/criteo-owned-video-player-integration)

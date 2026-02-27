@@ -1,0 +1,557 @@
+---
+title: "Account Fees (Private Market)"
+---
+
+1. Guides for Retail Media API
+2. [Account](/retail-media/docs/account)
+
+## Introduction
+
+The **Account Fees API** allows Private Market retailers to manage fee settings for their accounts through the external API. This includes retrieving fees for one or more accounts and updating those fees where permitted.
+
+***
+
+## Endpoints
+
+| Verb     | Endpoint                | Description                                                                                           |
+| -------- | ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| **POST** | `/accounts/fees/search` | This endpoint allows users to retrieve fee settings for one or more accounts they have access to.     |
+| **POST** | `/accounts/fees/update` | This endpoint allows **Private Market retailers** to update fees for child seller or demand accounts. |
+
+***
+
+## Search Account Fees
+
+![](/images/retail-media/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/fees/search
+```
+
+This endpoint allows users to retrieve fee settings for one or more accounts they have access to.
+
+You can find more details in the API reference for this endpoint [here](https://developers.criteo.com/retail-media/v2025-preview/reference/post_preview-retail-media-accounts-fees-search).
+
+<Info>
+  This endpoint does not require `Account Manage` scope nor consent to the parent supply account.
+</Info>
+
+***
+
+### Attributes
+
+| Attribute    | Data Type | Description                                                                                                            |
+| ------------ | --------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `accountIds` | `list`    | Account ID Up to **25 account IDs**can be queried at once.Accepted values: string of `int64` Writeable: Y/ Nullable: N |
+
+***
+
+### Optional Query Parameters
+
+| Query Parameters | Data Type | Description                                                                                                                |
+| ---------------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `offsite`        | `integer` | Pagination parameter, see [API Response](https://developers.criteo.com/retail-media/docs/api-response#/)                   |
+| `limit`          | `integer` | Pagination parameter, see [API Response](https://developers.criteo.com/retail-media/docs/api-response#/)                   |
+| `fields`         | `list`    | Comma-separated list of optional attributes to include in the response. Used to optimize response time and payload length. |
+
+***
+
+### Sample request
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST "https://api.criteo.com/{version}/retail-media/accounts/fees/search" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+          "data": {
+              "attributes": {
+                  "accountIds": [
+                      "667131474078658560",
+                      "680116036401160192"
+                  ]
+              },
+              "type": "AccountFeesSearchRequest"
+          }
+      }'
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+
+  payload = json.dumps({
+      "data": {
+          "attributes": {
+              "accountIds": [
+                  "667131474078658560",
+                  "680116036401160192"
+              ]
+          },
+          "type": "AccountFeesSearchRequest"
+      }
+  })
+
+  headers = {
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+  }
+
+  conn.request(
+      "POST",
+      "/{version}/retail-media/accounts/fees/search",
+      payload,
+      headers
+  )
+
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder().build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, """
+  {
+      "data": {
+          "attributes": {
+              "accountIds": [
+                  "667131474078658560",
+                  "680116036401160192"
+              ]
+          },
+          "type": "AccountFeesSearchRequest"
+      }
+  }
+  """);
+
+  Request request = new Request.Builder()
+      .url("https://api.criteo.com/{version}/retail-media/accounts/fees/search")
+      .method("POST", body)
+      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+      .addHeader("Content-Type", "application/json")
+      .addHeader("Accept", "application/json")
+      .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/fees/search');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig([
+      'follow_redirects' => TRUE
+  ]);
+  $request->setHeader([
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json'
+  ]);
+
+  $request->setBody(json_encode([
+      "data" => [
+          "attributes" => [
+              "accountIds" => [
+                  "667131474078658560",
+                  "680116036401160192"
+              ]
+          ],
+          "type" => "AccountFeesSearchRequest"
+      ]
+  ], JSON_PRETTY_PRINT));
+
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      } else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+      }
+  } catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+Please note that:
+
+* `accountIds` is optional.
+* `accountIds: [""]` → returns an **empty response**.
+* `accountIds: []` → returns **all accounts the user has consent to**.
+* Up to **25 account IDs** can be queried at once in the request.
+* Must be sent as **an array** — not as a comma-separated string.
+
+***
+
+### Sample Response
+
+<CodeGroup>
+  ```bash bash
+  {
+      "metadata": {
+          "count": 2,
+          "offset": 0,
+          "limit": 50
+      },
+      "data": [
+          {
+              "type": "PrivateMarketAccountFees",
+              "attributes": {
+                  "accountId": "667131474078658560",
+                  "fees": {
+                      "demandManaged": {
+                          "rate": 0.40
+                      },
+                      "managedService": {
+                          "rate": 0.20,
+                          "onsiteSponsoredProductsEnabled": false,
+                          "onsiteDisplayEnabled": false
+                      }
+                  }
+              }
+          },
+          {
+              "type": "PrivateMarketAccountFees",
+              "attributes": {
+                  "accountId": "680116036401160192",
+                  "fees": {
+                      "demandManaged": {
+                          "rate": 0.10
+                      },
+                      "managedService": {
+                          "rate": 0.15,
+                          "onsiteSponsoredProductsEnabled": true,
+                          "onsiteDisplayEnabled": false
+                      }
+                  }
+              }
+          }
+      ],
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Update Account Fees (Retailers Only)
+
+![](/images/retail-media/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/fees/update
+```
+
+This endpoint allows **Private Market retailers** to update fees for child seller or demand accounts. You can find more details about this endpoint in our API reference [here](https://developers.criteo.com/retail-media/v2025-preview/reference/post_preview-retail-media-accounts-fees-update).
+
+To use this endpoint, users must meet the following requirements:
+
+* **OAuth Scope**: `Account Manage`
+
+* **Consent**:
+
+  * To the **parent supply account**
+  * To the **child accounts** for which fees are being managed
+
+***
+
+### Attributes
+
+| Attribute                        | Data Type | Description                                                                                                                                                                                              | Writable | Nullable |
+| -------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------- |
+| `accountIds`                     | `list`    | Account ID Accepted values: string of `int64`                                                                                                                                                            | Y        | N        |
+| `fees`                           | `enum`    | Defines the set of fees you can set on the Account. Possible values:- `demandManaged`: DSP fee on private market demand account
+- `managedService`: Managed Service fee on private market demand account | N        | N        |
+| `rate`                           | `decimal` | Value to apply as the `demandManaged` and/or `managedService` fee. Accepted range: **0.00 to 1.00** Max precision: **2 decimal places**                                                                  | Y        | N        |
+| `managedService`                 | `enum`    | The managed service fee that is applied to the account. Options:- `onsiteDisplayEnabled`
+- `onsiteSponsoredProductsEnabled`                                                                              | N        | N        |
+| `onsiteDisplayEnabled`           | `boolean` | Indicates if `Managed Service fee` is enabled for Onsite Display.                                                                                                                                        | Y        | N        |
+| `onsiteSponsoredProductsEnabled` | `boolean` | Indicates if `Managed Service fee` is enabled for Sponsored Products.                                                                                                                                    | Y        | N        |
+
+***
+
+### Feature flag
+
+This functionality is available only to retailers who have the **Private Market Fees** setting enabled in their UI. If you do not see this feature in your account, please contact your support team or account representative.
+
+To have access to this functionality, retailers must:
+
+* Have access to the fee configuration UI,
+* Enable either or both fee types:
+* **Managed Service Fee**
+* **Demand Managed Fee**
+
+***
+
+### Sample Request
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST "https://api.criteo.com/{version}/retail-media/accounts/fees/update" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+          "data": {
+              "attributes": {
+                  "accountIds": [
+                      "618738804747743232"
+                  ],
+                  "fees": {
+                      "demandManaged": {
+                          "rate": "0"
+                      },
+                      "managedService": {
+                          "onsiteDisplayEnabled": "true",
+                          "onsiteSponsoredProductsEnabled": "true",
+                          "rate": "0.01"
+                      }
+                  }
+              },
+              "type": "AccountFeesUpdateRequest"
+          }
+      }'
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+
+  payload = json.dumps({
+      "data": {
+          "attributes": {
+              "accountIds": [
+                  "618738804747743232"
+              ],
+              "fees": {
+                  "demandManaged": {
+                      "rate": "0"
+                  },
+                  "managedService": {
+                      "onsiteDisplayEnabled": "true",
+                      "onsiteSponsoredProductsEnabled": "true",
+                      "rate": "0.01"
+                  }
+              }
+          },
+          "type": "AccountFeesUpdateRequest"
+      }
+  })
+
+  headers = {
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+  }
+
+  conn.request(
+      "POST",
+      "/{version}/retail-media/accounts/fees/update",
+      payload,
+      headers
+  )
+
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder().build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, """
+  {
+      "data": {
+          "attributes": {
+              "accountIds": [
+                  "618738804747743232"
+              ],
+              "fees": {
+                  "demandManaged": {
+                      "rate": "0"
+                  },
+                  "managedService": {
+                      "onsiteDisplayEnabled": "true",
+                      "onsiteSponsoredProductsEnabled": "true",
+                      "rate": "0.01"
+                  }
+              }
+          },
+          "type": "AccountFeesUpdateRequest"
+      }
+  }
+  """);
+
+  Request request = new Request.Builder()
+      .url("https://api.criteo.com/{version}/retail-media/accounts/fees/update")
+      .method("POST", body)
+      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+      .addHeader("Content-Type", "application/json")
+      .addHeader("Accept", "application/json")
+      .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/fees/update');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig([
+      'follow_redirects' => TRUE
+  ]);
+  $request->setHeader([
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json'
+  ]);
+
+  $request->setBody(json_encode([
+      "data" => [
+          "attributes" => [
+              "accountIds" => [
+                  "618738804747743232"
+              ],
+              "fees" => [
+                  "demandManaged" => [
+                      "rate" => "0"
+                  ],
+                  "managedService" => [
+                      "onsiteDisplayEnabled" => "true",
+                      "onsiteSponsoredProductsEnabled" => "true",
+                      "rate" => "0.01"
+                  ]
+              ]
+          ],
+          "type" => "AccountFeesUpdateRequest"
+      ]
+  ], JSON_PRETTY_PRINT));
+
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      } else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+      }
+  } catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+***
+
+### Validation Rules
+
+* `accountIds` is **required** — omitting it returns a **400 error**.
+* `demandManaged.rate` must be a **decimal between 0 and 1**.
+* `managedService.onsiteDisplayEnabled` and `onsiteSponsoredProductsEnabled` must be **boolean** (`true` or `false`).
+
+***
+
+### Sample Response
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "AccountFeesUpdateResult",
+      "attributes": {
+        "successfullyUpdatedAccountIds": [
+          "618738804747743232"
+        ],
+        "failedUpdateAccountIds": []
+      }
+    },
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Responses
+
+| Response | Title                                                                                                                                                                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢`200`  | Success                                                                                                                                                                                                                                   |
+| 🔴`400`  | Bad Request: Model Validation Error. Check that the acceptable values for the attributes are correct.                                                                                                                                     |
+| 🔴`403`  | API user does not have the authorization to make requests to the account ID. For an authorization request, follow[the authorization request steps](https://developers.criteo.com/retail-media/v2025-preview/docs/authorization-requests). |
+
+***
+
+### Error responses examples
+
+#### Invalid permission
+
+<CodeGroup>
+  ```bash bash
+  {
+      "warnings": [],
+      "errors": [
+          {
+              "type": "authorization",
+              "title": "Authorization error",
+              "detail": "Resource access forbidden: does not have permissions"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+#### Rate value is missing
+
+<CodeGroup>
+  ```bash bash
+  {
+      "warnings": [],
+      "errors": [
+          {
+              "traceId": "bb1c3376097f47934484ea67bf8e2755",
+              "type": "validation",
+              "code": "model-validation-error",
+              "title": "Model validation error",
+              "detail": "Error converting value {null} to type 'System.Decimal'. Path 'data.attributes.fees.demandManaged.rate', line 9, position 20."
+          },
+          {
+              "traceId": "bb1c3376097f47934484ea67bf8e2755",
+              "type": "validation",
+              "code": "model-validation-error",
+              "title": "Model validation error",
+              "detail": "Required property 'rate' expects a value but got null. Path 'data.attributes.fees.demandManaged', line 10, position 9."
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+[Account Creation and Management (Private Market)](/retail-media/docs/account-creation-and-management-private-market)
+
+[Brands](/retail-media/docs/brands)

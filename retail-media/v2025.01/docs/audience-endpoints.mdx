@@ -1,0 +1,277 @@
+---
+title: "Audience Endpoints"
+---
+
+1. Guides for Retail Media API
+2. [Audiences](/retail-media/v2025.01/docs/audiences)
+
+## **Endpoints**
+
+| Verb     | Endpoint                                               | Description                                                                                                                                                                                       |
+| -------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **POST** | `/retail-media/accounts/{account-id}/audiences/search` | Returns a list of audiences that match the provided filters. If present, the filters are AND'ed together when applied. You can search audiences by audience IDs, retailer IDs and/or segment IDs. |
+
+ 
+
+## **Audience Attributes**
+
+id
+
+***
+
+* **Data Type:** string
+
+  **Values:** int64
+
+  **Nullable?** No
+
+  **Description:** Audience ID
+
+name
+
+***
+
+* **Data Type:** string
+
+  **Values:** string
+
+  **Nullable?** No
+
+  **Description:** Audience name
+
+description
+
+***
+
+* **Data Type:** string
+
+  **Values:** string
+
+  **Nullable?** Yes
+
+  **Description:** Description of the Audience
+
+createdAt
+
+***
+
+* **Data Type:** string
+
+  **Values:** YYYY-MM-DDTHH:mm:ss:msZ
+
+  **Nullable?** No
+
+  **Description:** Timestamp (in UTC) of Audience reation
+
+createdById
+
+***
+
+* **Data Type:** string
+
+  **Values:** int64
+
+  **Nullable?** Yes
+
+  **Description:** User ID of the Audience creator (null if created by a service)
+
+updatedAt
+
+***
+
+* **Data Type:** string
+
+  **Values:** YYYY-MM-DDTHH:mm:ss:msZ
+
+  **Nullable?** No
+
+  **Description:** Timestamp (in UTC) of Audience update
+
+accountID
+
+***
+
+* **Data Type:** string
+
+  **Values:** int64
+
+  **Nullable?** No
+
+  **Description:** Account associated with the Audience
+
+retailerId
+
+***
+
+* **Data Type:** string
+
+  **Values:** int
+
+  **Nullable?** No
+
+  **Description:** ID of the retailer. To retrieve the RetailerID associated to your Supply account you can use the GET call found [here](/retail-media/docs/retailers)
+
+Algebra Node
+
+***
+
+* **Data Type:** string
+
+  **Values:** [Algebra Node](/retail-media/docs/algebra-nodes)
+
+  **Nullable:** No
+
+  **Description:** Algebra Node with the definition of how the different audiences are mixed to create the audience using logical operators: AND, OR, NOT
+
+ 
+
+## **Search Audiences**
+
+This endpoint returns a list of audiences that match the provided filters. If present, the filters are AND'ed together when applied. You can search audiences by audience IDs, retailer IDs and/or segment IDs.
+
+![](/images/retail-media/v2025.01/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences/search?limit=50&offset=0
+```
+
+**Sample Request: searching by Retailer ID only**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/search' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+  -d '{
+    "data": {
+      "type": "Audience",
+      "attributes": {
+        "audienceIds": null,
+        "retailerIds": [
+          "12"
+        ],
+        "audienceSegmentIds": null
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "meta": {
+          "totalItems": 400,
+          "limit": 50,
+          "offset": 0
+      },
+      "data": [
+          {
+              "attributes": {
+                  "name": "My audience A",
+                  "description": null,
+                  "createdAt": "2024-01-12T11:46:13.77Z",
+                  "updatedAt": "2024-02-12T11:46:13.77Z",
+                  "accountId": "625702934721171442",
+                  "retailerId": "12",
+                  "algebra": {
+                      "audienceSegmentId": "56159923678901880"
+                  },
+                  "createdById": "j.doe"
+              },
+              "id": "258216562069631686",
+              "type": "RetailMediaAudience"
+          },
+          // ...
+          {
+              "attributes": {
+                  "name": "My audience B",
+                  "description": null,
+                  "createdAt": "2024-01-22T14:41:32.489Z",
+                  "updatedAt": "2024-01-22T14:41:32.489Z",
+                  "accountId": "625702934721171442",
+                  "retailerId": "12",
+                  "algebra": {
+                      "audienceSegmentId": "225702933721195672"
+                  },
+                  "createdById": "a.jack"
+              },
+              "id": "920472839472539402",
+              "type": "RetailMediaAudience"
+          }
+      ],
+      /* omitted if no errors */
+      "errors": [],
+      /* omitted if no warnings */
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+**Sample Request: searching by multiple filters**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/search' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+  -d '{
+    "data": {
+      "type": "Audience",
+      "attributes": {
+        "audienceIds": ["920472839472539402"],
+        "retailerIds": [
+          "12"
+        ],
+        "audienceSegmentIds": ["225702933721195672"]
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "meta": {
+          "totalItems": 400,
+          "limit": 50,
+          "offset": 0
+      },
+      "data": [
+          {
+              "attributes": {
+                  "name": "My audience",
+                  "description": null,
+                  "createdAt": "2024-01-22T14:41:32.489Z",
+                  "updatedAt": "2024-01-22T14:41:32.489Z",
+                  "accountId": "625702934721171442",
+                  "retailerId": "12",
+                  "algebra": {
+                      "audienceSegmentId": "225702933721195672"
+                  },
+                  "createdById": "a.jack"
+              },
+              "id": "920472839472539402",
+              "type": "RetailMediaAudience"
+          }
+      ],
+      /* omitted if no errors */
+      "errors": [],
+      /* omitted if no warnings */
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+[Audiences](/retail-media/v2025.01/docs/audiences)
+
+[Audience Segment Endpoints](/retail-media/v2025.01/docs/audience-segment-endpoints)

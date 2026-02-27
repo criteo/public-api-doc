@@ -1,0 +1,955 @@
+---
+title: "Audience Segments Endpoints"
+---
+
+1. Guides for Retail Media API
+2. [Audiences](/retail-media/v2026-preview/docs/audiences)
+
+## Introduction
+
+**Audience Segments** represent groups of users, defined either explicitly through `Contact Lists` provided externally or by `User Events` intent behaviors automatically collected through our retailers integrations.
+
+Multiple Audience Segments can be combined using logical [Algebra Nodes](https://developers.criteo.com/retail-media/docs/algebra-nodes) to define the desired target audience for your campaigns.
+
+<Warning>
+  The corresponding App should have the "**Audiences Manage**" permission enabled for all endpoints listed on this page.
+</Warning>
+
+<Info>
+  ### About Audience Segments in Preview
+
+  The Audience Segment endpoints documented here are part of the `2025 Preview version`of the Retail Media API. Only the `create`, `update`, and `delete` endpoints are included because they now support event-based targeting, which is not available in the stable API. Other endpoints (e.g., `search`, `contact-list management`) remain unchanged and are documented in [the stable version of this page](https://developers.criteo.com/retail-media/docs/audience-segment-endpoints).
+</Info>
+
+<Warning>
+  ### Note on Audience Computation
+
+  Audience updates are processed daily at 0h UTC and 12h UTC and can take around 5 hours to reflect on a live campaign. This is important for audiences that are frequently updated as changes should be ready for processing prior to these two times.
+</Warning>
+
+<Info>
+  ### Partial Approvals
+
+  Bulk operations (`create`, `update`, `delete`) use a **partial approval model**. Even if some items in the request fail, the response will return `200 OK`. Any failed items will be listed in the `error` section of the response with [an error code and details](https://developers.criteo.com/retail-media/v2025-preview/docs/audience-segments#errors).
+
+  Examples of possible error codes:
+
+  * `segment-not-found` → Segment is not found.
+  * `name-must-be-unique` → Segment name must be unique.
+  * `name-must-not-be-empty` → Segment name property must not be empty.
+
+  This list is not exhaustive. Additional warnings may be returned depending on the request context.
+</Info>
+
+***
+
+## Endpoints
+
+| Verb      | Endpoint                                         | Description                   |
+| --------- | ------------------------------------------------ | ----------------------------- |
+| **POST**  | `/accounts/{accountId}/audience-segments/create` | Create a new Audience Segment |
+| **PATCH** | `/accounts/{accountId}/audience-segments`        | Update an Audience Segment    |
+| **POST**  | `/accounts/{accountId}/audience-segments/delete` | Delete an Audience Segment    |
+
+***
+
+## Audience Segment Attributes
+
+| Attribute                  | Data Type   | Description                                                                                                                                                                                                                                                             |
+| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id` / `audienceSegmentId` | string      | Audience Segment ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                          |
+| `name`\*                   | string      | Audience Segment nameAccepted values: string Writeable? Y / Nullable? N                                                                                                                                                                                                 |
+| `description`              | string      | Description of the Audience SegmentAccepted values: string Writeable? Y / Nullable? N                                                                                                                                                                                   |
+| `accountId`                | string      | [Account](https://developers.criteo.com/retail-media/docs/account) ID associated with the Audience Segment, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                   |
+| `retailerId`\*             | string      | [Retailer](https://developers.criteo.com/retail-media/docs/retailers) ID, associated with the Audience Segment, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                               |
+| `type`                     | enum        | Type of segmentAccepted values:- `ContactList`: users segment defined by list of contact identifiers, manageable by the other endpoints
+- `Events`: users segment defined by a combination of events collected in the retailer's environment Writeable? Y / Nullable? N |
+| `contactList`              | object      | Setting to target users with contact list. Note, either one of `contactList` or `events` is required, however both cannot be leveraged at the same timeSee below for more details                                                                                       |
+| `events`                   | object      | Settings to target users based on their events. Note, either one of `contactList` or `events` is required, however both cannot be leveraged at the same timeSee below for more details                                                                                  |
+| `createdAt`                | timestamp   | Timestamp of Audience Segment creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss.msZ` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Writeable? N / Nullable? N                                                                            |
+| `createdById`              | string      | User ID who created the Audience Segment (`null` if created by a service)Accepted values: string Writeable? N / Nullable? Y                                                                                                                                             |
+| `updatedAt`                | timestamp   | Timestamp of last Audience Segment update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss.msZ`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                           |
+| `channels`                 | list\<enum> | Channels associated to the audienceAccepted values: `Onsite`, `Offsite` Writeable? N / Nullable? N                                                                                                                                                                      |
+
+*\*Required at the`create` operation*
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Contact List Segment Attributes
+
+| Attribute        | Data Type | Description                                                                                                                                                         |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isReadOnly`     | boolean   | Indicates if the contact list can be editedAccepted values: `true`, `false` Writeable? N / Nullable? N                                                              |
+| `identifierType` | enum      | User identifier type from Contact listAccepted values: `Email`, `UserIdentifier`, `IdentityLink`, `CustomerId`, `PhoneNumber`,`Unknown`, Writeable? N / Nullable? N |
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Events Segment Attributes
+
+| Attribute           | Data Type     | Description                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shopperActivity`\* | enum          | Activity type performed by the desired target users in the retailer's environmentAccepted values: `View`, `Buy`, `AddToCart`, `Unknown` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                 |
+| `lookbackDays`\*    | enum          | Timeframe of the interaction performed by the desired target users in the retailer's environmentAccepted values: `Last7Days`, `Last14Days`, `Last30Days`, `Last45Days`, `Last60Days`, `Last90Days`, `Last120Days`, `Last150Days`, `Last180Days` Writeable? Y / Nullable? N                                                                                                                                                         |
+| `categoryIds`       | list\<string> | Define users interested in specific categories using [Search Category](https://developers.criteo.com/retail-media/v2025-preview/docs/category-search). Note, either one of `categoryIds` or `brandIds` must be included. Both can be included as well, but the request will fail if neither are included.See the dedicated section right below for more details.Accepted values: array of strings/int64 Writeable? Y / Nullable? Y |
+| `brandIds`          | list\<string> | Define users who performed the activity type above in specific [brands](https://developers.criteo.com/retail-media/docs/brands). Note, either one of `categoryIds` or `brandIds` must be included. Both can be included as well, but the request will fail if neither are included.See the dedicated section right below for more details.Accepted values: array of strings/int64 Writeable? Y / Nullable? Y                       |
+| `minPrice`          | decimal       | Define users who interact with products whose prices are greater than `minPrice`Accepted values: `minPrice` ≥ 0.0 (or `null`) Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                           |
+| `maxPrice`          | decimal       | Define users who interact with products whose prices are smaller than `maxPrice`Accepted values: `maxPrice` ≥ 0.0 (or `null`) Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                           |
+
+*\*Required at create operation*
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Sourcing Category and Brand IDs
+
+To populate the `categoryId` and `brandId` attributes when creating or updating audience segments, use the following endpoints:
+
+### `categoryID`
+
+Use the [Search Categories](https://developers.criteo.com/retail-media/v2025-preview/docs/category-search) endpoint to find category IDs relevant to your campaign. This method offers a faster lookup than navigating the full product catalog.
+
+### `brandID`
+
+Two endpoints should be used together to accurately source `brandId`:
+
+* [`/brands/search`](https://developers.criteo.com/retail-media/docs/brands) – retrieves all available brands.
+* [`/accounts/{accountId}/brands`](https://developers.criteo.com/retail-media/docs/brands) – retrieves only the brands mapped to a specific account.
+
+To avoid targeting conflicts, ensure that the `brandId` used is mapped to the account associated with the audience segment. A best practice is to cross-reference both the `brandId` and the intended `retailerId` to verify eligibility for targeting.
+
+***
+
+## Create Audience Segment
+
+This endpoint allows creating Audience Segments, either from Contact List or Users Events type.
+
+![](/images/retail-media/v2026-preview/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audience-segments/create
+```
+
+**Sample Request**:
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/create' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+    "data": [
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "CRM Users 2025",
+          "description": "Segment made of CRM user emails",
+          "retailerId": "1234",
+          "contactList": {
+            "identifierType": "Email"
+          }
+        }
+      },
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "Buyers Last 7D Brand ABC",
+          "description": "Segment of buyer users of brand ABC in the last 7 days",
+          "retailerId": "1234",
+          "events": {
+            "shopperActivity": "Buy",
+            "lookbackDays": "Last7Days",
+            "brandIds": [
+              "123456"
+            ]
+          }
+        }
+      }
+    ]
+  }'
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+  conn = http.client.HTTPSConnection("api.criteo.com")
+  payload = json.dumps({
+    "data": [
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "CRM Users 2025",
+          "description": "Segment made of CRM user emails",
+          "retailerId": "1234",
+          "contactList": {
+            "identifierType": "Email"
+          }
+        }
+      },
+      {
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "Buyers Last 7D Brand ABC",
+          "description": "Segment of buyer users of brand ABC in the last 7 days",
+          "retailerId": "1234",
+          "events": {
+            "shopperActivity": "Buy",
+            "lookbackDays": "Last7Days",
+            "brandIds": [
+              "123456"
+            ]
+          }
+        }
+      }
+    ]
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <TOKEN>'
+  }
+  conn.request("POST", "/{version}/retail-media/accounts/625702934721171442/audience-segments/create", payload, headers)
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+  MediaType mediaType = MediaType.parse("application/json");
+  RequestBody body = RequestBody.create(mediaType, '{"data":[{"type":"AudienceSegment","attributes":{"name":"CRM Users 2025","description":"Segment made of CRM user emails","retailerId":"1234","contactList":{"identifierType":"Email"}}},{"type":"AudienceSegment","attributes":{"name":"Buyers Last 7D Brand ABC","description":"Segment of buyer users of brand ABC in the last 7 days","retailerId":"1234","events":{"shopperActivity":"Buy","lookbackDays":"Last7Days","brandIds":["123456"]}}}]}');
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/create")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <TOKEN>")
+    .build();
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/create');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <TOKEN>'
+  ));
+  $request->setBody('{"data":[{"type":"AudienceSegment","attributes":{"name":"CRMUsers2025","description":"SegmentmadeofCRMuseremails","retailerId":"1234","contactList":{"identifierType":"Email"}}},{"type":"AudienceSegment","attributes":{"name":"BuyersLast7DBrandABC","description":"SegmentofbuyerusersofbrandABCinthelast7days","retailerId":"1234","events":{"shopperActivity":"Buy","lookbackDays":"Last7Days","brandIds":["123456"]}}}]}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "738406687217913856",
+              "type": "RetailMediaAudienceSegment",
+              "attributes": {
+                  "accountId": "625702934721171442",
+                  "name": "Buyers Last 7D Brand ABC",
+                  "description": "Segment of buyer users of brand ABC in the last 7 days",
+                  "retailerId": "1234",
+                  "type": "Events",
+                  "createdAt": "2025-07-30T14:44:32.81Z",
+                  "updatedAt": "2025-07-30T14:44:32.81Z",
+                  "createdById": "514277",
+                  "events": {
+                      "shopperActivity": "Buy",
+                      "lookbackDays": "Last7Days",
+                      "categoryIds": [],
+                      "brandIds": [
+                          "123456"
+                      ],
+                      "minPrice": null,
+                      "maxPrice": null
+                  },
+                  "channels": [
+                      "Onsite",
+                      "Offsite"
+                  ]
+              }
+          },
+          {
+              "id": "738406688413290496",
+              "type": "RetailMediaAudienceSegment",
+              "attributes": {
+                  "accountId": "625702934721171442",
+                  "name": "CRM Users 2025",
+                  "description": "Segment made of CRM user emails",
+                  "retailerId": "1234",
+                  "type": "ContactList",
+                  "createdAt": "2025-07-30T14:44:32.81Z",
+                  "updatedAt": "2025-07-30T14:44:32.81Z",
+                  "createdById": "514277",
+                  "contactList": {
+                      "isReadOnly": false,
+                      "identifierType": "Email",
+                      "sharingStatus": "NotShared"
+                  },
+                  "channels": [
+                      "Offsite"
+                  ]
+              }
+          }
+      ],
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Update Audience Segment
+
+This endpoint allows updating `Audience Segments`, either from `Contact List` or `Users Events` type.
+
+<Info>
+  For `Contact List `segments, it's possible to update their metadata (name and description) but not their identity types. For those cases, please create a new segment with the new desired identifier type.
+</Info>
+
+![](/images/retail-media/v2026-preview/docs/04a928f-patch.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audience-segments
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+    "data": [
+      {
+        "id": "738406688413290496",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "CRM User E-mails 2025 ",
+          "description": {
+            "value": "Segment made of CRM user e-mails"
+          },
+          "contactList": {
+            "identifierType": "Email"
+          }
+        }
+      },
+      {
+        "id": "738406687217913856",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "Cart Abandoned Last 7D Brand ABC",
+          "description": {
+            "value": "Segment of cart users with brand ABC in the last 7 days"
+          },
+          "retailerId": "1234",
+          "events": {
+            "shopperActivity": "AddToCart",
+            "lookbackDays": "Last7Days",
+            "brandIds": [
+              "123456"
+            ]
+          }
+        }
+      }
+    ]
+  }'
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+  conn = http.client.HTTPSConnection("api.criteo.com")
+  payload = json.dumps({
+    "data": [
+      {
+        "id": "738406688413290496",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "CRM User E-mails 2025 ",
+          "description": "Segment made of CRM user e-mails",
+          "retailerId": "1234",
+          "contactList": {
+            "identifierType": "Email"
+          }
+        }
+      },
+      {
+        "id": "738406687217913856",
+        "type": "AudienceSegment",
+        "attributes": {
+          "name": "Cart Abandoned Last 7D Brand ABC",
+          "description": "Segment of cart users with brand ABC in the last 7 days",
+          "retailerId": "1234",
+          "events": {
+            "shopperActivity": "AddToCart",
+            "lookbackDays": "Last7Days",
+            "brandIds": [
+              "123456"
+            ]
+          }
+        }
+      }
+    ]
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <TOKEN>'
+  }
+  conn.request("PATCH", "/{version}/retail-media/accounts/625702934721171442/audience-segments", payload, headers)
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+  MediaType mediaType = MediaType.parse("application/json");
+  RequestBody body = RequestBody.create(mediaType, '{"data":[{"id":"738406688413290496","type":"AudienceSegment","attributes":{"name":"CRM User E-mails 2025","description":"Segment made of CRM user e-mails","retailerId":"1234","contactList":{"identifierType":"Email"}}},{"id":"738406687217913856","type":"AudienceSegment","attributes":{"name":"Cart Abandoned Last 7D Brand ABC","description":"Segment of cart users with brand ABC in the last 7 days","retailerId":"1234","events":{"shopperActivity":"AddToCart","lookbackDays":"Last7Days","brandIds":["123456"]}}}]}');
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments")
+    .method("PATCH", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <TOKEN>")
+    .build();
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments');
+  $request->setMethod(HTTP_Request2::METHOD_PATCH);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <TOKEN>'
+  ));
+  $request->setBody('{"data":[{"id":"738406688413290496","type":"AudienceSegment","attributes":{"name":"CRM User E-mails 2025","description":"Segment made of CRM user e-mails","retailerId":"1234","contactList":{"identifierType":"Email"}}},{"id":"738406687217913856","type":"AudienceSegment","attributes":{"name":"Cart Abandoned Last 7D Brand ABC","description":"Segment of cart users with brand ABC in the last 7 days","retailerId":"1234","events":{"shopperActivity":"AddToCart","lookbackDays":"Last7Days","brandIds":["123456"]}}}]}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "id": "738406688413290496",
+        "type": "RetailMediaAudienceSegment",
+        "attributes": {
+          "accountId": "4",
+          "name": "CRM User E-mails 2025",
+          "description": {
+            "value": "Segment made of CRM user e-mails"
+          },
+          "retailerId": "1234",
+          "type": "ContactList",
+          "createdAt": "2025-07-30T14:44:32.81Z",
+          "updatedAt": "2025-07-30T15:14:19.3566667Z",
+          "createdById": "514277",
+          "contactList": {
+            "isReadOnly": false,
+            "identifierType": "Email",
+            "sharingStatus": "NotShared"
+          },
+          "channels": [
+            "Offsite"
+          ]
+        }
+      },
+      {
+        "id": "738406687217913856",
+        "type": "RetailMediaAudienceSegment",
+        "attributes": {
+          "accountId": "4",
+          "name": "Cart Abandoned Last 7D Brand ABC",
+          "description": {
+            "value": "Segment made of CRM user e-mails"
+          },
+          "type": "Events",
+          "createdAt": "2025-07-30T14:44:32.81Z",
+          "updatedAt": "2025-07-30T15:14:19.3566667Z",
+          "createdById": "514277",
+          "events": {
+            "shopperActivity": "AddToCart",
+            "lookbackDays": "Last7Days",
+            "categoryIds": [],
+            "brandIds": [
+              "123456"
+            ],
+            "minPrice": null,
+            "maxPrice": null
+          },
+          "channels": [
+            "Onsite",
+            "Offsite"
+          ]
+        }
+      }
+    ],
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Delete Audience Segment
+
+This endpoint allows deleting Audience Segments, either one by one or multiple of them.
+
+![](/images/retail-media/v2026-preview/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audience-segments/delete
+```
+
+**Sample request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/delete' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+    "data": [
+      {
+        "id": "738406561971802112"
+      }
+    ]
+  }'
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+  conn = http.client.HTTPSConnection("api.criteo.com")
+  payload = json.dumps({
+    "data": [
+      {
+        "id": "738406561971802112"
+      }
+    ]
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <TOKEN>'
+  }
+  conn.request("POST", "/{version}/retail-media/accounts/625702934721171442/audience-segments/delete", payload, headers)
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+  MediaType mediaType = MediaType.parse("application/json");
+  RequestBody body = RequestBody.create(mediaType, '{"data":[{"id":"225702933721171456"}]}');
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/delete")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <TOKEN>")
+    .build();
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/delete');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <TOKEN>'
+  ));
+  $request->setBody('{"data":[{"id":"225702933721171456"}]}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "738406561971802112",
+              "type": "RetailMediaAudienceSegment",
+              "attributes": {}
+          }
+      ],
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+### Partial `200 OK` response
+
+<Warning>
+  **Audience Segments cannot be deleted once they have served impressions**. Attempts to delete them will return `200 OK` but include a warning indicating the segment must first be removed from all audiences.
+
+  Please note that this is not the only use case that might return a partial `200 OK `response.
+</Warning>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [],
+      "warnings": [],
+      "errors": [
+          {
+              "traceId": "0ab8cdc52e17ecfd1ba9e5d1dacd102a",
+              "traceIdentifier": "0ab8cdc52e17ecfd1ba9e5d1dacd102a",
+              "type": "validation",
+              "code": "segment-must-not-be-used-in-audience",
+              "instance": "@data/0",
+              "title": "Segment must not be used in an audience",
+              "detail": "The segment must be removed from all audiences to be able to delete it"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Errors and warnings
+
+Errors and warnings are grouped by category for clarity and usability.
+
+***
+
+### Request Structure Errors
+
+#### `duplicate-id`
+
+**Error**: Segment ID cannot be duplicated **Message**: The data object must not have multiple segment objects with the same ID.
+
+***
+
+#### `duplicate-name`
+
+**Error**: Cannot have duplicated segment names **Message**: Each segment in the request must have a unique name.
+
+***
+
+#### `empty-attributes-object`
+
+**Error**: Cannot have an empty attributes object **Message**: The request must have attributes object provided.
+
+***
+
+#### `empty-data-object`
+
+**Error**: Cannot have an empty data object **Message**: The request must have at least one element in the data object.
+
+***
+
+#### `invalid-segment-type`
+
+**Error**: Segment type is invalid **Message**: abcdef is not a valid segment type.
+
+***
+
+#### `multiple-segment-types`
+
+**Error**: Cannot have a segment object with multiple types defined **Message**: The segment object must have exactly one type defined.
+
+***
+
+#### `non-parsable-id`
+
+**Error**: One or more IDs cannot be parsed **Message**: All IDs in the segment object must have a valid numerical ID.
+
+***
+
+#### `undefined-segment-type`
+
+**Error**: Cannot have a segment object without any type defined **Message**: The segment object must have exactly one type defined.
+
+***
+
+### Payload & Limits
+
+#### `payload-too-big`
+
+**Error**: Cannot create more than 10 segments at a time **Message**: Each request must have at most 10 segment objects.
+
+***
+
+#### `segments-limit-reached`
+
+**Error**: Too many audience segments **Message**: Advertiser(s) 30, 40 have reached the number of allowed audience segments.
+
+***
+
+### Pagination Errors
+
+#### `pagination-is-required`
+
+**Error**: Pagination is required **Message**: Pagination is required when no entity IDs are provided in the filters.
+
+***
+
+#### `pagination-limit-cannot-be-zero`
+
+**Error**: Pagination limit cannot be zero **Message**: Pagination limit must be great than 0 when offset is positive.
+
+***
+
+#### `pagination-limit-invalid`
+
+**Error**: Pagination limit is invalid **Message**: Pagination limit must be a positive number lower than 10 (current limit set to 10).
+
+***
+
+#### `pagination-offset-invalid`
+
+**Error**: Pagination offset is invalid **Message**: Pagination offset must be a positive number.
+
+***
+
+### Account and Authorization Errors
+
+#### `account-must-be-active`
+
+**Error**: Account must be active **Message**: The account used must be active.
+
+***
+
+#### `account-must-be-supply`
+
+**Error**: Account must be supply **Message**: The account used must be a supply account.
+
+***
+
+#### `account-must-exist`
+
+**Error**: Account must exist **Message**: The account used must exist.
+
+***
+
+#### `retailer-must-be-authorized`
+
+**Error**: Retailer must be authorized **Message**: The retailer associated with the account must be authorized.
+
+***
+
+#### `retailer-must-be-live`
+
+**Error**: Retailer must be live **Message**: The retailer used must be live.
+
+***
+
+#### `brands-must-be-authorized`
+
+**Error**: Brands must be authorized **Message**: You are not authorized to use one or more of the provided brand IDs.
+
+***
+
+#### `add-to-cart-must-be-supported-for-retailer`
+
+**Error**: Add to cart must be supported **Message**: The retailer used must support add to cart.
+
+***
+
+### Validation Errors
+
+#### `brand-list-must-be-valid`
+
+**Error**: Brand list must be valid **Message**: The provided brands are unknown or cannot be found within the given country: (30, 40).
+
+***
+
+#### `buying-power-must-be-valid`
+
+**Error**: Buying power must be valid **Message**: Buying power value is unknown: (Low).
+
+***
+
+#### `categories-must-exist`
+
+**Error**: Categories must exist **Message**: One or more of the provided category IDs do not exist.
+
+***
+
+#### `categories-or-brands-must-be-set`
+
+**Error**: Categories or brands must be set **Message**: Either category IDs or brand IDs must be set.
+
+***
+
+#### `category-must-be-valid`
+
+**Error**: Category must be valid **Message**: The specified category value is invalid.
+
+***
+
+#### `lookback-days-must-be-set`
+
+**Error**: Lookback days must be set **Message**: Lookback days must be set.
+
+***
+
+#### `name-must-be-unique`
+
+**Error**: Segment name must be unique **Message**: Another Segment exists with the name: abcdef.
+
+***
+
+#### `name-must-not-be-empty`
+
+**Error**: Segment name property must not be empty **Message**: Cannot have an empty name in a create Segment entity.
+
+***
+
+#### `name-must-not-be-too-long`
+
+**Error**: Segment name property must not be too long **Message**: Segment names must be no longer than 10 characters.
+
+***
+
+#### `price-range-must-be-valid`
+
+**Error**: Price range must be valid **Message**: At least one price range must be set or one of the provided value is unknown.
+
+***
+
+#### `segment-must-not-be-used-in-audience`
+
+**Error**: Segment must not be used in an audience **Message**: The segment must be removed from all audiences to be able to delete it.
+
+***
+
+#### `segment-not-found`
+
+**Error**: Segment not found **Message**: Segment ID abcdef was not found.
+
+***
+
+#### `shopper-activity-must-be-set`
+
+**Error**: Shopper activity must be set **Message**: Shopper activity must be set.
+
+***
+
+#### `start-date-must-be-before-end-date`
+
+**Error**: Start date must be before end date **Message**: Start date and end date are not chronologically ordered.
+
+***
+
+#### `type-must-be-the-same`
+
+**Error**: Type must be the same **Message**: Segment type cannot be changed after creation. The information sent is incompatible with the type of the segment.
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Audiences Size](/retail-media/v2026-preview/docs/audience-size)
+* [Audience Segments Size](/retail-media/v2026-preview/docs/audience-segments-size)

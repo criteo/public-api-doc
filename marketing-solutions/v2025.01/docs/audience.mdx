@@ -1,0 +1,570 @@
+---
+title: "Audience"
+---
+
+1. Marketing Solutions Endpoints
+2. [Audiences](/marketing-solutions/v2025.01/docs/audiences)
+
+<Warning>
+  The new audience endpoints function according to the bulk operation logic. Before using this endpoint in production, please ensure you are familiar with the [Partial Success For Bulk Operation document](doc:partial-success-for-bulk-operations).
+</Warning>
+
+## Audiences
+
+Audiences have some specific parameters, which can be Required, Optional or Computed (filled automatically after Audience creation)
+
+| Field Name   | Type                              | Optional / Required / Computed | Description                                                                                                                            |
+| ------------ | --------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| id           | String                            | Computed                       | Unique ID of the audience                                                                                                              |
+| name         | String                            | Required                       | Name of the audience. It must be unique per advertiser.                                                                                |
+| description  | String                            | Optional                       | Description of the audience                                                                                                            |
+| createdAt    | String                            | Computed                       | ISO-8601 timestamp in UTC of audience creation (read-only)                                                                             |
+| updatedAt    | String                            | Computed                       | ISO-8601 timestamp in UTC of audience update (read-only)                                                                               |
+| advertiserId | String                            | Required                       | Advertiser associated to the audience                                                                                                  |
+| adSetIds     | String Array                      | Computed                       | Ad sets associated to the audience (read-only).                                                                                        |
+| algebra      | [Algebra Node](doc:algebra-nodes) | Required                       | Algebra Node with the definition of how the different segments are mixed to create the audience using logical operators: AND, OR, NOT. |
+
+## Create Audiences
+
+Creates all Audiences with a valid configuration and returns them. For those that cannot be created, one or multiple errors are returned.
+
+![](/images/marketing-solutions/v2025.01/docs/b0623eb-post.png)
+
+```
+ /marketing-solutions/audiences/create
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "type": "Audience",
+              "attributes": {
+                  "name": "My audience",
+                  "description": "An audience which targets people of interest",
+                  "advertiserId": "4949",
+                  "algebra": {
+                      "and": [
+                          {
+                              "or": [
+                                  { "audienceSegmentId": "42914" },
+                                  { "audienceSegmentId": "19234" }
+                              ]
+                          },
+                          {
+                              "not": { "audienceSegmentId": "3482" }
+                          }
+                      ]
+                  }
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      ...
+      "data": [
+          {
+              "id": "1001",
+              "type": "Audience",
+              "attributes": {
+                  "name": "My audience",
+                  "createdAt": "2018-07-04T00:00:00Z",
+                  "updatedAt": null,
+                  "description": "An audience which targets people of interest",
+                  "advertiserId": "4949",
+                  "algebra": {
+                      "and": [
+                          {
+                              "or": [
+                                  { "audienceSegmentId": "42914" },
+                                  { "audienceSegmentId": "19234" }
+                              ]
+                          },
+                          {
+                              "not": { "audienceSegmentId": "3482" }
+                          }
+                      ]
+                  }
+              }
+          }
+      ],
+      "errors": [     /* omitted if no errors */
+          ...
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## Update Audiences
+
+Updates the properties of all audiences with a valid configuration and returns them. For those that cannot be updated, one or multiple errors are returned.
+
+![](/images/marketing-solutions/v2025.01/docs/04a928f-patch.png)
+
+```
+/marketing-solutions/audiences
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1001",
+              "type": "Audience",
+              "attributes": {
+                  "name": "My audience (v2)",
+                  "description": {
+                      value: "An audience which targets a broader set of people of interest except existing customers"
+                  },
+                  "algebra": {
+                      "and": [
+                          {
+                              "or": [
+                                  { "audienceSegmentId": "42914" },
+                                  { "audienceSegmentId": "19234" }
+                              ]
+                          },
+                          {
+                              "not": {
+                                  "or": [
+                                      { "audienceSegmentId": "3482" },
+                                      { "audienceSegmentId": "2842" }
+                                  ]
+                              }
+                          }
+                      ]
+                  }
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      ...
+      "data": [
+          {
+              "id": "1001",
+              "type": "Audience",
+              "attributes": {
+                  "name": "My audience (v2)",
+                  "createdAt": "2018-07-04T00:00:00Z",
+                  "updatedAt": "2018-07-15T00:00:00Z",
+                  "description": "An audience which targets a broader set of people of interest except existing customers",
+                  "advertiserId": "4949",
+                  "algebra": {
+                      "and": [
+                          {
+                              "or": [
+                                  { "audienceSegmentId": "42914" },
+                                  { "audienceSegmentId": "19234" }
+                              ]
+                          },
+                          {
+                              "not": {
+                                  "or": [
+                                      { "audienceSegmentId": "3482" },
+                                      { "audienceSegmentId": "2842" }
+                                  ]
+                              }
+                          }
+                      ]
+                  }
+              }
+          }
+      ],
+      "errors": [     /* omitted if no errors */
+          ...
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## Search Audiences
+
+Returns a list of audiences that match the provided filters. If present, the filters are AND'ed together when applied. You can search audiences by audience IDs, advertiser IDs, segment IDs and/or ad set IDs.
+
+![](/images/marketing-solutions/v2025.01/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audiences/search
+```
+
+| Name   | Required / Optional | Description                                                                      |
+| ------ | ------------------- | -------------------------------------------------------------------------------- |
+| limit  | optional            | The number of elements to be returned. The default is 50 and the maximum is 100. |
+| offset | optional            | The (zero-based) offset into the collection. The default is 0.                   |
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "AudienceSearch",
+          "attributes": {
+              "audienceIds": null,
+              "advertiserIds": null,
+              "audienceSegmentIds": null,
+              "adSetIds": ["1001"]
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      ...
+      "meta": {
+          "totalItems": 400,
+          "limit": 50,
+          "offset": 0
+      },
+      "data": [
+          {
+              "id": "1001",
+              "type": "Audience",
+              "attributes": {
+                  "name": "My audience",
+                  "description": "An audience which targets people of interest",
+                	"createdAt": "2018-07-04T00:00:00Z",
+                  "updatedAt": "2018-07-15T00:00:00Z",
+                  "advertiserId": "4949",
+                  "adSetIds": ["49122", "21242"],
+                  "algebra": {
+                      "and": [
+                          {
+                              "or": [
+                                  { "audienceSegmentId": "42914" },
+                                  { "audienceSegmentId": "19234" }
+                              ]
+                          },
+                          {
+                              "not": { "audienceSegmentId": "3482" }
+                          }
+                      ]
+                  }
+              },
+          },
+          /* more search results */
+      ],
+      "errors": [     /* omitted if no errors */
+          ...
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## Delete Audiences
+
+Deletes the audiences associated with the given audience IDs.
+
+![](/images/marketing-solutions/v2025.01/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audiences/delete
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1001",
+              "type": "Audience"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      ...
+      "errors": [     /* omitted if no errors */
+          ...
+      ],
+      "warnings": [   /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## Compute Audiences sizes
+
+If you have already created an audience, and would like to use it's size, you can use this endpoint. It returns the size of one or more audience IDs (if available and if supported). For those whose size cannot be retrieved, one or multiple errors are returned.
+
+![](/images/marketing-solutions/v2025.01/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audiences/compute-sizes
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1001",
+              "type": "Audience"
+          },
+          {
+              "id": "1002",
+              "type": "Audience"
+          },
+          {
+              "id": "1003",
+              "type": "Audience"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1001", 
+              "type": "AudienceSize",
+              "attributes": {
+                  "size": 194730
+              }
+          },
+          {
+              "id": "1002", 
+              "type": "AudienceSize",
+              "attributes": {
+                  "size": 4285
+              }
+          },
+          {
+              "id": "1003", 
+              "type": "AudienceSize",
+              "attributes": {
+                  "size": 978597
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+## Estimate Audience size
+
+If you have the structure of the audience, but have not created it yet, and would like to estimate it's size, you can use this endpoint. It returns the size estimation for an audience (if available and if supported). If the size cannot be estimated, an error is returned. This endpoint is resource-intensive, this is why the bulk workflow is not supported.
+
+![](/images/marketing-solutions/v2025.01/docs/b0623eb-post.png)
+
+```
+/marketing-solutions/audiences/estimate-size
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "Audience",
+          "attributes": {
+              "advertiserId": "4949",
+              "algebra": {
+                  "and": [
+                      {
+                          "or": [
+                              { "audienceSegmentId": "42914" },
+                              { "audienceSegmentId": "19234" }
+                          ]
+                      },
+                      {
+                          "not": { "audienceSegmentId": "3482" }
+                      }
+                  ]
+              }
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "AudienceSize",
+          "attributes": {
+              "size": 194730
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [
+          {
+              "type": "validation",
+              "code": "audience-size-too-small",
+              "instance": "/marketing-solutions/audiences/size-estimation",
+              ...
+          }
+      ],
+      "warnings": [ /* omitted if no warnings */
+          ...
+      ]
+  }
+  ```
+</CodeGroup>
+
+## Validation Errors
+
+In addition to general API errors, you may encounter validation errors when creating or managing Audiences and Segments.
+
+Below is a list of error codes for Audience endpoints and a more detailed description of their meaning.
+
+`empty-data-object` Cannot have an empty data object
+
+`pagination-limit-too-big` Pagination limit is too big
+
+`audience-must-contain-only-existing-segments` Audience must contain only existing segments
+
+`audience-not-found` Audience not found
+
+`audience-size-not-available` Audience size not available
+
+`audience-size-not-supported` Audience size not supported
+
+`audience-size-too-small` Audience size is too small
+
+`country-code-must-be-valid` Country code must be valid
+
+`country-code-must-be-authorized` Country code must be authorized
+
+`country-code-is-required` Country code is required
+
+`buying-power-must-be-valid` Buying power must be valid
+
+`brand-list-must-be-valid` Brand list must be valid
+
+`interests-list-must-be-valid` Interest list must be valid
+
+`gender-must-be-valid` Gender must be valid
+
+`registry-type-must-be-valid` Registry type must be valid
+
+`price-range-must-be-valid` Price range must be valid
+
+`poi-list-must-be-not-empty` Points of interest list must be nor null nor empty
+
+`poi-list-must-be-null-or-empty` Points of interest list must be null or empty
+
+`radius-must-be-in-range` RadiusInKm must be in range
+
+`poi-coordinates-must-be-valid` Points of interest coordinates must be valid
+
+`poi-surface-must-be-valid` Points of interest surface area must be valid
+
+`poi-radius-must-be-not-null` Location segment of type 'PointOfInterest' must have a radius
+
+`segment-not-found` Segment not found
+
+`segment-size-not-available` Segment size not available
+
+`segment-size-not-supported` Segment size not supported
+
+`segment-size-too-small` Segment size is too small
+
+# Audience
+
+`undefined-advertiser-id` Cannot have an undefined advertiser ID
+
+`payload-too-big` Cannot create more than 50 audiences at a time
+
+`payload-too-big` Cannot update more than 50 audiences at a time
+
+`non-parsable-id` One or more IDs cannot be parsed
+
+`duplicate-id` Audience ID cannot be duplicated
+
+`audience-must-not-be-used-in-non-archived-ad-set` Audience must not be used in an active ad set
+
+`audience-algebra-and-or-nodes-must-include-more-than-one-node` Audience algebra "and" and "or" nodes must include more than one node
+
+`audience-with-similar-segment-must-be-correctly-specified` Audience with similar segment must be correctly specified
+
+`audience-must-contain-included-segment-or-only-excluded-contact-list` Audience must contain included segment or only excluded contact list
+
+`audience-cannot-switch-to-from-similar` Audience cannot switch to/from similar
+
+`audience-cannot-switch-to-from-pushback` Audience cannot switch to/from pushback
+
+`audience-name-must-be-unique` Audience name must be unique
+
+`name-must-not-be-empty` Audience name property must not be empty
+
+`advertiser-must-be-opt-in-for-data-sharing` Advertiser must be opt in for data sharing
+
+# Segment
+
+`undefined-advertiser-id` Cannot have an undefined advertiser ID
+
+`undefined-segment-type` Cannot have a segment object without any type defined
+
+`multiple-segment-types` Cannot have a segment object with multiple types defined
+
+`duplicate-name` Cannot have duplicated segment names
+
+`payload-too-big` Cannot create more than 50 segments at a time
+
+`payload-too-big` Cannot update more than 50 segments at a time
+
+`non-parsable-id` One or more IDs cannot be parsed
+
+`duplicate-id` Segment ID cannot be duplicated
+
+`name-must-not-be-empty` Name must not be empty
+
+`segment-must-not-be-used-in-audience` Segment must not be used in an audience
+
+`commerce-settings-must-be-defined` Commerce segment settings must be defined
+
+`event-type-must-be-valid` Event type must be valid
+
+`days-must-be-in-range` Days in omnichannel segment must be in range
+
+`cannot-create-contact-list` Contact list creation error
+
+`name-must-be-unique` Name must be unique
+
+`type-must-be-the-same` Type must be the same
+
+`type-must-be-the-same` Type must be the same
+
+***
+
+[Audiences](/marketing-solutions/v2025.01/docs/audiences)
+
+[Audience Segments](/marketing-solutions/v2025.01/docs/audience-segments)

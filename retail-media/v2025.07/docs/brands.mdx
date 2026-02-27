@@ -1,0 +1,351 @@
+---
+title: "Brands"
+---
+
+1. Guides for Retail Media API
+2. [Account](/retail-media/v2025.07/docs/account)
+
+## Introduction
+
+A brand is a collection of products marketed and sold under a unified name. The brands associated with an account define the products that the account can promote on retailer sites.
+
+An account can have access to one or more brands, and this access is typically managed by Criteo.
+
+Brand attributes are standardized across retailers to ensure consistency.
+
+***
+
+## Endpoints
+
+| Method   | Endpoint                       | Description                                                       |
+| -------- | ------------------------------ | ----------------------------------------------------------------- |
+| **GET**  | `/accounts/{accountId}/brands` | Get Brands                                                        |
+| **POST** | `/brands/search`               | Search for Brands by name in Retailer(s) [Catalogs](doc:catalogs) |
+
+***
+
+## Brand Attributes
+
+| Attribute       | Data Type | Description                                                                                                                                                                                                                                                                                                      |
+| --------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | string    | Brand ID, generated internally by Criteo and originated from brand name provided in retailer's [Catalog](doc:catalogs)Accepted values: int64Writeable? N / Nullable? N                                                                                                                                           |
+| `name`          | string    | Brand name, keyword to use as filter in the search (case-insensitive) or returned as final brand name availableAccepted values: stringWriteable? N / Nullable? N                                                                                                                                                 |
+| `retailerIds`\* | list      | List of [Retailer](doc:retailers) IDs, to use as filter in the search or returned as containing the specific brandAccepted values: list of strings of int32Writeable? N / Nullable? N                                                                                                                            |
+| `brandType`     | enum      | Type of brands, to consider in the search or returned as attribute of the specific brand\* `all`: all brands\* `retailer`: brands specific to the retailer\* `uc`: brands referenced to our Universal CatalogAccepted values: `all`, `retailer`, `uc` (case-insensitive)Default: `all`Writeable? N / Nullable? N |
+
+(\*) *Required*
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Get all Brands
+
+This endpoint lists all brands associated with an account.
+
+Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively - see [API Response](#/pagination)
+
+![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/brands?pageIndex={pageIndex}&pageSize={pageSize}
+```
+
+<Info>
+  ### View in the API Reference
+
+  You can also check this endpoint in [the API reference](https://developers.criteo.com/retail-media/reference/accountsapi_getapiv1externalaccountbrandsbyaccountid).
+</Info>
+
+### Sample Request
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X GET "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/brands?pageIndex=0&pageSize=25" \
+      -H 'Accept: application/json' \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+
+  ```bash bash
+  import requests
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/4/brands?pageIndex=0&pageSize=25"
+
+  payload={}
+  headers = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/4/brands?pageIndex=0&pageSize=25")
+    .method("GET", body)
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/4/brands?pageIndex=0&pageSize=25');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+### Sample Response
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "7672171780147256541",
+              "type": "RetailMediaBrand",
+              "attributes": {
+                  "name": "Brand 123"
+              }
+          },
+   
+          // ...
+   
+          {
+              "id": "5979998329674492121",
+              "type": "RetailMediaBrand",
+              "attributes": {
+                  "name": "Brand 789"
+              }
+          }
+      ],
+      "metadata": {
+          "totalItemsAcrossAllPages": 15,
+          "currentPageSize": 25,
+          "currentPageIndex": 0,
+          "totalPages": 1,
+          "nextPage": null,
+          "previousPage": null
+      }
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Search for Brands by name
+
+This endpoint searches for Brands, by name term, across one or multiple retailers. Results are paginated.
+
+![](/images/retail-media/v2025.07/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/brands/search?offset=0&limit=25
+```
+
+### Sample Request
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/brands/search?offset=0&limit=25' \
+      -H 'Content-Type: application/json' \
+      -H 'Accept: application/json' \
+      -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+      -d '{
+              "data": {
+                  "type": "<string>",
+                  "attributes": {
+                      "retailerIds": [
+                          "123",
+                          "456"
+                      ],
+                      "name": "brand abc",
+                      "brandType": "all"
+                  }
+              }
+          }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/brands/search?offset=0&limit=25"
+
+  payload = json.dumps({
+      "data": {
+          "type": "<string>",
+          "attributes": {
+              "retailerIds": [
+                  "123",
+                  "456"
+              ],
+              "name": "brand abc",
+              "brandType": "all"
+          }
+      }
+  })
+  headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"<string>\",\"attributes\":{\"retailerIds\":[\"123\",\"456\"],\"name\":\"brand abc\",\"brandType\":\"all\"}}}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/brands/search?offset=0&limit=25")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/brands/search?offset=0&limit=25');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+      'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json',
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+  $request->setBody('{"data":{"type":"<string>","attributes":{"retailerIds":["123","456"],"name":"brand abc","brandType":"all"}}}');
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      }
+      else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+          $response->getReasonPhrase();
+      }
+  }
+  catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+### Sample Response
+
+<CodeGroup>
+  ```bash bash
+  {
+      "metadata": {
+          "count": 2,
+          "offset": 0,
+          "limit": 25
+      },
+      "data": [
+          {
+              "id": "2149023412134133",
+              "type": "BrandIdSearchResult",
+              "attributes": {
+                  "id": "2149023412134133",
+                  "name": "brand abcdef",
+                  "brandType": "Retailer",
+                  "retailerIds": [
+                      123
+                  ]
+              }
+          },
+          {
+              "id": "62342",
+              "type": "BrandIdSearchResult",
+              "attributes": {
+                  "id": "62342",
+                  "name": "Brand ABC",
+                  "brandType": "UC",
+                  "retailerIds": [
+                      123,
+                      456
+                  ]
+              }
+          }
+      ],
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Responses
+
+| Response | Error               | Message                                                | Description                                                                                                                                                                     |
+| -------- | ------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢 `200` |                     |                                                        | Call completed successfully                                                                                                                                                     |
+| 🔴 `400` | Validation Error    | `One or more validation errors occurred.`              | One of the parameters provided in the request does not match the format accepted. Check the error details and the parameters informed in the call                               |
+| 🔴 `403` | Authorization Error | `Resource access forbidden: does not have permissions` | API user does not have the authorization to make requests to the account ID. For an authorization request, follow the [authorization request](doc:authorization-requests) steps |
+
+***
+
+What’s Next
+
+* [Sellers](/retail-media/v2025.07/docs/sellers)
+* [Retailers](/retail-media/v2025.07/docs/retailers)
+* [Account Creation and Management (Private Market)](/retail-media/v2025.07/docs/account-creation-and-management-private-market)

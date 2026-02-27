@@ -1,0 +1,562 @@
+---
+title: "Video Player Implementation (Web Browser)"
+description: "This page provides implementation guidance for video players in web browsers, relevant for both desktop and mobile browsers."
+---
+
+## Introduction
+
+When it comes to building your video ad implementation, there are a few high-level steps to consider:
+
+1. Requesting and parsing the VAST tag,
+2. Creating the HTML structure of your player to be injected into the DOM,
+3. Firing beacons at the proper time during video playback,
+4. Incorporating additional verification scripts (OMID).
+
+Criteo supports **VAST 4.2** (the IAB specs are available [here](https://iabtechlab.com/wp-content/uploads/2019/06/VAST_4.2_final_june26.pdf)).
+
+***
+
+## Step 1: requesting and parsing the VAST tag
+
+To obtain the data for your video player, start by fetching the VAST information from the Criteo API Ad Response.
+
+Here is an example of how to request the VAST (if required) and parse it:
+
+<CodeGroup>
+  ```bash bash
+  const response = await fetch('VAST TAG URL');  
+  const DOMXML = await response.text();  
+  const xmlParser = new window.DOMParser();  
+  const data = xmlParser.parseFromString(DOMXML, 'text/xml');
+  ```
+</CodeGroup>
+
+Once you have the parsed VAST tag, you can extract the necessary beacons outlined in this document.
+
+<Info>
+  ### VAST parsing libraries
+
+  Some of our clients choose to use a VAST parsing library to extract all the needed information. Here are examples of alternative libraries, if you want to avoid using the `DOMParser`:
+
+  * [VAST client JS](https://github.com/dailymotion/vast-client-js)
+  * [JQuery](https://github.com/jquery/jquery)
+</Info>
+
+***
+
+## Step 2: Creating the Video Player HTML Structure
+
+Our video player is built around the video HTML tag. This tag inherits from `HTMLMediaElement `and offers methods like `play() `and `pause()`, along with properties such as: `volume`, `duration`, and `currentTime`.
+
+These properties help us mute or unmute the player and track playback progress.
+
+<Info>
+  Learn more about the [HTML tag](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video) , the [HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement) and the [video controls](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video#controls) on the Mozilla Developper documentation.
+</Info>
+
+To manage these functionalities, we wrap the entire ad placement in a surrounding `<div>` and incorporate additional HTML for the Play/Pause and Mute/Unmute and CC (close captions) buttons.
+
+We add click listeners to these buttons to handle play, pause, and volume controls. Although the `<video>` tag includes a default controls attribute, we avoid using it as it permits seeking.
+
+Additionally, be aware that local regulations may require a **callout** or **pop-up** for mandatory notices.
+
+***
+
+## Step 3: Firing Beacons During Video Playback
+
+<Info>
+  Please refer to[ the following page of the Mozilla Developer documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) to learn more about the recommended way to fire beacons within the browser. Other methods (as described below) have resulted in issues sending 100% of data.
+</Info>
+
+The first beacon we need to fire is the **impression beacon**.
+
+To set a trigger for this, we add an event listener to our `<video>` element for the `can play` event. This event is dispatched as soon as the browser determines the video is ready for playback and painted to the page, regardless of its position in the viewport.
+
+<Warning>
+  To ensure accurate beacon tracking, **playback beacons** (start and quartiles beacons) **should only be emitted once, during the first play of the video**. It is important that the video maintains a state for each emitted beacon to prevent duplication.
+
+  However, **interaction beacons** (such as clicks, mute, unmute, pause, and resume) **must be emitted each time the corresponding user action occurs**.
+</Warning>
+
+The start, `firstQuartile`, `midpoint`, and `thirdQuartile` beacons are managed in a function triggered by a listener on the `timeupdate event `from the `<video>` tag.
+
+Inside this playback handler function, we first check if we are within the first loop of video playback. If so, we calculate the percentage of video viewed by dividing the` currentTime` attribute by the duration attribute, then normalizing this value to a range of 0-100 by multiplying the result by 100.
+
+Once we have a non-zero percentage, and we are in the first loop, we drop the `start` beacon. At 25 percent viewed and still within the first loop, we drop the `firstQuartile` beacon, and the same applies for 50 and 75 percent.
+
+Since this handler is called many times per second ([see `timeupdate` spec](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/timeupdate_event)), we can build a handler as follows:
+
+<CodeGroup>
+  ```bash bash
+  // During the initialization process
+  this.videoPlayer.addEventListener('timeupdate', this.handlePlaybackEvents.bind(this));
+
+  function handlePlaybackEvents() {
+          const percent = (this.videoPlayer.currentTime / this.videoPlayer.duration) * 100;
+
+          //only fire these beacons during the first loop
+          if (this.currentLoop === 1 ) {
+              if (percent >= 0.01 && !this.adStarted.sent) {
+                // mark sent
+                this.adStarted.sent = true;
+
+                // fire start beacon
+                const adStartedBeacon = new URL(this.adStarted.beacon);
+                adStartedBeacon.drop();
+
+                // forward event to OMID (related to next section of the document)
+                if (this.mediaEvents) {
+                    this.mediaEvents.start(this.videoPlayer.duration, this.videoPlayer.muted ? 0 : this.videoPlayer.volume);
+                }
+              }
+
+              if (percent >= 25 && !this.adFirstQuartile.sent) {
+                // mark sent
+                this.adFirstQuartile.sent = true;
+
+                // fire firstQuartile beacon
+                const adFirstQuartileBeacon = new URL(this.adFirstQuartile.beacon);
+                adFirstQuartileBeacon.drop();
+
+                // forward event to OMID (related to next section of the document)
+                if (this.mediaEvents) {
+                    this.mediaEvents.firstQuartile();
+                }
+              }
+
+              if (percent >= 50 && !this.adMidpoint.sent) {
+                // mark sent
+                this.adMidpoint.sent = true;
+
+                // fire midPoint beacon
+                const adMidpointBeacon = new URL(this.adMidpoint.beacon);
+                adMidpointBeacon.drop();
+
+                // forward event to OMID (related to next section of the document)
+                if (this.mediaEvents) {
+                    this.mediaEvents.midpoint();
+                }
+            }
+
+              if (percent >= 75 && !this.adThirdQuartile.sent) {
+                // mark sent
+                this.adThirdQuartile.sent = true;
+
+                // fire thirdQuartile beacon
+                const adThirdQuartileBeacon = new URL(this.adThirdQuartile.beacon);
+                adThirdQuartileBeacon.drop();
+
+                // forward event to OMID (related to next section of the document)
+                if (this.mediaEvents) {
+                    this.mediaEvents.thirdQuartile();
+                }
+            }
+          }
+  ```
+</CodeGroup>
+
+To handle the complete beacon, we listen for **the[ended event ](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/ended_event)fired by the video player.**
+
+Upon receiving this event, we check if we are in the first loop of the video and, if so, we drop the complete beacon. We then remove the `timeupdate event` listener and its associated playback handler, as they are no longer needed.
+
+Afterward, we increment the internal loop count for debugging and logging purposes and call `play()` on the video to create the looping effect. Subsequent "ended" events should only increment the loop count and restart the video.
+
+<CodeGroup>
+  ```bash bash
+  // During the initialization process
+  this.videoPlayer.addEventListener('ended', this.handleLoop.bind(this));
+
+  handleLoop() {
+      if (this.currentLoop === 1) {
+          Logger.info('Sent video ad completed beacon');
+          
+          // Emit the completion quartile beacon
+          const adCompletedBeacon = new URL(this.adCompleted.beacon);
+          adCompletedBeacon.drop();
+          
+          // forward event to OMID (related to next section of the document)
+          if (this.mediaEvents) {
+              this.mediaEvents.complete();
+          }
+      }
+      // Stop monitoring for video progress
+      this.videoPlayer.removeEventListener('timeupdate', this.handlePlaybackEvents);
+      
+      // Increment loop & restart the video
+      this.currentLoop++;
+      this.videoPlayer.play();
+  }
+  ```
+</CodeGroup>
+
+All playback beacons are fired only when the player is playing.
+
+<Warning>
+  To ensure the ad is visible per IAB standards, **at least 50% of the video player must be in theviewport** . We use an [IntersectionObserver](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver) with a threshold set to 0.5 to observe our video player for "50% in view."
+</Warning>
+
+<CodeGroup>
+  ```bash bash
+  handleVideoPlayPauseObserver(entries, observer) {
+      for (let i = 0; i < entries.length; i++) {
+          let entry = entries[i];
+          let isVisible = entry.isIntersecting;
+          if (isVisible) {
+              this.playVideo();
+          } else if (!isVisible && this.isPlaying) {
+              this.pauseVideo();
+          }
+      }
+  }
+
+  startVideoAdObserver() {
+      try {
+          //play the video unless the video is 50% or more in the viewport.
+          const observer = new IntersectionObserver(this.handleVideoPlayPauseObserver.bind(this), {threshold: 0.5});
+          observer.observe(this.videoPlayerContainer);
+      } catch (error) {
+          throw new Error(`Unable to start video ad or observer. Error:  ${error}`);
+      }
+  }
+
+  // After player had been created & initialized
+  this.player.startVideoAdObserver();
+  ```
+</CodeGroup>
+
+Finally, we handle the `ClickTracking` beacon by attaching an event listener to our `<video>` tag for the `click` event. In the handler function, we drop the beacon and instruct the browser to open the `ClickThrough `URL from the VAST tag , only if a redirection URL is provided.
+
+<CodeGroup>
+  ```bash bash
+  clickThroughHandler() {
+      // Emit the click beacon
+      if (this.clickThrough.beacon) {
+          Logger.info('Sent video ad Click Through beacon');
+          const clickThroughBeacon = new URL(this.clickThrough.beacon);
+          clickThroughBeacon.drop();
+      }
+      
+      // Redirect the user to the ClickThrough URL
+      window.open(this.clickThroughURL, '_self');
+  }
+
+  handlePlayPause() {
+      if (this.isPlaying) {
+          // Pause the video, and emit the pause beacon
+          this.pauseVideo();
+      } else {
+          // Start playing the video, and emit the resume beacon
+          this.playVideo();
+      }
+  }
+
+  handleClickThrough() {
+      // When there's no clickThroughURL, play or pause the video when clicked on the video player
+      if (this.clickThroughURL) {
+          this.videoPlayer.addEventListener('click', this.clickThroughHandler.bind(this));
+      } else {
+          this.videoPlayer.addEventListener('click', this.handlePlayPause.bind(this));
+      }
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Step 4: Additional Verification with OMID Compatible Scripts (Video Views)
+
+Clients must support OMID to enable their player to run additional scripts, hence allowing Criteo to track video viewability. This allows Criteo to send its own verification script within the VAST XML to track video viewability.
+
+<Info>
+  ### About OMID
+
+  The [Open Measurement Interface Definition (OMID) ](https://iabtechlab.com/standards/open-measurement-sdk/)is a standardized technology provided by IAB to measure and verify the viewability of digital ads, particularly video ads, across various platforms and devices.
+
+  OMID provides a consistent framework for measuring viewability metrics, such as viewable impressions and viewable video plays, in compliance with industry standards. Implementing OMID offers accurate insights into ad performance and user engagement, and is also used to track video viewability the same way across all retailers, ensuring coherence across networks.
+
+  OM SDK in this documentation refers to the **OM SDKJS for Web Video**.
+</Info>
+
+Section 3.16 of the [VAST specification](https://www.iab.com/wp-content/uploads/2016/04/VAST4.0_Updated_April_2016.pdf) outlines an optional `AdVerifications` element where these verifications reside. Each `Verification` element nested inside `AdVerifications` details the resources needed for verification.
+
+<Info>
+  ### The OM SDK
+
+  To handle these resources, we pass them to the Open-Measurement SDK provided by IAB. The official OM SDK JS implementation guide can be found [here](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS). The documentation provides full code snippets for each step to integrate viewability.
+</Info>
+
+At a high level, the process goes as follows:
+
+1. Load the OMID service script and session client
+2. Extract the necessary session client classes
+3. Pass the `VerificationParameters` information to the session client’s ad `Context`
+4. Start a session
+5. Trigger `adEvents` & `mediaEvents` events to OM SDK when Video & Ad related events occur
+
+<Warning>
+  The [IAB implementation guide](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS/) is not complete enough to cover all the Criteo video player specifications (support of buffering events, only emit tracking events once, play/pause events are not notifying OM SDK, etc.). For that reason, **it is highly recommended to also verify your integration following[the IAB documentation ](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS/validation.html)and using [the verification script ](https://github.com/InteractiveAdvertisingBureau/Open-Measurement-JSClients/blob/master/creatives/video/omid_video_creative_session.js)they provide.**
+</Warning>
+
+![](/images/retailer-integration/q4-2025/docs/9b71828-image.png)
+
+<Info>
+  The Criteo verification script comes from the VAST XML file.
+</Info>
+
+Through the OM SDK, several events will be emitted by Criteo OMID Verification Script to Criteo servers:
+
+| Level                           | Beacon name                                  | Description                                                                                                                                                                                           |
+| ------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OMID (`VerificationParameters`) | `omidTrackView`                              | Indicates that the OMID Ad session was properly initialized.                                                                                                                                          |
+| OMID (`VerificationParameters`) | `start`                                      | Indicates that the video just started, and the video is displayed 100% in the viewport.                                                                                                               |
+| OMID (`VerificationParameters`) | `firstQuartile`                              | Indicates that the video just reached the 25% quartile, and the video is displayed 100% in the viewport.                                                                                              |
+| OMID (`VerificationParameters`) | `midpoint`                                   | Indicates that the video just reached the 50% quartile, and the video is displayed 100% in the viewport.                                                                                              |
+| OMID (`VerificationParameters`) | `thirdQuartile`                              | Indicates that the video just reached the 75% quartile, and the video is displayed 100% in the viewport.                                                                                              |
+| OMID (`VerificationParameters`) | `complete`                                   | Indicates that the video just completed, and the video is displayed 100% in the viewport.                                                                                                             |
+| OMID (`VerificationParameters`) | `twoSecondsFiftyPercentView`                 | Indicates that the video was playing for 2 consecutive seconds, and the video is at least displayed 50% in the viewport. Note that, buffering the video or pausing, will reset the 2 seconds counter. |
+| VAST XML - OMID                 | `<Tracking event="verificationNotExecuted">` | Indicates that the verification script failed to initialize.                                                                                                                                          |
+
+<Info>
+  The 100% in the viewport display is an industry standard to track playback events such as quartiles. The two consecutive seconds and 50% display in the viewport is an MRC standard.
+</Info>
+
+***
+
+### 1. Load the OMID service script and session client
+
+The provided IAB OM SDK JS is composed of two scripts (`omweb-v1.js` & `omid-session-client-v1.js`) that need to be included for the creative to support viewability.
+
+<Info>
+  ### To support viewability measurement, the IAB Open Measurement SDK (OM SDK) for Web requires two scripts:
+
+  * `omweb-v1.js` – the OMID JS library for the web context.
+  * `omid-session-client-v1.js` – used by integration partners to perform ad session activities in the JavaScript layer.
+
+  Per IAB requirements, each retailer must obtain their own build of these scripts from the IAB Tech Lab Tools Portal. This ensures the SDK is correctly registered to your organization and remains up to date with the official specification.
+
+  **Steps to download your scripts:**
+
+  1. Log in or register at the [IAB Tech Lab Tools Portal](https://tools.iabtechlab.com/login).
+  2. Navigate to the [Open Measurement SDK for Web](https://iabtechlab.com/standards/open-measurement-sdk/#:~:text=to%20get%20started-,OM%20Web%20Video%20SDK,-OM%20SDK%20Web) section.
+  3. Generate and download your **`OMSDK`** package.
+  4. Host the downloaded files in your environment or reference them from your own CDN.
+</Info>
+
+***
+
+### 2. Extract the necessary session client classes
+
+<CodeGroup>
+  ```bash bash
+          const AdSession = sessionClient.AdSession;
+          const Partner = sessionClient.Partner;
+          const Context = sessionClient.Context;
+          const VerificationScriptResource = sessionClient.VerificationScriptResource;
+          const AdEvents = sessionClient.AdEvents;
+          const MediaEvents = sessionClient.MediaEvents;
+          const VastProperties = sessionClient.VastProperties;
+  ```
+</CodeGroup>
+
+***
+
+### 3. Pass the `<VerificationParameters>` information to the session client’s ad `Context`
+
+Before the ad session initialization, the OMSDK requires specifying some parameters related to the Criteo integration:
+
+<CodeGroup>
+  ```bash bash
+  const CONTENT_URL = window.location.href;
+  const PARTNER_NAME = '{retailer namespace}';
+  const PARTNER_VERSION = Object.keys(OmidSessionClient)[0];
+
+  const partner = new Partner(PARTNER_NAME, PARTNER_VERSION);
+  ```
+</CodeGroup>
+
+This step allows to reference Criteo’s verification script, so that it can automatically be loaded when the `AdSession` will start:
+
+<CodeGroup>
+  ```bash bash
+  // From <AdVerifications> in VAST definition
+  const vastVerifications = [{
+      javaScriptResource: 'https://static.criteo.net/banners/js/omidjs/stable/omid-validation-verification-script-for-retail-media.js',
+      vendor: 'criteo.com-omid',
+      // From <VerificationParameters> in VAST definition
+      verificationParameters: JSON.stringify({
+          "beacons": {
+              "omidTrackView": `${bbtUrlomidTrackView}`,
+              "start": `${bbtUrlStart}`,
+              "firstQuartile": `${bbtUrlFirstQuartile}`,
+              "midpoint": `${bbtUrlMidpoint}`,
+              "thirdQuartile": `${bbtUrlThirdQuartile}`,
+              "complete": `${bbtUrlComplete}`,
+              "twoSecondsFiftyPercentView": `${bbtUrlTwoSecondsFiftyPercentView}`
+          }
+      }),
+  }];
+
+  const resources = vastVerifications.map((verification) => {
+      const scriptUrl = verification.javaScriptResource;
+      // Access mode values:
+      // https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS/accessmodes.html
+      const accessMode = 'full';
+      return new VerificationScriptResource(scriptUrl, verification.vendor, verification.verificationParameters, accessMode);
+  });
+
+  const OMSDK_SERVICE_WINDOW = window.top;
+  const VIDEO_ELEMENT = document.getElementById('video-creative-element');
+
+  // Set a reference to Criteo's verification script
+  const context = new Context(partner, resources, CONTENT_URL);
+  context.setVideoElement(VIDEO_ELEMENT);
+  context.setServiceWindow(OMSDK_SERVICE_WINDOW);
+  ```
+</CodeGroup>
+
+***
+
+### 4. Start a Session
+
+When the ad session is started, the Criteo verification script is automatically loaded, using the `Context` information ([step 3 of the IAB implementation guide](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS/#3-create-the-context)).
+
+At this point, the Criteo verification script will start observing any `AdEvents` & `MediaEvents` that are triggered toward the OM SDK.
+
+<CodeGroup>
+  ```bash bash
+  const adSession = new AdSession(context);
+  adSession.setCreativeType('video');
+  adSession.setImpressionType('beginToRender');
+
+  if (!adSession.isSupported()) {
+      const errorMessage = "Ad session is not supported."
+      Logger.error(errorMessage)
+      throw errorMessage
+  }
+
+  const adEvents = new AdEvents(adSession);
+  const mediaEvents = new MediaEvents(adSession);
+
+  // Start the AdSession
+  adSession.start();
+
+  // Notify the OM SDK JS that the session started & support its lifetime (error/finished)
+  adSession.registerSessionObserver((event) => {
+      const {adSessionId, timestamp, type, data} = event;
+      switch (type) {
+          case 'sessionStart':
+              state.omidState.sessionActive = true;
+
+              const isSkippable = false;
+              const skipOffset = 0;
+              const vastProperties = new VastProperties(isSkippable, skipOffset, /* isAutoPlay= */ true, /* position= */ 'standalone');
+
+              // load event
+              adEvents.loaded(vastProperties);
+              adEvents.impressionOccurred();
+              break;
+          case 'sessionError':
+              Logger.error("An OMID session error occured", event);
+              throw event;
+          case 'sessionFinish':
+              // clean up
+              Logger.log("The OMID session finished", event);
+              break;
+      }
+  });
+  ```
+</CodeGroup>
+
+***
+
+### 5. Trigger Open Measurement Events
+
+<Info>
+  The complete list of available `AdEvents` & `MediaEvents` is accessible on [IAB’s Github](https://github.com/InteractiveAdvertisingBureau/).
+</Info>
+
+Through those calls, the Criteo verification script will be able to compute advanced viewability events:
+
+* Criteo will be able to track quartile events (if the video is 100% part of the viewport)
+* Advanced events are computed to track if 50% of the video is playing & displayed in the viewport during 2 consecutive seconds.
+
+All calls to both `AdEvents` & `MediaEvents` must be triggered aside of the existing tracking beacons for quartile & display events.
+
+Additionally, the video buffering events must be triggered as described in the IAB code sample:
+
+<CodeGroup>
+  ```bash bash
+  this.isBuffering = false;
+
+  this.videoPlayer.addEventListener("waiting", () => {
+      this.isBuffering = true;
+      this.mediaEvents.bufferStart();
+  });
+
+  this.videoPlayer.addEventListener("timeupdate", () => {
+      if (this.isBuffering) {
+          this.isBuffering = false;
+          this.mediaEvents.bufferFinish();
+      }
+  });
+  ```
+</CodeGroup>
+
+***
+
+### 6. Select the right video when multiple videos are presented
+
+<Info>
+  The **target dimension** is the width and height of the HTML element where the video will be placed.
+</Info>
+
+When there are multiple videos presented in the VAST XML, it is critical to provide the target dimension as a parameter when invoking `loadAd()`. You can dynamically retrieve the dimension using `clientWidth` and `clientHeight`, like so:
+
+<CodeGroup>
+  ```bash bash
+  const targetContainer = document.querySelector('.targetContainerSelector');
+
+  const targetDimension = {
+      width: targetContainer.clientWidth,
+      height: targetContainer.clientHeight,
+  };
+
+  await videoAdPlayer.loadAd(targetDimension);
+  ```
+</CodeGroup>
+
+The right video is selected based on the dimension that most closely matches the target dimension.
+
+<Warning>
+  If no valid target dimension is provided, or if it's invalid, the first video in the list is automatically selected.
+</Warning>
+
+When a valid target dimension is specified, the library considers the aspect ratio and chooses a video with the smallest difference in ratios.
+
+<Info>
+  **Example**
+
+  When presented with vertical, horizontal, and square videos, and a vertical target dimension, the library selects the vertical video. In a scenario where there are 2x vertical, 2x horizontal, and 1x square videos available, and a vertical target dimension, then one of the two vertical videos with the smallest ratio difference will be chosen.
+</Info>
+
+***
+
+### Code Sample
+
+<Info>
+  Criteo provides an **open-source version of video player** to help with the implementation:
+
+  [https://github.com/criteo/video-ad-player](https://github.com/criteo/video-ad-player)
+</Info>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+[Criteo-Owned Video Player Integration](/retailer-integration/q4-2025/docs/criteo-owned-video-player-integration)
+
+[Video Player Implementation (App: iOS)](/retailer-integration/q4-2025/docs/video-player-implementation-ios-app)

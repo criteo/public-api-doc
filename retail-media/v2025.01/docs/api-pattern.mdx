@@ -1,0 +1,104 @@
+---
+title: "API Pattern"
+---
+
+1. Concepts
+
+# Base URL
+
+<CodeGroup>
+  ```bash bash
+  https://api.criteo.com/<version>/retail-media/{endpoint}
+  ```
+</CodeGroup>
+
+***
+
+# Synchronous Endpoints
+
+All campaign operations except for Catalogs are achieved through synchronous endpoints. Those will return a response in real-time.
+
+| Operation                    | Method | Endpoint                                                                    |
+| ---------------------------- | ------ | --------------------------------------------------------------------------- |
+| **Create an entity**         | `POST` | `/{plural-parent-entity-name}/{parentEntityId}/{plural-entity-name}`        |
+| **Delete from a list**       | `POST` | `/{plural-parent-entity-name}/{parentEntityId}/{plural-entity-name}/delete` |
+| **Append to a list**         | `POST` | `/{plural-parent-entity-name}/{parentEntityId}/{plural-entity-name}/append` |
+| **Get all entities**         | `GET`  | `/{plural-parent-entity-name}/{parentEntityId}/{plural-entity-name}`        |
+| **Get a specific entity**    | `GET`  | `/{plural-entity-name}/{entityId}`                                          |
+| **Update a specific entity** | `PUT`  | `/{plural-entity-name}/{entityId}`                                          |
+
+<Info>
+  * "Create" operations using the `POST` method expect every **Required (R)** field; omitting **Optional (O)** fields will set those fields to **Default** values.\* "Update" operations using the `PUT` method expect every **Write (W)** field; omitting these fields is equivalent to setting them to `null`, if possible.
+</Info>
+
+***
+
+# Asynchronous Endpoints
+
+"Catalogs" and "Reports" are requested and retrieved through asynchronous endpoints. Those will send a response once the request is done processing (not in real-time).
+
+| Operation                                         | Method | Endpoint                                                                                                                    |
+| ------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| **Create a resource request**                     | `POST` | `/{plural-parent-entity-name}/{parentEntityId}/{plural-entity-name}` or `/{plural-parent-entity-name}/{plural-entity-name}` |
+| **Retrieve the status of the requested resource** | `GET`  | `/{plural-entity-name}/{entityId}/status`                                                                                   |
+| **Retrieve the output of the requested resource** | `GET`  | `/{plural-entity-name}/{entityId}/output`                                                                                   |
+
+***
+
+# Bulk calls
+
+<Info>
+  Please refer to[ this page](https://developers.criteo.com/retail-media/docs/bulk-calls) for more information about Bulk Calls.
+</Info>
+
+***
+
+# Error Codes
+
+When sending more than 50 IDs, you will get the following `400 Bad request` HTTP Response:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [
+          {
+              "code": "exceeded-ids-cap",
+              "title": "Requests are capped for 50 unique ids, 51 were provided",
+              "type": "validation",
+              "traceId": "aa47dd83-8ca9-4a79-a179-ad5be6932ff1",
+              "instance": "/api/v1/reports/line-item",
+              "detail": "ids Requests are capped for 50 unique ids, 51 were provided (Value: \"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51\")",
+              "source": {
+                  "ids": "data/attributes/ids"
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+This Contains:
+
+* Error code: `exceeded-ids-cap`
+
+* Error title: `Requests are capped for 50 unique ids, {count of ids requested} were provided`
+
+* Error Type: `validation`
+
+* A traceId: `aa47dd83-8ca9-4a79-a179-ad5be6932ff1`
+
+* Instance: the report requested (here `/api/v1/reports/line-item`)
+
+* Detail: Title with a list of requested IDs
+
+* Source: The parameter that caused the error (IDs in this case)
+
+***
+
+What’s Next
+
+* [Bulk Calls](/retail-media/v2025.01/docs/bulk-calls)
+* [Campaign Structure](/retail-media/v2025.01/docs/campaign-structure)
+* [List of Endpoints](/retail-media/v2025.01/docs/criteo-api-swagger)
+* [Rate Limits](/retail-media/v2025.01/docs/rate-limits)
+* [Statuses](/retail-media/v2025.01/docs/campaign-lineitem-status)

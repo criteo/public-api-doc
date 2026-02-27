@@ -1,0 +1,124 @@
+---
+title: "Overview"
+---
+
+1. Migration Guides
+
+<Warning>
+  ### Sunset of MAPI
+
+  All MAPI endpoints were migrated to Criteo API on **July 18, 2022**. To learn more about using the Criteo APIs please see our [Onboarding checklist](https://developers.criteo.com/marketing-solutions/docs/onboarding-checklist).
+</Warning>
+
+This guide shows you how to update to Statistics v2022-01
+
+```
+https://api.criteo.com/2023-01/statistics/report
+```
+
+If you are currently using the Statistics V1 endpoint
+
+```
+https://api.criteo.com/marketing/v1/statistics
+```
+
+This article focuses on the changes required to use the endpoint. But you will need to update also your authentication system. Please see our [Onboarding checklist](https://developers.criteo.com/marketing-solutions/docs/onboarding-checklist) to learn how to create a developer Account, get access to your new credentials and request access to your users. And please see our [Authentication guide](https://developers.criteo.com/marketing-solutions/docs/authentication) to learn how to authenticate and get your token.
+
+Statistics 2022-01 has 100+ new metrics across marketing goals and channels, including App, Web, and Store campaigns. Additionally, you can now:
+
+* Specify your time zone (list available in our [Timezones Supported](doc:campaign-statistics#timezones) guide)
+* Keep track of your category history
+* Benefit from a nearly real-time look into your data and campaign performance
+* ROAS and AverageCart metrics are now available for every attribution model (including PC30D, PC7D, PC1D, PV24H, and PC30DPV24H)
+* Omnichannel campaigns are easier to analyze, with the xDevice parameter and the inclusion of PV24H and client attribution as new attribution models
+* App campaigns metrics have been renamed for clarity
+
+Below you can find how requests in Statistics 2022-01 are different, and how to update your integration.
+
+## Changes to requests
+
+Below is a summary of the changes that you’ll want to reflect in your requests.
+
+| Statistics 2020-10      | Change made                  | Details                                                                                                                                                                                                                                                                                                                   |
+| ----------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CampaignId and Campaign | Renamed to AdsetId and Adset | Following our latest changes in Commerce Growth                                                                                                                                                                                                                                                                           |
+| Currency                | Specification is mandatory   | It is now mandatory to specify this parameter                                                                                                                                                                                                                                                                             |
+| Timezone                | Updated                      | Customize your time zone by adding your preferred time zone to the request. You can select from all time zone codes and time zone locals like “America/Chicago”The default value is now GMT.                                                                                                                              |
+| reportType              | Removed                      | The only available report type is the CampaignPerformance report. Statistics 2020-10 endpoint doesn’t support FacebookDPA, TransactionID report types.                                                                                                                                                                    |
+| ignoreXDevice           | Removed                      | This parameter has been removed from the request altogether. Post-click 30d sales with cross-device disabled can be obtained using SalesPc30d metric; sales with cross-device enabled can be obtained using SalesAllPc30d metric. Please see the list of available metrics below to choose relevant metric for your case. |
+
+## Additional updates
+
+* There are now no restrictions on the number of dimensions (previously 3) or the order of dimensions (previously a limited set of combinations/ordering)
+* We removed that non-time dimensions (advertiser, adset, category) when requested would return both the id and name dimension. Now you must explicitly request the one you’d like
+* We removed the behavior where the AdvertiserId dimension was always added, whether or not it was requested
+* The returned key will always match the requested key. Metrics previously were returned with translated keys. For example, if you requested "SalesPc", the response would be "Sales PC" and translated based on user language
+* Category names that were unknown previously had the translated value of "Unknown". This will no longer be translated
+* We now report explicitly on each category currently disabled or enabled. Previously, any categories that were disabled at the time of the request the stats were grouped into an "Other" category dimension
+
+## New metrics in Statistics 2022-01
+
+You can now slice and dice your data with 100+ new metrics across marketing goals and channels, including App, Web, and Store campaigns.
+
+Below are some of the new ways that you can analyze your campaigns’ performance through Statistics 2022-01.
+
+| Metrics (Statistics v1)           | Details                                                                                                                                                                  | Statistics V1 | Statistics 2020-10   |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | -------------------- |
+| Clicks                            |                                                                                                                                                                          | ✓             | ✓                    |
+| Displays                          |                                                                                                                                                                          | ✓             | ✓                    |
+| AdvertiserCost                    | Total money spent on Criteo advertising.                                                                                                                                 | ✓             | ✓                    |
+| ExposedUsers                      |                                                                                                                                                                          | ✓             | ✓                    |
+| Audience                          |                                                                                                                                                                          | ✓             | ✓                    |
+| Reach                             |                                                                                                                                                                          | ✓             | ✓                    |
+| ConversionRate                    | Percentage of conversions or sales compared to the clicks that occurred.Updated statistics v2022-01 metrics names: please see [Metrics](docs:metrics) guide, CVR section | ✓             | ✓                    |
+| OverallCompetitionWin             | The number of displays divided by the total number of display opportunities (win rate).                                                                                  | ✓             | ✓                    |
+| ClickThroughRate                  |                                                                                                                                                                          | ✓             | ✓                    |
+| ECpm                              | Cost per 1000 Impressions (CPM).                                                                                                                                         | ✓             | ✓                    |
+| ECpc                              | Cost per click (CPC).Updated statistics v2022-01 metrics names: CPC                                                                                                      | ✓             | ✓ - **New options!** |
+| AverageCart                       |                                                                                                                                                                          | ✓             | ✓ - **New options!** |
+| ReturnOnAdvertisingSpending       | The ratio between revenue generated and the cost (ROAS).Updated statistics v2022-01 metrics names: please see [Metrics](docs:metrics) guide, ROAS section                | ✓             | ✓ - **New options!** |
+| Sales                             | The number of transactions or conversions resulting from Criteo ads.Updated statistics v2022-01 metrics names: please see [Metrics](docs:metrics) guide, Sales section   | ✓             | ✓ - **New options!** |
+| RevenueGenerated                  | The amount of money generated by online sales (Revenue).Updated statistics v2022-01 metrics names: please see [Metrics](docs:metrics) guide, Revenue section             | ✓             | ✓ - **New options!** |
+| ConversionRate                    |                                                                                                                                                                          | ✓             | ✓ - **New options!** |
+| ECos                              | Advertising cost per conversion or sale (COS).Updated statistics v2022-01 metrics names: please see [Metrics](docs:metrics) guide, COS section                           | ✓             | ✓ - **New options!** |
+| CostPerOrder                      | Potential users who could be served an ad (CPO).Updated statistics v2022-01 metrics names: please see [Metrics](docs:metrics) guide, CPO section                         | ✓             | ✓ - **New options!** |
+| AverageCart                       | Average revenue generated by a conversion or sale.Updated statistics v2022-01 metrics names: please see [Metrics](docs:metrics) guide, Average Cart section              | ✓             | ✓ - **New options!** |
+| AdvertiserValue                   |                                                                                                                                                                          | ✓             | ✓ - **New options!** |
+| CostOfAdvertiserValue             | The ratio between the advertiser value generated by sales and the cost of the campaign(s), given as a percentage (COV).                                                  | ✓             | ✓ - **New options!** |
+| CostOfSale                        |                                                                                                                                                                          |               | ✓                    |
+| OrderValue                        |                                                                                                                                                                          |               | ✓                    |
+| AppInstalls                       |                                                                                                                                                                          |               | ✓                    |
+| CostPerInstall                    |                                                                                                                                                                          |               | ✓                    |
+| CostOfSalePi                      | The cost of sale for app install campaigns (Post-install COS).                                                                                                           |               | ✓                    |
+| CostPerOrderPi                    | The cost per order for sales after an app install (Post-install CPO).                                                                                                    |               | ✓                    |
+| InstallRate                       |                                                                                                                                                                          |               | ✓                    |
+| ReturnOnAdvertiserSpendingPi      | The return on ad spend for sales after an app install (Post-install ROAS).                                                                                               |               | ✓                    |
+| SalesPI                           | The number of your completed events after an app install (Post-install sales).                                                                                           |               | ✓                    |
+| AdvertiserAllValue                |                                                                                                                                                                          |               | ✓                    |
+| SalesOffline                      | The number of completed in-store transactions or purchases (Store sales).                                                                                                |               | ✓                    |
+| OmniChannelRoas                   |                                                                                                                                                                          |               | ✓                    |
+| OmniChannelRevenue                |                                                                                                                                                                          |               | ✓                    |
+| OmniChannelSales                  |                                                                                                                                                                          |               | ✓                    |
+| RevenueGeneratedOffline           | The amount of revenue generated by in-store sales (Store revenue).                                                                                                       |               | ✓                    |
+| ReturnOnAdvertiserSpendingOffline | The ratio between the revenue generated offline and the cost (Store ROAS).                                                                                               |               | ✓                    |
+| QualifiedVisits                   |                                                                                                                                                                          |               | ✓                    |
+| Visits                            |                                                                                                                                                                          |               | ✓                    |
+| CostPerVisit                      |                                                                                                                                                                          |               | ✓                    |
+| BounceRate                        |                                                                                                                                                                          |               | ✓                    |
+| PotentialDisplays                 |                                                                                                                                                                          |               | ✓                    |
+
+*Some metrics allow for specifying the device, attribution, and deduplication parameters.*
+
+Metrics are created with a common structure, such as: `SalesAllPc30dClientAttribution`
+
+The naming follows the following pattern: `[Measurement][Devices][AttributionModel][LookbackWindow] `
+
+   
+
+All metrics available in Criteo Commerce Growth are available through the Statistics API. To explore all available metrics, dimensions, and options, see [the Statistics guide](https://developers.criteo.com/marketing-solutions/docs/analytics).
+
+***
+
+[API Troubleshooting Tips](/marketing-solutions/v2023.07/docs/api-troubleshooting-tips)
+
+[Partner from MAPI to Criteo API](/marketing-solutions/v2023.07/docs/partner-from-mapi-to-criteo-api)

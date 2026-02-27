@@ -1,0 +1,206 @@
+---
+title: "Offsite Report"
+---
+
+1. Guides for Retail Media API
+2. [Demand Side Analytics (DSP)](/retail-media/v2026-preview/docs/demand-side-analytics)
+
+## Introduction
+
+Four separated endpoints support requests to create campaign and line item reports and retrieve the report data and status. You can find those endpoints in our stable version [Demand Side Analytics](/retail-media/docs/demand-side-analytics-get-started).
+
+<Info>
+  The endpoints and functionalities covered in this **page refers to features available exclusively in Preview** for now, which doesn't mean that they are the only ones available for this domain/scope.
+
+  For more complete information about our API capabilities, check the Stable version in [Welcome to Criteo Retail Media API](https://developers.criteo.com/retail-media/docs/welcome-to-criteo)
+</Info>
+
+We added a "create an offsite report request", in the preview version that is described below.
+
+***
+
+## Endpoints
+
+| Verb     | Endpoint           | Description                      |
+| -------- | ------------------ | -------------------------------- |
+| **POST** | `/reports/offsite` | Create an offsite report request |
+
+<Info>
+  ### Reporting Asynchronous Workflow
+
+  * First, create a request for the campaign or line item report with the desired attributes,
+  * This generates a `reportId` representing the report.
+  * Next, use the `reportId` to poll the **report status endpoint** until one is successfully computed (available in stable - see above)
+  * Finally, download the report using the **report output endpoint** (available in stable - see above)
+  * Report outputs are cached for at least 1 hour before expiration. Exact expiration is indicated by the `expiresAt` field in the /status response.
+</Info>
+
+***
+
+## Report Request Attributes
+
+| Attribute                | Data Type              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id` / `ids`\*           | string / list\<string> | Campaign or Line Item ID(s) of the desired reportExamples: `id: "12345"` `ids: ["12345", "67890"]`Accepted values: single or list of string/int64 (max 50 ids per call) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `reportType`             | enum                   | Report types are pre-packaged reports that allow the specification of the report breakdown. See [Report Types](doc:report-types) for more details about each of them.- *Note*\*: when `metrics` and `dimensions` are used, the `reportType` is ignored.Accepted values: refer to [Report Types](doc:report-types) page for a complete list of available values Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `dimensions`             | list\<enum>            | Dimension attributes desired for metrics breakdown for the custom report of the campaign(s) / line item(s).- *Note*\*:
+- when `metrics` and `dimensions` are used, the `reportType` is automatically ignoredAccepted values: refer to [Metrics and Dimensions](doc:metrics-and-dimensions) page for a complete list of available values Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `metrics`                | list\<enum>            | Quantitative metrics desired in the custom report of the campaign(s) / line item(s).- *Note*\*:
+- when `metrics` and `dimensions` are used, the `reportType` is automatically ignored
+- when including `winRate` metric, it is required to either define `campaignType` as `sponsoredProducts` or include `campaignTypeName` in the list of dimensionsAccepted values: refer to [Metrics and Dimensions](doc:metrics-and-dimensions) page for a complete list of available values Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                       |
+| `startDate`\*            | date                   | Start date to report (inclusive)Accepted values: `YYYY-MM-DD` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `endDate`\*              | date                   | End date to report (inclusive)Accepted values: `YYYY-MM-DD` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `campaignType`           | enum                   | [Campaign](doc:campaign) typeAccepted values: `sponsoredProducts`, `onSiteDisplays` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `timeZone`               | string                 | Time zone to consider in the reportAccepted values: [IANA (TZ database)](https://www.iana.org/time-zones) time zones (example: `America/New_York`, `Europe/Paris`, `Asia/Tokyo`, `UTC`) Writeable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `clickAttributionWindow` | enum                   | The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if `viewAttributionWindow` is one of the accepted values.The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click. Defaults to campaign settings if omitted; must be specified if `viewAttributionWindow` is one of the accepted values.Accepted values: `none`, `7D`, `14D`, `30D` Writeable? N / Nullable? Y                                                                                                                                             |
+| `viewAttributionWindow`  | enum                   | The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values.The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression. Defaults to campaign settings if omitted; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values.Accepted values: `none`, `1D`, `7D`, `14D`, `30D` Writeable? N / Nullable? Y |
+| `salesChannel`           | enum                   | Filter on specific sales channel: online or offlineAccepted values: `online`, `offline` Writeable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `format`                 | enum                   | Format of the report data returnedAccepted values: `json`, `json-compact`, `json-newline`, `csv` Default: `json` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+
+*(\*) Required*
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Offsite Dimensions
+
+Those dimensions are specific to offsite reports.
+
+<Warning>
+  Report level and report types are not applicable for offsite reporting.
+</Warning>
+
+| Dimension Name  | Dimension Type | Description                                                                             | Example             |
+| --------------- | -------------- | --------------------------------------------------------------------------------------- | ------------------- |
+| `adFormatSize`  | Dimension      | The format size of the placement ad, usually defined in width × height pixels.          | `300x250`           |
+| `billingType`   | Dimension      | The ad strategy billing type. Typically Cost Per Click (CPC) or Cost Per Mille (CPM).   | `CPC`               |
+| `inventoryType` | Dimension      | Category of video ads not tied to video content. Seen in native feeds, slideshows, etc. | `In-content`        |
+| `mediaType`     | Dimension      | The type of creative asset used in the ad, such as Display or Video.                    | `Video`             |
+| `publisher`     | Dimension      | The domain of the publisher where the ad was rendered.                                  | `example.com`       |
+| `ssp`           | Dimension      | The Supply-Side Platform (SSP) responsible for the ad event.                            | `Google Ad Manager` |
+
+***
+
+## Create an offsite report request
+
+The dimensions specific to offsite reports can be found [here](https://developers.criteo.com/retail-media/docs/metrics-and-dimensions#offsite-dimensions).
+
+![](/images/retail-media/v2026-preview/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/reports/offsite
+```
+
+### Sample request
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "string",
+      "attributes": {
+        "accountIds": [
+          "563116287072485376"
+        ],
+        "dimensions": [
+          "date",
+
+          "daysDifference",
+          "advDate",
+          "advHour",
+          "campaignId",
+          "campaignName",
+          "lineItemId",
+          "lineItemName",
+          "retailerId",
+          "retailerName",
+          "billingType",
+          "environment",
+          "adFormatSize",
+          "ssp",
+          "publisher",
+          "inventoryType",
+          "mediaType",
+          "buyType",
+          "salesChannel",
+          "creativeId",
+          "creativeName"
+        ],
+        "metrics": [
+         "audience",
+          "uniqueVisitors",
+          "reachRate",
+          "impressions",
+          "frequency",
+          "winRate",
+          "clicks",
+          "ctr",
+          "viewability",
+          "cpc",
+          "ecpm",
+          "cpm",
+          "spend",
+          "attributedUnits",
+          "attributedSales",
+          "roas",
+          "videoStarts",
+          "videosPlayedTo25",
+          "videosPlayedTo50",
+          "videosPlayedTo75",
+          "videosPlayedTo100",
+          "videoStartingRate",
+          "videoCompletionRate",
+          "videoCPC",
+          "videoCPCV",
+          "visits",
+          "qualifiedVisits",
+          "landingRate"
+
+        ],
+        "format": "csv",
+        "clickAttributionWindow": "none",
+        "viewAttributionWindow": "none",
+        "startDate": "2025-06-18",
+        "endDate": "2025-06-19",
+        "timezone": "UTC"
+      }
+    }
+  }        
+  ```
+</CodeGroup>
+
+***
+
+## Responses
+
+| Response | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔵 `200` | Call executed with success- *Report Type has been ignored*\* - Report Type has been ignored since Dimensions and Metrics has been provided. Please remove them if you want to use one of the templates.When generating a report type using the `metrics` and `dimensions` filters for multi dimension reporting, a warning message will be presented in the `200` to inform that `reportType` is ignored. This is because multi dimension takes priority in this scenario. |
+| 🔴 `400` | Common Validation Errors- **`endDate`cannot be more than 100 days from`startDate`** - Using a date range with more than 100 days apart
+
+- **`reportType`invalid** - calling an unsupported `report type` will throw a 400 error
+
+- **`timeZone`must be a valid timezone** - using a time zone value that is not listed in the list tz database time zones
+
+- **format invalid** - using an unsupported file format                                                         |
+| 🔴`400`  | Validation ErrorIn the API, win rate metric will be available to sponsored product campaigns only. When using this metric, please specify `campaignTypeName` in the list of dimensions to obtain a value\*\*"title": "`WinRate` metric is only supported for Sponsored Products campaigns.", \*\***"detail": "Please provide either the`campaignTypeName` in dimensions or filter on `SponsoredProducts` using the `campaignType` filter."**                               |
+| 🔴 `410` | Expired or Lost Report ErrorThe report is expired, lost, or failed to create. Re-create the report through a new request.                                                                                                                                                                                                                                                                                                                                                  |
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Retail Media Insights (Share of Voice)](/retail-media/v2026-preview/docs/retail-media-insights-share-of-voice)

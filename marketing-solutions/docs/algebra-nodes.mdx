@@ -1,0 +1,146 @@
+---
+title: "Algebra Nodes"
+---
+
+1. Marketing Solutions Endpoints
+2. [Audiences](/marketing-solutions/docs/audiences)
+
+## Introduction
+
+<Info>
+  Algebra nodes define the logical rules used to compute Audience membership from Segments.
+</Info>
+
+Algebra nodes are the way to mix different Audience Segments. For example, you can use them when you want to include users that belong to more than one segment at the time or if you want to exclude users of a specific segment.
+
+Each Audience has one Algebra Node, and within it, you can mix your segments to build the audiences you want. Algebra nodes can be mixed together in a flexible way.
+
+There are four types of nodes available, and they follow a JSON notation:
+
+* Audience Segment nodes: Segments with no operator.
+* `AND` nodes: used to include the users that belong simultaneously to all the segments within it (like an intersection).
+* `OR` nodes: used to include users that belong to any of the segments within it.
+* `NOT` nodes: used to not include the users that belong to the segments within it.
+
+We provide examples below.
+
+***
+
+## Nodes Examples
+
+### Audience Segment Node
+
+<CodeGroup>
+  ```bash bash
+  // Target users that belong to a single Audience Segment
+  {
+      "audienceSegmentId": "153516"
+  }
+  ```
+</CodeGroup>
+
+***
+
+### `AND` Node
+
+This one is used to include the users that belong simultaneously to all the segments (like an intersection).
+
+<CodeGroup>
+  ```bash bash
+  // Target users that belong to three Audience Segments
+  "and":  [
+      { "audienceSegmentId": "153516" },
+      { "audienceSegmentId": "144184" },
+      { "audienceSegmentId": "328272" }
+  ]         
+
+  // Target users that belong to two groups of Audience Segments
+  "and": [
+      {
+          "or": [
+              { "audienceSegmentId": "153516" },
+              { "audienceSegmentId": "144184" }
+          ]
+      },
+      {
+          "or": [
+              { "audienceSegmentId": "144217" },
+              { "audienceSegmentId": "153522" }
+          ]
+      }
+  ]
+
+  // Target users that belong to the first group of Audience Segments (42914 or 19234) but not on the last one (144219)
+  "and": [
+      {
+          "or": [
+              { "audienceSegmentId": "42914" },
+              { "audienceSegmentId": "19234" }
+          ]
+      },
+      {
+          "not": { "audienceSegmentId": "144219" }
+      }
+  ]
+  ```
+</CodeGroup>
+
+***
+
+### `OR` Node
+
+This is used to include users that belong to any of the segments within it.
+
+<CodeGroup>
+  ```bash bash
+  // Target users that belong to any of these Audience Segments
+  {
+      "or": [
+          { "audienceSegmentId": "144219" },
+          { "audienceSegmentId": "153522" },
+          { "audienceSegmentId": "144217" }
+      ]                      
+   }
+  ```
+</CodeGroup>
+
+***
+
+### `NOT` Node
+
+This is used to exclude the users that belong to the segments within it.
+
+<CodeGroup>
+  ```bash bash
+  // Target users that do not belong to the single Audience Segment
+  {
+      "not": { "audienceSegmentId": "144219" }                    
+  }
+
+  // Target users that do not belong to any of these Audience Segments
+  {
+      "not": {
+          "or": [
+              { "audienceSegmentId": "153516" },
+              { "audienceSegmentId": "144217" }
+          ]
+      }
+  }
+
+  // Target users that do not belong to these Audience Segments
+  {
+      "not": {
+          "and": [
+              { "audienceSegmentId": "153516" },
+              { "audienceSegmentId": "144217" }
+          ]
+      }
+  }
+  ```
+</CodeGroup>
+
+***
+
+[Audience Segments](/marketing-solutions/docs/audience-segments)
+
+[Campaigns](/marketing-solutions/docs/campaigns)

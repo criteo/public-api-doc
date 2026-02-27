@@ -1,0 +1,169 @@
+---
+title: "Category Search"
+---
+
+1. Guides for Retail Media API
+2. [Line Items](/retail-media/v2025.10/docs/line-items)
+
+## Introduction
+
+The `Category Search` endpoint enables you to explore and discover available product categories within a retailer's hierarchical taxonomy structure. Product categories allow retailers to create a hierarchical structure that helps narrow down products into unique groups or subgroups based on shared characteristics.
+
+This endpoint provides the ability to see what categories are available to serve against a retailer's inventory, making it an essential tool for understanding targeting options and campaign planning. Unlike recommendation endpoints, `Category Search` allows you to actively explore the retailer's category structure through flexible search parameters.
+
+You can search for categories using category IDs to find specific categories and their relationships, or use text substring matching to discover categories by name. The endpoint supports pagination for large result sets, making it easy to browse through extensive category hierarchies efficiently.
+
+This functionality is particularly valuable for **campaign setup**, **category discovery**, and **understanding the breadth of targeting options available within a retailer's ecosystem**.
+
+***
+
+## Endpoint
+
+| Method   | Endpoint                                    | Description                                                    |
+| -------- | ------------------------------------------- | -------------------------------------------------------------- |
+| **POST** | `/retailers/{retailerId}/categories/search` | Searches for available categories within a retailer's taxonomy |
+
+***
+
+## Attributes table
+
+| Attribute       | Data Type | Description                                                                                                                   |
+| --------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `retailerId` \* | `string`  | Unique identifier for the retailer. Found using the `GET` retailer's endpoint. Required in URL path.Writable? N / Nullable? N |
+| `categoryIds`   | `array`   | Array of category ID strings for search filtering. Must be positive integer strings.Writable? Y / Nullable? Y                 |
+| `textSubstring` | `string`  | Text string to search for in category names. Used for category name filtering.Writable? Y / Nullable? Y                       |
+| `offset`        | `integer` | Pagination offset for search results. Default: `0`. Query parameter.Writable? Y / Nullable? Y                                 |
+| `limit`         | `integer` | Maximum number of results to return. Default: `500`. Query parameter.Writable? Y / Nullable? Y                                |
+
+\**Required*
+
+***
+
+## Search Categories
+
+This endpoint enables searching for available categories within a retailer's hierarchical taxonomy structure. You can search by category IDs or text substring, with pagination support for large result sets.
+
+Results are paginated using offset and limit query parameters; if omitted, defaults to 0 and 500, respectively.
+
+![](/images/retail-media/v2025.10/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/retailers/{retailerId}/categories/search?offset=0&limit=50
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/retailers/12345/categories/search?offset=0&limit=50' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+    -d '{
+            "data": {
+              "attributes": {
+                "categoryIds": [
+                  "520020"
+                ],
+                "textSubstring": "headphones"
+              },
+              "type": "CategoriesSearchRequestV1"
+            }
+        }'
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "metadata": {
+          "count": 2,
+          "offset": 0,
+          "limit": 50
+      },
+      "data": [
+          {
+              "id": "673311",
+              "type": "CategoryV1",
+              "attributes": {
+                  "text": "Electronics|Audio|Headphones|Wireless",
+                  "name": "Wireless Headphones",
+                  "parentId": "683708"
+              }
+          },
+          {
+              "id": "4830673",
+              "type": "CategoryV1",
+              "attributes": {
+                  "text": "Electronics|Audio|Headphones",
+                  "name": "Headphones",
+                  "parentId": "683706"
+              }
+          }
+      ],
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Responses
+
+| Code   | Meaning     | Troubleshooting Hint                                                                        |
+| ------ | ----------- | ------------------------------------------------------------------------------------------- |
+| 🟢 200 | Success     | Request processed successfully with pagination metadata                                     |
+| 🔴 400 | Bad Request | Check that `categoryIds` are positive integer strings and `retailerId` is valid in URL path |
+| 🔴 403 | Forbidden   | Verify authorization and retailer access permissions                                        |
+
+***
+
+### Common Error Scenarios
+
+**Invalid Category ID Format**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "metadata": null,
+      "data": null,
+      "warnings": [],
+      "errors": [
+          {
+              "type": "validation",
+              "code": "InvalidCategoryId",
+              "title": "Validation error",
+              "detail": "Category ids can only be positive integer strings."
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+**Invalid Retailer ID**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "warnings": [],
+      "errors": [
+          {
+              "traceId": "954eab48899860c9b18880eb0018fd3f",
+              "type": "validation",
+              "code": "model-validation-error",
+              "title": "Model validation error",
+              "detail": "The value ':retailerId' is not valid."
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+***
+
+[Recommended Keywords](/retail-media/v2025.10/docs/recommended-keywords)
+
+[Onsite Sponsored Products](/retail-media/v2025.10/docs/onsite-sponsored-products)

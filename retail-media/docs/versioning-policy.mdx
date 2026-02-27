@@ -1,0 +1,177 @@
+---
+title: "Versioning Policy"
+---
+
+1. Introduction
+
+As the Criteo API continuously evolves, API versioning provides predictability and insight into scheduled changes. This helps you control how you choose to handle feature upgrades and deprecations.
+
+<Info>
+  To stay informed about the Criteo API and upcoming changes, we recommend checking the [Changelog](https://developers.criteo.com/retail-media/changelog) and ensuring that your contact information is up to date.
+</Info>
+
+***
+
+## Release Schedule
+
+A new Criteo API version is released every three months, at the beginning of each quarter. The version names are date-based by year and month, such as `2025-10`. This helps to know precisely when your version was released.
+
+<Warning>
+  **Each version is supported for 12 months.** When a new stable version is released and contains changes that affect your integration, you have 12 months to test and migrate to the newest version.
+</Warning>
+
+Here is an example release schedule:
+
+| Version                                                                               | Release date       | Date Support is Expected by |
+| ------------------------------------------------------------------------------------- | ------------------ | --------------------------- |
+| [2024-07](https://developers.criteo.com/retail-media/v2024.07/docs/welcome-to-criteo) | July 23rd, 2024    | July 31st, 2025             |
+| [2024-10](https://developers.criteo.com/retail-media/v2024.10/docs/welcome-to-criteo) | October 22nd, 2024 | October 28th, 2025          |
+| [2025-01](https://developers.criteo.com/retail-media/v2025.01/docs/welcome-to-criteo) | January 21st, 2025 | January 27th, 2026          |
+| [2025-04](https://developers.criteo.com/retail-media/v2025.04/docs/welcome-to-criteo) | April 22nd, 2025   | April 28th, 2026            |
+| [2025-07](https://developers.criteo.com/retail-media/v2025.07/docs/welcome-to-criteo) | July 22th, 2025    | July 28th, 2026             |
+| [2025-10](https://developers.criteo.com/retail-media/v2025.10/docs/welcome-to-criteo) | October 21th, 2025 | October 28th, 2026          |
+| [2026-01](https://developers.criteo.com/retail-media/docs/welcome-to-criteo)          | January 20th 2026  | January 27th 2027           |
+
+***
+
+## Fall Forward
+
+If your app calls an endpoint on a stable version that is no longer supported, Criteo will fall forward and respond to your request with the same behavior as the oldest supported stable version.
+
+If an endpoint has been removed in all stable versions, then calling such an endpoint on an out-of-support version of Criteo API will result in an error.
+
+***
+
+## Breaking vs. Non-Breaking Changes
+
+Each version might include some changes. We explain below what the difference between breaking changes and backward compatible changes is.
+
+### Breaking change
+
+**A breaking change is a change to the API that could cause errors or failures when your app calls the API.**
+
+Any change that requires to change the way you call the API is breaking. Another type of breaking change is deprecating any functionality previously available in the API. Bug fixes can also create breaking changes if they require changing how the API is called.
+
+<Warning>
+  Breaking changes will be indicated as such in [the changelog](https://developers.criteo.com/retail-media/changelog).
+</Warning>
+
+### Backward-compatible change
+
+**A backward-compatible change is a change that guarantees that any previous requests will still be valid and provide the same output.**
+
+Backward-compatible changes include bug fixes or new features that do not interfere with other endpoints or functionality.
+
+***
+
+## Calling an API Version
+
+The Criteo API version is explicitly declared in the URL your app call, such as:
+
+<CodeGroup>
+  ```bash bash
+  https://api.criteo.com/2025-10
+  ```
+</CodeGroup>
+
+At any time, several supported versions of the API will be available. Specify which version you want to call by substituting the version name in the URL.
+
+The Criteo API responses will contain the header `Criteo-API-Version`, which returns the API version used to execute the request. If your app is updated, this will match the API version that is specified in your request. If the returned version is different, your app is outdated and using the default API version.
+
+Two unstable versions are available with the stable versions: the **preview** and the **beta** versions.
+
+***
+
+## Unstable Versions
+
+The Criteo API has two unstable versions, including several features that may change before their potential inclusion in an upcoming stable version.
+
+Developers are welcome to explore and test the features available in these versions.
+
+### Preview version
+
+The preview version lets you see what changes will likely be released in the next stable version so that you plan accordingly.
+
+The preview version is based on the latest stable version. Generally, new changes will be in the preview version for at least a month before going to a quarterly stable version.
+
+This version can be called using `preview` as the version number:
+
+<CodeGroup>
+  ```bash bash
+  https://api.criteo.com/preview
+  ```
+</CodeGroup>
+
+<Warning>
+  While the changes will likely be released in the stable version, there is always a chance that they might not be released. A feature might be added and removed later before making it to the stable version. Because of this, it’s recommended that you **do not use the preview version in your production environment**.
+</Warning>
+
+Please check the preview's documentation if you wish to test the version.
+
+### Beta version
+
+The beta version contains features and changes that are still in testing. You can use the beta version to test new and exploratory features, but since changes are frequent, **the beta version should not be used in production**.
+
+This means that both backward-incompatible and backward-compatible changes are made regularly. As a result, beta features may not always be released in future stable versions.
+
+Any beta endpoints will be flagged in the documentation and changelog. If you’d like to test endpoints available in the beta version, contact your Criteo contact to join the API developer program.
+
+***
+
+## Deprecation
+
+After 12 months of stability, each Criteo API will sunset and be deprecated. Developers will receive notices when a version is about to be deprecated. These notices will also be posted in the [changelog](https://developers.criteo.com/retail-media/changelog).
+
+### Endpoint lifecycle
+
+* From release to end-of-support, the response from the endpoint will have `deprecation` set to the end-of-support date of the version.
+* Starting from the day the endpoint is scheduled to decommission, `sunset` is set to the decommission date and the `deprecation` attribute is set to `true`.
+* After this date, the endpoint returns a `410` (i.e. cannot be used). This date is always after the end-of-support date but can also be equal to the end-of-support date.
+* After the decommission date, the endpoint answers `410`.
+
+### `Sunset HTTP` headers
+
+Our platform uses the `Sunset HTTP` response header to indicate when an endpoint is scheduled to be removed.
+
+<Info>
+  We follow the [RFC 8594 standard](https://www.rfc-editor.org/rfc/rfc8594.html) for the use of the Sunset header. This allows to monitor upcoming changes and plan migrations in advance.
+</Info>
+
+### Endpoint scheduled for decommission
+
+Once an endpoint has reached its end-of-support date, we may schedule it for removal. This moment is not predictable, but it is announced in advance.
+
+When this happens:
+
+* The response returns `Deprecation: true`.
+* The `Sunset header` is present and contains the exact decommission date.
+* Status remains `200 OK`, but this is the last opportunity to migrate.
+
+![](/images/retail-media/docs/353addf717c8c6006d4c69599a51d4c3af32c7bcdafdcf34184adb9dc7e358d9-image.png)
+
+<Info>
+  ### Recommended behavior
+
+  We recommend to detect the presence of both `Deprecation: true` and `Sunset`, and to log a warning or alert in your system.
+</Info>
+
+**Example of a Sunset endpoint**
+
+The header will indicate a `410 Gone` response code and the `deprecation` attribute will be set as `true`. The `sunset `field will indicate the final sunset date.
+
+![](/images/retail-media/docs/0388fb6f213e56624ae078077c12ae520b52d8131c0ec954f146eef2889ecd0e-image.png)
+
+**Example of a deprecated endpoint**
+
+The deprecation date will be visible in the `deprecation` attribute, indicating the endpoint is deprecated but not sunset yet. The endpoint will still be functional, but we advise migrating to another, more recent endpoint.
+
+![](/images/retail-media/docs/b30f74884ffc891fc6eee26019e6fd7232e3fb6ea3d9a0997bf1275887ffdbcf-image.png)
+
+***
+
+What’s Next
+
+* [Configure Your API Application](/retail-media/docs/connect-to-the-api)
+* [API Authorization](/retail-media/docs/api-authorization)
+* [OAuth App Implementation](/retail-media/docs/oauth-app-implementation)
+* [Developer Accounts](/retail-media/docs/developer-accounts-organizations-apps)

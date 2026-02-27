@@ -1,0 +1,208 @@
+---
+title: "OneTag for Offsite - Hybrid Apps"
+description: "Addendum for Hybrid Apps"
+---
+
+# Introduction
+
+This guide is to be used in 2 different scenarios:
+
+* Hybrid app integration for offsite and onsite, already integrated through API
+
+* Hybrid app integration for offsite only.
+
+<Info>
+  This guide is an addendum. Please refer to this page for a more comprehensive documentation: [OneTag for Retail Media Offsite.](https://developers.criteo.com/retailer-integration/v1.1/docs/onetag-for-offsite)
+</Info>
+
+***
+
+# About “hybrid apps”
+
+"Hybrid apps" refer to any app wrapping and rendering web content (HTML/CSS/JS) from your website via `web-view` components. Two examples of popular frameworks to implement such apps are React Native and Apache Cordova.
+
+In this scenario, the Javascript tags (OneTag) implemented on your website will also be triggered when users navigate your app. However, to activate the monetization of your audience through the delivery of ads on the open web, it’s crucial that such events also collect the user’s advertising ID, i.e. the Identifier for Advertisers (IDFA) on iOS devices and the Google Advertising ID (GAID) on Android devices.
+
+This guide documents how the IDFA and/or GAID can be passed into your existing implementation of OneTag.
+
+***
+
+# Passing the advertising ID to OneTag
+
+## Step 1: Retrieve the advertising ID from the OS
+
+The first step consists of getting the advertising ID from the OS into the JS layer inside the web view.
+
+The retrieval of the advertising ID is contingent on the specific framework used for the app’s development.
+
+If the app was developed without a framework, guidelines for obtaining the advertising ID can be found on the Android and iOS developer websites.
+
+We will illustrate this with two examples in the following sections.
+
+***
+
+### iOS
+
+Web views (like `UIWebView`, `WKWebView `or `SFSafariViewController`) are sandboxed, which means they don’t have access to app data, and vice versa. This means you can’t directly access the IDFA from JavaScript running in a web view.
+
+To retrieve and pass the IDFA to your web view, you would need to do this from your app code.
+
+Here’s a simple example of how you might do this in Swift:
+
+<CodeGroup>
+  ```bash bash
+  import AdSupport 
+
+  let idfaString = ASIdentifierManager.shared().advertisingIdentifier.uuidString 
+  let javascript = "window.retrieved_idfa = '\(idfaString)';" 
+
+  webView.evaluateJavaScript(javascript, completionHandler: nil) 
+  ```
+</CodeGroup>
+
+In this example, `ASIdentifierManager` is used to get the IDFA, and then a JavaScript string is created which sets a global `retrieved_idfa` variable to the IDFA value. This JavaScript is then run in the `webView` using the` evaluateJavaScript` method.
+
+If the user has not granted permission to access the IDFA, then `ASIdentifierManager.shared().advertisingIdentifier.uuidString` will return a string of zeros to respect their privacy. You can learn more about this on the [Apple for Developer website](https://developer.apple.com/documentation/adsupport/asidentifiermanager/advertisingidentifier).
+
+<Warning>
+  Please note that this is a simplified example and might not cover all use cases or error handling. Adapt the code to your specific implementation.
+</Warning>
+
+<Warning>
+  Importantly, if the user has not provided consent via the cookie banner or has not granted permission to be tracked through the App Tracking Transparency (ATT) prompt, Onetag should not be called from within the web view.
+</Warning>
+
+***
+
+### Android
+
+Similarly to iOS, you cannot directly access the GAID from a web view in Android. However, you can retrieve it in the native Android code and then pass it to your web view.
+
+Here’s a simple example of how you might do this in Kotlin:
+
+<CodeGroup>
+  ```bash bash
+  import com.google.android.gms.ads.identifier.AdvertisingIdClient
+
+  val adInfo = AdvertisingIdClient.getAdvertisingIdInfo(context)
+  val gaid = adInfo?.id
+
+  val javascript = "window.retrieved_gaid = '$gaid';"
+
+  webView.evaluateJavascript(javascript, null)
+  ```
+</CodeGroup>
+
+In this example, `AdvertisingIdClient` is used to get the GAID, and then a JavaScript string is created which sets a global `retrieved_gaid` variable to the GAID value. This JavaScript is then run in the `webView` using the `evaluateJavascript `method.
+
+If the user has not given permission to access the GAID (i.e. when `isLimitAdTrackingEnabled() `returns true) then `AdvertisingIdClient.Info.getId()` will return a string of zeros to respect their privacy (this applies to all the devices that support Google Play Services). You can learn more about this on the [Android for Developers website](https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info).
+
+<Warning>
+  Please note that this is a simplified example and might not cover all use cases or error handling. Adapt the code to your specific implementation.
+</Warning>
+
+<Warning>
+  Importantly, if the user has not provided consent via the cookie banner or has not granted permission to access the GAID, Onetag should not be called from within the web view.
+</Warning>
+
+***
+
+## Step 2: Pass the advertising ID to OneTag
+
+Identify which page types are served via your app web view. The Tracker events fired on those pages will require an additional parameter to support the collection of the advertising ID.
+
+The steps below details how to apply the needed changes and refer to the example code displayed [at the end of the section.](https://developers.criteo.com/retailer-integration/v1.1/docs/offsite-for-hybrid-apps#full-example)
+
+***
+
+### Step 2.1.
+
+* Assign the advertising ID retrieved in the previous step to one of the following variables:
+
+  * In the iOS app, the retrieved IDFA must be assigned to variable `idfa` (the `gaid` variable should be set as an empty string).
+  * In the Android app, the retrieved GAID must be assigned to variable `gaid` (the `idfa` variable should be set as an empty string).
+
+<CodeGroup>
+  ```bash bash
+
+      // Assign to these variables the advertising ID 
+      // (IDFA for iOS / GAID for Android) retrieved from the OS
+      var idfa = "";
+      var gaid = "";
+  ```
+</CodeGroup>
+
+***
+
+### Step 2.2.
+
+Copy and paste the code below after the initialization of the object `window.criteo_q`.
+
+<CodeGroup>
+  ```bash bash
+  // Pass the App identifiers to OneTag
+      if (typeof idfa !== "undefined" && idfa !== "") {
+          window.criteo_q.push({ event: "setAppleAdvertisingId", idfa: idfa });
+      } else if (typeof gaid !== "undefined" && gaid !== "") {
+          window.criteo_q.push({ event: "setGoogleAdvertisingId", gaid: gaid });
+      }
+  ```
+</CodeGroup>
+
+The code needs to be copied after this line:
+
+<CodeGroup>
+  ```bash bash
+  window.criteo_q = window.criteo_q || \[];
+  ```
+</CodeGroup>
+
+<Info>
+  This part doesn’t require any customization
+</Info>
+
+***
+
+### Full example
+
+<CodeGroup>
+  ```bash bash
+  <script src="//dynamic.criteo.com/js/ld/ld.js?a=12345" type="text/javascript"></script>
+  <script type="text/javascript">
+      window.criteo_q = window.criteo_q || [];
+
+      // Assign to these variables the advertising ID 
+      // (IDFA for iOS / GAID for Android) retrieved from the OS
+      var idfa = "";
+      var gaid = "";
+
+      // Pass the App identifiers to OneTag
+      if (typeof idfa !== "undefined" && idfa !== "") {
+          window.criteo_q.push({ event: "setAppleAdvertisingId", idfa: idfa });
+      } else if (typeof gaid !== "undefined" && gaid !== "") {
+          window.criteo_q.push({ event: "setGoogleAdvertisingId", gaid: gaid });
+      }
+
+      window.criteo_q.push(
+          { event: "setAccount", account: "12345" },
+          { event: "setRetailerVisitorId", id: "1a2b3c4e5d6f7g" },
+          { event: "setCustomerID", id: "1234567890" },
+          { event: "setEmail", email: "##SHA256-hashed Email Address of User##", hash_method: "sha256" },
+          { event: "viewHome" }
+          // Other parameters as necessary
+      );
+  </script>
+  ```
+</CodeGroup>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+[OneTag for Retail Media Offsite](/retailer-integration/q4-2025/docs/onetag-for-offsite)
+
+[Google Ad Manager (GAM) - Criteo Onsite Display](/retailer-integration/q4-2025/docs/gam-overview)

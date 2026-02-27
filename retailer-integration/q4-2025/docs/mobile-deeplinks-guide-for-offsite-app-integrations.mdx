@@ -1,0 +1,175 @@
+---
+title: "Mobile Deeplinks Guide for Offsite"
+---
+
+## Introduction
+
+Deep linking enables users to be redirected to specific content within a mobile application when they click on a link. It provides a seamless transition between web and app environments, enhancing user experience and conversion potential.
+
+In mobile contexts, a deep link can take users directly to a screen or feature within the app. When a user taps one of these links, the mobile operating system (iOS or Android) launches the app and navigates to the desired content.
+
+At Criteo, **Offsite Retail Media for App** currently supports the following deep linking methods:
+
+* **Universal Links** on iOS,
+* **App Links** on Android.
+
+<Warning>
+  **Important** URI schemes are *not supported* for Offsite Retail Media App integrations. Only Universal Links and App Links are accepted.
+</Warning>
+
+***
+
+## Universal Links (iOS) & App Links (Android)
+
+Apple introduced **Universal Links** in iOS 9 to replace custom URI schemes, avoiding conflicts between apps sharing the same scheme and providing secure, web-compatible redirection. Similarly, **Android App Links**, introduced in Android 6.0, offer an equivalent mechanism on Android.
+
+Both systems rely on HTTPS URLs and allow a fallback to the mobile website if the app is not installed.
+
+**Example:**
+
+```
+https://www.mystore.com/products?id=abc123
+```
+
+If the app is installed, this URL will open directly in the app; otherwise, it will open in the browser.
+
+***
+
+## Deep Linking in Criteo Ads
+
+Deep linking configuration depends on the type of ad being delivered.
+
+### Dynamic Ads
+
+Dynamic Ads use Criteo’s Product Recommendation Engine to optimize engagement and conversions. Deep links may vary by banner zone:
+
+| Zone             | Description                                                                            | Requirement                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Logo Zone**    | Contains advertiser branding (typically top-left). Redirects to the app’s main screen. | **Mandatory:** Universal/App Link to main screen.                                               |
+| **Product Zone** | Displays products from the catalog. Redirects to product detail screens.               | **Mandatory:** Product-specific Universal/App Link.                                             |
+| **Coupon Zone**  | Optional area showing discounts or special offers.                                     | **Optional:** Universal/App Link to main or promotional screen (e.g., category or search page). |
+
+***
+
+### Static Ads
+
+Static Ads have fixed creative content and a single redirection target.
+
+**Requirement:**
+
+* **Mandatory:** One Universal Link or App Link that opens the app and navigates to either the main screen or a specific landing page.
+
+This configuration is available in the **self-service platform** when creating an ad under *Web Redirection*.
+
+***
+
+### Video Ads
+
+**Requirement:**
+
+* **Mandatory:** One Universal Link or App Link that opens the app and navigates to either the main screen or a specific landing page.
+
+This configuration is also available in the **self-service platform** under *Web Redirection*.
+
+***
+
+## Setting Up Deep Linking for iOS Apps
+
+### Universal Links Configuration
+
+To configure Universal Links for iOS:
+
+1. Add your link’s domain to the app’s **Associated Domains** in Xcode.
+2. Host an **Apple App Site Association (AASA)** file on the corresponding domain.
+
+The AASA file:
+
+* Must be a valid JSON file (no `.json` extension in the URL).
+* Includes your app’s **App ID** and the paths that should (or should not) trigger redirection.
+
+**Example AASA file:**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "applinks": {
+      "details": [
+        {
+          "appIDs": ["ABCDE12345.com.example.app"],
+          "components": [
+            { "/": "/buy/*" },
+            { "/": "/help/*", "?": { "articleNumber": "????" } }
+          ]
+        }
+      ]
+    },
+    "webcredentials": {
+      "apps": ["ABCDE12345.com.example.app"]
+    }
+  }
+  ```
+</CodeGroup>
+
+<Info>
+  For more details, refer to Apple’s [Universal Links documentation](https://developer.apple.com/documentation/xcode/allowing-apps-and-websites-to-link-to-your-content).
+</Info>
+
+***
+
+## Setting Up Deep Linking for Android Apps
+
+### App Links Configuration
+
+To configure Android App Links:
+
+1. In your app’s `AndroidManifest.xml`, define an **intent filter** to specify which URLs your app should handle.
+2. Host a **Digital Asset Links** file (`assetlinks.json`) on the same domain as the URLs.
+
+The `assetlinks.json` file must contain:
+
+* The **package name** declared in your `build.gradle` file.
+* The **SHA256 fingerprint** of your app’s signing certificate.
+
+Generate the fingerprint with:
+
+<CodeGroup>
+  ```bash bash
+  keytool -list -v -keystore my-release-key.keystore
+  ```
+</CodeGroup>
+
+**Example with the `assetlinks.json` file:**
+
+<CodeGroup>
+  ```bash bash
+  [{
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5"
+      ]
+    }
+  }]
+  ```
+</CodeGroup>
+
+<Info>
+  For more details, refer to Google’s [App Links documentation](https://developer.android.com/training/app-links/).
+</Info>
+
+***
+
+## Summary
+
+| Platform | Supported Method | Fallback   | Required Configuration            |
+| -------- | ---------------- | ---------- | --------------------------------- |
+| iOS      | Universal Links  | Mobile Web | AASA file + Associated Domains    |
+| Android  | App Links        | Mobile Web | `assetlinks.json` + Intent Filter |
+
+***
+
+[Ad Rendering Best Practices](/retailer-integration/q4-2025/docs/ad-rendering-best-practices)
+
+[Introduction to Beacons](/retailer-integration/q4-2025/docs/introduction-to-beacons)

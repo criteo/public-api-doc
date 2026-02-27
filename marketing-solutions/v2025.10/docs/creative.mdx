@@ -1,0 +1,815 @@
+---
+title: "Creatives"
+---
+
+1. Marketing Solutions Endpoints
+2. [Creatives](/marketing-solutions/v2025.10/docs/creatives)
+
+## **Search Creatives**
+
+### Retrieving Creatives for a Specific Advertiser
+
+Creatives created through Criteo's API will be returned for the designated advertiser ID. Only static images, HTML Ad Tags, Adaptive and dynamic creatives created through API and Commerce Growth are returned.
+
+![](/images/marketing-solutions/v2025.10/docs/8a6bfd9-get.png)
+
+```
+/advertisers/{advertiserId}/creatives?offset=0&limit=30
+```
+
+  The API will return an array of the IDs, formats and creative specific attributes for the specified advertiser ID. Please note that the advertiser ID is required in the request URL. The offset and limit are optionals.
+
+**`offset`** 0 based index of the first creative to return in the response. The default is 0.
+
+**`limit`** The number of creatives to be returned. The default is 50.
+
+Response example:
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "id": "18",
+        "type": "Creative",
+        "attributes": {
+          "name": "My image",
+          "description": "Description of the creative",
+          "author": "r.deckard",
+          "status": "Live",
+          "format": "Image",
+          "advertiserId": "51",
+          "datasetId": "49",
+          "imageAttributes": {
+              "urls": [
+                "https://static.criteo.net/image_1.jpg", 
+                "https://static.criteo.net/image_2.jpg"
+              ],
+              "landingPageUrl": "https://my-landing-page.com"
+          },
+          "id": "18"
+        }
+      },
+      {
+        "type": "Creative",
+        "id": "19",
+        "attributes": {
+          "name": "My HTML ad",
+          "description": "Description of the creative",
+          "author": "r.deckard",
+          "status": "Draft",
+          "format": "HtmlTag",
+          "advertiserId": "51",
+          "datasetId": "49",
+          "htmlTagAttributes": {
+              "tags": [
+                {
+                  "htmlTag": "<script src=\"https://anotherthirdparty.com/script?super=ok\"></script>",
+                  "size": {
+                    "width": 600,
+                    "height": 400
+                  }
+                }
+              ]
+          },
+          "id": "19"
+        }
+      },
+      {
+        "type": "Creative",
+        "id": "20",
+        "attributes": {
+          "name": "My dynamic creative",
+          "description": "Description of the creative",
+          "author": "r.deckard",
+          "status": "Draft",
+          "format": "Dynamic",
+          "advertiserId": "51",
+          "datasetId": "49",
+          "dynamicAttributes": {
+             "logos": [
+               {
+                 "shape": "Horizontal",
+                 "url": "https://static.criteo.net/image_1.jpg"
+               }
+             ],
+            "creativeBackgroundColor": "#A1A1A1",
+            "bodyTextColor": "#A2A2A2",
+            "pricesColor": "#A3A3A3",
+            "primaryFont": "Arial",
+            "callsToAction": [
+              "Go!",
+              "Buy now"
+            ],
+            "productImageDisplay": "ShowFullImage"
+          }
+        },
+        "id": "20"
+      }
+    ],
+  	"errors": [ ],
+  	"warnings": [ ]
+  }
+  ```
+</CodeGroup>
+
+### Retrieving a Specific Creative
+
+Creative created through Criteo's API will be returned for the designated creative ID.
+
+![](/images/marketing-solutions/v2025.10/docs/8a6bfd9-get.png)
+
+```
+/creatives/{creativeId}
+```
+
+ The API will return an array of the ID, format and creative specific attributes for the specified creative ID. Please note that the creative ID is required in the request URL. Response example:
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+        "id": "18",
+        "type": "Creative",
+        "attributes": {
+          "name": "My image",
+          "description": "Description of the creative",
+          "author": "r.deckard",
+          "status": "Live",
+          "format": "Image",
+          "advertiserId": "51",
+          "datasetId": "49",
+          "imageAttributes": {
+              "urls": [
+                "https://static.criteo.net/image_1.jpg", 
+                "https://static.criteo.net/image_2.jpg"
+              ],
+              "landingPageUrl": "https://my-landing-page.com"
+          },
+         	"id": "18"
+        }
+      },
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## **Generating new Creatives**
+
+You can use API endpoints detailed below to generate new creatives. Depending on the Creative format chosen some attributes will vary. Here is the list of attributes that can be included in the request. If not specified as *optional*, the attribute is mandatory.
+
+**`name`** The name of Creative
+
+**`description`** (optional) The description of Creative
+
+**`format`** It should have the value `Image`, `Dynamic`, `Adaptive` or `HtmlTag`
+
+**`datasetId`** Dataset linked to the Creative
+
+**`ImageWriteAttributes`** (optional) Encapsulates all the attributes of **Image** creatives, it's mandatory only for creatives of that format.
+
+**`HtmlTagWriteAttributes`** (optional) Encapsulates all the attributes of **HtmlTag** creatives, it's mandatory only for creatives of that format.
+
+**`DynamicWriteAttributes`** (optional) Encapsulates all the attributes of **Dynamic** creatives, it's mandatory only for creatives of that format.
+
+**`AdaptiveWriteAttributes`** (optional) Encapsulates all the attributes of **Adaptive** creatives, it's mandatory only for creatives of that format.
+
+***
+
+## **Creating A New Image Creative**
+
+A new image creative can be created for a specific advertiser by making a POST call to the creatives' endpoint. The request body should specify the name, ad set ID, description (optional), format (`Image`), dataset ID and image attributes of the new image creative.
+
+![](/images/marketing-solutions/v2025.10/docs/b0623eb-post.png)
+
+```
+/advertisers/{advertiserId}/creatives
+```
+
+**Request example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "CreativeRequest",
+      "attributes": {
+          "name": "New image",
+          "description": "Description of the new Image creative",
+          "format": "Image",
+          "datasetId": "49",
+          "imageWriteAttributes": {
+              "base64Strings": [
+                "{base 64 encoded image string}", 
+                "{base 64 encoded image string}"
+              ],
+              "landingPageUrl": "https://my-landing-page.com"
+          }
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of the ID, name, description (if specified), author, status, format , advertiser ID, dataset ID and image attributes of the new image creative. Please note that the advertiser ID is required in the request URL.
+
+ **Response example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "20",
+          "type": "Creative",
+          "attributes": {
+              "name": "New image",
+              "description": "Description of the new Image creative",
+              "author": "r.deckard",
+              "status": "Draft",
+              "format": "Image",
+              "advertiserId": "51",
+              "datasetId": "49",
+              "imageAttributes": {
+                  "urls": [
+                    "https://www.criteo.com/myimage_1",
+                    "https://www.criteo.com/myimage_2"
+                  ],
+                  "landingPageUrl": "https://my-landing-page.com"
+              },
+              "id": "20"
+          }	
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## **Creating a new HTML Ad Tags**
+
+A new HTML Ad Tag can be created for a specific advertiser by making a POST call to the creatives' endpoint. The request body should specify the name, adset ID, description (optional), format (`HtmlTag`), dataset ID and HTML attributes of the new HTML creative.
+
+![](/images/marketing-solutions/v2025.10/docs/b0623eb-post.png)
+
+```
+/advertisers/{advertiserId}/creatives
+```
+
+**Request example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "CreativeRequest",
+      "attributes": {
+          "name": "New HTML Tag Creative",
+          "description": "Description of the new HTML Tag Creative",
+          "format": "HtmlTag",
+          "datasetId": "49",
+          "htmlTagWriteAttributes": {
+            "tags": [
+              {
+                  "htmlTag": "<script src=\"https://anotherthirdparty.com/script/?w=300&h=250\"></script>",
+                  "size": {
+                      "width": 300,
+                      "height": 250
+                  }
+              },
+              {
+                  "htmlTag": "<script src=\"https://anotherthirdparty.com/script?w=600&h=400\"></script>",
+                  "size": {
+                      "width": 600,
+                      "height": 400
+                  }
+              }
+            ]
+        }
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of the ID, name, description (if specified), author, status, format , advertiser ID, dataset ID and HTML attributes of the new HTML Ad Tag creative. Please note that the advertiser ID is required in the request URL. 
+
+**Response example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "21",
+          "type": "Creative",
+          "attributes": {
+              "name": "New HTML Tag Creative",
+              "description": "Description of the new HTML Tag Creative",
+              "author": "r.deckard",
+              "status": "Draft",
+              "format": "HtmlTag",
+              "advertiserId": "51",
+              "datasetId": "49",
+              "htmlTagAttributes": {
+                  "tags": [
+                    {
+                        "htmlTag": "<script src=\"https://anotherthirdparty.com/script/?w=300&h=250\"></script>",
+                        "size": {
+                            "width": 300,
+                            "height": 250
+                        }
+                    },
+                    {
+                        "htmlTag": "<script src=\"https://anotherthirdparty.com/script?w=600&h=400\"></script>",
+                        "size": {
+                            "width": 600,
+                            "height": 400
+                        }
+                    }
+                  ]
+              },
+              "id": "21"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## **Creating a new dynamic creative**
+
+A new dynamic creative can be created for a specific advertiser by making a POST call to the creatives' endpoint. The request body should specify the name, adset ID, description (optional), format (`Dynamic`), dataset ID, inventory type (`native` or `display`) and dynamic attributes of the new HTML Tag creative.
+
+### Dynamic attributes
+
+**`logoBase64String`** Logo displayed in the banner.
+
+**`creativeBackgroundColor`** Background color of the banner. Hexadecimal value
+
+**`bodyTextColor`** Main text color used in the banner. Hexadecimal value
+
+**`pricesColor`** Color applied to the product prices. Hexadecimal value
+
+**`primaryFont`** Primary font used in the banners. Available fonts listed [here](https://help.criteo.com/kb/guide/en/dynamic-ads-BlOsyHZFaF/Steps/775669)
+
+**`callsToAction`** Array of Call-to-Action.
+
+**`productImageDisplay`** Display format of the product images. Can be `ShowFullImage` (images fit inside the allocated space) or `ZoomOnImage`. If you choose `ZoomOnImage`, there may be some image cropping.
+
+![](/images/marketing-solutions/v2025.10/docs/b0623eb-post.png)
+
+```
+/advertisers/{advertiserId}/creatives
+```
+
+**Request example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "CreativeRequest",
+      "attributes": {
+          "name": "New dynamic creative",
+          "description": "Description of the new dynamic creative",
+          "format": "Dynamic",
+          "datasetId": "49",
+          "dynamicWriteAttributes": {
+            "logoBase64String": "{base 64 encoded image string}",
+            "creativeBackgroundColor": "ab00f",
+            "bodyTextColor": "496b4n",
+            "pricesColor": "d56d2e",
+            "primaryFont": "Arial",
+            "callsToAction": ["Buy now", "Go"],
+            "productImageDisplay": "ShowFullImage"
+          }
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+ The API will return an array of the ID, name, description (if specified), author, status, format, advertiser ID, dataset ID and dynamic attributes of the new dynamic creative. Please note that the advertiser ID is required in the request URL.
+
+**Response example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "22",
+          "type": "Creative",
+          "attributes": {
+              "name": "New dynamic creative",
+              "description": "Description of the new dynamic creative",
+              "author": "r.deckard",
+              "status": "Draft",
+              "format": "Dynamic",
+              "advertiserId": "51",
+              "datasetId": "49",
+              "dynamicAttributes": {
+                "logos": [
+                      {
+                          "shape": "Horizontal",
+                          "url": "https://www.criteo.com/myimage_1"
+                      }
+                  ],
+                "creativeBackgroundColor": "ab00f",
+            		"bodyTextColor": "496b4n",
+            		"pricesColor": "d56d2e",
+            		"primaryFont": "Arial",
+            		"callsToAction": ["Buy now", "Go"],
+            		"productImageDisplay": "ShowFullImage" 
+  						},
+              "id": "22"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## **Creating a new Adaptive creative**
+
+A new Adaptive creative can be created for a specific advertiser by making a POST call to the creatives' endpoint. The path should specify the Advertiser ID. The request body should specify the `adaptiveWriteAttributes`.
+
+### `adaptiveWriteAttributes` elements
+
+**`layouts`** The adaptive formats that should be enabled. It can contain any of the following values: "Editorial", “Montage“ or "InBannerVideo".
+
+**`logoBase64String`** Logo image as a base-64 encoded string Accepted formats: jpeg, png under 5MB (same as dynamic creatives)
+
+**`headlineText`** The headline of the banner.
+
+**`headlineFont`** The font of the headline.
+
+**`descriptionText`** The description of the banner.
+
+**`descriptionFont`** The font of the description.
+
+**`colors`** The color aliases used by Adaptive banners in Hexadecimal format. All the following have to be defined:
+
+→ *logoAreaAndTitleColor*: The color of the logo area → *backgroundColor*: The color of the background. → *text1Color*: The color of the headline and description. → *text2Color*: The color of the image set headline. → *ctaBackgroundColor*: The color of the background of the cta button. → *ctaTextColor*: The color of the text in cta button.
+
+**`callsToAction`** A Call-to-Action (CTA) is an action-driven instruction to your audience intended to provoke an immediate response, such as “Buy now” or “Go!”.
+
+**`ImageSetsBase64`** Represents multiple image sets, each image set consists of the headline and multiple images in base64. Accepted formats: jpeg, png, under 5MB
+
+<Info>
+  This field becomes required only if the `Montage` layout is enabled. The field is applicable to the other formats.
+</Info>
+
+**`imageDisplay`** Value can be `ShowFullImage` or `ZoomOnImage`. Choose whether your image set should fit inside the allocated space (`ShowFullImage`) or whether they should fill that space (`ZoomOnImage`). If `ZoomOnImage` is chosen, there may be some image cropping.
+
+<Info>
+  The field becomes required when the `Montage` layout is enabled or if the the scope of the ad that the user wants to create later is `Native`. This option is not used in the other cases.
+</Info>
+
+**`videoBase64Strings`** Represents one video as base64 in different ratios. Ideally 2 videos will be provided, one having a horizontal ratio and the other one a vertical ratio so that the use can deploy its creative. Accepted formats: mp4, under 25MB.
+
+<Info>
+  This field becomes required only if `InBannerVideo` layout is enabled.
+</Info>
+
+**`landingPageUrl`** The web redirection URL to which the user will be redirected when clicking on the banner.
+
+![](/images/marketing-solutions/v2025.10/docs/b0623eb-post.png)
+
+```
+/advertisers/{advertiser-id}/creatives
+```
+
+**Request example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "CreativeRequest",
+          "attributes": {
+              "datasetId": "49",
+              "name": "new adaptive creative",
+              "description": "description for adaptive crea",
+              "format": "Adaptive",
+              "adaptiveWriteAttributes": {
+                  "layouts": ["Editorial", "Montage", "InBannerVideo"],
+                  "logoBase64String": "{base 64 encoded image string}",
+                  "headlineText": "This a headline",
+                  "headlineFont": "Arial",
+                  "descriptionText": "This a description",
+                  "descriptionFont": "Arial",
+                  "colors": {
+                      "logoAndTitleColor": "#CD3414",
+                      "backgroundColor": "#1FCD14",
+                      "text1Color": "#0B41AB",
+                      "text2Color": "#CD3414",
+                      "ctaBackgroundColor": "#1FCD14",
+                      "ctaTextColor": "#0B41AB"
+                  },
+                  "callsToAction": ["Go go go", "Click me"],
+                  "imageSetsBase64": [{
+                          "imageBase64Strings": [
+                              "{base 64 encoded image1 string}",
+                              "{base 64 encoded image2 string}",
+                              "{base 64 encoded image3 string}"
+                          ],
+                          "headlineText": "image set 1 headline"
+                      },
+                      {
+                          "imageBase64Strings": [
+                              "{base 64 encoded image4 string}",
+                              "{base 64 encoded image5 string}",
+                              "{base 64 encoded image6 string}"
+                          ],
+                          "headlineText": "image set 2 headline"
+                      }
+                  ]
+              },
+              "imageDisplay": "ShowFullImage",
+              "videoBase64Strings": [
+                  "{base 64 encoded video1 string}",
+                  "{base 64 encoded video2 string}"
+              ],
+              "landingPageUrl": "https://example.com/"
+          }
+      }
+  }
+  }
+  ```
+</CodeGroup>
+
+**Response example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+      ...
+      "data": {
+          "type": "Creative",
+          "id": "18",
+          "attributes": {
+              "advertiserId": "51",
+              "datasetId": "49",
+              "name": "new adaptive crea",
+              "description": "description for adaptive crea",
+              "format": "Adaptive",
+              "status": "Live",
+              "author": "r.deckard",
+              "adaptiveAttributes": {
+                  "layouts": ["Editorial", "Montage", "InBannerVideo"],
+                  "logos": [{
+                      "shape": "Horizontal",
+                      "url": "https://static.criteo.net/toto.jpg"
+                  }],
+                  "headlineText": "This a headline",
+                  "headlineFont": "Arial",
+                  "descriptionText": "This a description",
+                  "descriptionFont": "Arial",
+                  "colors": {
+                      "logoAndTitleColor": "#CD3414",
+                      "backgroundColor": "#1FCD14",
+                      "text1Color": "#0B41AB",
+                      "text2Color": "#CD3414",
+                      "ctaBackgroundColor": "#1FCD14",
+                      "ctaTextColor": "#0B41AB"
+                  },
+                  "callsToAction": ["Go go go", "Click me"],
+                  "imageSets": [{
+                          "images": [{
+                                  "shape": "Horizontal",
+                                  "url": "https://static.criteo.net/image_horizontal1.jpg"
+                              },
+                              {
+                                  "shape": "Vertical",
+                                  "url": "https://static.criteo.net/image_vertical1.jpg"
+                              },
+                              {
+                                  "shape": "Square",
+                                  "url": "https://static.criteo.net/image_square1.jpg"
+                              }
+                          ],
+                          "headlineText": "image set 1 headline"
+                      },
+                      {
+                          "images": [{
+                                  "shape": "Horizontal",
+                                  "url": "https://static.criteo.net/image_horizontal2.jpg"
+                              },
+                              {
+                                  "url": "https://static.criteo.net/image_vertical2.jpg",
+                                  "shape": "Vertical"
+                              },
+                              {
+                                  "url": "https://static.criteo.net/image_square2.jpg",
+                                  "shape": "Square"
+                              }
+                          ],
+                          "headlineText": "image set 2 headline"
+                      }
+                  ]
+              },
+              "imageDisplay": "ShowFullImage",
+              "videos": [{
+                      "duration": 25.3422,
+                      "shape": "Horizontal",
+                      "url": "https://static.criteo.net/video_horizontal.mp4"
+                  },
+                  {
+                      "duration": 30,
+                      "shape": "Vertical",
+                      "url": "https://static.criteo.net/video_vertical.mp4"
+                  }
+              ],
+              "landingPageUrl": "https://example.com/"
+          }
+      }
+  },
+  "errors": [ /* omitted if no errors */
+      ...
+  ],
+  "warnings": [ /* omitted if no warnings */
+      ...
+  ]
+  ...
+  }
+  ```
+</CodeGroup>
+
+***
+
+## **Previewing a Creative**
+
+You can generate the preview HTML of a creative given a size (width x height). The parameters are passed as query parameters and not in the body.
+
+### Dynamic attributes
+
+**`creative-id`** (mandatory) The ID of the creative to preview.
+
+**`height`** (mandatory) The height of the banner to generate.
+
+**`width`** (mandatory) The width of the banner to generate.
+
+![](/images/marketing-solutions/v2025.10/docs/b0623eb-post.png)
+
+```
+/creatives/{creative-id}/preview?width={width}&height={height}
+```
+
+**Response example:**
+
+<CodeGroup>
+  ```bash bash
+  <html>
+  ...
+  	<body>
+  	...
+  		<div>Click me!</div>
+  	...
+  	</body>
+  </html>
+  ```
+</CodeGroup>
+
+***
+
+## **Updating a Creative**
+
+The creative name, description and creative specific attributes can be updated by making a PUT request to the creatives' endpoint with a specific creative ID in the URL path. Please note that the advertiser ID, dataset ID, ad set ID and format (`Image`, `HtmlTag`,`Adaptive` or `Dynamic`) are required in the PUT body.
+
+![](/images/marketing-solutions/v2025.10/docs/1ee76cc-put.png)
+
+```
+/creatives/{creativeId}
+```
+
+**Request example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "CreativeRequest",
+      "attributes": {
+          "name": "Image title updated",
+          "description": "Image description updated",
+          "format": "Image",
+          "advertiserId": "51",
+          "datasetId": "49",
+          "imageWriteAttributes": {
+              "base64Strings": [
+                "{base 64 encoded image string}", 
+                "{base 64 encoded image string}"
+              ],
+              "landingPageUrl": "https://new-landing-page.com"
+          }
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+  The API will return an array of the ID, name, description, format, author, status and image/HTML Ad Tag attributes of the specified creative ID.
+
+**Response example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "20",
+          "type": "Creative",
+          "attributes": {
+              "name": "Image title updated",
+              "description": "Image description updated",
+              "author": "r.deckard",
+              "status": "Live",
+              "format": "Image",
+              "advertiserId": "51",
+              "datasetId": "49",
+              "imageAttributes": {
+                "urls": [
+                  "https://www.criteo.com/myimage_3",
+                  "https://www.criteo.com/myimage_4"
+                ],
+                "landingPageUrl": "http://new-landing-page.com"
+              },
+             	"id": "20"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## **Deleting a creative**
+
+A creative can be deleted by specifying the creative ID in the URL path of a DELETE call to the creatives' endpoint.
+
+![](/images/marketing-solutions/v2025.10/docs/1e25c4c-delete.png)
+
+```
+/creatives/{creativeId}
+```
+
+ The API will return an array with the creative ID that was deleted.
+
+**Response example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+<Warning>
+  Make sure that the Creative is not linked to any Ad set before deletion.
+</Warning>
+
+***
+
+## **Validation Errors**
+
+**`user-request-forbidden-advertiser `**&#x54;he user doesn't have the permission to access the specified advertiser.
+
+**`user-request-forbidden-creative`** The user doesn't have the permission to access the specified creative.
+
+**`user-request-forbidden-ad`** The user doesn't have the permission to access the specified ad.
+
+**`invalid-action-with-managed-creative`** The action cannot be performed on a managed service creative.
+
+**`invalid-action-with-managed-ad`** The action cannot be performed on a managed service ad.
+
+**`invalid-creative-action-with-status `**&#x54;he action cannot be performed due to the status of the creative.
+
+**`invalid-image`** One of the images provided is invalid. Please check the image requirements [here](https://help.criteo.com/kb/guide/en/image-ads-8hXUBDeeoo/Steps/775688)
+
+**`invalid-redirection-url-image`** The redirection URL specified doesn't match the advertiser domain.
+
+**`invalid-html-tag`** One of the HTML tags is not supported. Please check the list of supported ad servers [here](https://help.criteo.com/kb/guide/en/html-ad-tags-QUSq5Astwy/Steps/775787)
+
+**`invalid-creative-request`** Invalid request on the Creative endpoint.
+
+**`invalid-ad-request`** Invalid request on the Ad endpoint.
+
+***
+
+What’s Next
+
+* [Ads](/marketing-solutions/v2025.10/docs/ads)
+* [Coupon](/marketing-solutions/v2025.10/docs/coupon)

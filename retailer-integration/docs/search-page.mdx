@@ -1,0 +1,219 @@
+---
+title: "Search Pages"
+---
+
+# Definition
+
+A search page is a **listing page showing the results of a user's inputted keyword**.
+
+Search result pages are divided into two types:
+
+* **Search result**: A search page that displays a product grid.
+* **Null search result**: A search page with no results and no corresponding product grid.
+
+***
+
+# Parameters
+
+## `event-type`
+
+**Value**: `viewSearchResult`
+
+**Description**: Indicates to the API that this is a search result request.
+
+**Required**: Yes
+
+***
+
+## `page-id`
+
+**Description**: An identifier that tells Criteo which placements to return for the ad request. Placements are instantiated by your Technical Account Manager depending on your desired ad configuration. Below are the standard page-ids for this page type:
+
+* **In Americas**: Typically follows the structure `[event-type]_API_[environment]`, e.g., `viewSearchResult_API_desktop`, `viewNullSearchResult_API_iOS`
+* **In EMEA**: Typically follows the structure `[event-type]Api[environment]`, e.g., `viewSearchResultApiMobile`, `viewNullSearchResultApiAndroid`
+
+**Required**: Yes
+
+***
+
+## `keywords`
+
+**Description**: The search query entered by the user. Should be URL encoded.
+
+**Examples**:
+
+* `black%20laptops`
+* `black-laptops`
+
+**Required**: Yes
+
+***
+
+## `item`
+
+**Description**: The list of SKUs that are organically shown on the page in the grid or list. Must match the parameter `id` in the feed (See details [here](https://developers.criteo.com/retailer-integration/docs/product-feed-parameters#id)). Multiple items should be separated by a pipe `|` or `%7C` (URL encoded). Used for reporting and for organic deduplication, if enabled.
+
+**Examples**:
+
+* `123|456|789`
+* `123%7C456%7C789`
+
+**Required**: Recommended, but not required
+
+***
+
+## `parent-item`
+
+**Description**: Only use this if parent SKUs are being passed. Must match the parameter `item_group_id` in the feed (See details [here](https://developers.criteo.com/retailer-integration/docs/product-feed-parameters#item_group_id)). Multiple parent items should be separated by a pipe `|` or `%7C` (URL encoded). For SKUs that do not have parent SKUs, `NULL` should be sent instead. Used for reporting and for organic deduplication, if enabled.
+
+**Examples**:
+
+* `12345P|NULL|456789P`
+* `12345P%7CNULL%7C456789P`
+
+**Required**: Recommended if the eCommerce platform uses parent items
+
+***
+
+## `list-size`
+
+**Description**: The total number of organic items on the page. Preferably, it should match the number of item IDs sent in the `item` parameter.
+
+**Required**: Recommended
+
+***
+
+## `page-number`
+
+**Description**: Represents the page number for either paginated results or scroll fold if products are loaded dynamically. This parameter can be used for result deduplication, by limiting the number of products shown on each page. Please note that a valid `page-number` starts at 1 and not 0.
+
+**Example**: `3`
+
+**Required**: Recommended
+
+***
+
+## `filters`
+
+**Description**: Corresponds to the filters applied by the shopper on the results. See the filter section for details on how to use this parameter.
+
+**Examples**:
+
+* `(price,le,100)`
+* `(color,eq,blue)`
+
+**Required**: Recommended. If not used, the ads will not follow the selected filters and might result in a poor user experience.
+
+***
+
+# Sample Calls
+
+<Info>
+  The header values in the sample calls are illustrative. Make sure to replace them with the appropriate values for your implementation.
+</Info>
+
+***
+
+## Search Result Page Example
+
+### AMER
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewSearchResult_API_desktop" \
+  --data-urlencode "event-type=viewSearchResult" \
+  --data-urlencode "keywords=fast laptops" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "page-number=1" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  ```
+</CodeGroup>
+
+### EMEA
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailervisitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewSearchResultApiAios" \
+  --data-urlencode "event-type=viewCategory" \
+  --data-urlencode "keywords=black laptops" \
+  --data-urlencode "item=123|456|789" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_ios 1.2.3"
+  ```
+</CodeGroup>
+
+***
+
+## Null Search Result Page Example
+
+### AMER
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewSearchResult_API_iOS" \
+  --data-urlencode "event-type=viewSearchResult" \
+  --data-urlencode "keywords=fast laptops" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "page-number=1" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_ios 1.2.3"
+  ```
+</CodeGroup>
+
+### EMEA
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewNullSearchResultApiAios" \
+  --data-urlencode "event-type=viewSearchResult" \
+  --data-urlencode "keywords=notarealkeyword" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_ios 1.2.3"
+  ```
+</CodeGroup>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Search pages](/retailer-integration/docs/search-page)
+* [Search bar dropdown](/retailer-integration/docs/search-bar-dropdown)
+* [Category pages](/retailer-integration/docs/category-page)
+* [Category flyout](/retailer-integration/docs/category-flyout)
+* [Product details page](/retailer-integration/docs/product-details-page)
+* [Favorites page](/retailer-integration/docs/favorites-page)
+* [Basket page](/retailer-integration/docs/cart-page)
+* [Order confirmation page](/retailer-integration/docs/order-confirmation-page)
+* [Organic add-to-cart events](/retailer-integration/docs/organic-add-to-cart-events)
+* [Filters](/retailer-integration/docs/filtering)

@@ -1,0 +1,1218 @@
+---
+title: "Balances Endpoints"
+---
+
+1. Guides for Retail Media API
+2. [Balances](/retail-media/v2025.01/docs/balances)
+
+View and manage all available balances across campaigns
+
+<Info>
+  ### Getting Started
+
+  Learn more about campaign management with our API [**here**](doc:balances)
+</Info>
+
+## **Endpoints**
+
+| Method    | Endpoint                                               | Description                                                                       |
+| --------- | ------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| **GET**   | `/accounts/{accountId}/balances`                       | Retrieve all balances associated with a specific account.                         |
+| **POST**  | `/accounts/{accountId}/balances`                       | Create a new balance for a specified account.                                     |
+| **PATCH** | `/accounts/{accountId}/balances/{balanceId}`           | Modify balance's metadata (name, start/end date - for deposited funds, see below) |
+| **POST**  | `/accounts/{accountId}/balances/{balanceId}/add-funds` | Add/remove funds deposited in a specific balance.                                 |
+| **GET**   | `/balances/{balanceId}/campaigns`                      | Retrieve all campaigns linked to a specific balance.                              |
+| **POST**  | `/balances/{balanceId}/campaigns/append`               | Add campaigns to a specific balance.                                              |
+| **POST**  | `/balances/{balanceId}/campaigns/delete`               | Remove campaigns from a specific balance.                                         |
+| **GET**   | `/balances/{balanceId}/history`                        | Retrieve all changes made historically to a balance                               |
+
+## **Balance Parameters**
+
+| Attribute                  | Data Type | Description                                                                                                                                                                                                                                                                                                                |
+| -------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | string    | Balance IDAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                      |
+| `name`\*                   | string    | Balance nameAccepted values: up to 255-char strings Writeable? Y / Nullable? N                                                                                                                                                                                                                                             |
+| `poNumber`                 | string    | Purchase order numberAccepted values: up to 32-char strings Writeable? Y / Nullable? Y                                                                                                                                                                                                                                     |
+| `deposited`                | decimal   | Amount of funds deposited; uncapped if `null`Accepted values: `deposited` ≥ 0.0 Writeable? Y / Nullable? Y                                                                                                                                                                                                                 |
+| `spent`                    | decimal   | Amount of funds already spentAccepted values: 0 ≤ `spent` ≤ `deposited` Writeable? N / Nullable? N                                                                                                                                                                                                                         |
+| `remaining`                | decimal   | Amount of funds already spentAccepted values: 0 ≤ `remaining` ≤ `deposited` (or `null`, if `deposited` not set) Writeable? N / Nullable? Y                                                                                                                                                                                 |
+| `startDate`\*              | timestamp | Balance start date; if time zone is not set, will consider [Account](doc:account)'s time zone as defaultAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Writeable? Y / Nullable? N                                                                    |
+| `endDate`                  | timestamp | Balance end date; if time zone is not set, will consider [Account](doc:account)'s time zone as defaultAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Default: if `null` or absent, balance will be available indefinitely Writeable? Y / Nullable? Y |
+| `status`                   | enum      | Balance current statusAccepted values: `active`, `scheduled`, `ended` Writeable? N / Nullable? N                                                                                                                                                                                                                           |
+| `createdAt`                | timestamp | Timestamp of balance creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html)) Writeable? N / Nullable? N                                                                                                                                       |
+| `updatedAt`                | timestamp | Timestamp of last balance update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html)) Writeable? N / Nullable? N                                                                                                                                    |
+| `memo`                     | string    | An optional memo note that can be set in the balanceAccepted values: up to 250-char strings Writeable? Y / Nullable? Y                                                                                                                                                                                                     |
+| `balanceType`              | enum      | The balance type is computed based on the deposited amount:Accepted values: `capped`, `uncapped` Writeable? N / Nullable? N- `capped`: if the deposited amount is provided.
+- `uncapped`: when there is no amount defined (set to `null`)                                                                                  |
+| `spendType`                | enum      | The type of balance that will be used based on the campaign typeAccepted values: `Onsite`, `Offsite`, `OffsiteAwareness` Writeable? N / Nullable? N                                                                                                                                                                        |
+| `privateMarketBillingType` | enum      | Billing type of the balance (for Private Market)Accepted values: `notApplicable`, `billByRetailer`, `billByCriteo` Writeable? N / Nullable? N                                                                                                                                                                              |
+
+*\*Required for Balance creation*
+
+## **Balance History Parameters**
+
+| Attribute            | Data Type | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dateOfModification` | timestamp | Timestamp of balance updateAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `modifiedByUser`     | string    | Username who modified the insertion orderAccepted values: strings in format "j.doe" Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `changeType`         | enum      | Definition of the type of change in a balanceAccepted values:- `BalanceCreated`: new balance is created
+- `BalanceAdded`: capped balance amount was increased by a certain amount
+- `BalanceRemoved`: capped balance is decreased by a certain amount
+- `BalanceUncapped`: capped balance is changed to uncapped
+- `BalanceCapped`: uncapped balance is changed to capped
+- `StartDate`: start date is modified
+- `EndDate`: end date is modified
+- `BalanceName`: balance name is modified
+- `PoNumber`: PO Number is modified
+- `ValueAdd`: new additional amount is added to the balance
+- `SalesforceId`: SalesForceID (internal Criteo ID) is modified by Criteo (this would appear for Criteo billed balances) |
+| `changeDetails`      | object    | Structure with the change details (from Balance History endpoint)Parameters:- `previousValue`: previous value of a property of the balance
+- `currentValue`: current value of a property of the balance
+- `changeValue`: change value of a property of the balance                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+
+## **Get all Balances**
+
+This endpoint lists all balances in an account. The results are provided in a paginated format.
+
+![](/images/retail-media/v2025.01/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+
+  ```bash bash
+  import requests
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25"
+
+  payload={}
+  headers = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25")
+    .method("GET", body)
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "metadata": {
+          "totalItemsAcrossAllPages": 94,
+          "currentPageSize": 25,
+          "currentPageIndex": 0,
+          "totalPages": 4,
+          "nextPage": "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=1&pageSize=25"
+      },
+      "data": [
+          {
+              "id": "14094543095747588032",
+              "type": "BalanceResponseV2",
+              "attributes": {
+                  "name": "Balance 123",
+                  "poNumber": "13993827",
+                  "memo": "uncapped balance, free to spend!",
+                  "deposited": null,
+                  "spent": 42931.28,
+                  "remaining": null,
+                  "startDate": "2020-04-06",
+                  "endDate": null,
+                  "status": "active",
+                  "createdAt": "2020-04-06T00:02:41+00:00",
+                  "updatedAt": "2020-04-06T00:02:41+00:00",
+                  "balanceType": "uncapped",
+                  "spendType": "Onsite",
+                  "privateMarketBillingType": "notApplicable"
+              }
+          },
+   
+          // ...
+   
+          {
+              "id": "4237496305219757554",
+              "type": "BalanceResponseV2",
+              "attributes": {
+                  "name": "Balance 789",
+                  "poNumber": "",
+                  "memo": "10k for the special 2s-day promotion",
+                  "deposited": 10000.00,
+                  "spent": 923.40,
+                  "remaining": 9076.60,
+                  "startDate": "2025-02-01",
+                  "endDate": null,
+                  "status": "scheduled",
+                  "createdAt": "2025-01-06T00:48:11+00:00",
+                  "updatedAt": "2025-01-07T22:19:57+00:00",
+                  "balanceType": "capped",
+                  "spendType": "Onsite",
+                  "privateMarketBillingType": "notApplicable"
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Create a Balance**
+
+This endpoint creates a new balance in the specified account.
+
+![](/images/retail-media/v2025.01/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances' \
+      -H 'Content-Type: application/json' \
+      -H 'Accept: application/json' \
+      -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+      -d '{
+              "data": {
+                  "attributes": {
+                      "name": "Balance 2025 Q1",
+                      "startDate": "2025-01-01",
+                      "spendType": "Onsite",
+                      "poNumber": null,
+                      "deposited": 12500.00,
+                      "endDate": "",
+                      "memo": "Balance for campaigns in 2025 Q1"
+                  }
+              }
+          }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances"
+
+  payload = json.dumps({
+      "data": {
+          "attributes": {
+              "name": "Balance 2025 Q1",
+              "startDate": "2025-01-01",
+              "spendType": "Onsite",
+              "poNumber": None,
+              "deposited": 12500.00,
+              "endDate": "",
+              "memo": "Balance for campaigns in 2025 Q1"
+          }
+      }
+  })
+  headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"name\":\"Balance 2025 Q1\",\"startDate\":\"2025-01-01\",\"spendType\":\"Onsite\",\"poNumber\": null,\"deposited\": 12500.00,\"endDate\":\"\",\"memo\":\"Balance for campaigns in 2025 Q1\"}}}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+      'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json',
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+  $request->setBody('{"data":{"attributes":{"name":"Balance 2025 Q1","startDate":"2025-01-01","spendType":"Onsite","poNumber":null,"deposited":12500.00,"endDate":"","memo":"Balance for campaigns in 2025 Q1"}}');
+  try{
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      }
+      else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+          $response->getReasonPhrase();
+      }
+  }
+  catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "id": "697385288434028544",
+      "type": "BalanceResponseV2",
+      "data": {
+          "attributes": {
+              "name": "Balance 2025 Q1",
+              "poNumber": null,
+              "memo": "Balance for campaigns in 2025 Q1",
+              "deposited": 12500.00,
+              "spent": 0.00,
+              "remaining": 12500.00,
+              "startDate": "2025-01-01",
+              "endDate": null,
+              "status": "active",
+              "createdAt": "2025-04-08T10:00:09+00:00",
+              "updatedAt": "2025-04-08T10:00:09+00:00",
+              "balanceType": "capped",
+              "spendType": "Onsite",
+              "privateMarketBillingType": "billByRetailer"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Modify Balance metadata**
+
+This endpoint modifies the metadata of a specified balance, like `name`, `poNumber`, `startDate` or `endDate`.
+
+To modify deposited funds, check the following endpoint `/accounts/{accountId}/balances/{balanceId}/add-funds`
+
+![](/images/retail-media/v2025.01/docs/04a928f-patch.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{balanceId}
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544' \
+      -H 'Content-Type: application/json' \
+      -H 'Accept: application/json' \
+      -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+      -d '{
+              "data": {
+                  "attributes": {
+                      "startDate": "2025-01-01",
+                      "endDate": "2025-04-01",
+                      "poNumber": "PO 12345",
+                      "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
+                  }
+              }
+          }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544"
+
+  payload = json.dumps({
+      "data": {
+          "attributes": {
+              "startDate": "2025-01-01",
+              "endDate": "2025-04-01",
+              "poNumber": "PO 12345",
+              "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
+          }
+      }
+  })
+  headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("PATCH", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"startDate\":\"2025-01-01\",\"endDate\":\"2025-04-01\",\"poNumber\":\"PO 12345\",\"memo\":\"Balance for campaigns in 2025 Q1 (with start and end date)\"}}}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544")
+    .method("PATCH", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+      'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json',
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+  $request->setBody('{"data":{"attributes":{"startDate":"2025-01-01","endDate":"2025-04-01","poNumber":"PO 12345","memo":"Balance for campaigns in 2025 Q1 (with start and end date)"}}}');
+  try{
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      }
+      else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+          $response->getReasonPhrase();
+      }
+  }
+  catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "id": "697385288434028544",
+      "type": "BalanceResponseV2",
+      "data": {
+          "attributes": {
+              "name": "Balance 2025 Q1",
+              "poNumber": "PO 12345",
+              "memo": "Balance for campaigns in 2025 Q1 (with start and end date)",
+              "deposited": 12500.00,
+              "spent": 0.00,
+              "remaining": 12500.00,
+              "startDate": "2025-01-01",
+              "endDate": "2025-04-01",
+              "status": "active",
+              "createdAt": "2025-04-08T10:00:09+00:00",
+              "updatedAt": "2025-04-08T10:00:09+00:00",
+              "balanceType": "capped",
+              "spendType": "Onsite",
+              "privateMarketBillingType": "billByRetailer"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Add or remove Balance funds**
+
+This endpoint allows to add or remove funds deposited in a specific balance
+
+![](/images/retail-media/v2025.01/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{balanceId}/add-funds
+```
+
+**Request Body Parameters**
+
+| Attribute       | Data Type | Description                                                                                                                                                                                                       |
+| --------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deltaAmount`\* | decimal   | Difference amount of fund to be added/removed from balance; it cannot reduce the current amount of funds deposited to less than zeroAccepted values: `deltaAmount`≥ `deposited * (-1)` Writeable? N / Nullable? N |
+| `poNumber`      | string    | New purchase order numberAccepted values: up to 32-char strings Writeable? Y / Nullable? Y                                                                                                                        |
+| `memo`\*        | string    | A memo note that should be set in the balance together with this modificationAccepted values: up to 250-char strings Writeable? Y / Nullable? Y                                                                   |
+
+*\*Required*
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds' \
+      -H 'Content-Type: application/json' \
+      -H 'Accept: application/json' \
+      -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+      -d '{
+              "data": {
+                  "attributes": {
+                      "deltaAmount": -2500.00,
+                      "poNumber": "PO 12346",
+                      "memo": "Reduced balance for campaigns in 2025 Q1"
+                  }
+              }
+          }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds"
+
+  payload = json.dumps({
+      "data": {
+          "attributes": {
+              "deltaAmount": -2500.00,
+              "poNumber": "PO 12346",
+              "memo": "Reduced balance for campaigns in 2025 Q1"
+          }
+      }
+  })
+  headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"deltaAmount\": -2500.00,\"poNumber\":\"PO 12346",\"memo":\"Reduced balance for campaigns in 2025 Q1\"}}}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+      'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json',
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+  $request->setBody('{"data":{"attributes":{"deltaAmount":-2500.00,"poNumber":"PO 12346","memo":"Reduced balance for campaigns in 2025 Q1"}}}');
+  try{
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      }
+      else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+          $response->getReasonPhrase();
+      }
+  }
+  catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "id": "697385288434028544",
+      "type": "BalanceResponseV2",
+      "data": {
+          "attributes": {
+              "name": "Balance 2025 Q1",
+              "poNumber": "PO 12346",
+              "memo": "Reduced balance for campaigns in 2025 Q1",
+              "deposited": 10000.00,
+              "spent": 0.00,
+              "remaining": 10000.00,
+              "startDate": "2025-01-01",
+              "endDate": "2025-04-01",
+              "status": "active",
+              "createdAt": "2025-04-08T10:00:09+00:00",
+              "updatedAt": "2025-04-08T10:00:09+00:00",
+              "balanceType": "capped",
+              "spendType": "Onsite",
+              "privateMarketBillingType": "billByRetailer"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Get all Campaigns on a specific Balance**
+
+This endpoint lists all campaigns on the specified balance. The results are provided in a paginated format.
+
+![](/images/retail-media/v2025.01/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
+```
+
+**Response Body Parameters**
+
+| Attribute | Data Type | Description                                                                                                                                             |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`      | string    | [Campaign](doc:campaign) ID, respective to the campaign(s) currently appended to the balanceAccepted values: string of int64 Writeable? N / Nullable? N |
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns")
+    .method("GET", body)
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  import requests
+
+  url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns"
+
+  payload={}
+  headers = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "8343086999167541140",
+              "type": "RetailMediaCampaign"
+          },
+          {
+              "id": "3683145960016759663",
+              "type": "RetailMediaCampaign"
+          }
+      ],
+      "metadata": {
+          "totalItemsAcrossAllPages": 2,
+          "currentPageSize": 25,
+          "currentPageIndex": 0,
+          "totalPages": 1,
+          "nextPage": null,
+          "previousPage": null
+      }
+  }
+  ```
+</CodeGroup>
+
+## **Add Campaigns to a specific Balance**
+
+This endpoint adds one or more campaigns to the specified balance. The results are provided in a single page. In this example, a campaign had already existed on the balance before two new additions.
+
+![](/images/retail-media/v2025.01/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/append
+```
+
+**Request Body Parameters**
+
+| Attribute | Data Type | Description                                                                                                                                                               |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`      | string    | [Campaign](doc:campaign) ID, required to define to which campaign(s) the balance should be appended or deletedAccepted values: string of int64 Writeable? N / Nullable? N |
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X POST "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/append" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+      -H "Content-Type: application/json" \
+      -d '{
+              "data": [
+                  {
+                      "id": "3683145960016759663",
+                      "type": "RetailMediaCampaign"
+                  },
+                  {
+                      "id": "16108177282234788969",
+                      "type": "RetailMediaCampaign"
+                  }
+              ]
+          }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/append"
+
+  payload = json.dumps({
+    "data": [
+      {
+        "id": "3683145960016759663",
+        "type": "RetailMediaCampaign"
+      },
+      {
+        "id": "16108177282234788969",
+        "type": "RetailMediaCampaign"
+      }
+    ]
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":[{\"id\":\"3683145960016759663\",\"type\":\"RetailMediaCampaign\"},{\"id\":\"16108177282234788969\",\"type\":\"RetailMediaCampaign\"}]\n}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/append")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/append');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  $request->setBody('{"data":[{"id":"3683145960016759663","type":"RetailMediaCampaign"},{"id":"16108177282234788969","type":"RetailMediaCampaign"}]}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "8343086999167541140",
+              "type": "RetailMediaCampaign"
+          },
+          {
+              "id": "3683145960016759663",
+              "type": "RetailMediaCampaign"
+          },
+          {
+              "id": "16108177282234788969",
+              "type": "RetailMediaCampaign"
+          }
+      ],
+      "metadata": {
+          "totalItemsAcrossAllPages": 3,
+          "currentPageSize": 3,
+          "currentPageIndex": 0,
+          "totalPages": 1,
+          "nextPage": null,
+          "previousPage": null
+      }
+  }
+  ```
+</CodeGroup>
+
+## **Remove Campaigns from a specific Balance**
+
+This endpoint removes one or more campaigns from the specified balance. The resulting state of the balance is returned as a single page.
+
+![](/images/retail-media/v2025.01/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/delete
+```
+
+**Request Body Parameters**
+
+| Attribute | Data Type | Description                                                                                                                                                               |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`      | string    | [Campaign](doc:campaign) ID, required to define to which campaign(s) the balance should be appended or deletedAccepted values: string of int64 Writeable? N / Nullable? N |
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X POST "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/delete" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+      -H "Content-Type: application/json" \
+      -d '{
+              "data": [
+                  {
+                      "id": "16108177282234788969",
+                      "type": "RetailMediaCampaign"
+                  }
+              ]
+          }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/delete"
+
+  payload = json.dumps({
+    "data": [
+      {
+        "id": "16108177282234788969",
+        "type": "RetailMediaCampaign"
+      }
+    ]
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":[{\"id\":\"16108177282234788969\",\"type\":\"RetailMediaCampaign\"}]}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/delete")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/delete');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  $request->setBody('{"data":[{"id":"16108177282234788969","type":"RetailMediaCampaign"}]}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "8343086999167541140",
+              "type": "RetailMediaCampaign"
+          },
+          {
+              "id": "3683145960016759663",
+              "type": "RetailMediaCampaign"
+          }
+      ],
+      "metadata": {
+          "totalItemsAcrossAllPages": 2,
+          "currentPageSize": 2,
+          "currentPageIndex": 0,
+          "totalPages": 1,
+          "nextPage": null,
+          "previousPage": null
+      }
+  }
+  ```
+</CodeGroup>
+
+## **Get Balance History**
+
+This endpoint lists all changes made to a specific balance. The results are provided in a paginated format (using query parameters `offset` and `limit`) and can be filtered by a comma-separated list of `changeType` values.
+
+<Info>
+  ### Modified Users
+
+  `modifiedByUser` - When a balance is updated via Criteo's Retail Media UI, the user login name will be provided. For instance, if “Kip Heaney” updated the balance on 2023-11-07, it indicates that Kip made the change through the Criteo Retail Media UI.
+
+  If a balance is updated through the Criteo API, the name of the API application responsible for the change will be shown. For example, on 2024-03-20, the balance was updated by the API application **Retail Media API Application.**
+</Info>
+
+![](/images/retail-media/v2025.01/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history?offset=0&limit=25&limitToChangeTypes={changeTypes}
+```
+
+**Sample Request**: retrieve all changes
+
+<CodeGroup>
+  ```bash bash
+  curl -L 'https://api.criteo.com/{version}/retail-media/balances/697385288434028544/history?offset=0&limit=25' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <TOKEN>'
+  ```
+</CodeGroup>
+
+**Sample Response**: retrieve all changes
+
+<CodeGroup>
+  ```bash bash
+  {
+      "meta": {
+          "count": 5,
+          "offset": 0,
+          "limit": 25
+      },
+      "data": [
+          {
+              "dateOfModification": "2025-02-15T12:24:49-04:00",
+              "modifiedByUser": "Retail Media API Application",
+              "changeType": "BalanceCreated",
+              "changeDetails": {
+                  "previousValue": null,
+                  "currentValue": "12500.00000000",
+                  "changeValue": null
+              },
+              "memo": "Balance for campaigns in 2025 Q1"
+          },
+          {
+              "dateOfModification": "2025-02-15T12:25:40-04:00",
+              "modifiedByUser": "Retail Media API Application",
+              "changeType": "EndDate",
+              "changeDetails": {
+                  "previousValue": null,
+                  "currentValue": "2025-04-01T23:59:59-04:00",
+                  "changeValue": null
+              },
+              "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
+          },
+          {
+              "dateOfModification": "2025-02-15T12:25:40-04:00",
+              "modifiedByUser": "Retail Media API Application",
+              "changeType": "PoNumber",
+              "changeDetails": {
+                  "previousValue": null,
+                  "currentValue": "PO 12345",
+                  "changeValue": null
+              },
+              "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
+          },
+          {
+              "dateOfModification": "2025-02-15T12:26:16-04:00",
+              "modifiedByUser": "Retail Media API Application",
+              "changeType": "BalanceRemoved",
+              "changeDetails": {
+                  "previousValue": "12500.00000000",
+                  "currentValue": "10000.00000000",
+                  "changeValue": "-2500.00000000"
+              },
+              "memo": "Reduced balance for campaigns in 2025 Q1"
+          },
+          {
+              "dateOfModification": "2025-02-15T12:26:16-04:00",
+              "modifiedByUser": "Retail Media API Application",
+              "changeType": "PoNumber",
+              "changeDetails": {
+                  "previousValue": "PO 12345",
+                  "currentValue": "PO 12346",
+                  "changeValue": null
+              },
+              "memo": "Reduced balance for campaigns in 2025 Q1"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+**Sample Request**: retrieve only changes in balance values (added / removed)
+
+<CodeGroup>
+  ```bash bash
+  curl -L 'https://api.criteo.com/{version}/retail-media/balances/697385288434028544/history?offset=0&limit=25&limitToChangeTypes=BalanceAdded,BalanceRemoved' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <TOKEN>'
+  ```
+</CodeGroup>
+
+**Sample Response**: retrieve only changes in balance values (added / removed)
+
+<CodeGroup>
+  ```bash bash
+  {
+      "meta": {
+          "count": 2,
+          "offset": 0,
+          "limit": 25
+      },
+      "data": [
+          {
+              "dateOfModification": "2024-02-15T12:10:11.2807153-04:00",
+              "modifiedByUser": "Retail Media API Application",
+              "changeType": "BalanceRemoved",
+              "changeDetails": {
+                  "previousValue": "12500.00000000",
+                  "currentValue": "10000.00000000",
+                  "changeValue": "-2500.00000000"
+              },
+              "memo": "Reduced balance for campaigns in 2025 Q1"
+          },
+          {
+              "dateOfModification": "2024-03-03T16:30:21.2807153-04:00",
+              "modifiedByUser": "Retail Media API Application",
+              "changeType": "BalanceAdded",
+              "changeDetails": {
+                  "previousValue": "10000.00000000",
+                  "currentValue": "15000.00000000",
+                  "changeValue": "5000.00000000"
+              },
+              "memo": "Increased balance for campaigns in 2025 Q1"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Responses**
+
+| Response | Title                                             | Detail                                                                                                                 | Troubleshooting                                                                                                                                                                                                                                                                                                              |
+| -------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢 `200` |                                                   |                                                                                                                        | Call executed with success                                                                                                                                                                                                                                                                                                   |
+| 🟢 `201` |                                                   |                                                                                                                        | Balance request created with success                                                                                                                                                                                                                                                                                         |
+| 🔴 `400` | **Error deserializing request**                   | Field xyz is not valid                                                                                                 | Review the value of field xyz provided in the request                                                                                                                                                                                                                                                                        |
+| 🔴 `400` | **Change data capture type xxx is not supported** | Change data capture type xxx is not supported                                                                          | The value of `limitToChangeTypes` is not supported for `/balances/{balanceId} /history` - ensure to use a comma-separated list of available`changeType` values defined above                                                                                                                                                 |
+| 🔴 `400` | **Invalid name**                                  | Balance name should be unique. There exists balance with the specified name. Balance creation/update has been canceled | Check value of `name` in the request trying to create/edit a balance. In case of editing, either provided a new name value or omit this parameter to maintain its same value                                                                                                                                                 |
+| 🔴 `400` | **Invalid deltaamount**                           | Can not decrease funds to less than zero                                                                               | Review value of `deltaAmount` and make sure it's greater than current balance's `deposited * (-1)`                                                                                                                                                                                                                           |
+| 🔴 `403` | **Authorization error**                           | Resource access forbidden: does not have permissions                                                                   | One of the permission levels was not respected. Make sure that the respective API app has access to:- Read/Manage the domain "Balance" (depending on the requested action). Review the Types of Permissions in [Authorization Requests](doc:authorization-requests)
+- the `accountId` or `balanceId` provided in the request |
+
+***
+
+[Balances](/retail-media/v2025.01/docs/balances)
+
+[Audiences](/retail-media/v2025.01/docs/audiences)

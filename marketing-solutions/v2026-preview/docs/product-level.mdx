@@ -1,0 +1,182 @@
+---
+title: "Product-Level"
+---
+
+1. Preview Endpoints
+2. [Analytics](/marketing-solutions/v2026-preview/docs/analytics)
+
+## Introduction
+
+The Product-Level endpoint provides transparency on **the top 200 products** your ads are being displayed on and provides visibility into the number of displays, clicks, and sales that have occurred.
+
+<Info>
+  ### If a user clicks on a banner but buys a product other than the one they clicked on, the click is still attributed to the product shown in the ad. The sale, however, is attributed to the sold product. This doesn’t necessarily mean that you are displaying the wrong product: some products can help you catch the attention of prospective customers. Those ads drive customers to your website, where they browse and buy different items
+</Info>
+
+## Making a call
+
+The product-Level report is available at the following endpoint:
+
+![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/preview/reports/top-products
+```
+
+<Warning>
+  ### Required Attributes
+
+  There are 4 required attributes when making a call. For additional fields, see the Attributes table below.
+
+  `advertiserId` `startDate` `endDate` `rankProductsBy`
+</Warning>
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "TopProductsReport",
+      "attributes": {
+        "startDate": "2022-01-01",
+        "endDate": "2022-01-02",
+        "advertiserId": "1111",
+        "rankProductsBy": "displays",
+        "metrics": [
+          "clicks",
+          "ctr",
+          "visits",
+          "sales",
+          "cost",
+          "revenue"
+        ],
+        "dimensions": [
+          "campaignId",
+          "campaign",
+          "adSetId",
+          "adSet",
+          "productId",
+          "product",
+          "productUrl",
+          "brand"
+        ],
+        "campaignIds": ["123", "456"],
+        "adSetIds": ["456", "789"],
+        "categoryIds": ["6666", "7777"],
+        "brands": ["brandName1"],
+        "adSetStatus": ["Active", "NotRunning"],
+        "timezone": "UTC",
+        "currency": "USD"
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The report generated from the POST returns the **top 200 products** according to the query in the format of a JSON document.
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "type": "TopProductsReport",
+        "attributes": {
+          "rows": [
+            {
+              "campaignId": "456",
+              "campaign": "MyCampaign",
+              "adSetId": "789",
+              "adSet": "MyAdset",
+              "productId": "1a2b3c",
+              "product": "productName1",
+              "productUrl": "https://www.product-url1.com/param1",
+              "brand": "brandName1",
+              "currency": "USD",
+              "displays": "123456",
+              "clicks": "456",
+              "ctr": "12.34",
+              "visits": "123",
+              "sales": "12",
+              "cost": "789",
+              "revenue": "1456"
+            },
+            ...
+            {
+              "campaignId": "456",
+              "campaign": "MyCampaign",
+              "adSetId": "789",
+              "adSet": "MyAdset",
+              "productId": "1a2b3c",
+              "product": "productName2",
+              "productUrl": "https://www.product-url2.com/param2",
+              "brand": "brandName1",
+              "currency": "USD",
+              "displays": "234567",
+              "clicks": "678",
+              "ctr": "23.45",
+              "visits": "234",
+              "sales": "23",
+              "cost": "678",
+              "revenue": "2356"
+            }
+          ]
+        }
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+## Attributes
+
+| Field          | Type      | Required | Default Value                                                                                                    | Description                                                              |
+| -------------- | --------- | -------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| startDate      | DateTime  | Yes      |                                                                                                                  | Start of the report in YYYY-MM-DD format                                 |
+| endDate        | DateTime  | Yes      |                                                                                                                  | End of the report in YYYY-MM-DD format                                   |
+| rankProductsBy | string    | Yes      |                                                                                                                  | Metric on which the top 200 products are computed                        |
+| advertiserId   | string    | Yes      |                                                                                                                  | Id of the advertiser                                                     |
+| metrics        | string\[] | No       | \[`rankProductsBy` is always added to the provided metrics if not already present)                               | List of metrics to retrieve                                              |
+| dimensions     | string\[] | No       | \["`productId`", "`product`", "`productUrl`" are always added to the provided dimensions if not already present) | List of dimensions to retrieve                                           |
+| limit          | integer   | No       | 200                                                                                                              | The maximum number of top products returned. Should be between 1 and 200 |
+| campaignIds    | string\[] | No       |                                                                                                                  | Report only on the specified (marketing) campaigns Ids                   |
+| adSetIds       | string\[] | No       |                                                                                                                  | Report only on the specified adSet Ids                                   |
+| brands         | string\[] | No       |                                                                                                                  | Report only on the specified brands                                      |
+| categoryIds    | string\[] | No       |                                                                                                                  | Report only on the specified categories ids                              |
+| adSetStatus    | string\[] | No       |                                                                                                                  | Report only on the specified adSetStatus                                 |
+| timezone       | string    | No       | UTC                                                                                                              | Timezone used for dates                                                  |
+| currency       | string    | No       | EUR                                                                                                              | Currency used for amounts                                                |
+
+## Metrics
+
+| Field    | Type   | Description                                                            |
+| -------- | ------ | ---------------------------------------------------------------------- |
+| displays | string | The number of displays                                                 |
+| clicks   | string | The number of clicks                                                   |
+| ctr      | string | Click Through Rate                                                     |
+| visits   | string | The number of visits                                                   |
+| sales    | string | The number of completed transactions or purchases (Post Click 30 days) |
+| cost     | string | Cost                                                                   |
+| revenue  | string | Revenue (quantity x price)                                             |
+
+## Dimensions
+
+| Field        | Type   | Description                      |
+| ------------ | ------ | -------------------------------- |
+| advertiserId | string | Id of the advertiser             |
+| advertiser   | string | Name of the advertiser           |
+| campaignId   | string | Id of the (marketing) campaign   |
+| campaign     | string | Name of the (marketing) campaign |
+| adSetId      | string | Id of the ad set                 |
+| adSet        | string | Name of the ad set               |
+| productId    | string | Id of the product                |
+| product      | string | Name of the product              |
+| productUrl   | string | URL of the product               |
+| brand        | string | Brand of the product             |
+| categoryId   | string | Id of the category               |
+| category     | string | Name of the Category             |
+
+***
+
+[Placement Category](/marketing-solutions/v2026-preview/docs/placement-category)
+
+[Creatives Report](/marketing-solutions/v2026-preview/docs/creatives-report)

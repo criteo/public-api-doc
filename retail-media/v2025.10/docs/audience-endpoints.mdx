@@ -1,0 +1,223 @@
+---
+title: "Audience Endpoints"
+---
+
+1. Guides for Retail Media API
+2. [Audiences](/retail-media/v2025.10/docs/audiences)
+
+## **Introduction**
+
+Audiences give the ability to advertisers to define subsets of retailers visitors to be targeted in their campaigns.
+
+Audiences are built of one or multiple audience segments that can be combined using logical [Algebra Nodes](doc:algebra-nodes) to define target campaigns' audiences.
+
+<Warning>
+  **Note on Audience Computation**
+
+  Audience updates are processed daily at 0h UTC and 12h UTC and can take around 5 hours to reflect on a live campaign. This is important for audiences that are frequently updated as changes should be ready for processing prior to these two times.
+</Warning>
+
+<Info>
+  ### Partial Approvals
+
+  Bulk operations (`create`, `update`, `delete`) use a **partial approval model**. Even if some items in the request fail, the response will return `200 OK`. Any failed items will be listed in the warnings section of the response with an error code and details.
+
+  Examples of possible warning codes:
+
+  * `audience-not-found` → Audience is not found.
+  * `name-must-be-unique` → Audience name must be unique.
+  * `name-must-not-be-empty` → Audience name property must not be empty.
+
+  This list is not exhaustive. Additional warnings may be returned depending on the request context.
+</Info>
+
+***
+
+## **Endpoints**
+
+| Verb     | Endpoint                                 | Description                                                            |
+| -------- | ---------------------------------------- | ---------------------------------------------------------------------- |
+| **POST** | `/accounts/{accountId}/audiences/search` | Search for audiences by audience IDs, retailer IDs and/or segment IDs. |
+
+## **Audience Attributes**
+
+| Attribute      | Data Type | Description                                                                                                                                                                                                                                           |
+| -------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`           | string    | Audience ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                |
+| `name`         | string    | Audience nameAccepted values: string Writeable? Y / Nullable? N                                                                                                                                                                                       |
+| `description`  | string    | Description of the AudienceAccepted values: string Writeable? Y / Nullable? N                                                                                                                                                                         |
+| `accountId`    | string    | [Account](doc:account) ID associated with the Audience, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                     |
+| `retailerId`\* | string    | [Retailer](doc:retailers) ID, associated with the Audience Segment, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                         |
+| `algebra`      | object    | Algebra node with the definition of how the different audience segments are combined together to create the audience, using logical operators `and`, `or` and `not`Accepted values: see [Algebra Nodes](doc:algebra-nodes) Writeable? N / Nullable? N |
+| `createdAt`    | timestamp | Timestamp of Audience creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss.msZ` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Writeable? N / Nullable? N                                                                  |
+| `createdById`  | string    | User ID who created the Audience (`null` if created by a service)Accepted values: string Writeable? N / Nullable? Y                                                                                                                                   |
+| `updatedAt`    | timestamp | Timestamp of last Audience update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss.msZ`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                 |
+
+*\*Required for the`create` operation*
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## **Search Audiences**
+
+This endpoint returns a list of audiences that match the provided filters. If present, the filters are AND'ed together when applied. You can search audiences by audience IDs, retailer IDs and/or segment IDs.
+
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `500`, respectively - see [API Response](https://developers.criteo.com/retail-media/docs/api-response#/pagination)
+
+![](/images/retail-media/v2025.10/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audiences/search?offset={offset}&limit={limit)
+```
+
+**Sample Request: searching by Retailer ID only**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audiences/search' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+  -d '{
+    "data": {
+      "type": "Audience",
+      "attributes": {
+        "audienceIds": null,
+        "retailerIds": [
+          "12"
+        ],
+        "audienceSegmentIds": null
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "meta": {
+          "totalItems": 400,
+          "limit": 50,
+          "offset": 0
+      },
+      "data": [
+          {
+              "attributes": {
+                  "name": "My audience A",
+                  "description": null,
+                  "createdAt": "2024-01-12T11:46:13.77Z",
+                  "updatedAt": "2024-02-12T11:46:13.77Z",
+                  "accountId": "625702934721171442",
+                  "retailerId": "12",
+                  "algebra": {
+                      "audienceSegmentId": "56159923678901880"
+                  },
+                  "createdById": "j.doe"
+              },
+              "id": "258216562069631686",
+              "type": "RetailMediaAudience"
+          },
+          // ...
+          {
+              "attributes": {
+                  "name": "My audience B",
+                  "description": null,
+                  "createdAt": "2024-01-22T14:41:32.489Z",
+                  "updatedAt": "2024-01-22T14:41:32.489Z",
+                  "accountId": "625702934721171442",
+                  "retailerId": "12",
+                  "algebra": {
+                      "audienceSegmentId": "225702933721195672"
+                  },
+                  "createdById": "a.jack"
+              },
+              "id": "920472839472539402",
+              "type": "RetailMediaAudience"
+          }
+      ],
+      /* omitted if no errors */
+      "errors": [],
+      /* omitted if no warnings */
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+**Sample Request: searching by multiple filters**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audiences/search' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+  -d '{
+    "data": {
+      "type": "Audience",
+      "attributes": {
+        "audienceIds": [
+          "920472839472539402"
+        ],
+        "retailerIds": [
+          "12"
+        ],
+        "audienceSegmentIds": [
+          "225702933721195672"
+        ]
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "meta": {
+          "totalItems": 400,
+          "limit": 50,
+          "offset": 0
+      },
+      "data": [
+          {
+              "attributes": {
+                  "name": "My audience",
+                  "description": null,
+                  "createdAt": "2024-01-22T14:41:32.489Z",
+                  "updatedAt": "2024-01-22T14:41:32.489Z",
+                  "accountId": "625702934721171442",
+                  "retailerId": "12",
+                  "algebra": {
+                      "audienceSegmentId": "225702933721195672"
+                  },
+                  "createdById": "a.jack"
+              },
+              "id": "920472839472539402",
+              "type": "RetailMediaAudience"
+          }
+      ],
+      /* omitted if no errors */
+      "errors": [],
+      /* omitted if no warnings */
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+[Audiences](/retail-media/v2025.10/docs/audiences)
+
+[Audience Segment Endpoints](/retail-media/v2025.10/docs/audience-segment-endpoints)

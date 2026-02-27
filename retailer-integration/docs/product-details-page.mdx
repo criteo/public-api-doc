@@ -1,0 +1,160 @@
+---
+title: "Product Details Page"
+---
+
+# Definition
+
+A product details page (PDP) shows the details of a single product or multiple products under the same parent ID.
+
+***
+
+# Parameters
+
+## `event-type`
+
+**Value**: `viewItem`
+
+**Description**: Indicates to the API that this is a PDP request.
+
+**Required**: Yes
+
+***
+
+## `page-id`
+
+**Description**: An identifier that tells Criteo which placements to return (if any) for the ad request. Placements are instantiated by your Technical Account Manager depending on your desired ad configuration. Below are the standard page-ids for this page type:
+
+* **In Americas**: Typically follows the structure `[event-type]_API_[environment]`, e.g., `viewItem_API_desktop`, `viewItem_API_mobile`, `viewItem_API_iOS`, `viewItem_API_android`.
+* **In EMEA**: Typically follows the structure `[event-type]Api[environment]`, e.g., `viewItemApiDesktop`, `viewItemApiMobile`, `viewItemApiAios`, `viewItemApiAa`.
+
+**Required**: Yes
+
+***
+
+## `item`
+
+**Description**: SKU IDs corresponding to the product on the PDP. Multiple products are allowed.
+
+**Example**: `123-ab`
+
+**Required**: Yes
+
+***
+
+## `parent-item`
+
+**Description**: Only use this if parent SKUs are being passed. If so, this value should match what is being sent in the `item_group_id` field of the product feed.
+
+**Example**: `123`
+
+**Required**: Recommended if the eCommerce platform uses parent items
+
+***
+
+## `price`
+
+**Description**: Current price of the product added to the basket (with discount, if any).
+
+**Example**: `34.99`
+
+**Required**: Yes
+
+***
+
+## `availability`
+
+**Description**: If the product is in stock, send `1`; if out of stock, send `0`.
+
+**Example**: `1`
+
+**Required**: Yes
+
+***
+
+## `category`
+
+**Description**: For PDP calls, this parameter exists to pass an explicit category for the purposes of ad-serving. If this field is not present, Criteo will default to the primary taxonomy of the SKU passed in the `item` parameter. If passed, this value should match the `product_type_key` value in the product feed. See more details [here](https://developers.criteo.com/retailer-integration/docs/product-feed-parameters#product_type_key).
+
+**Examples**:
+
+* Category ID, full breadcrumb style: `123>4567>89012`
+* Category ID, end-node-only style: `89012`
+* Category name style: `Computing>Keyboards and Mice>Mice`
+
+**Best Practices**:
+
+* Category ID is preferred over category name to avoid issues with typos, punctuation, and accented letters (especially in non-English languages).
+
+* If opting for category name:
+
+  * The category name is case-insensitive.
+  * Spaces between the separator (`>`) are ignored.
+
+**Required**: No
+
+***
+
+# Sample Calls
+
+<Info>
+  The header values in the sample calls are illustrative. Make sure to replace them with the appropriate values for your implementation.
+</Info>
+
+***
+
+## AMER
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewItem_API_desktop" \
+  --data-urlencode "event-type=viewItem" \
+  --data-urlencode "item=123-ab" \
+  --data-urlencode "price=34.99" \
+  --data-urlencode "availability=1" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  ```
+</CodeGroup>
+
+***
+
+## EMEA
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewItemApiAios" \
+  --data-urlencode "event-type=viewItem" \
+  --data-urlencode "item=123-ab" \
+  --data-urlencode "price=34.99" \
+  --data-urlencode "availability=1" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_ios 1.2.3"
+  ```
+</CodeGroup>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Favorites page](/retailer-integration/docs/favorites-page)
+* [Basket page](/retailer-integration/docs/cart-page)
+* [Order confirmation page](/retailer-integration/docs/order-confirmation-page)
+* [Organic add-to-cart events](/retailer-integration/docs/organic-add-to-cart-events)

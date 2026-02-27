@@ -1,0 +1,144 @@
+---
+title: "Digital Service Act (EU Only)"
+description: "Learn about the Digital Service Act and how it will impact integration. The DSA only applies in the EU."
+---
+
+# What is the Digital Service Act?
+
+<Info>
+  The Digital Services Act (DSA) is a legislative framework led by the European Commission aimed at updating and regulating the legal framework for digital services within the European Union (EU).
+
+  **The DSA applies since February 17th, 2024.**
+</Info>
+
+The primary goal of the DSA is to enhance the trust of both individual consumers and business users when utilizing online platforms. This extends to the products, services, and advertisements they encounter on these platforms.
+
+The DSA requires online platforms to ensure that users have real-time access to certain elements of information about any ad shown to them, namely:
+
+* The fact that an ad is indeed an ad,
+* The identity of the advertiser,
+* The identity of the party that financed the ad, if it is different from the advertiser,
+* Information about the “main parameters” used to select the ad presented to the end user,
+* Where applicable, information about any means users may have at their disposal to change those main parameters.
+
+***
+
+# Data Collection
+
+## Criteo-billed Campaigns
+
+In the case of Criteo-billed campaigns, DSA information will be automatically populated into the Delivery Ad Response by leveraging the contracts Criteo has with advertisers.
+
+***
+
+## Retailer-billed Campaigns
+
+In the case of Retailer-billed campaigns, Criteo does not have any contract with the advertisers. 
+
+<Info>
+  To that extent, **a new field has been createde for retailers to be able to share the information**, which will be populated in the Delivery Ad Response.
+</Info>
+
+This new field will only be available in relevant accounts, such as the Demand side of the Supply account.
+
+In case the field is left empty, Criteo will use the Account names as fall-back values.
+
+<Info>
+  **API endpoint**
+
+  The field is also available within the External API, through the `Account` endpoint, as the `companyName`parameter. The API documentation details can be accessed [here](https://developers.criteo.com/retail-media/docs/accounts-endpoints).
+</Info>
+
+![](/images/retailer-integration/docs/7329ecddf0d7f8d16fc178ae369d6acb66fe598cd72107f4b5d8f701413e070d-image.png)
+
+<Warning>
+  If the new field does not appear in the back-office, please reach out to your Criteo representative for help.
+</Warning>
+
+***
+
+# New Ad Response Fields for Direct Ad Server Integration
+
+Criteo will provide DSA-required advertiser financing information (`paid`, `behalf`) within the Ad Delivery Response for Onsite Sponsored products ads and Onsite Display ads. 
+
+<Info>
+  Additionally, transparency information will also be included in the form of **[Transparency & Consent Framework (TCF) ](https://iabeurope.eu/transparency-consent-framework/)IDs** that are outlined here: [DSA TransparencyExtension](https://github.com/InteractiveAdvertisingBureau/openrtb/pull/152/files#diff-5ab9e62a17f36edd71ae458147dbf0150393a53088e3a39620385821dedf6c7d).
+</Info>
+
+You will then be able to incorporate advertiser financing information into your ads accordingly.
+
+## Example
+
+Here is what the response will look like, including `dsa_url`, `behalf` and `paid` parameters on top of product-related information.
+
+<CodeGroup>
+  ```bash bash
+  {
+    "placements": [
+      {
+        "viewCategoryApiAios-inGrid": {
+          "dsa_url": "//privacy.criteo.com/dsa?dsabehalf=Advertiser&dsapaid=Advertiser&dsaparams=1_2",
+          "behalf": "Advertiser",
+          "paid": "Advertiser",
+          "products": [
+            {
+              "ProductName": "example product",
+              "ProductId": "00012008",
+              "ProductPage": "Example URL",
+              "Image": "example image",
+              "Rating": "4.8276",
+              "Price": "119.00",
+              "ComparePrice": "199.99",
+              "Shipping": "0"
+            }
+          ]
+        }
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+***
+
+# Criteo URL for Direct Ad Server Integration
+
+Criteo provides a criteo.com URL in the Ad Delivery Response capable of rendering a link-off page to display the DSA information provided in the ad response. 
+
+This link-off implementation is more straightforward for you to be DSA-compliant, as you do not have to rebuild the User Interface for all your site pages. 
+
+You are then able to incorporate the link-off page on your retailer site.
+
+## Example
+
+Here is an example URL:`https://privacy.criteo.com/dsa?dsabehalf=Advertiser&dsapaid=Advertiser&dsaparams=1_2`, which leads to a page like this one:
+
+![](/images/retailer-integration/docs/98f656f4c17e24a408cf1053e1cdf213434b94e076aa1dbf6993e783a89d9cfe-image.png)
+
+***
+
+# Criteo URL for Javascript Integration
+
+Criteo provides a criteo.com URL in the Ad Delivery Response capable of rendering a link-off page to display the DSA information provided in the ad response. 
+
+This link-off implementation is more straightforward for you to be DSA-compliant, as you do not have to rebuild the User Interface for all your site pages. 
+
+Criteo will then integrate a link-off to the URL in the Sponsored mention within the ad formats.
+
+## Example
+
+When the user clicks on the "i" icon next to "Sponsored", a pop-up opens displaying the DSA-related information.
+
+![](/images/retailer-integration/docs/2a2cc148b5c99dd880b674d1238b7e58fbe5c377e8b41166f7aad85685c75f45-image.png) ![](/images/retailer-integration/docs/1071fe3630f984ea8856fab801eacb9114993f9ddb957a1d54febe82f112b8c8-image.png)
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Ad Rendering Best Practices](/retailer-integration/docs/ad-rendering-best-practices)

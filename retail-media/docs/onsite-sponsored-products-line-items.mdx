@@ -1,0 +1,908 @@
+---
+title: "Onsite Sponsored Products Line Items"
+---
+
+1. Guides for Retail Media API
+2. [Onsite Sponsored Products](/retail-media/docs/onsite-sponsored-products)
+
+<Info>
+  **Get Started**
+
+  Learn more about how open auction line items work with our API in [Onsite Sponsored Products](https://developers.criteo.com/retail-media/docs/onsite-sponsored-products/).
+</Info>
+
+***
+
+## Endpoints
+
+| Method   | Endpoint                                     | Description                                         |
+| -------- | -------------------------------------------- | --------------------------------------------------- |
+| **GET**  | `/campaigns/{campaignId}/auction-line-items` | Get all auction line items from a specific campaign |
+| **POST** | `/campaigns/{campaignId}/auction-line-items` | Create a new auction line item                      |
+| **GET**  | `/auction-line-items/{lineItemId}`           | Get a specific auction line item                    |
+| **PUT**  | `/auction-line-items/{lineItemId}`           | Update a specific auction line item                 |
+
+<Info>
+  **Field Definitions**
+
+  * `Create` operations using the `POST` method expect every **Required** field; omitting **Optional** fields will set those fields to **Default** values.
+  * `Update` operations using the `PUT` method expect every **Writeable** field; omitting these fields is equivalent to setting them to `null`, if possible.
+</Info>
+
+***
+
+## Line Item Attributes
+
+| Attribute              | Data Type | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | string    | Auction line item ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `name`\*               | string    | Line item name, must be unique within the [Campaign](https://developers.criteo.com/retail-media/docs/campaign)Accepted values: between 2 and 255-chars string Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `campaignId`\*         | string    | [Campaign](https://developers.criteo.com/retail-media/docs/campaign) ID, in which the respective line item belongs and generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `targetRetailerId`\*   | string    | [Retailer](https://developers.criteo.com/retail-media/docs/retailers) ID where the line item will serve ads onAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `startDate`\*          | date      | Start date of the line item, used to schedule its activation and start serving ads. To understand the conditions that will cause a status to change, check out [Campaign & Line Item Status](https://developers.criteo.com/retail-media/docs/campaign-lineitem-status)ℹ️ This now supports datetime offset to define the desired time zone, in the format of `±hh:mm`. If omitted in create/update operations, UTC will be considered the default time zoneAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm or yyyy-mm-dd` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html)) Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                           |
+| `endDate`              | date      | End date of the line item; serves ads indefinitely if omitted or set to `null`. To understand the conditions that will cause a status to change, check out [Campaign & Line Item Status](https://developers.criteo.com/retail-media/docs/campaign-lineitem-status)ℹ️ This now supports datetime offset to define the desired time zone, in the format of `±hh:mm`. If omitted in create/update operations, UTC will be considered the default time zoneAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm or yyyy-mm-dd` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Default: if `null` or absent, line item will serve ads indefinitely Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                          |
+| `budget`               | decimal   | Lifetime spend cap of line item (optional), uncapped if omitted or set to `null`Accepted values: `budget` ≥ 0.0 Default: `null` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `budgetSpent`          | decimal   | Budget amount the line item has already spentAccepted values: `budgetSpent` ≥ 0.0 Default: `0.0` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `budgetRemaining`      | decimal   | Amount the line item has remaining until cap is hit; `null` if budget is uncappedAccepted values: 0 ≤ `budgetRemaining` ≤ `budget` Default: `0.0` Writeable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `monthlyPacing`        | decimal   | Amount the line item can spend per calendar month (optional), in the [Account](https://developers.criteo.com/retail-media/docs/account) time zoneAccepted values: `monthlyPacing` ≥ 0.0 (or `null`) Default: `0.0` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `dailyPacing`          | decimal   | Amount the line item can spend per calendar month (optional), in the [Account](https://developers.criteo.com/retail-media/docs/account) time zone It resets each day overwritten by calculation if `isAutoDailyPacing` is enabled; uncapped if omitted of set to `null`Accepted values: `dailyPacing` ≥ 0.0 (or `null`) Default: `0.0` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `isAutoDailyPacing`\*  | boolean   | To activate, either line item `endDate` and budget, or `monthlyPace`, must be specified; overwrites `dailyPacing` with calculation if not set priorAccepted values: `true`, `false` Default: `false` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `bidStrategy`          | enum      | Indicate whether Adaptive CPC is enabled or not `automated` will trigger a validation against the `maxBid` to ensure that it is present. `manual`will trigger a validation against the `targetBid`to ensure that a bid for the line item have been input.Accepted values: `automated`, `manual` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `optimizationStrategy` | enum      | Bid algorithm optimizing for sales conversions, sales revenue or clicksAccepted values: `conversion`, `revenue`, `clicks` Default: `conversion` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `targetBid`\*          | decimal   | If optimizing for `conversion` or `revenue`, a target average amount to bid (as each bid is modulated up/down by our optimization algorithm); else bids stay constant, if optimizing for `clicks` Bidding is uncapped if omitted or set to `null`ℹ️ Note:- Must meet `minBid` for line item to deliver ads, which depends on selected products (available through the [Catalog](https://developers.criteo.com/retail-media/docs/catalogs))
+- Input excludes platform feesAccepted values: at least the greatest value of `minBid` across all products in the line item Default: `0.3` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                   |
+| `maxBid`               | decimal   | If optimizing for `conversion` or `revenue`, the maximum amount allowed to bid for each display (respected regardless of `targetBid`). Does not apply if optimizing for `clicks` Bidding is uncapped if omitted or set to `null`ℹ️ Note:- Must meet `minBid` for line item to deliver ads, which depends on selected products (available through the [Catalog](https://developers.criteo.com/retail-media/docs/catalogs))
+- Input excludes platform feesAccepted values: at least `0.1` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `status`               | enum      | Line item status; can only be updated by a user to `active` or `paused`; all other values are applied automatically depending on financials, flight dates, or missing attributes required for line item to serve. To understand the conditions that will cause a status to change, check out [Campaign & Line Item Status](https://developers.criteo.com/retail-media/docs/campaign-lineitem-status)Accepted values: `active`, `paused`, `scheduled`, `ended`, `budgetHit`, `noFunds`, `draft`, `archived` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `flightSchedule`       | object    | Settings allowing custom scheduling for serving ads serving, organized by a combination of `legs`. In case of `null` or empty `legs`, the line item status will remain unchanged along the weekdays and hours, as long as other delivery parameters are respected - see [Campaign & Line Item Status](https://developers.criteo.com/retail-media/docs/campaign-lineitem-status)Accepted values: see below Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `keywordStrategy`      | enum      | Keyword strategy used to target users according to the promoted products appended in the line item and their competitorsℹ️ Note: "*Conquesting*" is not available for all retailers; when creating a new line item for those retailers, a validation error will return which can be avoided by omitting this attribute from the requestAccepted values:- `genericAndBranded`: enables users who submit general keywords and also keywords related to the brand(s) to target the promoted products associated with the line item (default behavior)
+- `conquesting`: enables users who submit keywords identified as competitor(s) from the brand(s) related to the promoted products associated with the line item (manual review required)
+- `genericBrandedAndConquesting`: enables users who submit keywords related to both brand(s) and competitor(s) from the promoted products of line item (manual review required)Default: `genericAndBranded` Writeable? Y / Nullable? N |
+| `createdAt`            | timestamp | Timestamp of line item creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `updatedAt`            | timestamp | Timestamp of last line item update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Default: same as `createdAt` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+
+(\*) *Required for create operations*
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Flight Schedule Legs Attributes
+
+| Attribute   | Data Type | Description                                                                                                                                                                                                                                                                                                                                                       |
+| ----------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dayOfWeek` | enum      | Day of the week or day type that the respective `leg` should be effective, i.e., the respective line item should be activated (in case all other conditions are satisfied)Accepted values: `Sunday`, `Monday`, `Tuesday`, `Wednesday`, `Thursday`, `Friday`, `Saturday`, `Everyday`, `Weekdays`, `Weekends` Writeable? Y / Nullable? N                            |
+| `startTime` | time      | Start time that the respective `leg` should be effective, i.e., the respective line item should be activated (in case all other conditions are satisfied)ℹ️ This time value will be interpreted considering the time zone provided in the `startDate`/`endDate` aboveAccepted values: `hh:mm`, with values between `00:00` and `23:59` Writeable? Y / Nullable? N |
+| `endTime`   | time      | End time that the respective `leg` should be effective, i.e., the respective line item should be deactivated (in case all other conditions are satisfied)ℹ️ This time value will be interpreted considering the time zone provided in the `startDate`/`endDate` aboveAccepted values: `hh:mm`, with values between `00:00` and `23:59` Writeable? Y / Nullable? N |
+
+***
+
+## Get all Onsite Sponsored Products Line Items
+
+This endpoint lists all Onsite Sponsored Products line items in the specified campaign.
+
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `500`, respectively - see [API Response](https://developers.criteo.com/retail-media/docs/api-response#/pagination)
+
+![](/images/retail-media/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}/auction-line-items?offset={offset}&limit={limit}
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X GET "https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items?offset=0&limit=500" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+      -H "Accept: application/json"
+  ```
+
+  ```bash bash
+  import http.client
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+
+  headers = {
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+      'Accept': 'application/json'
+  }
+
+  conn.request("GET", "/{version}/retail-media/campaigns/544937665113018368/auction-line-items?offset=0&limit=500", headers=headers)
+
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+      .build();
+
+  Request request = new Request.Builder()
+      .url("https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items?offset=0&limit=500")
+      .method("GET", null)
+      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+      .addHeader("Accept", "application/json")
+      .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items?offset=0&limit=500');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig([
+      'follow_redirects' => TRUE
+  ]);
+  $request->setHeader([
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+      'Accept' => 'application/json'
+  ]);
+
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      } else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+      }
+  } catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "9979917896105882144",
+              "type": "SponsoredProductsLineItem",
+              "attributes": {
+                  "name": "Line Item 123 Always On",
+                  "campaignId": "544937665113018368",
+                  "targetRetailerId": "12345",
+                  "startDate": "2024-09-01T04:00:00+00:00",
+                  "endDate": null,
+                  "status": "active",
+                  "budget": 5000.00,
+                  "budgetSpent": 2354.38,
+                  "budgetRemaining": 2645.62,
+                  "maxBid": 2.50,
+                  "targetBid": null,
+                  "monthlyPacing": null,
+                  "dailyPacing": null,
+                  "isAutoDailyPacing": false,
+                  "bidStrategy": "automated",
+                  "optimizationStrategy": "conversion",
+                  "flightSchedule": null,
+                  "keywordStrategy": "genericBrandedAndConquesting",
+                  "createdAt": "2024-08-24T15:46:45.1578781+00:00",
+                  "updatedAt": "2025-08-12T08:02:36.9158515+00:00"
+              }
+          },
+          // ...
+          {
+              "id": "6854840188706902009",
+              "type": "SponsoredProductsLineItem",
+              "attributes": {
+                  "name": "Line Item 456 - Weekends Only",
+                  "campaignId": "544937665113018368",
+                  "targetRetailerId": "6789",
+                  "startDate": "2025-08-09T04:00:00+00:00",
+                  "endDate": "2026-01-01T03:59:59+00:00",
+                  "status": "draft",
+                  "budget": 12000.00,
+                  "budgetSpent": 0.00,
+                  "budgetRemaining": 12000.00,
+                  "maxBid": 5.0,
+                  "targetBid": null,
+                  "monthlyPacing": null,
+                  "dailyPacing": null,
+                  "bidStrategy": "automated",
+                  "optimizationStrategy": "conversion",
+                  "isAutoDailyPacing": false,
+                  "flightSchedule": {
+                      "legs": [
+                          {
+                              "dayOfWeek": "Weekends",
+                              "startTime": "00:00",
+                              "endTime": "23:59"
+                          }
+                      ]
+                  },
+                  "keywordStrategy": "genericAndBranded",
+                  "createdAt": "2025-07-24T15:46:45.7793506-04:00",
+                  "updatedAt": "2025-08-12T08:02:36.9158515-04:00"
+              }
+          },
+      ],
+      "metadata": {
+          "count": 35,
+          "offset": 0,
+          "limit": 25
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Create an Onsite Sponsored Products Line Item
+
+This endpoint creates a new Onsite Sponsored Products line item in the specified campaign.
+
+![](/images/retail-media/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}/auction-line-items
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST "https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+              "data": {
+                  "attributes": {
+                      "name": "Product ABC Sponsored Weekend Conversions",
+                      "targetRetailerId": "12345",
+                      "status": "draft",
+                      "startDate": "2025-09-01T00:00:00-04:00",
+                      "endDate": "2025-12-31T23:59:59-04:00",
+                      "budget": 1000.0,
+                      "monthlyPacing": null,
+                      "isAutoDailyPacing": false,
+                      "targetBid": null,
+                      "maxBid": 5,
+                      "bidStrategy": "automated",
+                      "optimizationStrategy": "conversion",
+                      "flightSchedule": {
+                          "legs": [
+                              {
+                                  "dayOfWeek": "Weekends",
+                                  "startTime": "00:00",
+                                  "endTime": "23:59"
+                              }
+                          ]
+                      },
+                      "keywordStrategy": "genericBrandedAndConquesting"
+                  }
+              }
+          }'
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+  payload = json.dumps({
+      "data": {
+          "attributes": {
+              "name": "Product ABC Sponsored Weekend Conversions",
+              "targetRetailerId": "12345",
+              "status": "draft",
+              "startDate": "2025-09-01T00:00:00-04:00",
+              "endDate": "2025-12-31T23:59:59-04:00",
+              "budget": 1000.0,
+              "monthlyPacing": None,
+              "isAutoDailyPacing": False,
+              "targetBid": 1.0,
+              "maxBid": 5,
+              "bidStrategy": "automated",
+              "optimizationStrategy": "conversion",
+              "flightSchedule": {
+                  "legs": [
+                      {
+                          "dayOfWeek": "Weekends",
+                          "startTime": "00:00",
+                          "endTime": "23:59"
+                      }
+                  ]
+              },
+              "keywordStrategy": "genericBrandedAndConquesting"
+          }
+      }
+  })
+
+  headers = {
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+  }
+
+  conn.request("POST", "/{version}/retail-media/campaigns/544937665113018368/auction-line-items", payload, headers)
+
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+      .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, """
+  {
+      "data": {
+          "attributes": {
+              "name": "Product ABC Sponsored Weekend Conversions",
+              "targetRetailerId": "12345",
+              "status": "draft",
+              "startDate": "2025-09-01T00:00:00-04:00",
+              "endDate": "2025-12-31T23:59:59-04:00",
+              "budget": 1000.0,
+              "monthlyPacing": null,
+              "isAutoDailyPacing": false,
+              "targetBid": 1.0,
+              "maxBid": 5,
+              "bidStrategy": "automated",
+              "optimizationStrategy": "conversion",
+              "flightSchedule": {
+                  "legs": [
+                      {
+                          "dayOfWeek": "Weekends",
+                          "startTime": "00:00",
+                          "endTime": "23:59"
+                      }
+                  ]
+              },
+              "keywordStrategy": "genericBrandedAndConquesting"
+          }
+      }
+  }
+  """);
+
+  Request request = new Request.Builder()
+      .url("https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items")
+      .method("POST", body)
+      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+      .addHeader("Content-Type", "application/json")
+      .addHeader("Accept", "application/json")
+      .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig([
+      'follow_redirects' => TRUE
+  ]);
+  $request->setHeader([
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json'
+  ]);
+
+  $request->setBody(json_encode([
+      "data" => [
+          "attributes" => [
+              "name" => "Product ABC Sponsored Weekend Conversions",
+              "targetRetailerId" => "12345",
+              "status" => "draft",
+              "startDate" => "2025-09-01T00:00:00-04:00",
+              "endDate" => "2025-12-31T23:59:59-04:00",
+              "budget" => 1000.0,
+              "monthlyPacing" => null,
+              "isAutoDailyPacing" => false,
+              "targetBid" => 1.0,
+              "maxBid" => 5,
+              "bidStrategy" => "automated",
+              "optimizationStrategy" => "conversion",
+              "flightSchedule" => [
+                  "legs" => [
+                      [
+                          "dayOfWeek" => "Weekends",
+                          "startTime" => "00:00",
+                          "endTime" => "23:59"
+                      ]
+                  ]
+              ],
+              "keywordStrategy" => "genericBrandedAndConquesting"
+          ]
+      ]
+  ], JSON_PRETTY_PRINT));
+
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      } else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+      }
+  } catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "764555166286684160",
+          "type": "SponsoredProductsLineItem",
+          "attributes": {
+              "name": "Product ABC Sponsored Weekend Conversions",
+              "startDate": "2025-09-01T04:00:00+00:00",
+              "endDate": "2026-01-01T03:59:59+00:00",
+              "status": "draft",
+              "targetBid": null,
+              "targetRetailerId": "12345",
+              "budget": 10.00,
+              "campaignId": "544937665113018368",
+              "budgetSpent": 0.00,
+              "budgetRemaining": 10.00,
+              "createdAt": "2025-10-10T18:29:16.3861275+00:00",
+              "updatedAt": "2025-10-10T18:29:16.3861275+00:00",
+              "maxBid": 0.0,
+              "monthlyPacing": 1000.00,
+              "dailyPacing": 0.00,
+              "bidStrategy": "automated",
+              "optimizationStrategy": "conversion",
+              "isAutoDailyPacing": false,
+              "flightSchedule": {
+                  "legs": [
+                      {
+                          "dayOfWeek": "weekends",
+                          "startTime": "00:00",
+                          "endTime": "23:59"
+                      }
+                  ]
+              },
+              "keywordStrategy": "genericAndBranded"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Get a specific Onsite Sponsored Products Line Item
+
+This endpoint retrieves the specified Onsite Sponsored Products line item
+
+![](/images/retail-media/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/auction-line-items/{lineItemId}
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X GET "https://api.criteo.com/{version}/retail-media/auction-line-items/6854840188706902009" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+      -H "Accept: application/json"
+  ```
+
+  ```bash bash
+  import http.client
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+
+  headers = {
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+      'Accept': 'application/json'
+  }
+
+  conn.request("GET", "/preview/retail-media/auction-line-items/6854840188706902009", headers=headers)
+
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+      .build();
+
+  Request request = new Request.Builder()
+      .url("https://api.criteo.com/preview/retail-media/auction-line-items/6854840188706902009")
+      .method("GET", null)
+      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+      .addHeader("Accept", "application/json")
+      .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/preview/retail-media/auction-line-items/6854840188706902009');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig([
+      'follow_redirects' => TRUE
+  ]);
+  $request->setHeader([
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+      'Accept' => 'application/json'
+  ]);
+
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      } else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+      }
+  } catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "6854840188706902009",
+          "type": "SponsoredProductsLineItem",
+          "attributes": {
+              "name": "Line Item 456 - Weekends Only",
+              "campaignId": "544937665113018368",
+              "targetRetailerId": "6789",
+              "startDate": "2025-08-09T04:00:00+00:00",
+              "endDate": "2026-01-01T03:59:59+00:00",
+              "status": "draft",
+              "budget": 12000.00,
+              "budgetSpent": 0.00,
+              "budgetRemaining": 12000.00,
+              "maxBid": 5.0,
+              "targetBid": null,
+              "monthlyPacing": 0.00,
+              "dailyPacing": 0.00,
+              "bidStrategy": "automated",
+              "optimizationStrategy": "conversion",
+              "isAutoDailyPacing": false,
+              "flightSchedule": {
+                  "legs": [
+                      {
+                          "dayOfWeek": "Weekends",
+                          "startTime": "00:00",
+                          "endTime": "23:59"
+                      }
+                  ]
+              },
+              "keywordStrategy": "genericAndBranded",
+              "createdAt": "2025-07-24T15:46:45.7793506-04:00",
+              "updatedAt": "2025-08-12T08:02:36.9158515-04:00"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Update a Specific Onsite Sponsored Products Line Item
+
+This endpoint updates the specified Onsite Sponsored Products line item. In this example, we are:
+
+* renaming the line item and start date, to be scheduled to deliver during Q4.
+* enabling auto daily pacing by setting a monthly pace simultaneously. Note that with auto daily pacing enabled, daily pacing is automatically calculated and overwrites its previous value, if any.
+* modifying the day scheduling to deliver ads during extended weekend evenings only, i.e., Fridays, Saturdays and Sundays from 18h until 0h (local time)
+
+Also, note the draft state of the line item because products to be promoted have not yet been added.
+
+![](/images/retail-media/docs/1ee76cc-put.png)
+
+```
+https://api.criteo.com/{version}/retail-media/auction-line-items/{lineItemId}
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X PUT "https://api.criteo.com/{version}/retail-media/auction-line-items/6854840188706902009" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+              "data": {
+                  "id": "6854840188706902009",
+                  "type": "SponsoredProductsLineItem",
+                  "attributes": {
+                      "name": "Line Item 456 - Q4 Weekends Evenings",
+                      "campaignId": "544937665113018368",
+                      "targetRetailerId": "6789",
+                      "startDate": "2025-10-01T00:00:00-04:00",
+                      "endDate": "2025-12-31T23:59:59-04:00",
+                      "status": "active",
+                      "budget": 12000.00,
+                      "maxBid": 5.0,
+                      "targetBid": 1.0,
+                      "monthlyPacing": 4000.00,
+                      "isAutoDailyPacing": true,
+                      "flightSchedule": {
+                          "legs": [
+                              {
+                                  "dayOfWeek": "friday",
+                                  "startTime": "18:00",
+                                  "endTime": "23:59"
+                              },
+                              {
+                                  "dayOfWeek": "weekends",
+                                  "startTime": "18:00",
+                                  "endTime": "23:59"
+                              }
+                          ]
+                      }
+                  }
+              }
+          }'
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+  payload = json.dumps({
+      "data": {
+          "id": "6854840188706902009",
+          "type": "SponsoredProductsLineItem",
+          "attributes": {
+              "name": "Line Item 456 - Q4 Weekends Evenings",
+              "campaignId": "8343086999167541140",
+              "targetRetailerId": "6789",
+              "startDate": "2025-10-01T00:00:00-04:00",
+              "endDate": "2025-12-31T23:59:59-04:00",
+              "status": "active",
+              "budget": 12000.00,
+              "maxBid": 5.0,
+              "targetBid": 1.0,
+              "monthlyPacing": 4000.00,
+              "isAutoDailyPacing": True,
+              "flightSchedule": {
+                  "legs": [
+                      {
+                          "dayOfWeek": "friday",
+                          "startTime": "18:00",
+                          "endTime": "23:59"
+                      },
+                      {
+                          "dayOfWeek": "weekends",
+                          "startTime": "18:00",
+                          "endTime": "23:59"
+                      }
+                  ]
+              }
+          }
+      }
+  })
+
+  headers = {
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+  }
+
+  conn.request("PUT", "/preview/retail-media/auction-line-items/6854840188706902009", payload, headers)
+
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+      .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, """
+  {
+      "data": {
+          "id": "6854840188706902009",
+          "type": "SponsoredProductsLineItem",
+          "attributes": {
+              "name": "Line Item 456 - Q4 Weekends Evenings",
+              "campaignId": "8343086999167541140",
+              "targetRetailerId": "6789",
+              "startDate": "2025-10-01T00:00:00-04:00",
+              "endDate": "2025-12-31T23:59:59-04:00",
+              "status": "active",
+              "budget": 12000.00,
+              "maxBid": 5.0,
+              "targetBid": 1.0,
+              "monthlyPacing": 4000.00,
+              "isAutoDailyPacing": true,
+              "flightSchedule": {
+                  "legs": [
+                      {
+                          "dayOfWeek": "friday",
+                          "startTime": "18:00",
+                          "endTime": "23:59"
+                      },
+                      {
+                          "dayOfWeek": "weekends",
+                          "startTime": "18:00",
+                          "endTime": "23:59"
+                      }
+                  ]
+              }
+          }
+      }
+  }
+  """);
+
+  Request request = new Request.Builder()
+      .url("https://api.criteo.com/preview/retail-media/auction-line-items/6854840188706902009")
+      .method("PUT", body)
+      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+      .addHeader("Content-Type", "application/json")
+      .addHeader("Accept", "application/json")
+      .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/preview/retail-media/auction-line-items/6854840188706902009');
+  $request->setMethod(HTTP_Request2::METHOD_PUT);
+  $request->setConfig([
+      'follow_redirects' => TRUE
+  ]);
+  $request->setHeader([
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json'
+  ]);
+
+  $request->setBody(json_encode([
+      "data" => [
+          "id" => "6854840188706902009",
+          "type" => "SponsoredProductsLineItem",
+          "attributes" => [
+              "name" => "Line Item 456 - Q4 Weekends Evenings",
+              "campaignId" => "8343086999167541140",
+              "targetRetailerId" => "6789",
+              "startDate" => "2025-10-01T00:00:00-04:00",
+              "endDate" => "2025-12-31T23:59:59-04:00",
+              "status" => "active",
+              "budget" => 12000.00,
+              "maxBid" => 5.0,
+              "targetBid" => 1.0,
+              "monthlyPacing" => 4000.00,
+              "isAutoDailyPacing" => true,
+              "flightSchedule" => [
+                  "legs" => [
+                      [
+                          "dayOfWeek" => "friday",
+                          "startTime" => "18:00",
+                          "endTime" => "23:59"
+                      ],
+                      [
+                          "dayOfWeek" => "weekends",
+                          "startTime" => "18:00",
+                          "endTime" => "23:59"
+                      ]
+                  ]
+              ]
+          ]
+      ]
+  ], JSON_PRETTY_PRINT));
+
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      } else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+      }
+  } catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "6854840188706902009",
+          "type": "SponsoredProductsLineItem",
+          "attributes": {
+              "name": "Line Item 456 - Q4 Weekends Evenings",
+              "campaignId": "544937665113018368",
+              "targetRetailerId": "6789",
+              "startDate": "2025-10-01T04:00:00+00:00",
+              "endDate": "2026-01-01T03:59:59+00:00",
+              "status": "draft",
+              "budget": 12000.00,
+              "budgetSpent": 0.00,
+              "budgetRemaining": 12000.00,
+              "maxBid": 5.0,
+              "targetBid": 1.00000000,
+              "monthlyPacing": 4000.00,
+              "dailyPacing": 200.00,
+              "bidStrategy": "manual",
+              "optimizationStrategy": "conversion",
+              "isAutoDailyPacing": true,
+              "flightSchedule": {
+                  "legs": [
+                      {
+                          "dayOfWeek": "friday",
+                          "startTime": "18:00",
+                          "endTime": "23:59"
+                      },
+                      {
+                          "dayOfWeek": "weekends",
+                          "startTime": "18:00",
+                          "endTime": "23:59"
+                      }
+                  ]
+              },
+              "keywordStrategy": "genericAndBranded",
+              "createdAt": "2024-09-24T15:47:03.228224+00:00",
+              "updatedAt": "2025-08-12T09:34:07.6168328+00:00"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Responses
+
+| Responses | Description                                                                                                                                                                                                                                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 🔵 `200`  | Call completed with success                                                                                                                                                                                                                                                                                                                                        |
+| 🔵 `201`  | Line item created with success                                                                                                                                                                                                                                                                                                                                     |
+| 🔴 `400`  | Bad request leading to a validation error*Common validation errors*- Invalid `isAutoDailyPacing`: Cannot turn on `IsAutoDailyPacing` and add a `dailyPacing` value. Only one of the two options can be used
+- `Conquesting` not enabled: `Conquesting` is not enabled for the specified retailer, remove the `keywordStrategy` property from the creation request. |
+
+***
+
+[Onsite Sponsored Products](/retail-media/docs/onsite-sponsored-products)
+
+[Keywords](/retail-media/docs/keywords)

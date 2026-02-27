@@ -1,0 +1,128 @@
+---
+title: "Managing Campaigns"
+---
+
+1. Guides for Marketing Solutions API
+2. [Criteo Offsite Ads](/marketing-solutions/v2020.07/docs/criteo-offsite-ads)
+
+A COA-Campaign is a course of action to advertise the products of your sellers.    
+
+## Adding Campaigns
+
+Campaigns are not added with the API. Instead, they are created, started and stopped by your Technical Solution engineer.    
+
+## Managing Seller-Campaigns
+
+A Seller-Campaign contains all the information relative to the advertisement of the products of a Seller in a Campaign. In particular it contains information about bid and status:
+
+**`bid`** Bid specified for this Seller in this Campaign
+
+**`suspendedSince`** Date and time since we stopped delivering adds for this Seller in this Campaign
+
+**`suspensionReasons`** List of reasons why the campaign is suspended (possible values are: `NoMoreBudget`, `ManuallyStopped`, `NoBudgetDefined`, `NoCpcDefined`, `RemovedFromCatalog`)     Every Seller-Campaign is identified by:
+
+**`sellerId`** SellerId of the seller associated to this Seller-Campaign
+
+**`campaignId`** CampaignId of the COA-campaign associated to this Seller-Campaign    
+
+## Adding Seller-Campaigns
+
+Seller-Campaigns get automatically created for every Campaign and every Seller in your feed.
+
+* New Seller-Campaigns are created inactive by default (`suspendedSince` flag is set to the moment of creation)    
+
+## Getting Seller-Campaigns
+
+To see what Seller-Campaigns are available you can make following query:    
+
+![](/images/marketing-solutions/v2020.07/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/legacy/offsite-ads/seller-campaigns
+```
+
+<CodeGroup>
+  ```bash bash
+  [{
+      "id": "1.10001",
+      "suspendedSince": "2018-07-30T18:00:13.333",
+      "suspensionReasons": ["NoMoreBudget"],
+      "sellerId": "1",
+      "campaignId": 10001,
+      "bid": null
+  },{
+      "id": "2.10001",
+      "suspendedSince": "2018-09-03T09:00:23.8",
+      "suspensionReasons": ["ManuallyStopped"],
+      "sellerId": "2",
+      "campaignId": 10001,
+      "bid": null
+  },{
+      "id": "3.10001",
+      "suspendedSince": "2018-09-03T09:00:23.8",
+      "suspensionReasons": ["NoCpcDefined"], 
+      "sellerId": "3",
+      "campaignId": 10001,
+      "bid": null
+  }]
+  ```
+</CodeGroup>
+
+   
+
+## Starting Seller-Campaigns
+
+In order to start delivering ads for a Seller in a Campaign, the Seller-Campaign needs to :
+
+* be part of a running Campaign
+* have a bid (see "[Setting the Bid for a given Seller-Campaign](doc:managing-campaigns#setting-the-bids-of-seller-campaigns)" section)
+* have an active budget (see "[Managing Budgets](doc:managing-budgets)" section)
+
+When a Seller-Campaign becomes inactive, the `suspendedSince` flag is null.    
+
+## Stopping Seller-Campaigns
+
+In order to stop delivering ads for a Seller in a Campaign, you can do one of the following actions :
+
+* set the bid of the Seller-Campaign to null (see "[Setting the Bid for a given Seller-Campaign](doc:managing-campaigns#setting-the-bids-of-seller-campaigns)" section)
+* suspend the current budget (see "[Suspend a Budget](doc:managing-budgets#suspending-budgets)" section)
+* remove products of this Seller from the feed (if you have several COA-Campaigns, this will also stop the Seller in the other COA-Campaigns)
+
+When a Seller-Campaign becomes inactive, the `suspendedSince` flag is set to the current date.    
+
+## Setting the Bids of Seller-Campaigns
+
+In order to have a Sellers active in the campaign, you have to specify the bids that will be used for these Sellers in the given Campaign.    
+
+![](/images/marketing-solutions/v2020.07/docs/04a928f-patch.png)
+
+```
+https://api.criteo.com/legacy/offsite-ads/seller-campaigns
+```
+
+<CodeGroup>
+  ```bash bash
+  [{
+      "id": "1.10001",
+      "bid": 0.3
+  },{
+      "id": "2.10001",
+      "bid": 0.6
+  },{
+      "id": "3.10001",
+      "bid": 0.5
+  }]
+  ```
+</CodeGroup>
+
+   
+
+<Warning>
+  ### Note that the ID is defined by “seller ID” dot “campaign ID” (e.g 1.10001 for seller ID 1 and campaign 10001).
+</Warning>
+
+***
+
+[Managing Sellers](/marketing-solutions/v2020.07/docs/managing-sellers)
+
+[Managing Budgets](/marketing-solutions/v2020.07/docs/managing-budgets)

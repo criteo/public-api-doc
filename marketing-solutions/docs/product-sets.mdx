@@ -1,0 +1,490 @@
+---
+title: "Product Sets"
+---
+
+1. Marketing Solutions Endpoints
+2. [Catalog](/marketing-solutions/docs/catalog)
+
+## Introduction
+
+A Product Set is a subset of the product catalog that can be featured in dynamic ads.
+
+Product Sets are created with a combination of rules using conditions on product attributes available in the Catalog. These conditions are additive (similar to the `AND` operator). Once created, you can apply a Product Set to an Ad as a filter. After doing this, the Ads will display only the products that belong to that Product Set.
+
+***
+
+## Product Set Properties
+
+  **`datasetId`** The ID of the Data Set to which the Product Set belongs
+
+**`name`** The name of the Product Set
+
+**`rules`** It's an array that encapsulates product rules.
+
+A **`Product rule`** is an object containing the following parameters:
+
+* **`operator`**: Operator to be used, from the table below.
+* **`field`**: Field to be filtered.
+* **`values`**: The values on which you want to apply the rule.
+
+***
+
+### Fields and Operators
+
+Not all Catalog fields can be used to create rules. If you need a specific field, you can map it in the Catalog to one of the Custom Label fields and later use it to create the rule.
+
+| Catalog Field Name                                                              | API Field Name                                                                 | Operators Available                                |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Category 1, Category 2, Category 3                                              | `category1`,`category2`,`category3`                                            | `IsIn`, `IsNotIn`                                  |
+| Brand                                                                           | `brand`                                                                        | `IsIn`, `IsNotIn`                                  |
+| Product ID                                                                      | `ExternalproductID`                                                            | `IsIn`, `IsNotIn`                                  |
+| Custom Label 0, Custom Label 1, Custom Label 2 , Custom Label 3, Custom Label 4 | `CustomLabel0`, `CustomLabel1`, `CustomLabel2`, `CustomLabel3`, `CustomLabel4` | `IsIn`, `IsNotIn`                                  |
+| Sale Price                                                                      | `SalePrice`                                                                    | `Between`, `NotBetween`, `LessThan`, `GreaterThan` |
+
+***
+
+## Create a Product Set
+
+A Product Set can be created for a specific advertiser by making a `POST` call to the Product-Set endpoint. The request body should specify the **Data Set Id**, the name of the Product Set, if it's a draft (optional), and the product rules.
+
+![](/images/marketing-solutions/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/preview/product-sets
+```
+
+**Sample request**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "CreateProductSetRequest",
+      "attributes": {
+        "datasetId": "782",
+        "name": "Product set name",
+        "isDraft": True,
+        "rules": [
+          {
+            "operator": "IsIn",
+            "field": "Category1",
+            "values": [
+               "Decoration", "Home", "Furniture"
+            ]
+          },
+          {
+            "operator": "IsNotIn",
+            "field": "Category2",
+            "values": [
+              "Games", "Gastronomy"
+            ]
+          },
+          {
+            "operator": "IsIn",
+            "field": "Brand",
+            "values": [
+              "ADIDAS PERFORMANCE", "TEDDY SMITH", "REDSKINS", "NATACHA B", "GALERIES LAFAYETTE"
+            ]
+          },
+          {
+            "operator": "Between",
+            "field": "SalePrice",
+            "values": ["1.2", "645531.56"]
+          },
+          {
+            "operator": "LessThan",
+            "field": "SalePrice",
+            "values": ["645531.56"]
+          },
+          {
+            "operator": "GreaterThan",
+            "field": "RetailPrice",
+            "values": ["1.2"]
+          },
+          {
+            "operator": "IsNotIn",
+            "field": "ExternalItemId",
+            "values": ["552751852", "550853326"]
+          },
+          {
+            "operator": "IsNotIn",
+            "field": "CustomLabel0",
+            "values": ["552751852", "550853326"]
+          }
+        
+        ]
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "attributes": {
+        "datasetId": "string",
+        "name": "string",
+        "status": "Unknown",
+        "isEnabled": true,
+        "numberOfProducts": 0,
+        "creationDate": "string",
+        "rules": [
+          {
+            "operator": "IsIn",
+            "field": "Category1",
+            "values": [
+              "string"
+            ]
+          }
+        ],
+        "id": "string"
+      },
+      "id": "string",
+      "type": "string"
+    },
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Delete a Product Set 
+
+![](/images/marketing-solutions/docs/1e25c4c-delete.png)
+
+```
+https://api.criteo.com/preview/product-sets/{productSetId}
+```
+
+A Product Set can be deleted for a specific advertiser by making a DELETE call to the product-sets endpoint. You need to specify the **`productSetId`** to delete in the request URL.
+
+<CodeGroup>
+  ```bash bash
+  {
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Retrieve Product Set Data
+
+### Retrieve Data for a specific Product Set
+
+You can get the information of a specific Product Set by making a GET call to the product-sets endpoint. You need to specify the **`productSetId`** to retrieve in the request URL.
+
+![](/images/marketing-solutions/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/preview/product-sets/{productSetId}
+```
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "attributes": {
+        "datasetId": "string",
+        "name": "string",
+        "status": "Unknown",
+        "isEnabled": true,
+        "numberOfProducts": 0,
+        "creationDate": "string",
+        "rules": [
+          {
+            "operator": "IsIn",
+            "field": "Category1",
+            "values": [
+              "string"
+            ]
+          }
+        ],
+        "id": "string"
+      },
+      "id": "string",
+      "type": "string"
+    },
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+### Retrieve Data for a Specific Data Set
+
+If you need to get all the Product Sets for a specific Data Set, you can make a GET call to the endpoint specifying the relevant **`datasetId`**
+
+![](/images/marketing-solutions/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/preview/product-sets/dataset/{datasetId}
+```
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "attributes": {
+          "datasetId": "string",
+          "name": "string",
+          "status": "Unknown",
+          "isEnabled": true,
+          "numberOfProducts": 0,
+          "creationDate": "string",
+          "rules": [
+            {
+              "operator": "IsIn",
+              "field": "Category1",
+              "values": [
+                "string"
+              ]
+            }
+          ],
+          "id": "string"
+        },
+        "id": "string",
+        "type": "string"
+      }
+    ],
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Test Product Set rules
+
+Before creating a Product Set, you can check how many products would be part of a Product Set with a particular set of rules. Use this endpoint to get the number of products belonging to the Product Set and a small sample of the products.
+
+![](/images/marketing-solutions/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/preview/product-sets/preview
+```
+
+**Sample request**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "productSet": {
+      "datasetId": "782",
+      "rules": [
+        {
+            "operator": "IsIn",
+            "field": "Category1",
+            "values": [
+              "Decoration", "Home", "Furniture"
+            ]
+          },
+          {
+            "operator": "IsNotIn",
+            "field": "Category2",
+            "values": [
+              "Games", "Gastronomy"
+            ]
+          }
+      ]
+    },
+    "productSampleCount": 5
+  }
+  ```
+</CodeGroup>
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "productCount": 3940,
+      "totalProductCount": 404202,
+      "sampleProducts": [
+        "-9063027279849067663",
+        "927588690310362953",
+        "667545005484734956",
+        "-6270815052645770065",
+        "-9213562868104252217"
+      ]
+    },
+    "warnings": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Associate a Product Set and an Ad
+
+Once a Product Set is created, it can be applied to an Ad as a filter. As a result, only products that belong to that Product Set are displayed in the Ad.
+
+![](/images/marketing-solutions/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/preview/ads/{adId}/product-filter
+```
+
+**`adId`**: Id of the Ad to that you want to link to the specified Product Set.
+
+<Info>
+  An Ad can only have **one** Product Set assigned to it. A Product Set can be associated with zero or more Ads.
+</Info>
+
+**Sample request**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "CreateProductFilterRequest",
+      "attributes": {
+        "productSetId": product_set_id
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "string",
+      "attributes": {
+        "adId": "string",
+        "productSetId": "string"
+      }
+    },
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Remove a Product Set and Ad association 
+
+![](/images/marketing-solutions/docs/1e25c4c-delete.png)
+
+```
+https://api.criteo.com/preview/ads/{adId}/product-filter
+```
+
+**`adId`**: Id of the Ad you want to unlink from the Product Set.
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Retrieve Associations Between Ads and Product Sets
+
+### Retrieve Filtering Association Data for a Specific Ad
+
+Get the Product Set assigned to an Ad
+
+![](/images/marketing-solutions/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/preview/ads/{adId}/product-filter
+```
+
+**`adId`**: Id of the ad you want to look for.
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "string",
+      "attributes": {
+        "adId": "string",
+        "productSetId": "string"
+      }
+    },
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+### Retrieve Associations of a Specific Product Set
+
+By doing a `GET` call to this endpoint, you get the association information (ad id + product set id).
+
+![](/images/marketing-solutions/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/preview/product-sets/{productSetId}/product-filters
+```
+
+**`productSetId`**: Id of the Product Set
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "type": "string",
+        "attributes": {
+          "adId": "string",
+          "productSetId": "string"
+        }
+      }
+    ],
+    "warnings": [],
+    "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Validation errors
+
+**`invalid-productset-request`** The request contains an invalid Product Set ID
+
+**`invalid-productset-request`** Missing authorization to get Product Set for the specified Data Set, or if the Product Set does not exist.
+
+**`JSON_FORMAT`** There's a constraint not satisfied by the provided JSON. For example: “productSet.rules: The operator Between isn't compatible with the provided field"
+
+**`REQUIRED_FIELD`** The required field is missing.
+
+***
+
+[Catalog](/marketing-solutions/docs/catalog)
+
+[Creatives](/marketing-solutions/docs/creatives)

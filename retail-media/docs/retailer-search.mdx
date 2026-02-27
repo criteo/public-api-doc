@@ -1,0 +1,335 @@
+---
+title: "Retailer Search"
+---
+
+1. Guides for Retail Media API
+2. [Account](/retail-media/docs/account)
+3. [Retailers](/retail-media/docs/retailers)
+
+## Introduction
+
+A retailer offers a selection of products from multiple brands. Retailers act as publishers, providing advertising inventory for brands to promote their products.
+
+An account can have access to one or more retailers, with this access typically managed by Criteo.
+
+A retailer typically allows multiples types of pages to be targeted. A **page** is an inventory that can be targeted by [Campaigns](/retail-media/docs/campaign) and [Line Items](/retail-media/docs/line-items) with specific configurations.
+
+***
+
+## Endpoints
+
+| Method   | Endpoint                                 | Description                                           |
+| -------- | ---------------------------------------- | ----------------------------------------------------- |
+| **POST** | `/accounts/{accountId}/retailers/search` | Search for Retailers associated with specific account |
+
+***
+
+## Retailer Attributes
+
+| Attribute                | Data Type      | Description                                                                                                                                                                                                                                                                       |
+| ------------------------ | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                     | `string`       | Retailer ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                            |
+| `name`                   | `string`       | Retailer name, arbitrary and defined during Retailer integration phaseAccepted values: up to 100-chars string Writeable? Y / Nullable? N                                                                                                                                          |
+| `campaignAvailabilities` | `list<object>` | Set of retail media capabilities available for the specific Retailer, separated by the different `campaignType` x `buyType` pairs. It's dependent on their current technical integration and other business conditionsAccepted values: see table below Writeable? N / Nullable? N |
+
+***
+
+## Retailer Campaign Availability Attributes
+
+| Attribute             | Data Type      | Description                                                                                                                                                                                                                                                                                             |
+| --------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `campaignType`        | `enum`         | Campaign type that the following attributes are available forAccepted values: `onsiteDisplay`, `sponsoredProducts`, `offsite` (case-insensitive) Writeable? N / Nullable? N                                                                                                                             |
+| `buyType`             | `enum`         | Buy type for the ad impressions of the campaign, that the following attributes are available forAccepted values: `auction`, `preferredDeals`, `sponsorship`, `offsite` (case-insensitive) Writeable? N / Nullable? N                                                                                    |
+| `isAvailable`         | `boolean`      | Flag indicating if combination of `campaignType` x `buyType` is available for related RetailerAccepted values: `true` or `false` Writeable? N / Nullable? N                                                                                                                                             |
+| `validCombinations`   | `list<object>` | List of page type and environment where the campaign type & buy type are available to deliver ad impressionsAccepted values: list of `pageType` x `pageEnvironmentType` pairs (see below) Writeable? N / Nullable? N                                                                                    |
+| `pageTypes`           | `<enum>`       | Page type available in the current integration of the associated RetailerAccepted values: case-insensitive values of- `home`
+- `search`
+- `category`
+- `productDetail`
+- `merchandising`
+- `deals`
+- `favorites`
+- `searchBar`
+- `categoryMenu`
+- `checkout`
+- `confirmation`Writeable? N / Nullable? N |
+| `pageEnvironmentType` | `<enum>`       | Environment where the page type is available in the associated Retailer integrationAccepted values: case-insensitive values of- `web`
+- `mobile`
+- `app`
+- `lockout`
+- `mixed`
+- `android`
+- `ios`Writeable? N / Nullable? N                                                                            |
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Search for Retailers
+
+This endpoint searches for retailers associated with the respective account and retrieves a set of retail media capabilities, allowing the user to set up campaigns accordingly.
+
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `5`, respectively, for this endpoint. Also for this endpoint, `limit` supports the maximum value of `10`
+
+<Warning>
+  If the limit above is not respected, a dedicated error `400` with `Model validation error` will return.
+</Warning>
+
+![](/images/retail-media/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/retailers/search
+```
+
+**Search Attributes**
+
+| Attribute          | Data Type       | Description                                                                                                                                                                                 |
+| ------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `retailerIdFilter` | `list<integer>` | Optional list of Retailer IDs, generated internally by Criteo, to retrieve retail media capabilities fromAccepted values: list of integers, empty list or `null` Writeable? N / Nullable? Y |
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X POST "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers/search?offset=0&limit=5" \
+    -H 'Accept: application/json' \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H 'Content-Type: application/json' \
+    -d '{
+            "data": {
+                "attributes": {
+                    "retailerIdFilter": [
+                        12345
+                    ]
+                }
+            }
+       }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/preview/retail-media/accounts/18446744073709551616/retailers/search?offset=0&limit=5"
+
+  payload = json.dumps({
+    "data": {
+      "attributes": {
+        "retailerIdFilter": [
+          12345
+        ]
+      }
+    }
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"retailerIdFilter\":[12345]}}}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/preview/retail-media/accounts/18446744073709551616/retailers/search?offset=0&limit=5")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/preview/retail-media/accounts/18446744073709551616/retailers/search?offset=0&limit=5');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  $request->setBody('{"data": {"attributes": {"retailerIdFilter": [12345]}}}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "metadata": {
+          "count": 1,
+          "offset": 0,
+          "limit": 5
+      },
+      "data": [
+          {
+              "id": "299",
+              "type": "RetailerResult",
+              "attributes": {
+                  "name": "Retailer 1234",
+                  "campaignAvailabilities": [
+                      {
+                          "campaignType": "onsiteDisplay",
+                          "buyType": "auction",
+                          "isAvailable": true,
+                          "validCombinations": [
+                              {
+                                  "pageType": "home",
+                                  "pageEnvironmentType": "web"
+                              },
+                              {
+                                  "pageType": "home",
+                                  "pageEnvironmentType": "ios"
+                              },
+                              {
+                                  "pageType": "search",
+                                  "pageEnvironmentType": "web"
+                              },
+                              {
+                                  "pageType": "category",
+                                  "pageEnvironmentType": "web"
+                              },
+                              {
+                                  "pageType": "productDetail",
+                                  "pageEnvironmentType": "web"
+                              },
+
+                              // ...
+
+                              {
+                                  "pageType": "confirmation",
+                                  "pageEnvironmentType": "web"
+                              }
+                          ]
+                      },
+                      {
+                          "campaignType": "onsiteDisplay",
+                          "buyType": "preferredDeals",
+                          "isAvailable": true,
+                          "validCombinations": [
+                              {
+                                  "pageType": "home",
+                                  "pageEnvironmentType": "web"
+                              },
+
+                              // ...
+
+                              {
+                                  "pageType": "confirmation",
+                                  "pageEnvironmentType": "web"
+                              }
+                          ]
+                      },
+                      {
+                          "campaignType": "onsiteDisplay",
+                          "buyType": "sponsorship",
+                          "isAvailable": false,
+                          "validCombinations": []
+                      },
+                      {
+                          "campaignType": "sponsoredProducts",
+                          "buyType": "auction",
+                          "isAvailable": true,
+                          "validCombinations": [
+                              {
+                                  "pageType": "home",
+                                  "pageEnvironmentType": "web"
+                              },
+
+                              // ...
+
+                              {
+                                  "pageType": "confirmation",
+                                  "pageEnvironmentType": "web"
+                              }
+                          ]
+                      },
+                      {
+                          "campaignType": "sponsoredProducts",
+                          "buyType": "sponsorship",
+                          "isAvailable": true,
+                          "validCombinations": [
+                              {
+                                  "pageType": "home",
+                                  "pageEnvironmentType": "web"
+                              },
+
+                              // ...
+
+                              {
+                                  "pageType": "confirmation",
+                                  "pageEnvironmentType": "web"
+                              }
+                          ]
+                      },
+                      {
+                          "campaignType": "offsite",
+                          "buyType": "offsite",
+                          "isAvailable": false,
+                          "validCombinations": []
+                      }
+                  ]
+              }
+          }
+      ],
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Responses
+
+| Response | Description                                                                                                                                                                                                                                                                                      |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 🟢`200`  | Call executed with success                                                                                                                                                                                                                                                                       |
+| 🔴 `400` | "*Model validation error: The field limit must be between 1 and 10*". This indicates that the endpoint above was invoked requesting more than 10 retailers, which is not possible. Define a `limit` up to `10` and use different `offset` values to navigate through the different result pages. |
+| 🔴 `403` | API user does not have the authorization to make requests to the account ID. For an authorization request, follow the [authorization request](/retail-media/docs/authorization-requests) steps                                                                                                                |
+
+***
+
+[Retailers](/retail-media/docs/retailers)
+
+[Audiences](/retail-media/docs/audiences)

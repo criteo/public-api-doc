@@ -1,0 +1,233 @@
+---
+title: "API Parameters"
+description: "These parameters are valid for all event types and should be included in all ad requests wherever applicable"
+---
+
+# Global Criteo Parameters
+
+## `criteo-partner-id`
+
+**Example**: `12345`
+
+**Description**: The key that corresponds with your specific partner ID within Criteo. This ID will be provided by your technical account manager.
+
+**Required**: Yes
+
+***
+
+## `retailer-visitor-id`
+
+**Example**: `39573958738533503`
+
+**Description**: A unique unauthenticated UserID that is persistent across sessions on the same device. For Android apps, we recommend using the [AdvertisingIdClient API](https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info), and for iOS, the [advertisingIdentifier](https://developer.apple.com/documentation/adsupport/asidentifiermanager/advertisingidentifier).
+
+If it is set as a first party cookie, it should be set as a cookie with an expiration date (maximum 13 months) and not as a session cookie. The lifetime of the cookie must be at least 30 days with longer lifetimes being more effective for attribution.
+
+**Required**: Yes
+
+<Info>
+  **Why it matters?**
+
+  This identifier represents the Retailer's first party ID which helps Criteo in mapping user activities across sessions, on same device, even when users are not logged in. It should have a certain minimum lifetime and it is used for tracking and targeting purposes on the Retailer's website - it doesn't bring value on the open Internet.
+</Info>
+
+***
+
+## `customer-id`
+
+**Example**: `9445678`
+
+**Description**: The ID of the authenticated user that is consistent in all logged sessions. It is important that the ID is the same across sessions and devices. The customer ID allows for cross-device attribution by connecting sessions on different devices. You must continue to include a `retailer-visitor-id` when adding this parameter.
+
+**Required**: Yes, if the user is logged in.
+
+<Info>
+  **Why it matters?**
+
+  Compared to the Retailer Visitor ID for guest users, the Customer ID is used to identify authenticated/logged-in users. This identifier represents a unique user in a client's CRM and it helps us track activities on different devices and to create links between same domain identifiers.
+</Info>
+
+***
+
+## `email`
+
+**Example**: `eb2ddfd95044b8da411dda8828ce123d52ccbc223a75e4f7e550f7188a758ae6`
+
+**Description**: The user’s email address, in SHA256 hash format. Before hashing, email addresses should be trimmed (i.e. removal of all spaces before and after the email address), cleaned (i.e. removal of comas, semicolons, quotes or double quotes), and converted to lowercase.
+
+**Required**: Yes, if discussed with your Criteo team.
+
+<Info>
+  **Why it matters?**
+
+  Hashed emails, even though in our other solutions represent a cross domain identifier, in the context of RM Delivery API Onsite integration are purely used for backup attribution. In order for retailers to monetize on their first-party audiences across the open Internet, our RM Offsite solution needs to be integrated and it requires an additional layer of OneTag integration in order to share HEMs.
+</Info>
+
+***
+
+## `page-id`
+
+**Example**: `viewCategory_API_desktop`
+
+**Description**: The ID of the page provided by your Criteo team.
+
+**Required**: Yes
+
+***
+
+## `placement-id`
+
+**Example**: `Carousel|In-Grid`
+
+**Description**: A pipe-separated list of placements that are tied to the above page ID
+
+**Required**: No, only leverage this if you do not intend to render all the associated placements.
+
+***
+
+## `nocall`
+
+**Example**: `oa`, `pd`, `both`
+
+**Description**: Filter out sponsored products, commerce display, or both in the Delivery API response.
+
+* `oa`: Filter out **sponsored products**
+* `pd`: Filter out **commerce display**
+* `both`: Return no ads
+
+**Required**: No
+
+***
+
+## `regionId`
+
+**Example**: `42`
+
+**Description**: Store ID selected by the user when browsing the retailer’s site. It should match the store IDs in the product feed. See more details [here](https://developers.criteo.com/retailer-integration/docs/product-feed-parameters#additional-attributes).
+
+**Required**: Yes, if Store IDs are defined in the product feed.
+
+***
+
+## `implementation`
+
+**Example**: `S2SAPI`
+
+**Description**: The type of API client used. If you are updating an existing implementation, please check with the Criteo team which value to set.
+
+**Required**: No, this string indicates which implementation was used and is useful for debugging and monitoring purposes.
+
+***
+
+## `json`
+
+**Example**: `json`
+
+**Description**: Specify the type of response sent back by the Web Service.
+
+**Required**: No, only if JSONP is needed.
+
+***
+
+## `item-whitelist`
+
+**Example**: `123abc|456def|789ghi`
+
+**Description**: Provides a pre-determined list of SKUs for Criteo to include in the auction (only for sponsored products - not display formats). Used to power recommendation engine placements. Provided that the specific page has been enabled for rec engine by your Technical Account Manager, this parameter will force Criteo to *only* evaluate this list of SKUs in our auction. If the parameter is left empty or removed, the page will function normally, and Criteo will conduct a standard auction on all eligible products.
+
+**Required**: Yes, if discussed with your Criteo team.
+
+***
+
+## `verbosity`
+
+**Examples**:
+
+* `min`
+* `full`
+
+**Description**: Change the verbosity level of product objects in the API response. See the [API Responses Guide](https://developers.criteo.com/retailer-integration/docs/api-responses#product-array-verbosity-levels) for examples of both levels of verbosity.
+
+**Required**: No
+
+***
+
+# European parameters
+
+These parameters are specifically for users in Europe and are related to GDPR compliance.
+
+***
+
+## `gdpr`
+
+**Example**: `1`
+
+**Description**: Indicates if GDPR applies to this user. (1: yes, the user is in Europe and GDPR applies; 2: no, the user is outside Europe).
+
+**Required**: Yes, if using TCFv2 standard.
+
+***
+
+## `gdpr_consent`
+
+**Example**: `CAGgAagBEADEAIQAfoBAwCEAFXALqAYEAwgBtAEegJiAXmAyQAA.IGSQJwABAALAAeEAE6ALgAY4A0AB-gEDAIQIA2gCPQEvAJiAT-AZAZI`
+
+**Description**: The encoded TCFv2 consent string.
+
+**Required**: Yes, if using TCFv2 standard.
+
+***
+
+## `block`
+
+**Example**: `1`
+
+**Description**: Value "1" is for opt-out users. (Value "0" can also be passed for opt-in users.)
+
+**Required**: No, only when the user is opt-out and not using the TCFv2 standard.
+
+***
+
+# In-app Events
+
+These parameters are specifically applicable for in-app events.
+
+## `device-id`
+
+**Example**: `e4dd94d1-d048-4ad3-92b5-d97e688f724f`
+
+**Description**: A unique and anonymised string of numbers and letters that identifies a mobile device. Please provide GAID (Android) or IDFA (iOS).
+
+**Required**: Yes, if Offsite is activated.
+
+***
+
+## `device-id-type`
+
+**Example**: `gaid`
+
+**Description**: Value “gaid” if the identifier provided in device-id parameter is a GAID (Android), value “idfa” if the identifier provided in device-id parameter is an IDFA (iOS).
+
+**Required**: Yes, if Offsite is activated.
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Homepage](/retailer-integration/q4-2025/docs/homepage)
+* [Search pages](/retailer-integration/q4-2025/docs/search-page)
+* [Search bar dropdown](/retailer-integration/q4-2025/docs/search-bar-dropdown)
+* [Category pages](/retailer-integration/q4-2025/docs/category-page)
+* [Category flyout](/retailer-integration/q4-2025/docs/category-flyout)
+* [Product details page](/retailer-integration/q4-2025/docs/product-details-page)
+* [Favorites page](/retailer-integration/q4-2025/docs/favorites-page)
+* [Basket page](/retailer-integration/q4-2025/docs/cart-page)
+* [Order confirmation page](/retailer-integration/q4-2025/docs/order-confirmation-page)
+* [Organic add-to-cart events](/retailer-integration/q4-2025/docs/organic-add-to-cart-events)
+* [Filters](/retailer-integration/q4-2025/docs/filtering)

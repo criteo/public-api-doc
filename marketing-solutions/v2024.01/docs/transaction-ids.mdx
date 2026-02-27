@@ -1,0 +1,88 @@
+---
+title: "Transaction IDs"
+---
+
+1. Marketing Solutions Endpoints
+2. [Analytics](/marketing-solutions/v2024.01/docs/analytics)
+
+## **Retrieving Transaction Data at the Advertiser Level**
+
+The transaction ID report allows all advertisers to retrieve the same level of information that is available in Criteo's Marketing UI. These reports include the ability to report on transactions within a given time period, transactions associated with select or all advertisers in your portfolio, or specific transaction ID's.  
+
+Transaction ID reports are available at the following endpoint:  
+
+![](/images/marketing-solutions/v2024.01/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/2023-01/transactions/report
+```
+
+Below is an example of the body for the POST call:
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [{
+      "type":"Report",
+      "attributes": {
+        "advertiserIds": "22, 4949",
+        "startDate": "2020-11-04",
+        "endDate": "2020-11-04",
+        "format": "json",
+        "timezone": "Asia/Tokyo",
+        "currency": "JPY",
+        "eventType": "click"
+      }
+    }]
+  }
+  ```
+</CodeGroup>
+
+The following fields are required: *startDate*, *endDate*, *timezone*, and *currency*. One or more *advertiserIds* can be requested. If none are specified, all advertisers in your portfolio will be included in the report.  
+
+The POST call will generate a report based on the format specified in the request. If not specified, the default report format is a CSV.  
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [{
+      "type":"TransactionsReport",
+      "attributes": {
+        "advertiserId": "22",
+        "transactionId": "20203090520694",
+        "transactionDate": "11/04/2020 08:19:07",
+        "adsetName": "crm-conversion-fil-rouge-famille",
+        "advertiserName": "laredoute",
+        "eventType": "click",
+        "eventDate": "11/01/2020 22:42:29",
+        "attributedTransaction": "True",
+        "currency": "JPY",
+        "amount": "15193.4412",
+        "crossDeviceTransaction": "No"
+      }
+    }]
+  }
+  ```
+</CodeGroup>
+
+The following metrics and dimensions will be returned in the report:
+
+| Field                  | Type     | Description                                                     |
+| ---------------------- | -------- | --------------------------------------------------------------- |
+| AdvertiserId           | ID       | ID of the advertiser                                            |
+| TransactionId          | ID       | ID of the transaction                                           |
+| TransactionDate        | DateTime | Date of the transaction                                         |
+| AdsetName              | string   | Name of the adset                                               |
+| AdvertiserName         | string   | Name of the advertiser                                          |
+| EventType              | string   | Type of event associated to the transactions (click or display) |
+| EventDate              | DateTime | Date of the event                                               |
+| AttributedTransaction  | boolean  | Transaction attributed to the click or display or not           |
+| Currency               | string   | Transaction currency                                            |
+| Amount                 | double   | Transaction amount                                              |
+| CrossDeviceTransaction | string   | X-device or same device transaction                             |
+
+***
+
+[Campaign Statistics](/marketing-solutions/v2024.01/docs/campaign-statistics)
+
+[Log-Level](/marketing-solutions/v2024.01/docs/log-level)

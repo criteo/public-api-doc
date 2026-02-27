@@ -1,0 +1,149 @@
+---
+title: "Favorites Page"
+---
+
+# Definition
+
+Favorites/wishlist pages are pages where users save their favorite products to be viewed later.
+
+***
+
+# Parameters
+
+## `event-type`
+
+**Value**: `viewFavorites`
+
+**Description**: Indicates to the API that this is a favorites/wishlist event.
+
+**Required**: Yes
+
+***
+
+## `page-id`
+
+**Description**: An identifier that tells Criteo which placements to return (if any) for the ad request. Placements are instantiated by your Technical Account Manager depending on your desired ad configuration. Below are the standard page-ids for this page type:
+
+* **In Americas**: Typically follows the structure `[event-type]_API_[environment]`, e.g., `viewFavorites_API_desktop`, `viewFavorites_API_mobile`, `viewFavorites_API_android`, `viewFavorites_API_iOS`.
+* **In EMEA**: Typically follows the structure `[event-type]Api[environment]`, e.g., `viewFavoritesApiDesktop`, `viewFavoritesApiMobile`, `viewFavoritesApiAios`, `viewFavoritesApiAa`.
+
+**Required**: Yes
+
+***
+
+## `item`
+
+**Description**: The list of SKUs that are saved as favorites. Must match the parameter ID in the feed. Multiple items should be separated by a pipe `|` or `%7C` (URL encoded).
+
+**Examples**:
+
+* `123|456|789`
+* `123%7C456%7C789`
+
+**Required**: Yes
+
+***
+
+## `parent-item`
+
+**Description**: Only use this if parent SKUs are being passed. Must match the parameter `item_group_id` in the feed (See details [here](https://developers.criteo.com/retail-media-delivery/docs/feed-parameters#item_group_id)). Multiple parent items should be separated by a pipe `|` or `%7C` (URL encoded). For SKUs that do not have parent SKUs, `NULL` should be sent instead. Used for reporting and for organic deduplication, if enabled.
+
+**Examples**:
+
+* `12345P|NULL|456789P`
+* `12345P%7CNULL%7C456789P`
+
+**Required**: Recommended if the eCommerce platform uses parent items
+
+***
+
+## `price`
+
+**Description**: The list of prices in the same order as the items. Prices should be separated by a pipe `|` or `%7C` (URL encoded). These need to be the unitary prices (price of an individual item).
+
+**Examples**:
+
+* `29.99|15.49|9.99`
+* `29.99%7C15.49%7C9.99`
+
+**Required**: Yes
+
+***
+
+## `quantity`
+
+**Description**: The pipe-separated quantities of each SKU within the user’s favorites/wishlist.
+
+**Examples**:
+
+* `4|1|2`
+* `4%7C1%7C2`
+
+**Required**: Yes
+
+***
+
+# Sample Calls
+
+<Info>
+  The header values in the sample calls are illustrative. Make sure to replace them with the appropriate values for your implementation.
+</Info>
+
+***
+
+## AMER
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewFavorites_API_desktop" \
+  --data-urlencode "event-type=viewFavorites" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "price=29.99|15.49|9.99" \
+  --data-urlencode "quantity=4|1|2" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0
+  ```
+</CodeGroup>
+
+***
+
+## EMEA
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewFavoritesApiAios" \
+  --data-urlencode "event-type=viewFavorites" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "price=29.99|15.49|9.99" \
+  --data-urlencode "quantity=4|1|2" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_ios 1.2.3"
+  ```
+</CodeGroup>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Basket page](/retailer-integration/q4-2025/docs/cart-page)
+* [Order confirmation page](/retailer-integration/q4-2025/docs/order-confirmation-page)
+* [Organic add-to-cart events](/retailer-integration/q4-2025/docs/organic-add-to-cart-events)
+* [Filters](/retailer-integration/q4-2025/docs/filtering)

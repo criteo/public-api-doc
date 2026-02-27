@@ -1,0 +1,135 @@
+---
+title: "Creatives Report"
+---
+
+1. Preview Endpoints
+2. [Analytics](/marketing-solutions/v2026-preview/docs/analytics)
+
+## Introduction
+
+The creatives report provides performance metrics from your creatives, including the number of displays, clicks, and click-through rate. These reports include the ability to be broken down by formats, display sizes, coupons, ads, ad types, and date or time.
+
+## Making a call
+
+Creatives report is available at the following endpoint:
+
+![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/preview/reports/creatives
+```
+
+Below is an example of the body for the POST call:
+
+<CodeGroup>
+  ```bash bash
+  {
+  	"data": {
+      "type": "CreativesReport",
+      "attributes": {
+        "startDate": "2022-01-01",
+        "endDate": "2022-01-02",
+        "dimensions": ["SizeCategory", "DisplaySize", "Day"],
+        "metrics": ["Clicks", "Displays", "Ctr"],
+        "advertiserIds": ["1111", "2222"],
+        "format": ["Dynamic"],
+        "displaySizes": ["MediumBanner"],
+        "couponNames": [],
+        "campaignIds": ["1234"],
+        "adSetIds": ["789", "456"],
+        "adSetStatus": ["Active", "NotRunning"]
+        }
+     }
+  }
+  ```
+</CodeGroup>
+
+There are 5 required attributes when making a call: *startDate*, *endDate*, *dimensions*, *metrics* and *advertiserIds*.
+
+The POST call will generate a report in the format of a JSON document. This is a response example:
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+  		{
+        "type": "CreativesReport",
+        "attributes": {
+          "rows": [
+            {
+              "sizeCategory": "Placements",
+              "displaySize": "HalfPage",
+              "day": "2021-10-01",
+              "displays": "65432",
+              "clicks": "123",
+              "ctr": "0.0222"
+            },
+            {
+              "sizeCategory": "Placements",
+              "displaySize": "HalfPage",
+              "day": "2021-10-02",
+              "displays": "45678",
+              "clicks": "654",
+              "ctr": "0.044"
+            },
+            ...
+            {
+              "sizeCategory": "Unknown sizes",
+              "displaySize": "Others",
+              "day": "2021-10-05",
+              "displays": "12345",
+              "clicks": "321",
+              "ctr": "0.0111"
+            }
+          ]
+        }
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+## Metrics
+
+| Value    | Description        |
+| -------- | ------------------ |
+| displays | Number of displays |
+| clicks   | Number of clicks   |
+| ctr      | Click Through Rate |
+
+## Dimensions
+
+| Value        | Description                                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------------- |
+| adType       | Classification of ads based on required brand assets and potential reach                                      |
+| coupon       | Static images displayed within an ad creative. Usually used to deliver commercial offers or branding messages |
+| couponId     | Id of the coupon                                                                                              |
+| sizeCategory | Grouping of display sizes by category                                                                         |
+| displaySize  | The displayed size of the ad expressed in pixels                                                              |
+| ad           | Name of the ad                                                                                                |
+| adId         | Id of the ad                                                                                                  |
+| day          | Represents date in a day format                                                                               |
+| hour         | Represents date in an hour format                                                                             |
+
+## Attributes
+
+| Field         | Type      | Required | Default Value | Description                                |
+| ------------- | --------- | -------- | ------------- | ------------------------------------------ |
+| startDate     | DateTime  | Yes      |               | Start of the report in YY-MM-DD format     |
+| endDate       | DateTime  | Yes      |               | End of the report in YY-MM-DD format       |
+| dimensions    | string\[] | Yes      |               | List of dimensions to retrieve             |
+| metrics       | string\[] | Yes      |               | List of metrics to retrieve                |
+| advertiserIds | string\[] | Yes      |               | Ids of the advertisers                     |
+| timezone      | string    | No       | UTC           | Timezone used for dates                    |
+| format        | string\[] | No       |               | Report only on the specified ad types      |
+| displaySizes  | string\[] | No       |               | Report only on the specified display sizes |
+| couponNames   | string\[] | No       |               | Report only on the specified coupon names  |
+| campaignIds   | string\[] | No       |               | Report only on the specified campaign ids  |
+| adSetIds      | string\[] | No       |               | Report only on the specified adSet ids     |
+| adSetStatus   | string\[] | No       |               | Report only on the specified adSet status  |
+
+***
+
+[Product-Level](/marketing-solutions/v2026-preview/docs/product-level)
+
+[Audience Performance](/marketing-solutions/v2026-preview/docs/audience-performance)

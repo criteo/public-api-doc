@@ -1,0 +1,109 @@
+---
+title: "[Analytics] Statistics v1"
+---
+
+1. Guides for Marketing Solutions API
+2. [Analytics](/marketing-solutions/v2020.07/docs/analytics)
+
+## **Retrieving Statistics for a Specific Advertiser**
+
+The Statistics API allows measurement and reporting on campaigns using the metrics and dimensions you specify.
+
+![](/images/marketing-solutions/v2020.07/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/legacy/marketing/v1/statistics
+```
+
+<CodeGroup>
+  ```bash bash
+  curl --request POST \
+    --url https://api.criteo.com/legacy/marketing/v1/statistics \
+    --header 'Accept: application/json' \
+    --header 'Content-Type: text/json' \
+    --data '{"dimensions":["CampaignId","Day"],"metrics":["Display","Clicks"],"advertiserIds":"12345","startDate":"09-10-2020","endDate":"09-14-2020","timezone":"PST","currency":"USD","format":"Csv"}'
+  ```
+</CodeGroup>
+
+   
+
+A report is generated via a POST call and the results are returned directly in the response.
+
+<CodeGroup>
+  ```bash bash
+  Advertiser Name;Campaign ID;Campaign Name;Category ID;Category Name;Day;Currency;Clicks
+  My Advertiser;54321;Lower Funnel;0;MyCategory;Thu 2020/9/10;USD;293
+  My Advertiser;54321;Lower Funnel;0;MyCategory;Fri 2020/9/11;USD;254
+  My Advertiser;54321;Lower Funnel;0;MyCategory;Sat 2020/9/12;USD;280
+  My Advertiser;54321;Lower Funnel;0;MyCategory;Sun 2020/9/13;USD;327
+  My Advertiser;54321;Lower Funnel;0;MyCategory;Mon 2020/9/14;USD;306
+  My Advertiser;54321;Lower Funnel;0;MyCategory;Tue 2020/9/15;USD;219
+  ```
+</CodeGroup>
+
+All metrics from Management Center UI are available through the API, available up to a daily granularity. A maximum of 3 dimensions can be used.
+
+Remaining budget and statistics are not real-time and can be delayed up to a few hours.
+
+Formats allowed for export are XML, JSON, CSV, EXCEL and HTML. Currency value must respect ISO currency code format.
+
+   
+
+## **Available Dimensions**
+
+A maximum of 3 dimensions can be used. Some combinations of dimensions are not allowed and we recommend keeping the following order when building your report:
+
+* AdvertiserId
+* CampaignId
+* Category
+* Year
+* Week
+* Day
+* Hour
+
+   
+
+## **Available Metrics**
+
+| Metrics                     | Details                                                                                                                                                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Clicks                      | Number of times that your Criteo ads have been clicked                                                                                                                                                                                                 |
+| Displays                    | Number of times your Criteo ad is displayed to a user on publishers’ websites                                                                                                                                                                          |
+| AdvertiserCost              | Total cost of your campaigns                                                                                                                                                                                                                           |
+| SalesPc                     | The total number of purchases completed via the same device your Criteo ads were clicked. Sales are attributed within 30 days after a user clicks on your Criteo ad.                                                                                   |
+| SameSalesPc                 | The total number of purchases completed via the same device your Criteo ads were clicked. Sales are attributed within 30 days after a user clicks on your Criteo ad.                                                                                   |
+| SalesPcNd                   | Post-click sales that are non-deduplicated                                                                                                                                                                                                             |
+| SalesPv                     | All sales that occurred on your website within 24 hours after a user sees a Criteo ad of your campaign. Post-view sales do not include sales from users who clicked an ad, which are counted as sales                                                  |
+| SalesPvNd                   | All non-deduplicated post-view sales that occurred on your website within 24 hours after a user sees a Criteo ad of your campaign. Post-view sales do not include sales from users who clicked an ad, which are counted as sales                       |
+| SalesPcPv                   | The total amount of sales generated both post-click and post-view                                                                                                                                                                                      |
+| SalesAllPc                  | The total number of purchases completed via the same device your Criteo ads were clicked, or a different one. Sales are attributed within 30 days after a user clicks on your Criteo ad.                                                               |
+| RevenueGeneratedPc          | Total revenue of your campaigns generated from post-click sales                                                                                                                                                                                        |
+| RevenueGeneratedPv          | Total revenue of your campaigns generated from post-view sales                                                                                                                                                                                         |
+| RevenueGeneratedPcPv        | Post-click + post-view revenue is the total revenue of your campaigns generated from post-click and post-view sales. This number is computed based on the prices provided by your conversion trackers                                                  |
+| RevenueGeneratedPcNd        | Total revenue of your campaigns generated from post-click sales non-deduplicated                                                                                                                                                                       |
+| RevenueGeneratedPvNd        | Total revenue of your campaigns generated from post-view sales non-deduplicated                                                                                                                                                                        |
+| ExposedUsers                | Number of distinct cookies that have seen at least one Criteo display                                                                                                                                                                                  |
+| OverallCompetitionWin       | Percentage of impressions/ad placements won, out of all impressions/ad placements that were bid on. For example, Criteo bid on 10 ad placements and won 2, so the Overall Competition Win is 20%. Higher CPC bids result in increased competition win. |
+| Audience                    | Number of distinct cookies to which Criteo had the opportunity to make a display                                                                                                                                                                       |
+| Reach                       | Share of the audience exposed to at least one Criteo display ad (percentage)                                                                                                                                                                           |
+| AverageCart                 | Average revenue generated by a campaign’s sales. This number is calculated by dividing the total revenue by the total sales                                                                                                                            |
+| ClickThroughRate            | The number of times your Criteo ads are clicked, divided by the number of times your ad is displayed (impressions). Each campaign has its own CTR                                                                                                      |
+| ConversionRate              | Number of sales generated by users who clicked on your campaign’s ad, divided by the campaign’s number of clicks                                                                                                                                       |
+| ConversionRatePv            | Conversion rate post-view is the number of post-view sales generated by users who viewed on your campaign’s ad, divided by the campaign’s number of impressions                                                                                        |
+| ECos                        | The ratio between the total cost of the campaign and the sales amount that the campaign generated. COS provides a good indication of your campaign’s ROI                                                                                               |
+| ECosPv                      | The ratio between the total cost of the campaign and the post-view sales amount that the campaign generated. This number provides a good indication of your campaign’s ROI.                                                                            |
+| ECosPcPv                    | Cost of sale post-click + post-view is the ratio between the total cost of the campaign and the post-click and post-view sales amount that the campaign generated. This number provides a good indication of your campaign’s ROI                       |
+| CostPerOrder                | Cost per order is the amount of money (cost) spent to generate post-click sales                                                                                                                                                                        |
+| CostPerOrderPv              | The amount of money (cost) spent to generate post-view sales                                                                                                                                                                                           |
+| CostPerOrderPcPv            | Cost per order post-click + post-view is the amount of money (cost) spent to generate post-click and post-view sales                                                                                                                                   |
+| ECpc                        | The price you pay each time a user clicks your Criteo ad. Depending on your campaign’s business model, you can change the CPC on the Campaigns tab for each campaign                                                                                   |
+| ECpm                        | Cost per mille is the cost of your campaign for 1,000 impressions                                                                                                                                                                                      |
+| ReturnOnAdvertisingSpending | Corresponds to the ratio between the sales amount the campaign generated and the total cost of the campaign (ROAS = 1/COS)                                                                                                                             |
+| AdvertiserValue             | The total value generated by the campaign. It is equal to the sum of revenues generated by each product multiplied by their corresponding Value coefficient as defined in the advertiser's feed.                                                       |
+| CostOfAdvertiserValue       | The ratio between the total cost of the campaign and the Advertiser Value of the campaign                                                                                                                                                              |
+
+***
+
+[Analytics](/marketing-solutions/v2020.07/docs/analytics)
+
+[\[Analytics\] Publisher Transparency Report](/marketing-solutions/v2020.07/docs/analytics-publisher-transparency-report)

@@ -1,0 +1,885 @@
+---
+title: "Catalog Endpoints"
+---
+
+1. Guides for Retail Media API
+2. [Catalog](/retail-media/v2025.01/docs/catalogs)
+
+Generate and download a copy of retailer's inventory
+
+## **Endpoints**
+
+| Method   | Endpoint                                 | Description                                                           |
+| -------- | ---------------------------------------- | --------------------------------------------------------------------- |
+| **POST** | `/accounts/{accountId}/catalogs`         | Create a catalog request to generate a new catalog for Brand account  |
+| **POST** | `/accounts/{accountId}/catalogs/sellers` | Create a catalog request to generate a new catalog for Seller account |
+| **GET**  | `/catalogs/{catalogId}/status`           | Retrieve the status of a specific catalog request.                    |
+| **GET**  | `/catalogs/{catalogId}/output`           | Download the output of a specific catalog once it's ready.            |
+
+## **Catalog Creation Request Attributes (for Brand accounts)**
+
+format *Optional*
+
+***
+
+* **Data Type:** string
+
+  **Description:** Format of the catalog data returned
+
+  **Values:** `json-newline`
+
+brandIDFilter *Optional*
+
+***
+
+* **Data Type:** string
+
+  **Description:** Brand(s) ids used to filter down catalog results based on specified brands
+
+  **Values:** int64
+
+## **Catalog Creation Request Attributes (for Seller accounts)**
+
+retailerId *Required*
+
+***
+
+* **Data Type:** string
+
+  **Values:** int64
+
+  **Description:** Retailer id(s) carrying the product
+
+sellerId *Required*
+
+***
+
+* **Data Type:** string
+
+  **Values:** -
+
+  **Description:** Seller id(s) in respective retailers' catalogs, used to filter down catalog items
+
+## **Catalog Status Response Attributes**
+
+id
+
+***
+
+* **Data Type:** string
+
+  **Values:** int64
+
+  **Description:** ID of the catalog creation status request
+
+type
+
+***
+
+* **Data Type:** string
+
+  **Values:** `RetailMediaCatalogStatus`
+
+  **Description:** Type definition of the following attributes structure
+
+status
+
+***
+
+* **Data Type:** string
+
+  **Values:** enum with possible values: `pending`, `success`, `failure`, `expired`, `unknown`
+
+  **Description:** Status of the catalog creation request
+
+currency
+
+***
+
+* **Data Type:** string
+
+  **Values:** `USD`, `EUR`, etc
+
+  **Description:** ISO-4217 currency of the items in the respective catalog
+
+rowCount
+
+***
+
+* **Data Type:** integer
+
+  **Values:** int32
+
+  **Description:** Number of products contained in the catalog (available when creation reaches `success` status)
+
+fileSizeBytes
+
+***
+
+* **Data Type:** integer
+
+  **Values:** int32
+
+  **Description:** Size of catalog, in bytes (available when creation reaches `success` status)
+
+md5Checksum
+
+***
+
+* **Data Type:** string
+
+  **Values:** 32-char alpha-numeric strings
+
+  **Description:** MD5 checksum of catalog's content (available when creation reaches `success` status)
+
+createdAt
+
+***
+
+* **Data Type:** timestamp
+
+  **Values:** ISO-8601
+
+  **Description:** Timestamp of the creation
+
+message
+
+***
+
+* **Data Type:** string
+
+  **Values:** -
+
+  **Description:** Optional informative message, for developer consumption
+
+## **Catalog Output Response Attributes**
+
+id
+
+***
+
+* **Data Type:** string
+
+  **Values:** 500 char limit
+
+  **Description:** Retailer product ID, established by the retailer
+
+name
+
+***
+
+* **Data Type:** string
+
+  **Values:** 1000 char limit
+
+  **Description:** Retailer product name
+
+category
+
+***
+
+* **Data Type:** string
+
+  **Values:** 1000 char limit
+
+  **Description:** Retailer product category
+
+brandName
+
+***
+
+* **Data Type:** string
+
+  **Values:** 120 char limit
+
+  **Description:** Brand name of the product; names are standardized across retailers
+
+retailerId
+
+***
+
+* **Data Type:** string
+
+  **Values:** int64
+
+  **Description:** Retailer ID carrying the product
+
+retailerName
+
+***
+
+* **Data Type:** string
+
+  **Values:** 100 char limit
+
+  **Description:** Retailer name carrying the product
+
+price
+
+***
+
+* **Data Type:** number
+
+  **Values:** -
+
+  **Description:** Retailer product price in USD
+
+isInStock
+
+***
+
+* **Data Type:** boolean
+
+  **Values:** `true`, `false`
+
+  **Description:** Whether or not the product is in stock
+
+minBid
+
+***
+
+* **Data Type:** number
+
+  **Values:** greater than 0
+
+  **Description:** Minimum Cost-Per-Click (CPC) an advertiser must bid for the product, established by the retailer; any [line item](/retail-media/docs/line-items) with this product must have targetBid meet this value
+
+gtin
+
+***
+
+* **Data Type:** string
+
+  **Values:** -
+
+  **Description:** Global Trade Item Number (GTIN), if available; also known as European Article Number (EAN) or Universal Product Code (UPC)
+
+mpn
+
+***
+
+* **Data Type:** string
+
+  **Values:** -
+
+  **Description:** Manufacturer Part Number (MPN), if available
+
+imageUrl
+
+***
+
+* **Data Type:** string
+
+  **Values:** -
+
+  **Description:** An http image URL provided by the retailer
+
+updatedAt
+
+***
+
+* **Data Type:** timestamp
+
+  **Values:** ISO-8601
+
+  **Description:** Timestamp in UTC of last update
+
+<Info>
+  ### Catalog Asynchronous Workflow: Step 1 of 3
+
+  1. Create a request for the latest catalog of the specified account using the appropriate endpoint.
+  2. This action generates a `catalogId` that represents the account's catalog.
+  3. Catalog requests are **cached for 1 hour**, meaning repeated requests within this timeframe will return the same `catalogId` and output.
+</Info>
+
+ 
+
+## **Create a Catalog Request for Brand account**
+
+This endpoint creates a request for the latest available catalog for a specific account
+
+![](/images/retail-media/v2025.01/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/catalogs
+```
+
+<Info>
+  ### Best Practice Tip!
+
+  To speed up catalog downloads, you can narrow down the results by using the `brandIdFilter` body parameter. This allows you to filter the catalog by specific brands, helping to return results faster.
+</Info>
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/4/catalogs' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  --data-raw '{
+    "data": {
+      "type": "RetailMediaCatalogStatus",
+      "attributes": {
+        "format": "json-newline",
+        "brandIdFilter": [
+          "40115",
+          "9092"
+        ]
+      }
+    }
+  }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/4/catalogs"
+
+  payload = json.dumps({
+    "data": {
+      "type": "RetailMediaCatalogStatus",
+      "attributes": {
+        "format": "json-newline",
+        "brandIdFilter": [
+          "4768"
+        ]
+      }
+    }
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n    \"type\": \"RetailMediaCatalogStatus\",\n    \"attributes\": {\n      \"format\": \"json-newline\",\n      \"brandIdFilter\": [\n        \"4768\"\n      ]\n    }\n  }\n}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/4/catalogs")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/4/catalogs');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  $request->setBody('{\n  "data": {\n    "type": "RetailMediaCatalogStatus",\n    "attributes": {\n      "format": "json-newline",\n      "brandIdFilter": [\n        "4768"\n      ]\n    }\n  }\n}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "RetailMediaCatalogStatus",
+          "id": "1122850670915847014",
+          "attributes": {
+              "status": "pending",
+              "currency": null,
+              "rowCount": null,
+              "fileSizeBytes": null,
+              "md5Checksum": null,
+              "createdAt": "2024-04-06T05:11:41.351+00:00",
+              "message": null
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<Info>
+  ### Catalog Asynchronous Workflow: Step 2 of 3
+
+  After generating a `catalogId`, use it to poll the catalog status endpoint to check the progress. Continue polling until the catalog is successfully created and ready for download.
+</Info>
+
+ 
+
+## **Create a Catalog Request for Seller account**
+
+This endpoint creates catalog for a particular Seller account:
+
+![](/images/retail-media/v2025.01/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/catalogs/sellers
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl --location 'https://api.criteo.com/{version}/retail-media/accounts/345656205021392896/catalogs/sellers' \
+  --header 'Content-Type: application/json' \
+  --header 'Accept: text/plain' \
+  --header 'Authorization: Bearer <TOKEN>' \
+  --data '{
+    "data": {
+      "type": "RetailMediaCatalogStatus",
+      "attributes": {
+        "sellers": [
+          {
+            "retailerId": "123",
+            "sellerId": "60axxxxxxxxxxxxxxxx"
+          }
+        ]
+      }
+    }
+  }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/345656205021392896/catalogs/sellers"
+
+  payload = json.dumps({
+    "data": {
+      "type": "RetailMediaCatalogStatus",
+      "attributes": {
+        "sellers": [
+          {
+            "retailerId": "123",
+            "sellerId": "60axxxxxxxxxxxxxxxx"
+          }
+        ]
+      }
+    }
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n    \"type\": \"RetailMediaCatalogStatus\",\n    \"attributes\": {\n      \"sellers\": [\n        {\n          \"retailerId\": \"123\",\n          \"sellerId\": \"60axxxxxxxxxxxxxxxx\"\n        }\n      ]\n    }\n  }\n}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/345656205021392896/catalogs/sellers")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/345656205021392896/catalogs/sellers');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  $request->setBody('{\n  "data": {\n    "type": "RetailMediaCatalogStatus",\n    "attributes": {\n      "sellers": [\n        {\n          "retailerId": "123",\n          "sellerId": "60axxxxxxxxxxxxxxxx"\n        }\n      ]\n    }\n  }\n}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "RetailMediaCatalogStatus",
+          "id": "1122850670915847014",
+          "attributes": {
+              "status": "success",
+              "currency": "USD",
+              "rowCount": 369318,
+              "fileSizeBytes": 216634050,
+              "md5Checksum": "713f2d3c0ed718125a1acdef05224df5",
+              "createdAt": "2025-01-17T22:45:11.44+00:00",
+              "message": null
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+## **Get Status of a Specific Catalog**
+
+This endpoint retrieves the status of a specific catalog. Status can be `pending`, `success`, `failure`, or `expired`
+
+![](/images/retail-media/v2025.01/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/catalogs/{catalogId}/status
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://api.criteo.com/{version}/retail-media/catalogs/1122850670915847014/status" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+
+  ```bash bash
+  import requests
+
+  url = "https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/status"
+
+  payload={}
+  headers = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/status")
+    .method("GET", body)
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/status');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "RetailMediaCatalogStatus",
+          "id": "1122850670915847014",
+          "attributes": {
+              "status": "success",
+              "currency": "USD",
+              "rowCount": 1001,
+              "fileSizeBytes": 353293,
+              "md5Checksum": "2c15b77740028435ca476823df7fb4f8",
+              "createdAt": "2020-04-06T05:11:41.351+00:00",
+              "message": null
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+<Info>
+  ### Catalog Asynchronous Workflow: Step 3 of 3
+
+  Once the catalog is successfully created, use the catalog output endpoint to download the collection of catalog products. Note that catalog outputs are typically available for 72 hours before they expire, so be sure to download them within this time frame.
+</Info>
+
+ 
+
+## **Download Output of a Specific Catalog**
+
+This endpoint returns the products in a specific catalog as a [newline-delimited JSON byte stream](https://en.wikipedia.org/wiki/JSON_streaming)
+
+![](/images/retail-media/v2025.01/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/catalogs/{catalogId}/output
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://api.criteo.com/{version}/retail-media/catalogs/1122850670915847014/output" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+
+  ```bash bash
+  import http.client
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+  payload = ''
+  headers = {
+    'Accept': 'application/x-json-stream',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+  conn.request("GET", "/{version}/retail-media/catalogs/357957813719011328/output", payload, headers)
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/output")
+    .method("GET", body)
+    .addHeader("Accept", "application/x-json-stream")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/output');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Accept' => 'application/x-json-stream',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response - Brand Catalog**
+
+<CodeGroup>
+  ```bash bash
+  { \
+      "id": "sku1", \
+      "name": "Product One", \
+      "category": "category1", \
+      "brandId": "7672171780147256541", \
+      "brandName": "Brand 123", \
+      "retailerId": "3239117063738827231", \
+      "retailerName": "Retailer 123", \
+      "price": 1.00, \
+      "isInStock": true, \
+      "minBid": 0.30, \
+      "gtin": "abc123", \
+      "mpn": "789xyz", \
+      "imageUrl": "/image1.jpg", \
+      "updatedAt": "2020-04-06T02:23:07Z" \
+  }
+   
+  // ... newline-delimited, no comma
+   
+  { \
+      "id": "product-1001", \
+      "name": "Product One Thousand and One", \
+      "category": "category2", \
+      "brandId": "7672171780147256541", \
+      "brandName": "Brand 123", \
+      "retailerId": "18159942378514859684", \
+      "retailerName": "Retailer 789", \
+      "price": 5.00, \
+      "isInStock": false, \
+      "minBid": 0.45, \
+      "gtin": "none", \
+      "mpn": "none", \
+      "imageUrl": "/image1001.jpg", \
+      "updatedAt": "2020-04-06T01:07:23Z" \
+  }
+  ```
+</CodeGroup>
+
+**Sample Response - Seller Catalog**
+
+<CodeGroup>
+  ```bash bash
+  { \
+      "id": "86833674", \
+      "name": "Flat Front Short 46 x 10.5\" - Black", \
+      "category": "clothing, shoes & accessories|men’s clothing|bottoms|shorts", \
+      "categoryId": "3051218", \
+      "brandId": "40095", \
+      "brandName": "Test Brand", \
+      "retailerId": "131", \
+      "retailerName": "Retailer Name", \
+      "price": 39.99, \
+      "isInStock": true, \
+      "minBid": 0.4000, \
+      "gtin": "1234567890", \
+      "mpn": null, \
+      "imageUrl": "https://example.com/is/image/a610-881aa9a71c93", \
+      "updatedAt": "2024-07-25T19:52:30Z", \
+      "sellerId": "60axxxxxxxxxxxxxxxx", \
+      "sellerName": "Test Seller" \
+  }
+   
+  // ... newline-delimited, no comma
+   
+  { \
+      "id": "86833235", \
+      "name": "Pleated Front Short 52 x 10.5\" - String", \
+      "category": "clothing, shoes & accessories|men’s clothing|bottoms|shorts", \
+      "categoryId": "3051218", \
+      "brandId": "40095", \
+      "brandName": "Test Brand", \
+      "retailerId": "131", \
+      "retailerName": "Retailer Name", \
+      "price": 39.99, \
+      "isInStock": true, \
+      "minBid": 0.4000, \
+      "gtin": "1234567890", \
+      "mpn": null, \
+      "imageUrl": "https://example.com/is/image/a610-881aa9a71c93", \
+      "updatedAt": "2024-07-25T19:52:30Z", \
+      "sellerId": "60axxxxxxxxxxxxxxxx", \
+      "sellerName": "Test Seller" \
+  }
+  ```
+</CodeGroup>
+
+## **Responses**
+
+| Response | Description                                                                                                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢`200`  | Success                                                                                                                                                                       |
+| 🔴`400`  | The indicated catalog is not available for retrieval, wait for a success status                                                                                               |
+| 🔴`403`  | API user does not have the authorization to make requests to the account ID. For an authorization request, follow the[authorization request](doc:authorization-requests)steps |
+
+***
+
+[Catalog](/retail-media/v2025.01/docs/catalogs)
+
+[Line Items](/retail-media/v2025.01/docs/line-items)

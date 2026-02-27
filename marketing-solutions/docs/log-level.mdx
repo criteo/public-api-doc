@@ -1,0 +1,147 @@
+---
+title: "Log-Level"
+---
+
+1. Marketing Solutions Endpoints
+2. [Analytics](/marketing-solutions/docs/analytics)
+
+## **Introduction**
+
+The Criteo API can provide log-level, publisher-oriented information on your ad impressions and clicks in the form of daily reports. These reports include publisher domains where ads are displayed, timestamps of displayed ads, the price you are paying for each click, and contextual information such as user environment and device.
+
+You can retrieve this information at any time through the Criteo API in the form of reports that can integrate back into your systems. Reports are available for up to 30 days, starting from yesterday.
+
+***
+
+## Endpoint
+
+![](/images/marketing-solutions/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/2026-01/log-level/advertisers/{advertiser-id}/report
+```
+
+Below is an example using a basic cURL request:
+
+<CodeGroup>
+  ```bash bash
+  curl -X POST "https://api.criteo.com/2026-01/log-level/advertisers/{advertiser-id}/report" 
+    -H "accept: text/plain"
+    -H "Content-Type: application/json-patch+json"
+    -H "Authorization: Bearer XXXXX " 
+    -d "{ \"startDate\": \"2021-02-03\", \"endDate\": \"2021-02-04\"}"
+  ```
+</CodeGroup>
+
+The call above will return an array of objects containing links to download the reports. The reports will be split out by advertiser and day. No result will be returned if the query pre-dates a 30-day period (starting from yesterday).
+
+Due to the high volume of impression date, this query only supports daily files.
+
+**Response example:**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "type": "TransparencyReport",
+        "attributes": {
+          "advertiserId": "XXXXX",
+          "tokenValidUntil": "2021-02-04T22:42:44.3437476Z",
+          "files": [
+            {
+              "fileName": "2021-02-03_v1.csv.gz",
+              "url": "https://criteocpp.blob.core.windows.net/XXXXX
+            },
+            {
+              "fileName": "2021-02-04_v1.csv.gz",
+              "url": "https://criteocpp.blob.core.windows.net/XXXXX
+            },
+          ]
+        }
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+In the array returned, the report address will be located in the `stats` section under the `url` parameter. You will need to retrieve the report from this location to see the data. There are many ways to retrieve this report but in this example, we will be using curl.
+
+<CodeGroup>
+  ```bash bash
+  curl -o "saved_report.csv.gz" "#link from the url param#"
+  ```
+</CodeGroup>
+
+Once the report is downloaded, you will need to un-compress it and open it. The downloaded report will not contain column headers; please refer to the documentation below.
+
+***
+
+## Data specification
+
+| Column in CSV | Metric                | Type    | Description                                                                                                                                                                                                                        |
+| ------------- | --------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A             | Day                   | String  | Day of impression or click event                                                                                                                                                                                                   |
+| B             | Hour                  | Integer | Hour of impression or click event                                                                                                                                                                                                  |
+| C             | Timestamp             | Integer | Timestamp of impression or click event                                                                                                                                                                                             |
+| D             | Event type            | String  | Impression or click event specification                                                                                                                                                                                            |
+| E             | AdSet ID              | Integer | Criteo-assigned numerical AdSet identifier                                                                                                                                                                                         |
+| F             | AdSet name            | String  | Name of AdSet as seen in Commerce Growth                                                                                                                                                                                           |
+| G             | Ad format             | String  | Format of display (i.e. 'mozaic' is a dynamic banner)                                                                                                                                                                              |
+| H             | Banner ID             | Integer | Criteo-assigned numerical banner identifier                                                                                                                                                                                        |
+| I             | Category ID           | Integer | Identifier of product category in the catalog                                                                                                                                                                                      |
+| J             | Category name         | String  | Name of product category in the catalog                                                                                                                                                                                            |
+| K             | Referrer              | String  | Publisher domain on which ad was served                                                                                                                                                                                            |
+| L             | Environment           | String  | Browsing medium (web or app)                                                                                                                                                                                                       |
+| M             | Device family         | String  | Device specification of user agent                                                                                                                                                                                                 |
+| N             | OS family             | String  | Operating system specification of user agent                                                                                                                                                                                       |
+| O             | App ID                | String  | Identifier of app                                                                                                                                                                                                                  |
+| P             | App name              | String  | Specification of app                                                                                                                                                                                                               |
+| Q             | Viewability           | String  | Indicates if display was viewable for at least 50% of a continuous second-1 = impression was untracked; no insight into if it was viewed 0 = impression was tracked, but not viewable 1 = impression was tracked, and was viewable |
+| R             | Display cost currency | String  | Currency of the impression display cost                                                                                                                                                                                            |
+| S             | Display cost          | Double  | Impression display cost in local currency                                                                                                                                                                                          |
+| T             | Display cost (USD)    | Double  | Impression display cost in USD currency                                                                                                                                                                                            |
+| U             | Click cost currency   | String  | Currency of the click cost                                                                                                                                                                                                         |
+| V             | Click cost            | Double  | Cost per click in local currency                                                                                                                                                                                                   |
+| W             | Click cost (USD)      | Double  | Cost per click in USD currency                                                                                                                                                                                                     |
+
+When reading over the report, there are a few things to note.
+
+Those are listed below in a table for easy reference:
+
+| Question                                                                                          | Answer                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| How do I differentiate my AdSets from one another?                                                | If you have multiple AdSets under a given advertiser, they will be identified uniquely in the reports by the AdSet ID field. You can also reference the AdSet field.                                                                                                                                                                                                                                                                                   |
+| Why does the referrer field contain "null" or "unknown"?                                          | Due to legal and technical limitations, we might not receive the exact publishers' domain information (also known as blind traffic). These instances are tracked as “null” under the “referrer” field in the Log-level reports. This is a general behavior in the industry and it is common to have around 10% of traffic that falls under this definition.                                                                                            |
+| Why am I seeing a lot of itunes.apple.com and play.google.com?                                    | Our inApp displays will report as itunes.apple.com or play.google.com depending on the operating system the user has.itunes.apple.com = iOS play.google.com = Android                                                                                                                                                                                                                                                                                  |
+| Why am I seeing users from different countries included in these reports?                         | User targeting is derived from continental data base location. Every AdSet has an account ID that is linked to a specific data base. Unless there is a country-specific geofilter applied on the AdSet, it technically can target any user in that geographical region.For example, an AdSet linked to one of our Americas data centers could target a user in any North or South American country unless it has a country-specific geofilter applied. |
+| Why am I seeing values of 0 in the category\_ID field? And "unknown" in the category\_name field? | If your Criteo product catalog does not have category IDs mapped to specific product IDs, this will display a value of 0. Likewise, this is why "unknown" appears in the category\_name field.                                                                                                                                                                                                                                                         |
+| Why do have sometimes cost related to clicks, and some other times cost related to display?       | If the AdSet is using an adaptive optimizer or a target budget mechanism, it will show a click cost of 0 because we are billing displays, not clicks. If you’re using a standard click-billed AdSet, you will see a click cost unless smoothing is activated.                                                                                                                                                                                          |
+
+***
+
+## Example of Parsing
+
+The CSV file is produced with no quotes, Newline as a line terminator, backslash as an escape character, and comma as a separator. Please see below an example of parsing.
+
+<CodeGroup>
+  ```bash bash
+  import csv
+   
+  csv.register_dialect('crto', delimiter=',' ,quoting=csv.QUOTE_NONE,escapechar='\\',lineterminator = '\n')
+  with open('test_om.csv', newline='') as csvfile:
+         spamreader = csv.reader(csvfile, dialect='crto')
+         for row in spamreader:
+               print('rowcount ', len(row))
+               print(', '.join(row))
+  ```
+</CodeGroup>
+
+If you notice any issues don't hesitate to reach out through the Discussion section or your dedicated account representative.
+
+***
+
+What’s Next
+
+* [Placement](/marketing-solutions/docs/placement)
+* [Placement Category](/marketing-solutions/docs/placement-category)

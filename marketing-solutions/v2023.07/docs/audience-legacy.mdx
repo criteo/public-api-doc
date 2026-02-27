@@ -1,0 +1,199 @@
+---
+title: "Audience (Legacy)"
+---
+
+1. Marketing Solutions Endpoints
+2. [Audiences](/marketing-solutions/v2023.07/docs/audiences)
+
+This page documents the legacy Audience endpoints, and should not be used for new integration. The scope of this endpoints is limited and the newer endpoints should be used instead.
+
+## **Retrieving Audiences for a Specific Advertiser**
+
+Audiences created through Criteo's API will be returned for the designated advertiser ID.
+
+![](/images/marketing-solutions/v2023.07/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/2021-10/audiences?advertiser-id={advertiserId}
+```
+
+ 
+
+ 
+
+The API will return an array of the **IDs**, **names**, **description**, **date of creation**, **date of last update**, **number of lines** in the contact list, as well as the number of **matched emails** in the contact list associated with the specified advertiser ID. Please note that the advertiser ID is required in the request URL.
+
+ 
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [
+      {
+        "type": "AudienceContactlist",
+        "id": "1",
+        "attributes": {
+          "advertiserId": "18",
+          "name": "Audience name",
+          "description": "An Audience description",
+          "createdAt": "2020-10-20T08:35:22.000Z",
+          "updatedAt": "2020-10-20T08:35:22.000Z",
+          "nbLines": 100,
+          "nbLinesEmail": 10,
+          "nbMatchesEmail": 10
+        }
+      }
+    ],
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+## **Creating A New Audience**
+
+A new audience can be created for a specific advertiser by making a POST call to the audience endpoint. The request body should specify the advertiser id, name, and description of the new audience.
+
+![](/images/marketing-solutions/v2023.07/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/2023-01/audiences
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "Audience",
+      "attributes": {
+          "advertiserId": "1",
+          "name": "audienceX",
+          "description": "audience X targets people who like shoes"
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The API will return a unique **audience id** associated with the newly created audience.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+        "id": "12",
+        "type": "Audience"
+      },
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+ 
+
+ 
+
+## **Deleting An Audience**
+
+An audience can be deleted by specifying the audience id in the URL path of a DELETE call to the audiences endpoint.
+
+![](/images/marketing-solutions/v2023.07/docs/1e25c4c-delete.png)
+
+```
+https://api.criteo.com/2023-01/audiences/{audienceId}
+```
+
+The API will return an array with the audience ID that was deleted.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+        "id": "12",
+        "type": "Audience"
+      },
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+ 
+
+ 
+
+## **Updating Audience Metadata**
+
+The audience name and description can be updated by making a PATCH request to the audiences endpoint with a specific audience ID in the URL path. The request body should include the updated name and description of the audience.
+
+![](/images/marketing-solutions/v2023.07/docs/04a928f-patch.png)
+
+```
+https://api.criteo.com/2023-01/audiences/{audienceId}
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "Audience",
+      "attributes": {
+          "name": "audienceY",
+          "description": "audience Y targets people who like pants"
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of the updated **name** and **description** of the specified audience ID.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+        "type": "Audience",
+        "id": "12",
+        "attributes": {
+            "name": "audienceY",
+            "description": "audience Y targets people who like pants"
+        }
+      },
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+In addition to general API errors, you may encounter validation errors when creating or managing Audiences.
+
+Below is a list of error codes for Audience validation and a more detailed description of their meaning.
+
+## **Audience Validation Errors**
+
+**`body-data-type-invalid`** The data-type provided cannot be accepted. The message will detail expected data type.
+
+  **`audience-invalid-name`** Invalid audience name.
+
+  **`invalid-audience-name-duplicated`** Given audience name already exists for the requested advertiser
+
+  **`invalid-schema`** Bad schema name. Please check the list of allowed schemas on [Managing Audiences](doc:audience)
+
+ 
+
+  **`invalid-operation`** Bad operation name. Please check the list of allowed operations on [Managing Audiences](doc:audience)
+
+ 
+
+  **`empty-identifiers`** None or invalid identifiers have been supplied with the request
+
+ 
+
+  **`invalid`** Request is invalid or the server wasn't able to process the request due to a serialization error.
+
+***
+
+[Audiences](/marketing-solutions/v2023.07/docs/audiences)
+
+[Contact List](/marketing-solutions/v2023.07/docs/contact-list)

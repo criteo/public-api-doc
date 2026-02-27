@@ -1,0 +1,339 @@
+---
+title: "Bid Multipliers"
+---
+
+1. Guides for Retail Media API
+2. [Onsite Sponsored Products](/retail-media/v2025.10/docs/onsite-sponsored-products)
+
+The Criteo engine maximizes advertising performance while optimizing the shopper experience. It can automatically and intelligently control how much a line item delivers on each page type. In addition, bid multipliers provide campaign managers more control over managing bids at the line item level while also optimizing campaign performance goals at a page-type level.
+
+Bid multipliers are available at the Onsite Sponsored Products line items level. In addition, campaign managers can modify bids only on enabled page types.
+
+Bids can be **increased up to 500%** or **decreased up to 50%** on each page targeted at the line item level.
+
+**For example:** *If a line item bid is $1, with a bid multiplier, you can increase the Search page bid by 20% and decrease the homepage bid by 10%. The Criteo engine will optimize more delivery and performance on the search page while also allowing the control of which page types budget is mostly allocated towards.*
+
+## **Endpoints**
+
+| Verb    | Endpoint                                   | Description                                                            |
+| ------- | ------------------------------------------ | ---------------------------------------------------------------------- |
+| **GET** | `/line-items/{lineItemId}/bid-multipliers` | Returns all bid multipliers per page types of the specified line item. |
+| **PUT** | `/line-items/{lineItemId}/bid-multipliers` | Updates bid multipliers with new values or reset to default one.       |
+
+ 
+
+## **Bid Multiplier Attributes**
+
+| Attribute       | Data Type | Description                                                                                                                                                                                                           |
+| --------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | string    | Line item ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                               |
+| `home`          | decimal   | Bid multiplier to the `home` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `home` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N                   |
+| `search`        | decimal   | Bid multiplier to the `search` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `search` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N               |
+| `category`      | decimal   | Bid multiplier to the `category` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `category` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N           |
+| `productDetail` | decimal   | Bid multiplier to the `productDetail` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `productDetail` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N |
+| `merchandising` | decimal   | Bid multiplier to the `merchandising` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `merchandising` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N |
+| `deals`         | decimal   | Bid multiplier to the `deals` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `deals` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N                 |
+| `favorites`     | decimal   | Bid multiplier to the `favorites` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `favorites` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N         |
+| `searchBar`     | decimal   | Bid multiplier to the `searchBar` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `searchBar` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N         |
+| `categoryMenu`  | decimal   | Bid multiplier to the `categoryMenu` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `categoryMenu` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N   |
+| `checkout`      | decimal   | Bid multiplier to the `checkout` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `checkout` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N           |
+| `confirmation`  | decimal   | Bid multiplier to the `confirmation` page type Note: bids can be increased up to 500% (6.0) or decreased up to 50% (0.50)Accepted values: `0.50` ≤ `confirmation` ≤ `6.0` Default: `1.0` Writeable? Y / Nullable? N   |
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+## **Get Bid Multipliers**
+
+Returns all bid multipliers for page types of the specified line item.
+
+<Warning>
+  **Note**: this endpoint returns all possible page types supported by our platform, including the ones not currently supported by the respective retailer associated with the line item. For the effective list of supported page types, please refer to [Retailers](doc:retailers)
+</Warning>
+
+![](/images/retail-media/v2025.10/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}/bid-multipliers
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X GET 'https://api.criteo.com/{version}/retail-media/line-items/347413132777078784/bid-multipliers' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer MY_ACCESS_TOKEN'
+  ```
+
+  ```bash bash
+  import requests
+
+  url = "https://api.criteo.com/{version}/retail-media/line-items/347413132777078784/bid-multipliers"
+
+  payload={}
+  headers = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer MY_ACCESS_TOKEN'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/line-items/347413132777078784/bid-multipliers")
+    .method("GET", body)
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer MY_ACCESS_TOKEN")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/347413132777078784/bid-multipliers');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer MY_ACCESS_TOKEN'
+  ));
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "LineItemBidMultipliersV2",
+          "attributes": {
+              "id": "347413132777078784",
+              "home": 1.90,
+              "search": 1.10,
+              "category": 1.50,
+              "productDetail": 1.60,
+              "merchandising": 1.70,
+              "deals": 2.00,
+              "favorites": 2.30,
+              "searchBar": 1.00,
+              "categoryMenu": 1.10,
+              "checkout": 2.50,
+              "confirmation": 1.30
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Update Bid Multipliers**
+
+Replaces all existing bid multipliers with the provided bid multipliers or the default value, i.e., `1.0`.
+
+<Info>
+  **Note:** A **PUT** operation with empty attributes object will reset all values to their default value
+</Info>
+
+![](/images/retail-media/v2025.10/docs/1ee76cc-put.png)
+
+```
+https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}/bid-multipliers
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X PUT 'https://api.criteo.com/{version}/retail-media/line-items/347112182987198464/bid-multipliers' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer MY_ACCESS_TOKEN' \
+  --data-raw '{
+  	"data": {
+      "id": "347112182987198464",
+      "type": "RetailMediaBidMultiplier"
+  		"attributes": {
+  			"home": "1.90",
+  			"search": "1.10",
+  			"category": "1.50",
+  			"productDetail": "1.60",
+  			"merchandising": "1.70",
+        "deals": "2.00",
+        "favorites": "2.30",
+        "searchBar": "1.00",
+        "categoryMenu": "1.10",
+        "checkout": "2.50",
+        "confirmation": "1.30"
+  		}
+  	}
+  }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/line-items/347112182987198464/bid-multipliers"
+
+  payload = json.dumps({
+    "data": {
+      "id": "347112182987198464",
+      "type": "RetailMediaBidMultiplier",
+      "attributes": {
+        "home": "1.90",
+        "search": "1.10",
+        "category": "1.50",
+        "productDetail": "0.49",
+        "merchandising": "1.70",
+        "deals": "2.00",
+        "favorites": "2.30",
+        "searchBar": "1.00",
+        "categoryMenu": "1.10",
+        "checkout": "2.50",
+        "confirmation": "1.30",
+      }
+    }
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer MY_ACCESS_TOKEN'
+  }
+
+  response = requests.request("PUT", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"id\":\"347112182987198464\",\"type\":\"RetailMediaBidMultiplier\",\"attributes\":{\"home\":\"1.90\",\"search\":\"1.10\",\"category\":\"1.50\",\"productDetail\":\"1.60\",\"merchandising\":\"1.70\",\"deals\":\"2.00\",\"favorites\":\"2.30\",\"searchBar\":\"1.00\",\"categoryMenu\":\"1.10\",\"checkout\":\"2.50\",\"confirmation\":\"1.30\"}}}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/line-items/347112182987198464/bid-multipliers")
+    .method("PUT", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer MY_ACCESS_TOKEN")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once "HTTP/Request2.php";
+  $request = new HTTP_Request2();
+  $request->setUrl(
+      "https://api.criteo.com/{version}/retail-media/line-items/347112182987198464/bid-multipliers"
+  );
+  $request->setMethod(HTTP_Request2::METHOD_PUT);
+  $request->setConfig([
+      "follow_redirects" => true,
+  ]);
+
+  $request->setHeader([
+      "Content-Type" => "application/json",
+      "Accept" => "application/json",
+      "Authorization" => "Bearer MY_ACCESS_TOKEN",
+  ]);
+
+  $request->setBody('{"data":{"id":"347112182987198464","type":"RetailMediaBidMultiplier","attributes":{"home":"1.90","search":"1.10","category":"1.50","productDetail":"1.60","merchandising":"1.70","deals":"2.00","favorites":"2.30","searchBar":"1.00","categoryMenu":"1.10","checkout":"2.50","confirmation":"1.30"}}}');
+
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      } else {
+          echo "Unexpected HTTP status: " .
+              $response->getStatus() .
+              " " .
+              $response->getReasonPhrase();
+      }
+  } catch (HTTP_Request2_Exception $e) {
+      echo "Error: " . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": 347112182987198464,
+          "type": "LineItemBidMultipliersV2",
+          "attributes": {
+              "home": 1.90,
+              "search": 1.10,
+              "category": 1.50,
+              "productDetail": 0.50,
+              "merchandising": 1.70,
+              "deals": 2.00,
+              "favorites": 2.30,
+              "searchBar": 1.00,
+              "categoryMenu": 1.10,
+              "checkout": 2.50,
+              "confirmation": 1.30
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Responses**
+
+| Response | Description                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 🔵 `200` | Call executed with success                                                                                                                                                                                         |
+| 🔴 `400` | **BidMultiplierOutOfRange** A bid multiplier provided is out of range of the expected range and could not be accepted**IllegalValueProvided** An invalid page type or poorly formatted bid multiplier was provided |
+| 🔴 `401` | **Unauthorized** User doesnt have permission to edit a specified line item                                                                                                                                         |
+| 🔴 `404` | **LineItemDoesntExist** Attempted to fetch or manipulate a line item that does not exist                                                                                                                           |
+
+***
+
+[Keyword Review](/retail-media/v2025.10/docs/keyword-review)
+
+[Budget Overrides](/retail-media/v2025.10/docs/budget-overrides)

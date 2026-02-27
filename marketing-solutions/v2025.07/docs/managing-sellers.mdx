@@ -1,0 +1,198 @@
+---
+title: "Managing Sellers"
+---
+
+1. Marketing Solutions Endpoints
+2. [Marketplace Performance Outcomes](/marketing-solutions/v2025.07/docs/marketplace-performance-outcomes)
+
+The seller represents the legal person selling products on your platform. The MPO API enables you to manage the advertisement of your Sellers.
+
+## Adding Sellers
+
+Sellers are not added with the API. Instead, they are automatically added from the Catalog you provided us. In your catalog, you should provide the `sellerName` field on the Sellers' products. Products that don't have these fields provided will not be advertised.
+
+<Warning>
+  `sellerName` is case-sensitive. If your seller has different case, it will be considered as a different Seller.
+</Warning>
+
+<Info>
+  You can use your internal ID of the seller as SellerName.
+</Info>
+
+The catalog can be updated from the [Criteo Product Catalog API](https://developers.criteo.com/marketing-solutions/v2025.10/docs/product-importer-api) or directly from [Commerce Growth Dashboard](https://help.criteo.com/kb/guide/en/introducing-product-catalog-HuVC8b4c4e/Steps/3316715).
+
+***
+
+## Removing Sellers
+
+A Seller can be removed by removing its products from the Feed. If you want to stop an advertising a Seller immediately, you can suspend the budgets of its Seller-Campaigns (see "[Suspend a budget](doc:managing-budgets#suspending-budgets)" section).
+
+***
+
+## Getting Sellers
+
+In order to see the list of sellers that were extracted, you can make the following call:
+
+![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+
+```
+/marketplace-performance-outcomes/sellers
+```
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  [{
+     "id" : "1",
+     "sellerName": "AHepburn",
+  },{
+     "id" : "2",
+     "sellerName": "HBogart"
+  },{
+     "id" : "3",
+     "sellerName": "NewTech"
+  }]
+  ```
+</CodeGroup>
+
+A seller is defined by the following:
+
+**`sellerName`** This corresponds to the `sellerId` that was specified in the product catalog you provided.
+
+**`sellerId`** This `sellerId` identifies your seller. It is attributed by our Seller ingestion system.
+
+| Parameter          | Definition                                                                                                                                                     | Type      | Required? |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------- |
+| `advertiserId`     | Return sellers for the given advertiser Id. Default is to not filter on advertiser                                                                             | `integer` | No        |
+| `campaignId`       | Return sellers for the given campaign Id. Default is to not filter on campaign                                                                                 | `integer` | No        |
+| `sellerName`       | Returns only sellers with the given `sellerName` value.                                                                                                        | `string`  | No        |
+| `sellerStatus`     | Return only sellers with a specific status. Possible values: **Inactive**, **Active**.                                                                         | `string`  | No        |
+| `withBudgetStatus` | Return sellers with any budget having the given state. Default is to not filter on the budget state. Possible values: **Archived**, **Current**, **Scheduled** | `string`  | No        |
+| `withProducts`     | Return sellers with or without products in the catalog. The default is not to filter on products in the catalog.                                               | `boolean` | No        |
+
+<Warning>
+  There is an enrichment delay of 24 to 48 hours from when a product is placed in the catalog and becomes available.
+</Warning>
+
+***
+
+## Get Specific Seller
+
+You can also fetch the details of a single Seller using the following request:
+
+![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+
+```
+/marketplace-performance-outcomes/sellers/{sellerId}
+```
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  {
+    "id": "123456",
+    "sellerName": "HBogart"
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Get a collection of budgets for selected Seller
+
+The following endpoint retrieves a list of budgets for a specific seller, applying any optional filters provided as a query parameters. If no filters are given, return all budgets the user can access, excluding those with an `endDate` in the past. When multiple filters are used, only budgets that meet all the specified criteria are returned. For more information, refer to the [budgets endpoint documentation](/marketing-solutions/v2025.07/docs/managing-budgets).
+
+![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+
+```
+/marketplace-performance-outcomes/sellers/{sellerId}/budgets
+```
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  [
+    {
+      "id": "123456",
+      "sellerId": "123456",
+      "campaignIds": [
+        123532
+      ],
+      "budgetType": "Daily",
+      "amount": 12.0000,
+      "startDate": "2021-02-25",
+      "endDate": "Never",
+      "spend": null,
+      "status": "Current",
+      "isSuspended": false
+    }
+  ]
+  ```
+</CodeGroup>
+
+You can apply the following query parameters to the endpoint to specify filters:
+
+| Parameter         | Definition                                                                                                      | Type      | Required? |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- | --------- | --------- |
+| `sellerId`        | Filters budgets to those owned by the specified seller.                                                         | `string`  | Yes       |
+| `campaignId`      | Filters budgets to those funding the specified campaign.                                                        | `integer` | No        |
+| `endAfterDate`    | Returns budgets ending after the given date (`yyyy-MM-DD`). If omitted, only budgets still active are returned. | `string`  | No        |
+| `startBeforeDate` | Returns budgets starting on or before the given date (`yyyy-MM-DD`).                                            | `string`  | No        |
+| `status`          | Filters budgets by the specified status. Possible values: **Archived**, **Current**, **Scheduled**.             | `string`  | No        |
+| `type`            | Filters budgets by the specified budget type.                                                                   | `string`  | No        |
+| `withBalance`     | Returns only budgets that currently have a remaining balance.                                                   | `boolean` | No        |
+| `withSpend`       | Returns budgets that have a positive spend amount.                                                              | `boolean` | No        |
+
+***
+
+## Get a collection of campaigns for selected Seller
+
+The following endpoint returns a list of seller campaigns for the specified seller, applying any optional filters provided.
+
+If no filters are given, it returns the full collection accessible to the user. When multiple filters are used, only campaigns meeting all filter criteria are included. For more information, see the [seller campaigns endpoint documentation](/marketing-solutions/v2025.07/docs/managing-campaigns).
+
+![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+
+```
+/marketplace-performance-outcomes/sellers/{sellerId}/seller-campaigns
+```
+
+**Sample response**
+
+<CodeGroup>
+  ```bash bash
+  [
+    {
+      "id": "10624700.225662",
+      "sellerId": "10624700",
+      "campaignId": 225662,
+      "bid": null,
+      "suspendedSince": "2021-03-07T23:06:15.17",
+      "suspensionReasons": [
+        "NoBudgetDefined"
+      ]
+    }
+  ]
+  ```
+</CodeGroup>
+
+You can apply the following query parameters to the endpoint to specify filters:
+
+| Parameter      | Definition                                                                                         | Type      | Required? |
+| -------------- | -------------------------------------------------------------------------------------------------- | --------- | --------- |
+| `sellerId`     | Limits results to campaigns belonging to the specified seller.                                     | `string`  | Yes       |
+| `budgetStatus` | Filters campaigns by the budget status. Possible values: **Archived**, **Current**, **Scheduled**. | `string`  | No        |
+| `campaignId`   | Filters campaigns linked to the specified campaign ID.                                             | `integer` | No        |
+| `sellerStatus` | Filters campaigns by the seller's status. Possible values: **Inactive**, **Active**.               | `string`  | No        |
+
+***
+
+What’s Next
+
+* [Managing Campaigns](/marketing-solutions/v2025.07/docs/managing-campaigns)
+* [Managing Budgets](/marketing-solutions/v2025.07/docs/managing-budgets)
+* [Getting statistics](/marketing-solutions/v2025.07/docs/getting-statistics)
+* [Validation Errors](/marketing-solutions/v2025.07/docs/validation-errors)

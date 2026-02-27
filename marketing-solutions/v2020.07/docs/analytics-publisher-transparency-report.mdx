@@ -1,0 +1,91 @@
+---
+title: "[Analytics] Publisher Transparency Report"
+---
+
+1. Guides for Marketing Solutions API
+2. [Analytics](/marketing-solutions/v2020.07/docs/analytics)
+
+## **Retrieving Publisher Display Data at the Advertiser Level**
+
+As part of our open and transparent approach, we are providing publisher-oriented information on your ad impressions in the form of reports. These reports include publisher domains where ads are displayed, timestamps of displayed ads, the price you are paying for each impression, and contextual information such as user environment and device.   You can retrieve this information at any time through our REST API in the form of reports that can integrate back into your systems. Reports are available for up to 30 days.  
+
+<Warning>
+  ### The Management Center roles that can access the transparency endpoint are:
+
+  • Administrator • Business Manager • View Only
+</Warning>
+
+The transparency report is available at this endpoint:  
+
+![](/images/marketing-solutions/v2020.07/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/legacy/marketing/v1/publishers/stats
+```
+
+  Below are examples connecting using our API client library.
+
+<CodeGroup>
+  ```bash bash
+  curl --request POST \
+    --url https://api.criteo.com/legacy/marketing/v1/publishers/stats \
+    --header 'Accept: application/json' \
+    --header 'Content-Type: text/json' \
+    --data '{"advertiserIds":"1234","startDate":"2020-09-03","endDate":"2020-09-04"}'
+  ```
+</CodeGroup>
+
+The call above will return an array of objects containing links to download the reports. The reports will be split out by advertiser and day. The 'advertiser\_ids' field is required for all client libraries except node. In node, all advertisers linked with your account will be returned if you do not specify an advertiser id in the call.  
+
+<CodeGroup>
+  ```bash bash
+  [
+    {
+      "advertiserId": 1234,
+      "stats": [
+        {
+          "fileName": "2020-09-03.csv.gz",
+          "tokenValidUntil": "2020-09-05T17:52:05.757Z",
+          "url": "https://criteocpp.blob.core.windows.net/......"
+        },
+        {
+          "fileName": "2020-09-04.csv.gz",
+          "tokenValidUntil": "2020-09-05T17:52:05.757Z",
+          "url": "https://criteocpp.blob.core.windows.net/......"
+        }
+      ]
+    }
+  ]
+  ```
+</CodeGroup>
+
+In the array returned, the report address will be located in the 'stats' section under the 'url' parameter. You will need to retrieve the report from this location to see the data.   There are many ways to retrieve this report but in this example, we will be using curl.
+
+<CodeGroup>
+  ```bash bash
+  curl -o "saved_report.csv.gz" "#link from the url param#"
+  ```
+</CodeGroup>
+
+Once the report is downloaded, you will need to uncompressed it and open it.
+
+<Warning>
+  ### The downloaded report will have no column headers
+
+  To understand the report, you will want to save the column headers somewhere. **Column 1:** Timestamp **Column 2:** Date **Column 3:** Hour **Column 4:** Domain level referrer **Column 5:** Cost **Column 6:** CampaignId **Column 7:** CategoryId **Column 8:** BannerId **Column 9:** Environment (e.g. Mobile) **Column 10:** Device model **Column 11:** OS
+</Warning>
+
+When reading over the report, there are a few things to note. They are listed before in a table for easy reference.
+
+| Question                                                                  | Answer                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| How do I differentiate my campaigns from one another?                     | If you have multiple campaigns under a given advertiser, they will be identified uniquely in the reports by the category ID field.                                                                                                                                                                                                               |
+| Why does the referrer field contain "null"?                               | Due to legal and technical limitations, we might not receive the exact publishers' domain information (also known as blind traffic). These tracked as “null” under the “referrer” field in the Transparency reports. This is a general behavior in the industry and it is common to have around 10% of traffic that falls under this definition. |
+| Why am I seeing a lot of itunes.apple.com and play.google.com?            | Our inApp displays will report as itunes.apple.com or play.google.com depending on the operating system the user has.itunes.apple.com = iOS play.google.com = Android                                                                                                                                                                            |
+| Why am I seeing users from different countries included in these reports? | The way we buy publishers' inventory is based on the users. It does not take into account the user’s location. A user that interacts with your site will be retargeted even if not in your country unless specified otherwise by your Criteo representative.                                                                                     |
+
+***
+
+[\[Analytics\] Statistics v1](/marketing-solutions/v2020.07/docs/analytics-statistics-v1)
+
+[Audiences](/marketing-solutions/v2020.07/docs/audience)

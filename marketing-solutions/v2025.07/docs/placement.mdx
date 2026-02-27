@@ -1,0 +1,145 @@
+---
+title: "Placement"
+---
+
+1. Marketing Solutions Endpoints
+2. [Analytics](/marketing-solutions/v2025.07/docs/analytics)
+
+## **Placement Report API Endpoint**
+
+```
+https://api.criteo.com/2025-07/placements/report
+```
+
+## **Introduction**
+
+The **Placement Report API** endpoint allows for customized reporting containing placement level data from a campaign's delivery. This new endpoint offers the ability to pull reports with data that was previously only available through the Criteo Platform UI.
+
+There are several dimensions and metrics that can be combined for different insights to show how inventory is playing a role in campaign delivery. A set of filters applied as parameters in the POST request can also be used to limit the data in the report so it only contains relevant details.
+
+The metrics are similar to the ones provided in the Statistics endpoint, but the dimensions allow for seeing performance across the different placements available in a campaign's inventory.
+
+   
+
+Please note the data in this endpoint for the current day can only be accessed after midnight that day and can take up to 4 hours to become available (so the sum of today's data will be available tomorrow between midnight and 4am).
+
+Placement data is retained for up to 3 months and queries to this endpoint return a maximum of 20000 rows. These limitations are in place to ensure optimal report performance and stability.
+
+## **Retrieving Placements**
+
+The Placement Report API endpoint offers reporting on the performance of inventory based on the available criteria provided in a POST request. Keep in mind the following are required fields for queries on this endpoint: *startDate*, *endDate*, *advertiserIds*, *timezone*, *currency*, and *disclosed*
+
+![](/images/marketing-solutions/v2025.07/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/2025-07/placements/report
+```
+
+Examples and definitions for each of the fields are provided in the following pages.
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [{
+      "type": "ReportOrder",
+      "attributes": {
+        "advertiserIds": "22, 4949",  
+        "startDate": "2020-11-04",  
+        "endDate": "2020-11-04",  
+        "format": "json",  
+        "timezone": "Asia/Tokyo",  
+        "currency": "JPY",
+        "dimensions": ["advertiserId", "adSetId", "placement"],
+        "metrics": ["displays", "cost"]
+      }
+    }]
+  }
+  ```
+</CodeGroup>
+
+The report generated from the POST request is returned in the response. The report is generated in the format specified in the request.
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": [{
+      "type": "Report",
+      "attributes": {
+        "rows": [{
+          "advertiserId": "22",
+          "adSetId": "200094",
+          "placement": "My android app",
+          "displays": "5577",
+          "cost": "0.0200",
+        }]
+      }
+    }]
+  }
+  ```
+</CodeGroup>
+
+## **Dimensions**
+
+Dimensions requested in the API call will return data detailing delivery. The dimensions requested in the POST call will be returned for each row of data returned in the report. There are no restrictions on the number of dimensions or the order of dimensions. Dimensions are provided as an array of strings in the POST request. The full list is below:
+
+| Field        | Description                  |
+| ------------ | ---------------------------- |
+| advertiserId | Id of the advertiser         |
+| adsetId      | Id of the ad set             |
+| adsetName    | Name of the ad set           |
+| environment  | Web/Android/iOS              |
+| placement    | The name of the ad placement |
+
+The `dimensions` array of the request should contain all requested dimensions as strings in an array.
+
+For example: `['placement','adsetId','environment']`
+
+## **Metrics**
+
+The metrics requested in the POST call will be returned for each available row of data. Metrics are provided as an array of strings in the data payload of the POST request to the API endpoint. The full list of metrics is below:
+
+| Field        | Description                                                                                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| clicks       | The number of clicks driven by the add.                                                                                                                          |
+| displays     | The number of displays/impressions of ads served on sites through the Criteo Publisher Network.                                                                  |
+| cost         | The amount of money spent on Criteo advertising.                                                                                                                 |
+| salesPc30d   | The number of completed e-commerce transactions or purchases. Attribution model pc30d                                                                            |
+| salesPv1d    | The number of completed e-commerce transactions or purchases. Attribution model pv1d                                                                             |
+| revenuePc30d | The amount of money generated by the online sales. Attribution model pc30d                                                                                       |
+| revenuePv1d  | The amount of money generated by the online sales. Attribution model pv1d                                                                                        |
+| cosPc30d     | Cost Of Sales - the ratio between the cost generated by the campaign(s) vs. the revenue generated by the sales, figured as a percentage. Attribution model pc30d |
+| cosPv1d      | Cost Of Sales - the ratio between the cost generated by the campaign(s) vs. the revenue generated by the sales, figured as a percentage. Attribution model pv1d  |
+| roasPc30d    | Return On Ad Spend - the ratio between the revenue generated and the cost. Attribution model pc30d                                                               |
+| roasPv1d     | Return On Ad Spend - the ratio between the revenue generated and the cost. Attribution model pv1d                                                                |
+| cpoPc30d     | Cost Per Order - the amount of money that needs to be spent to get one order or transaction. Attribution model pc30d                                             |
+| cpoPv1d      | Cost Per Order - the amount of money that needs to be spent to get one order or transaction. Attribution model pv1d                                              |
+| cvrPc30d     | ConVersion Rate - the percentage of completed purchases compared to the clicks that occurred. Attribution model pc30d                                            |
+| cvrPv1d      | ConVersion Rate - the percentage of completed purchases compared to the clicks that occurred. Attribution model pv1d                                             |
+
+The `metrics` array of the request uses the same format as the `dimensions` array.
+
+For example: `['clicks','displays','roasPc30d']`
+
+## **Filters**
+
+Filters can be used to be more selective about the data returned in the response and produce a more focused report. A number of filters are required to make a query to the Placement Report endpoint. Filters are provided as properties to the "attributes" object in the data payload of the POST request to the API.
+
+| Field         | Description                                                         | Optional/Required | Type                                                             | Default Value |
+| ------------- | ------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------- | ------------- |
+| startDate     | start of the period                                                 | required          | DateTime                                                         |               |
+| endDate       | end of the period                                                   | required          | DateTime                                                         |               |
+| advertiserIds | List of Advertiser Ids separated by commas                          | required          | string of ID's separated by commas                               |               |
+| adsetIds      | List of Ad Set Ids separated by commas                              | optional          | string of ID's separated by commas                               |               |
+| adsetName     | Filter for Ad Set names                                             | optional          | string                                                           |               |
+| environment   | Web/Android/iOS                                                     | optional          | string                                                           |               |
+| timezone      | Time zone used for dates                                            | required          | Timezone                                                         |               |
+| currency      | Currency used for amounts                                           | required          | [ISO 4217 Currency Code](https://en.wikipedia.org/wiki/ISO_4217) |               |
+| placement     | Filter the value of the placement                                   | optional          | string                                                           |               |
+| format        | Format of the report provided in the response (json, xml, csv, xls) | optional          | string                                                           | CSV           |
+| disclosed     | undisclosed exchanges for which we don't have the domain            | required          | string                                                           | true          |
+
+***
+
+[Log-Level](/marketing-solutions/v2025.07/docs/log-level)
+
+[Placement Category](/marketing-solutions/v2025.07/docs/placement-category)

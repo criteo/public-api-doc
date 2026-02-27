@@ -1,0 +1,234 @@
+---
+title: "Ads"
+---
+
+1. Marketing Solutions Endpoints
+2. [Creatives](/marketing-solutions/v2025.07/docs/creatives)
+
+## **Search Ads**
+
+### Retrieving Ads for a Specific Advertiser
+
+Ads created through Criteo's API will be returned for the designated advertiser ID. Only ads created through API and Commerce Growth are returned.
+
+![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+
+```
+/advertisers/{advertiserId}/ads?offset=0&limit=30
+```
+
+ 
+
+ 
+
+The API will return an array of the IDs, name, description (if specified), creative ID, ad set ID, start date and end date (if specified) for the specified advertiser ID. Please note that the advertiser ID is required in the request URL. The offset and limit are optionals.
+
+**`offset`** 0 based index of the first ad to return in the response. The default is 0.
+
+**`limit`** The number of ads to be returned. The default is 50.
+
+ 
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "15",
+              "type": "Ad",
+              "attributes": {
+                  "name": "My first ad",
+                  "description": "Description of my first ad",
+                  "creativeId": "18",
+                  "adSetId": "345",
+                  "startDate": "2021-09-08T08:47:30.000Z",
+                  "endDate": "2021-10-08T08:47:30.000Z"
+              }
+          },
+          {
+              "id": "16",
+              "type": "Ad",
+              "attributes": {
+                  "name": "My second ad",
+                  "description": "",
+                  "creativeId": "19",
+                  "adSetId": "346",
+                  "startDate": "2021-04-29T11:05:00.000Z",
+                  "endDate": null
+              }
+          }
+      ],
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+### Retrieving a Specific Ad
+
+Ad created through Criteo's API will be returned for the designated ad ID.
+
+![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+
+```
+/ads/{adId}
+```
+
+ 
+
+ 
+
+The API will return an array of the ID, name, description (if specified), creative ID, ad set ID, start date and end date (if specified) for the specified ad ID. Please note that the ad ID is required in the request URL.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "15",
+          "type": "Ad",
+          "attributes": {
+            "name": "My first ad",
+            "description": "Description of my first ad",
+            "creativeId": "18",
+            "adSetId": "345",
+            "startDate": "2021-09-08T08:47:30.000Z",
+            "endDate": "2021-10-08T08:47:30.000Z"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Creating A New Ad**
+
+A new ad can be created for a specific advertiser and from an existing creative by making a POST call to the ads endpoint. The request body should specify the name, description (optional), creative id, adset id, start date and end date (optional) of the new ad.
+
+![](/images/marketing-solutions/v2025.07/docs/b0623eb-post.png)
+
+```
+/advertisers/{advertiserId}/ads
+```
+
+<CodeGroup>
+  ```bash bash
+  {
+    "data": {
+      "type": "AdWriteRequest",
+      "attributes": {
+        "name": "My new ad",
+        "description": "Description of my new ad",
+        "creativeId": "20",
+        "adSetId": "347",
+        "startDate": "2021-09-08T08:47:30.000Z",
+        "endDate": "2021-10-08T08:47:30.000Z"
+      }
+    }
+  }
+  ```
+</CodeGroup>
+
+The API will return an array of the ID, name, description (if specified), creative id, adset id, start date and end date (if specified) of the new ad. Please note that the advertiser ID is required in the request URL.
+
+<Warning>
+  ### Ad id null at creation
+
+  Ad Id will be set as null in the response. The ad id will be provided after ad deployment and can be retrieved using the "Get Existing Ads" endpoints.
+</Warning>
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": null,
+          "type": "Ad",
+          "attributes": {
+            "name": "My new ad",
+            "description": "Description of my new ad",
+            "creativeId": "20",
+            "adSetId": "347",
+            "startDate": "2021-09-08T08:47:30.000Z",
+            "endDate": "2021-10-08T08:47:30.000Z"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+## **Deleting an ad**
+
+An ad can be deleted by specifying the ad id in the URL path of a DELETE call to the ads endpoint.
+
+![](/images/marketing-solutions/v2025.07/docs/1e25c4c-delete.png)
+
+```
+/ads/{adId}
+```
+
+The API will return an array with the ad ID that was deleted.
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+## **Validation Errors**
+
+**`user-request-forbidden-advertiser `**&#x54;he user doesn't have the permission to access the specified advertiser.
+
+ 
+
+**`user-request-forbidden-creative`** The user doesn't have the permission to access the specified creative.
+
+ 
+
+**`user-request-forbidden-ad`** The user doesn't have the permission to access the specified ad.
+
+ 
+
+**`invalid-action-with-managed-creative`** The action cannot be performed on a managed service creative.
+
+ 
+
+**`invalid-action-with-managed-ad`** The action cannot be performed on a managed service ad.
+
+ 
+
+**`invalid-creative-action-with-status `**&#x54;he action cannot be performed due to the status of the creative.
+
+ 
+
+**`invalid-image`** One of the images provided is invalid. Please check the image requirements [here](https://help.criteo.com/kb/guide/en/image-ads-8hXUBDeeoo/Steps/775688)
+
+ 
+
+ 
+
+**`invalid-redirection-url-image`** The redirection URL specified doesn't match the advertiser domain.
+
+ 
+
+**`invalid-html-tag`** One of the HTML tags is not supported. Please check the list of supported ad servers [here](https://help.criteo.com/kb/guide/en/third-party-ads-QUSq5Astwy/Steps/775787,817360)
+
+ 
+
+ 
+
+**`invalid-creative-request`** Invalid request on the Creative endpoint.
+
+ 
+
+**`invalid-ad-request`** Invalid request on the Ad endpoint.
+
+***
+
+[Creative](/marketing-solutions/v2025.07/docs/creative)
+
+[Coupon](/marketing-solutions/v2025.07/docs/coupon)

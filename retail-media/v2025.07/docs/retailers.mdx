@@ -1,0 +1,313 @@
+---
+title: "Retailers"
+---
+
+1. Guides for Retail Media API
+2. [Account](/retail-media/v2025.07/docs/account)
+
+## **Introduction**
+
+A retailer offers a selection of products from multiple brands.
+
+Retailers act as publishers, providing advertising inventory for brands to promote their products.
+
+An account can have access to one or more retailers, with this access typically managed by Criteo.
+
+A retailer typically allows multiples types of pages to be targeted. A *page* is an inventory that can be targeted by [Campaigns](doc:campaign) and [Line Items](doc:line-items) with specific configurations.
+
+## **Endpoint**
+
+| Method  | Endpoint                          | Description                                |
+| ------- | --------------------------------- | ------------------------------------------ |
+| **GET** | `/accounts/{accountId}/retailers` | Get all retailers                          |
+| **GET** | `/retailers/{retailerId}/pages`   | Get all pages types from specific retailer |
+
+## **Retailer Attributes**
+
+| Attribute               | Data Type   | Description                                                                                                                                                                                                                              |
+| ----------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                    | string      | Retailer ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                   |
+| `name`                  | string      | Retailer name, arbitrary and defined during retailer integration phaseAccepted values: up to 100-chars string Writeable? Y / Nullable? N                                                                                                 |
+| `campaignEligibilities` | list\<enum> | Type(s) of campaigns that are supported on each retailer. It's dependent on their current technical integration and other business conditionsAccepted values: `auction`, `preferred`, `offsite`, `offsitecpc` Writeable? N / Nullable? N |
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+## **Retailer Page Type Attributes**
+
+| Attribute    | Data Type    | Description                                                                                                                                                                                                                                        |
+| ------------ | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `retailerId` | string       | Retailer ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                             |
+| `pageTypes`  | list`<enum>` | Page types available in the associated RetailerAccepted values:- `Home`
+- `Search`
+- `Category`
+- `ProductDetail`
+- `Merchandising`
+- `Deals`
+- `Favorites`
+- `SearchBar`
+- `CategoryMenu`
+- `Checkout`
+- `Confirmation`Writeable? N / Nullable? N |
+
+## **Get all Retailers**
+
+This endpoint retrieves a list of all retailers associated with the respective account and whose environments are available as inventory for its campaigns and line items.
+
+Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively - see [API Response](#/pagination)
+
+![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/retailers
+```
+
+<Info>
+  ### API reference
+
+  You can find this endpoint in [the API reference](https://developers.criteo.com/retail-media/reference/) as well.
+</Info>
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers?pageIndex=0&pageSize=25" \
+    -H 'Accept: application/json' \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+
+  ```bash bash
+  import requests
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers?pageIndex=0&pageSize=25"
+
+  payload={}
+  headers = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers?pageIndex=0&pageSize=25")
+    .method("GET", body)
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers?pageIndex=0&pageSize=25');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+
+  $request->setHeader(array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCES_TOKEN>'
+  ));
+
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "metadata": {
+          "totalItemsAcrossAllPages": 10,
+          "currentPageSize": 25,
+          "currentPageIndex": 0,
+          "totalPages": 1,
+          "nextPage": null,
+          "previousPage": null
+      },
+      "data": [
+          {
+              "id": "1234",
+              "type": "RetailMediaRetailer",
+              "attributes": {
+                  "name": "Retailer 1234",
+                  "campaignEligibilities": [
+                      "auction",
+                      "preferred",
+                      "offsiteCpc",
+                      "offsite"
+                  ]
+              }
+          },
+          // ...
+          {
+              "id": "5678",
+              "type": "RetailMediaRetailer",
+              "attributes": {
+                  "name": "Retailer 5678",
+                  "campaignEligibilities": [
+                      "auction",
+                      "preferred"
+                  ]
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Get all Page Types from specific Retailer**
+
+This endpoint lists all page types available in the current retailer integration.
+
+![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/retailers/{retailerId}/pages
+```
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X GET "https://api.criteo.com/{version}/retail-media/retailers/1234/pages" \
+    -H 'Accept: application/json' \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+
+  ```bash bash
+  import requests
+
+  url = "https://api.criteo.com/{version}/retail-media/retailers/299/pages"
+  payload={}
+  headers = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/retailers/299/pages")
+    .method("GET", body)
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/retailers/299/pages');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "pageTypes": [
+          "Home",
+          "Search",
+          "Category",
+          "ProductDetail",
+          "Merchandising",
+          "Deals",
+          "Checkout",
+          "Confirmation"
+      ]
+  }
+  ```
+</CodeGroup>
+
+## **Responses**
+
+| Response | Description                                                                                                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢`200`  | Call executed with success                                                                                                                                                    |
+| 🔴`403`  | API user does not have the authorization to make requests to the account ID. For an authorization request, follow the[authorization request](doc:authorization-requests)steps |
+
+***
+
+What’s Next
+
+* [Balances](/retail-media/v2025.07/docs/balances)
+* [Audiences](/retail-media/v2025.07/docs/audiences)
+* [Catalog](/retail-media/v2025.07/docs/catalogs)
+* [Campaigns](/retail-media/v2025.07/docs/campaign)
+* [Line Items](/retail-media/v2025.07/docs/line-items-endpoints)
+* [Onsite Sponsored Products](/retail-media/v2025.07/docs/onsite-sponsored-products)

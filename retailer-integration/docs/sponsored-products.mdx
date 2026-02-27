@@ -1,0 +1,145 @@
+---
+title: "Sponsored Products"
+description: "This guide provides a response description, attributes and example of rendering for the Sponsored Products ads"
+---
+
+# Introduction
+
+Sponsored products are native ads that appear directly within a retailer’s product listings or search results, blending seamlessly with the site's content.
+
+***
+
+# Response description
+
+The response of the API call will give you all the information needed to render the ads and track them.
+
+For this reason, the important data are the `productId` in the `products` list to know which product should be displayed, and the different beacons to be able to measure ad performance.
+
+You can find more information about the beacons in the next [chapter](https://developers.criteo.com/retail-media-delivery/docs/retail-media-beacons) and a list of all possible attributes for Sponsored products below.
+
+***
+
+## Main object
+
+| Attributes   | Format                        | Description                                                                                                               |
+| ------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `status`     | `OK` or `Error`               | Alerts to whether the API call succeeded or failed                                                                        |
+| `errors`     | Array of strings              | Only appears if the `status` = `Error`. It will explain the reason behind the error status                                |
+| `placements` | Array of objects: `placement` | Lists all placements available for the specific page-id the API is being called for (example: `viewCategory_API_desktop`) |
+
+***
+
+## Placement
+
+| Attributes                    | Format                     | Description                                                                               |
+| ----------------------------- | -------------------------- | ----------------------------------------------------------------------------------------- |
+| `format`                      | Array of objects: `format` | Lists all formats present for the placement                                               |
+| `rendering`                   | Empty string               | Internal use                                                                              |
+| `OnClickBeacon`               | Empty string               | Not in use for Sponsored Products                                                         |
+| `OnLoadBeacon` `OnViewBeacon` | String containing a URL    | You can find more information on the beacons in the next [chapter](#tracking-ad-activity) |
+
+***
+
+## Formats
+
+This object contains only two members.
+
+The `format` is the type of format. For Sponsored Products, it will always be `sponsored_products`. `products` will then be a list of products that has to be rendered.
+
+***
+
+## Products
+
+| Attributes                                                                                            | Format                          | Description                                                                                                                      |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `ProductId`                                                                                           | String                          | Product ID of the product that matches what Criteo has in the product feed                                                       |
+| `ProductName` `Image` `Rating` `Price` `ComparePrice` `Shipping` `PromoText` `ParentSKU`              | String                          | Values that are in the feed, describing the `productId` above                                                                    |
+| `RenderingAttributes`                                                                                 | String containing a JSON object | Values in the feed that are not standard, but are needed to render the ad. If you need these, contact your Criteo representative |
+| `ClientAdvertiserId`                                                                                  | String                          | Internal ID                                                                                                                      |
+| `AdvertiserId`                                                                                        | String                          | Criteo ID of the advertiser who sent the ad                                                                                      |
+| `ProductPage` `OnLoadBeacon` `OnViewBeacon` `OnClickBeacon` `OnBasketChangeBeacon` `OnWishlistBeacon` | String containing a URL         | More information on the beacons can be found in the next [chapter](#tracking-ad-activity)                                        |
+
+***
+
+# Sample responses
+
+## Successful request
+
+<CodeGroup>
+  ```bash bash
+  {
+    "status": "OK",
+    "placements": [
+      {
+        "viewCategory_API_desktop-InGrid": [
+          {
+            "format": "sponsored_products",
+            "products": [
+              {
+                "ProductName": "rmp product",
+                "ProductId": "123456789",
+                "ProductPage": "//b.us5.us.criteo.com/rm?dest=https%3a%2f%2fwww.rmp.fr%2fp%2frmpproduct&rm_e=1hDkdqmDgzAEH%2f9b1bZMzIwtLKx%2fKcuHrtcks%2bx4LBbAWMSUAY5gynQFV86sd3I%2b9eY5%2bEuDBXWo0pkuJ7h%2f6S%2fbInDls80FWFuQNhLc5OYn8SqA1oc8xfKISOcQo3PUoYX7jdfghlyffh8pXdHVrp5jdxW0uugp88DTpUnJHBeL6iUFcAnxw8h6PxrFOFlr4QuexEhMRY5uSWRyW%2frhH3gVR0yGITZrJjdnBb6M09vNKfAx2pwED9kkLBA%2bQwO74Rfq%2fdbtp9NV48XaVHoDBb93iocReK74sEppuq01cf%2bslWxAA%3d&ev=2",
+                "Image": "https://rmp.us/static/wlpdatas/display/00f0/14f1/63f6/1416f369.jpg",
+                "Rating": "-1",
+                "Price": "1.20",
+                "ComparePrice": "1.20",
+                "Shipping": "0",
+                "PromoText": "",
+                "ParentSKU": "123456789",
+                "ClientAdvertiserId": "87987552",
+                "AdvertiserId": "434225",
+                "RenderingAttributes": "{\"brand\":\"nike\",\"issellersku\":\"0\",\"mapViolation\":\"0\",\"numberOfReviews\":\"0\",\"shippingCost\":\"0\",\"taxonomy_text\":\"retail>media>platform\"}",
+                "OnLoadBeacon": "//b.us5.us.criteo.com/rm?rm_e=n1c%2bs%2f5NdxiFJcVIg8c6Vmm%2bKxrWmOC9gAt2d0JlQEWDKt2ddr1EpQVoUK6DVX4uNN03iMIKcBEWqWAOcw%2buPxBYqlBeMP0ww2OdLCNlH5lLO%2bySQcFXVg3Y01p1eLt1OMlCWAEI90kCXs%2fDS3x3nREMj7AAvHC7oKue3t0TMqIW8js9PxWjRm1FyqggUNXURE3dFQCADhrDnT6rfbKCff%2brIB%2fb4zejcY5dhZz0zYDX7hUnE7PdPjhL5Lau7KBrCv&ev=2",
+                "OnViewBeacon": "//b.us5.us.criteo.com/rm?rm_e=EnwA7wlscNi0uCGzBFRAY08Hyxk1XaOxphZTdWxo9%2fADPfaBszhFiNnOS5jF4MjxEChuSdxuzxAzlRV%2b0Dn3Kd%2bHl3Xd71OaGoQ8uvFOXYBVUoofhQrCX6l%2fKFyUd1WkHRsrpkpmauANzWhl8p86xwUVg4Unv6%2bod3noZQITpT9iN1y3Ckd3HidTHyUggfcHjd7LZ7WF6u%2bI81K2p%2fHGjqdCmecnkfysi10sk%2bgmzXKtE%3d&ev=2",
+                "OnClickBeacon": "//b.us5.us.criteo.com/rm?rm_e=IZiAHJ6Eb975X6BYVRFbJcUkwz%2blc3OCxtLZx7uwOU5nMLsXE39KprBFczoGiVGlImOQiYn1eeDVX8bOc%2fetZesf2H3bD3LeN8Vo7JS9aJj6D%2be0qXDtwOceo0xl55NoRnaolo%2bRZdmGPS%2fjOfIBrILt0jNo8RlHW96xakuHyY3WLyHaIhBE8Gq%2fH1WB3awlRUHLBg1qrZWCgMbz0lMqgaOvRpQzQwvAuaWRCTZrXUYoavg6S9kkjCuQtqakJ4564LecFVc4XggsL8jfS1uWJsONrE47VLeuwWovvQKtt6hdE%3d&ev=2",
+                "OnBasketChangeBeacon": "//b.us5.us.criteo.com/rm?rm_e=4IK1Y6esxIlRPkxrR6%2f6WPgUoC0whhOEv%2fVhYz%2fxfUGfTWaIDq3fbzRWqfz2cChqpN8YTdpiI1o%2fWWH5nv%2biqG%2bJq4Vf3o3o1UjObcEXUcSn1fVhDexFllmW9hRiicbsrgD8hVVqUE5SlE2VDfdR%2bbqkiJS%2fMySgFFe2dxtL%2f0mM1y0L7N8W3SREh%2bUi%2fIzHJrGB0T94uvKk7vw4ZQmvInFND2M5VGe4BtXnumcL9mDhk6CUgo3M8SIn7VggFt4bva7KfmeyYf%2b0uuCgssP0HVz9pOkyAN4u552OPuBZ7Rgt13KnPBs42qVZ%2b8r%2fF4kMDk&ev=2",
+                "OnWishlistBeacon": "//b.us5.us.criteo.com/rm?rm_e=iWb5bklzr226ZlhC3ZCdkdeX8gof1niuPogHiEiRJxSile9A1XKgRd6Y3bPL%2bWxGAnKRntTe9FH4%2bLjGqb6GG92GFndFrBBDd4lQpMgga%2fnH21Vo5Dh%2bTu5p3dUP2a7wjmTGvKzoQpeeKGUc3tDXgIFFgf7FnSNqdyl2icDFGDP5YIqC%2fX9anhCv5V063PYZS6bUpkFYhMmJHAD76Ne%2bhLUAyGbKb0vKAr%2fihvJM6A0mv0n0rnzkzZndS0tMW7HCG6eo1v9ZfLpFk4jXCDep6BObnAmsDRR6w05lxF1yC07e4%3d&ev=2"
+              },
+              {
+                // other products
+              }
+            ],
+            "rendering": "",
+            "OnLoadBeacon": "//b.us5.us.criteo.com/rm?fid=954&hl_qs=yTqHg2JEabPYjIul18TDe2lAy2HpS%2fbgtNh9eNjE644j4%2bzu9ZFv%2f1KrDL0ICxAt4kHECzl2K0OTAVQSeW9yW7TgdLYxMzfgYoQleLDz9kPpaXaJIb6zrs2XnkjU%2bK5h7rEiSvhgBalIrr13bKafjVyYxh3svrEKNOnQw5h18eIJvs6G4792UjBGVdU5NHVrZ%2bdcSK%2f5jLoElAWlvqrFCwhmh3mOMeKt%2fuSrYohZirbX4TeDiaLdfndU0xgGdB4FHTwROtsBbuIxGcID95AFt%2bjkgPASKW6Nwk9deViutxsheKy1Gmrsar9isb9b0PIqTy1T0%2bnl%2fcppz8CUSyO0Pinj1UivJsHSN59zVD3zIUg%2feMjFQqfatEAzZ0GINm2LEamtO6yecLKjitRz47M1tdaEWfTejgVW7k8gMYbHa0MO8NPXpCMT9gX9vpdCcNMc37f0JOH90AxeI4iPRUiNk%2fveA0Ut5jLzQ3AI0p1ofm14PI%2fgOJQm81uMYlz9CXCvxzZDfgZtVghjTMuxKrnNz%2bJE1unTIUGw%2ba3GllmBeA3bVFzkKL%2b6wjZRzrOZo4jie36vtJcXfLA3ZoNs1cIZkYiH40QYQFrr4V9IRz5go%2f0ksDUlrS%2bVHtzMIX7ayBfAsK%2btnwRuTsSJPIiS8YRarR38EnlJqk0aO%2fGb%2b3v8vWHRZMqDW0l%2bX8ev8vHog4%2fAooA2amEJZ%2bFm8q3jDxVaJfxx34rNIj4IpXaO5QuYoI5azogv0uxF682FNQF7EP6MkPi4vI3Rg6uvs3iKnwC1W3hNCW6Wzon3qAZKma%2fPOdnI1H5s5bDZcPYCwIfu%2b6B9HNjkWnTMXVaP03VKU9MAWgI00%2fhIM0JXW9ePSJTNO64JIvMrb54oNbxs4TyvxActNYtkptXHG71HFa2Iit2gyrSy7yNRcyy%2f7ozvie8rUePJC9j0WA%2bwYGX2Cf6UHEtGzAO&ev=2&criteopartnerid=79940&action=page&origc=B&pid=f8cf2176-b7e8-4709-804d-56442ba2af2e&rn=252385926&hmguid=7cf0b290-59d3-429c-acea-0a9cf094257b&rm_e=C3e21vAkQKLqXhkygbvZMzyXvMnb%2bkIsZkd2QjORHoThEczEUfMtCERF89yxQ25IqEJ%2f%2bI0Gxd30z5X%2bc%2bVp%2f%2fbhHpiXB377t1JQcuU5qncXCY%2bx4JE0q8qYx1RnYs4KVJqsEpmEUSdptH5Dq5ziiA%3d%3d",
+            "OnViewBeacon": "//b.us5.us.criteo.com/rm?rm_e=d2iWauIsIQ799XTGLQUZfxdjfgCdxOUdqOSaFk69era00bxfeYTkpIToQoYBwc0jlxWXDNtkDG%2fSsJSaS0XqzkZiC5iZ5dsbSDhLAM8QstDZg5OCcopSKdzgCVzwc949aHEv0c%2bVEcTQXiW7xkXNEKXAyz11P6MzDQpl6GXs%2fqAKn39dtvqhhJeWWLuQl2UKYA%2f9lNvXcGpvXTjsBxuAyb1EROBQmBQpTVOdgVAviK3JuA%3d&ev=2",
+            "OnClickBeacon": ""
+          }
+        ]
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Error Response
+
+<CodeGroup>
+  ```bash bash
+  {
+  	"status":"Error",
+  	"placements":[],
+  	"errors":[
+  		"reason of the error" // list of errors
+  	]
+  }
+  ```
+</CodeGroup>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+You can now explore other ad formats or jump to the Ad Tracking section to learn about beacons.
+
+* [Onsite Display (New)](/retailer-integration/docs/onsite-display-new-formats)
+* [Video Formats](/retailer-integration/docs/video-formats)
+* [Ad Rendering best practices](/retailer-integration/docs/ad-rendering-best-practices)
+* [Introduction to beacons](/retailer-integration/docs/introduction-to-beacons)

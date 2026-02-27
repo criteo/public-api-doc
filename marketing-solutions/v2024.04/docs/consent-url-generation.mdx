@@ -1,0 +1,268 @@
+---
+title: "Consent URL Generation"
+---
+
+1. Concepts
+
+## **Introduction**
+
+The Criteo API allows you to build custom apps that help the world's advertisers grow their businesses.
+
+In order for your app to function, your users will have to **delegate permissions** for one or more of the Criteo advertisers that they oversee.
+
+To do this, you will need to direct the user to a unique consent delegation page. The URLs for this type of page can be generated in one of two ways - manually from your Criteo App page, or programmatically using a cryptographic key.
+
+Both methods are described below.
+
+These guides assume you have created a developer account, are part of an organization and have created an app. Instructions for getting started can be found [here](doc:onboarding-checklist).
+
+   
+
+## **Generate Consent URLs from your Criteo App Page**
+
+Once you have logged in to the Criteo [Partners Portal](https://partners.criteo.com/), navigate to your App page by clicking your app's card in the **My apps** section.
+
+![1278](/images/marketing-solutions/v2024.04/docs/52f9f11-app-card.PNG "app-card.PNG")
+
+   
+
+At the top of your App page, provided you have activated your app, you will see a **Generate new URL** button.
+
+![1410](/images/marketing-solutions/v2024.04/docs/4e1e9e0-generate_new_url.PNG "generate_new_url.PNG")
+
+   
+
+Clicking this button will generate a single consent URL which can be easily copied to your clipboard.
+
+The URL will have two query parameters as shown below:
+
+```
+https://consent.criteo.com/request?nonce=<nonce>&hmac=<signature>
+```
+
+Each click of the button will generate a new URL. You should provide a unique URL to each user.
+
+   
+
+## **Generate Consent URLs Programmatically**
+
+In order to generate consent URLs on the fly, you will need a public and private keypair for signing your URLs.
+
+To obtain this keypair, you will need to register a callback URL to receive confirmations. The callback process is described in full in a later section.
+
+Once you have logged in to the Criteo [Partners Portal](https://partners.criteo.com/), navigate to your App page by clicking your app's card in the **My apps** section.
+
+![1278](/images/marketing-solutions/v2024.04/docs/b0d8b77-app-card.PNG "app-card.PNG")
+
+   
+
+Scroll down to the **Connector Parameters** section and click **Create a new connector**. You will be prompted to enter a callback URL. Once registered, your callback URL can be modified at any time and the keypair associated will remain the same.
+
+![916](/images/marketing-solutions/v2024.04/docs/eed01d6-create-connector.PNG "create-connector.PNG")
+
+   
+
+Once complete, your browser will download a `.txt` file with your public and private keypair.
+
+<Warning>
+  ### Signing Keypair Generation
+
+  The private signing key is only shared once at the time you register a callback URL. Keep it somewhere safe. If you lose your private key, you can delete and re-register your callback URL to obtain a new one.
+</Warning>
+
+   
+
+Once you have your signing keypair, you will be able to programmatically generate a consent URL.
+
+Doing so requires that you use a **HMAC-SHA512** hashing algorithm to generate a `signature`.
+
+The consent URL will have the following structure and parameters:
+
+<CodeGroup>
+  ```bash bash
+  https://consent.criteo.com/request?key=<public signing key>&timestamp=<UNIX timestamp in seconds>&state=<state>&redirect-uri=<redirect URI>&signature=<hashed signature>
+  ```
+</CodeGroup>
+
+| Parameter      | Description                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| `key`          | Your public signing key                                                                                |
+| `timestamp`    | The UNIX timestamp of when your URL was generated, in seconds                                          |
+| `state`        | An arbitrary string to be included in the consent callback. For example, the User ID of your app user. |
+| `redirect-uri` | The URL to redirect the user to after consent delegation                                               |
+| `signature`    | The HMAC-SHA512 hashed query string of the previous four parameters, in order                          |
+
+   
+
+The final parameter, the `signature`, should be the HMAC-SHA512 hashed value of the following string, using the same `key`, `timestamp`, `state` and `redirect-uri` values as your URL:
+
+<CodeGroup>
+  ```bash bash
+  ?key=<public signing key>&timestamp=<UNIX timestamp in seconds>&state=<state>&redirect-uri=<redirect URI>
+  ```
+</CodeGroup>
+
+   
+
+Code examples for generating a Consent URL can be found below:
+
+<CodeGroup>
+  ```bash bash
+  const sha512 = require('js-sha512').sha512;
+
+  function generateConsentURL(publicSigningKey, signingSecret, redirect, state){
+
+      const timestamp = Math.round(Date.now() / 1000);
+
+      const query = `?key=${publicSigningKey}&timestamp=${timestamp}&state=${state}&redirect-uri=${redirect}`;
+
+      return `https://consent.criteo.com/request${query}&signature=${sha512.hmac(signingSecret, query)}`;
+  }
+
+  const res = generateConsentURL('public key', 'private key', 'https://example.com/app-landing-page', 'userID');
+
+  console.log(res);
+  ```
+
+  ```bash bash
+  using System;
+  using System.Text;
+  using System.Security.Cryptography;
+
+  /*
+     
+     Enter your public signing key and signing secret in between the quotations below. You can also choose to modify your redirect URL (where your consent giver will be redirected too after they accept your consent request). You can also choose to pass in parameters inside the state object.
+
+  */
+
+  public class Program
+  {
+  	public static void Main()
+  	{
+  		// MODIFY THIS
+  		var publicSigningKey = "<public signing key>";
+  		var signingSecret = "<private signing key>";
+  		var redirectUri = "https://developers.criteo.com/";
+  		var state = "userID";
+  		//
+
+  		long timestamp = ((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds();
+  		var signature = createSignature(publicSigningKey, timestamp, state, redirectUri, signingSecret);
+  		
+  		Console.WriteLine(generateUrl(publicSigningKey, timestamp, state, redirectUri, signature));
+  	}
+  	
+  	public static string createSignature(string publicSigningKey, long timestamp, string state, string redirectUri, string signingSecret)
+  	{
+  		var message = $"?key={publicSigningKey}&timestamp={timestamp}&state={state}&redirect-uri={redirectUri}";
+  		return HmacUtil.Sign(message, Encoding.UTF8.GetBytes(signingSecret));
+  	}
+  		
+  	public static string generateUrl(string publicSigningKey, long timestamp, string state, string redirectUri, string signature)
+  	{
+  		return $"https://consent.criteo.com/request?key={publicSigningKey}&timestamp={timestamp}&state={state}&redirect-uri={redirectUri}&signature={signature}";
+  	}
+  }
+
+  public static class HmacUtil
+  {
+  	public static string Sign(string message, byte[] signingKeyBytes)
+  	{
+  		using (var hmac = new HMACSHA512(signingKeyBytes))
+  		{
+  			var hashedMessage = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+
+  			var stringBuilder = new StringBuilder();
+  			foreach (var value in hashedMessage)
+  			{
+  				stringBuilder.Append(value.ToString("x2"));
+  			}
+
+  			return stringBuilder.ToString();
+  		}
+  	}
+
+  }
+  ```
+</CodeGroup>
+
+   
+
+## **Consent Delegation Callback**
+
+Once the user has completed the Consent Delegation flow, an HTTP callback will be sent to the URL associated with the signing keypair you used.
+
+The `POST` body will include a `Type` field, which will indicate either a successful ( value of `ConsentGranted`) or unsuccessful (value of `ConsentDenied`) consent request.
+
+For a `ConsentDenied` callback, `AcceptedScopes` will be an empty array.
+
+<Warning>
+  ### Callback Body Update
+
+  `CriteoService` values have been updated to improve consistency. Possible values are `MarketingSolutions` and `RetailMedia`
+</Warning>
+
+<CodeGroup>
+  ```bash bash
+  {
+    "Type": "ConsentGranted",
+    "Data": {
+      "Key": "971062d8161ba4ef8f78f3201a6f361f",
+      "Timestamp": 1614366053,
+      "State": "",
+      "ApplicationId": 2,
+      "ApplicationName": "Test App",
+      "RequestedScopes": [
+        {
+          "AccessLevel": "Read",
+          "Domain": "Analytics",
+          "CriteoService": "MarketingSolutions"
+        }
+      ],
+      "AcceptedScopes": [
+        {
+          "AccessLevel": "Read",
+          "Domain": "Analytics",
+          "CriteoService": "MarketingSolutions"
+      }
+      ],
+      "Advertisers": [
+        {
+          "Id": "12345",
+          "Name": "Example Advertiser"
+        }
+      ]
+    }
+  }
+  ```
+</CodeGroup>
+
+Other fields include the public `Key`, `Timestamp`, and `State` values provided in the original consent URL.
+
+Please note that for MarketingSolutions apps, the entities that have been shared will be in the "Advertisers" field of the callback body, but for RetailMedia apps, those entities will be in an "Accounts" field.
+
+The callback request will also include an HTTP header named `x-criteo-hmac-sha512` . Its value will be the HMAC-SHA512 hash of the callback request body, using the same signing secret value as your app.
+
+In this way, you can use your app's signing secret to validate the integrity and authenticity of the callback.
+
+<Warning>
+  ### Callbacks Only for Programmatically Generated URLs
+
+  Callbacks will only be sent for dynamically generated consent URLs. You will not receive a `POST` to your callback URL when user consent is provided using a link generated directly from Developer Dashboard.
+</Warning>
+
+   
+
+## **User Redirection**
+
+Once the user has completed the Consent Delegation flow, the `POST` request to the callback URL and the user's redirection to the redirect URI are executed in sequence. The user will not be redirected until the callback attempt has resolved.
+
+If the call to the callback URL fails on its first attempt, the `POST` will be retried up to two more times before the user is redirected to the redirect URL.
+
+Following three failed attempts, the user will be redirected to the redirect URL and Criteo will log the callback error.
+
+***
+
+[Authorization Code Setup](/marketing-solutions/v2024.04/docs/authorization-code-setup)
+
+[API Error Types](/marketing-solutions/v2024.04/docs/api-error-types)

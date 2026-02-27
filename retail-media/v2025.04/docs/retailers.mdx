@@ -1,0 +1,185 @@
+---
+title: "Retailers"
+---
+
+1. Guides for Retail Media API
+2. [Account](/retail-media/v2025.04/docs/account)
+
+## **Introduction**
+
+A retailer offers a selection of products from multiple brands.
+
+Retailers act as publishers, providing advertising inventory for brands to promote their products.
+
+An account can have access to one or more retailers, with this access typically managed by Criteo.
+
+## **Endpoint**
+
+| Method  | Endpoint                          | Description       |
+| ------- | --------------------------------- | ----------------- |
+| **GET** | `/accounts/{accountId}/retailers` | Get all retailers |
+
+## **Retailer Attributes**
+
+| Attribute               | Data Type   | Description                                                                                                                                             |
+| ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                    | string      | Retailer ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                  |
+| `name`                  | string      | Account nameAccepted values: up to 100-chars string Writeable? Y / Nullable? N                                                                          |
+| `campaignEligibilities` | list\<enum> | Example of param description here, with data type being enumAccepted values: `auction`, `preferred`, `offsite`, `offsitecpc` Writeable? N / Nullable? N |
+
+## **Get All Retailers**
+
+This endpoint retrieves a list of all retailers that carry the brands associated with an account.
+
+The results are provided in a paginated format.
+
+![](/images/retail-media/v2025.04/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/retailers
+```
+
+<Info>
+  ### API reference
+
+  You can find this endpoint in [the API reference](https://developers.criteo.com/retail-media/reference/) as well.
+</Info>
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers?pageIndex=0&pageSize=25" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+
+  ```bash bash
+  import requests
+
+  url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers?pageIndex=0&pageSize=25"
+
+  payload={}
+  headers = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("GET", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers?pageIndex=0&pageSize=25")
+    .method("GET", body)
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/retailers?pageIndex=0&pageSize=25');
+  $request->setMethod(HTTP_Request2::METHOD_GET);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+
+  $request->setHeader(array(
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCES_TOKEN>'
+  ));
+
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    
+    else {
+      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "3239117063738827231",
+              "type": "RetailMediaRetailer",
+              "attributes": {
+                  "name": "Retailer 123",
+                  "campaignEligibilities": [
+                      "auction",
+                      "preferred",
+                      "offsiteCpc",
+                      "offsite"
+                  ]
+              }
+          },
+          // ...
+          {
+              "id": "18159942378514859684",
+              "type": "RetailMediaRetailer",
+              "attributes": {
+                  "name": "Retailer 789",
+                  "campaignEligibilities": [
+                      "auction",
+                      "preferred",
+                      "offsiteCpc",
+                      "offsite"
+                  ]
+              }
+          }
+      ],
+      "metadata": {
+          "totalItemsAcrossAllPages": 10,
+          "currentPageSize": 25,
+          "currentPageIndex": 0,
+          "totalPages": 1,
+          "nextPage": null,
+          "previousPage": null
+      }
+  }
+  ```
+</CodeGroup>
+
+## **Responses**
+
+| Response | Description                                                                                                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢`200`  | Call executed with success                                                                                                                                                    |
+| 🔴`403`  | API user does not have the authorization to make requests to the account ID. For an authorization request, follow the[authorization request](doc:authorization-requests)steps |
+
+***
+
+What’s Next
+
+* [Balances](/retail-media/v2025.04/docs/balances)
+* [Audiences](/retail-media/v2025.04/docs/audiences)
+* [Catalog](/retail-media/v2025.04/docs/catalogs)
+* [Campaigns](/retail-media/v2025.04/docs/campaign)
+* [Line Items](/retail-media/v2025.04/docs/line-items-endpoints)
+* [Onsite Sponsored Products](/retail-media/v2025.04/docs/onsite-sponsored-products)

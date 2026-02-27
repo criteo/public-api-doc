@@ -1,0 +1,272 @@
+---
+title: "Category Pages"
+---
+
+# Definition
+
+Category pages typically display a collection of products that belong to a specific category or group.
+
+Category pages are divided into three types:
+
+* **Browse/Category**: A category page that displays a product grid.
+* **Merchandising**: A category landing page *without* a product grid.
+* **Deals**: A page for dedicated deals/offers, which might include products from several categories.
+
+***
+
+# Parameters
+
+## `event-type`
+
+**Value**: `viewCategory`
+
+**Description**: Indicates to the API that this is a category request.
+
+**Required**: Yes
+
+***
+
+## `page-id`
+
+**Description**: An identifier that tells Criteo which placements to return for the ad request. Placements are instantiated by your Technical Account Manager depending on your desired ad configuration. Below are the standard page-ids for this page type:
+
+* **In Americas**: Typically follows the structure `[event-type]_API_[environment]`, e.g., `viewCategory_API_desktop`, `viewMerchandising_API_mobile`, `viewDeals_API_android`, `Category_API_iOS`.
+* **In EMEA**: Typically follows the structure `[event-type]Api[environment]`, e.g., `viewCategoryApiDesktop`, `viewMerchandisingApiMobile`, `viewDealsApiAios`, `viewCategoryApiAa`.
+
+**Required**: Yes
+
+***
+
+## `category`
+
+**Description**: The category or taxonomy of the page that the user is browsing. This value should match the `product_type_key` value in the products feed. See more details [here](https://developers.criteo.com/retailer-integration/docs/product-feed-parameters#product_type_key).
+
+**Examples**:
+
+* Category ID, full breadcrumb style: `123>4567>89012`
+* Category ID, end-node-only style: `89012`
+* Category name style: `Computing>Keyboards and Mice>Mice`
+
+**Best Practices**:
+
+* Category ID is preferred over category name to avoid issues with typos, punctuation, and accented letters (especially in non-English languages).
+
+* If opting for category name:
+
+  * The category name is case insensitive.
+  * Spaces between the separator (`>`) are ignored.
+
+**Required**: Yes
+
+***
+
+## `item`
+
+**Description**: The list of SKUs that are organically shown on the page in the grid or list. Must match the parameter `id` in the feed (See details [here](https://developers.criteo.com/retailer-integration/docs/product-feed-parameters#id)). Multiple items should be separated by a pipe `|` or `%7C` (URL encoded). Used for reporting and for organic deduplication, if enabled.
+
+**Examples**:
+
+* `123|456|789`
+* `123%7C456%7C789`
+
+**Required**: Recommended, but not required.
+
+***
+
+## `parent-item`
+
+**Description**: Only use this if parent SKUs are being passed. Must match the parameter `item_group_id` in the feed (See details [here](https://developers.criteo.com/retailer-integration/docs/product-feed-parameters#item_group_id)). Multiple parent items should be separated by a pipe `|` or `%7C` (URL encoded). For SKUs that do not have parent SKUs, `NULL` should be sent instead. Used for reporting and for organic deduplication, if enabled.
+
+**Examples**:
+
+* `12345P|NULL|456789P`
+* `12345P%7CNULL%7C456789P`
+
+**Required**: Recommended if the ecommerce platform uses parent items
+
+***
+
+## `list-size`
+
+**Description**: The total number of organic items on the page. Preferably, it should match the number of item IDs sent in the `item` parameter.
+
+**Required**: Recommended
+
+***
+
+## `page-number`
+
+**Description**: Represents the page number for either paginated results or scroll fold if products are loaded dynamically. This parameter can be used for result deduplication, by limiting the number of products shown on each page.
+
+**Example**: `3`
+
+**Required**: Recommended
+
+***
+
+## `filters`
+
+**Description**: Corresponds to the filters applied by the shopper on the results. See the filter section for details on how to use this parameter.
+
+**Examples**:
+
+* `(price,le,100)`
+* `(color,eq,blue)`
+
+**Required**: Recommended. If not used, the ads will not follow the selected filters and might result in a poor user experience.
+
+***
+
+# Sample Calls
+
+<Info>
+  The header values in the sample calls are illustrative. Make sure to replace them with the appropriate values for your implementation.
+</Info>
+
+***
+
+## Browse/category
+
+### AMER
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewCategory_API_desktop" \
+  --data-urlencode "event-type=viewCategory" \
+  --data-urlencode "category=cat12345" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "page-number=1" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  ```
+</CodeGroup>
+
+### EMEA
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewCategoryApiDesktop" \
+  --data-urlencode "event-type=viewCategory" \
+  --data-urlencode "category=cat12345" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "page-number=1" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  ```
+</CodeGroup>
+
+***
+
+## Deals
+
+### AMER
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewDeals_API_iOS" \
+  --data-urlencode "event-type=viewCategory" \
+  --data-urlencode "category=Top_Deals" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "page-number=1" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_ios 1.2.3"
+  ```
+</CodeGroup>
+
+### EMEA
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewDealsApiAios" \
+  --data-urlencode "event-type=viewCategory" \
+  --data-urlencode "category=Top_Deals" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "page-number=1" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_ios 1.2.3"
+  ```
+</CodeGroup>
+
+***
+
+## Merchandising (EMEA `page-id` style)
+
+### AMER
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewMerchandisingApiAa" \
+  --data-urlencode "event-type=viewCategory" \
+  --data-urlencode "category=cat12345" \
+  --data-urlencode "item=123|456|789" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_android 3.2.1"
+  ```
+</CodeGroup>
+
+### EMEA
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewMerchandisingApiAndroid" \
+  --data-urlencode "event-type=viewCategory" \
+  --data-urlencode "category=cat12345" \
+  --data-urlencode "item=123|456|789" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: app_android 3.2.1"
+  ```
+</CodeGroup>
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Category flyout](/retailer-integration/docs/category-flyout)
+* [Product details page](/retailer-integration/docs/product-details-page)
+* [Favorites page](/retailer-integration/docs/favorites-page)
+* [Basket page](/retailer-integration/docs/cart-page)
+* [Order confirmation page](/retailer-integration/docs/order-confirmation-page)
+* [Organic add-to-cart events](/retailer-integration/docs/organic-add-to-cart-events)
+* [Filters](/retailer-integration/docs/filtering)

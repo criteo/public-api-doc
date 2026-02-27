@@ -1,0 +1,457 @@
+---
+title: "Audience Segments Size"
+---
+
+1. Guides for Retail Media API
+2. [Audiences](/retail-media/v2026-preview/docs/audiences)
+
+## Introduction
+
+The "audience-segments sizes" endpoints allow estimating (`estimate` endpoint) and retrieving (`compute`endpoint) the size of one or more audience-segments.
+
+***
+
+### Comparative use of `estimate` VS `compute` endpoints
+
+| Feature                   | `compute` Segment Endpoint                                     | `estimate` Segment Endpoint                                  |
+| ------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Purpose**               | Computes size for one or more previously saved segments by ID. | Provides a quick size estimation for a specific segment.     |
+| **Input Definition**      | Requires a list of saved segment IDs.                          | A single segment ID is provided inline.                      |
+| **Use Case**              | Used for analyzing reach of known, existing segments.          | Ideal for testing or previewing a specific segment.          |
+| **Segment Source**        | Segment definitions are already stored in the system.          | Segment reference is passed directly in the request payload. |
+| **Response Format**       | Returns an array of segment sizes, one per provided ID.        | Returns a single segment size object.                        |
+| **Channel Specification** | Required in the request payload.                               | Required in the request payload.                             |
+
+***
+
+## Endpoints
+
+| Method   | Path                                                    | Description                      |
+| -------- | ------------------------------------------------------- | -------------------------------- |
+| **POST** | `/accounts/{accountId}/audience-segments/compute-sizes` | Compute audience segment(s) size |
+| **POST** | `/accounts/{accountId}/audience-segments/estimate-size` | Estimate audience-segment size   |
+
+***
+
+## Compute Audience Segment(s) sizes
+
+This endpoint returns the size computation for an audience-segment (if available and if supported). If the size cannot be estimated, an error is returned.
+
+![](/images/retail-media/v2026-preview/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/audience-segments/compute-sizes
+```
+
+***
+
+### **Audience Segment Size Computation Attributes**
+
+| Name           | Format                 | Description                                                                                                                                                                                           |
+| -------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`/`ids`\*   | string / list\<string> | Audience Segment ID(s), generated internally by Criteo, to which the computation(s) are requiredAccepted values: string of int64 / list of strings of int64 Writeable? N / Nullable? N                |
+| `accountId`    | string                 | [Account](https://developers.criteo.com/retail-media/docs/account) ID associated with the Audience Segment, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N |
+| `channel`\*    | enum                   | Channels associated to the Audience SegmentAccepted values: `Onsite`, `Offsite` (case-insensitive) Writeable? N / Nullable? N                                                                         |
+| `size`         | integer                | Reach in absolute number of users (e.g., 150,300 users). Not returned if the user lacks permission to view it.Accepted values: `size` ≥ 0 (or `null`) Writeable? N / Nullable? Y                      |
+| `relativeSize` | decimal                | Reach in number of users relative to the retailer’s total audience (e.g., 0.5523 = 55.23%).Accepted values: 0.0 ≤ `relativeSize` ≤ 1.0 Writeable? N / Nullable? N                                     |
+
+*(\*) Required in body when requesting computation*
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+**Sample request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/campaigns/625702934721171442/audience-segments/compute-sizes' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+    -d '{
+          "data": {
+            "attributes": {
+              "ids": [
+                "1001", 
+                "1002", 
+                "1003"
+              ],
+              "channel": "Onsite"
+            }
+          }
+        }' 
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+  payload = json.dumps({
+    "data": {
+      "attributes": {
+        "ids": [
+          "1001", 
+          "1002", 
+          "1003"
+        ],
+        "channel": "Onsite"
+      }
+    }
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+  conn.request("POST", "/preview/retail-media/accounts/625702934721171442/audience-segments/compute-sizes", payload, headers)
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+  MediaType mediaType = MediaType.parse("application/json");
+  RequestBody body = RequestBody.create(mediaType, "\"data\":{\"attributes\":{\"ids\":[\"1001\",\"1002\",\"1003\"],\"channel\":\"Onsite\"}}");
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audience-segments/compute-sizes")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audience-segments/compute-sizes');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+  $request->setBody('{"data":{"attributes":{"ids":["1001","1002","1003"],"channel":"Onsite"}}}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    else {
+      echo 'Unexpected HTTP status:' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error:' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample response**: audience size computations returned successfully
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1001", 
+              "type": "RetailMediaAudienceSegment",
+              "attributes": {
+                  "size": 194730,
+                  "relativeSize" : 0.5523
+              }
+          },
+          {
+              "id": "1002", 
+              "type": "RetailMediaAudienceSegment",
+              "attributes": {
+                  "size": 4285,
+                  "relativeSize" : 0.5523
+              }
+          },
+          {
+              "id": "1003", 
+              "type": "RetailMediaAudienceSegment",
+              "attributes": {
+                  "size": 978597,
+                  "relativeSize" : 0.5523
+              }
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+**Sample response**: different errors at audience-level returned from response code 200
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [
+          {
+              "type": "validation",
+              "code": "audience-not-found",
+              "instance": "@data/0",
+              // ...
+          },
+          {
+              "type": "validation",
+              "code": "audience-size-not-available",
+              "instance": "@data/1",
+              // ...
+          },
+          {
+              "type": "validation",
+              "code": "audience-size-not-supported",
+              "instance": "@data/2",
+              // ...
+          }
+      ],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Estimate Audience Segment size
+
+Returns the size estimation for an Audience Segment (if available and if supported). If the size cannot be estimated, an error is returned.
+
+<Warning>
+  The `Estimate` endpoints are resource-intensive; therefore, bulk processing is not supported.
+</Warning>
+
+![](/images/retail-media/v2026-preview/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/audience-segments/estimate-size
+```
+
+***
+
+### Audience Segment Size Estimation Attributes
+
+| Name           | Format   | Description                                                                                                                                                                                               |
+| -------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accountId`    | string   | [Account](https://developers.criteo.com/retail-media/docs/account) ID associated with the Audience Segment, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N     |
+| `retailerId`\* | string   | [Retailer](https://developers.criteo.com/retail-media/docs/retailers) ID, associated with the Audience Segment, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N |
+| `channel`      | enum     | Channel associated to the Audience SegmentAccepted values: `Onsite`, `Offsite` (case-insensitive) Writeable? N / Nullable? N                                                                              |
+| `events`\*     | object   | Settings to target users based on their events.Accepted values: see below for more details Writeable? N / Nullable? N                                                                                     |
+| `size`         | `number` | Reach in absolute number of users (e.g., 150,300 users). Not present when the user lacks permissions to view it.                                                                                          |
+| `relativeSize` | `number` | Reach relative to the retailer’s total user base (e.g., 0.5523 = 55.23%).                                                                                                                                 |
+
+*(\*) Required in body when requesting size estimation*
+
+### **Events Segment Attributes**
+
+| Attribute         | Data Type     | Description                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `shopperActivity` | enum          | Activity type performed by the desired target users in the retailer's environmentAccepted values: `View`, `Buy`, `AddToCart`, `Unknown` Writeable? N / Nullable? N                                                                                                                                                                                                             |
+| `lookbackDays`    | enum          | Timeframe of the interaction performed by the desired target users in the retailer's environmentAccepted values: `Last7Days`, `Last14Days`, `Last30Days`, `Last45Days`, `Last60Days`, `Last90Days`, `Last120Days`, `Last150Days`, `Last180Days` Writeable? N / Nullable? N                                                                                                     |
+| `categoryIds`     | list\<string> | Define users interested in specific categories from retailer's [Catalog](https://developers.criteo.com/retail-media/docs/catalogs). Note, either one of `categoryIds` or `brandIds` must be included. Both can be included as well, but the request will fail if neither are includedAccepted values: array of strings/int64 Writeable? N / Nullable? Y                        |
+| `brandIds`        | list\<string> | Define users who performed the activity type above in specific brands from retailer's [Catalog](https://developers.criteo.com/retail-media/docs/catalogs). Note, either one of `categoryIds` or `brandIds` must be included. Both can be included as well, but the request will fail if neither are includedAccepted values: array of strings/int64 Writeable? N / Nullable? Y |
+| `minPrice`        | decimal       | Define users who interact with products whose prices are greater than `minPrice`Accepted values: `minPrice` ≥ 0.0 (or `null`) Writeable? N / Nullable? Y                                                                                                                                                                                                                       |
+| `maxPrice`        | decimal       | Define users who interact with products whose prices are smaller than `maxPrice`Accepted values: `maxPrice` ≥ 0.0 (or `null`) Writeable? N / Nullable? Y                                                                                                                                                                                                                       |
+
+***
+
+**Sample request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audience-segments/estimate-size' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+    -d '{
+          "data": {
+            "attributes": {
+              "retailerId": "1234",
+              "channel": "Onsite",
+              "events": {
+                "shopperActivity": "Buy",
+                "lookbackDays": "Last14Days",
+                "categoryIds": [
+                    "123",
+                    "456",
+                    "789"
+                  ],
+                "brandIds": [
+                    "123456"
+                ],
+                "minPrice": 1,
+                "maxPrice": 300
+              }
+            }
+          }
+        }' 
+  ```
+
+  ```bash bash
+  import http.client
+  import json
+
+  conn = http.client.HTTPSConnection("api.criteo.com")
+  payload = json.dumps({
+    "data": {
+      "attributes": {
+        "retailerId": "1234",
+        "channel": "Onsite",
+        "events": {
+          "shopperActivity": "Buy",
+          "lookbackDays": "Last14Days",
+          "categoryIds": [
+              "123",
+              "456",
+              "789"
+            ],
+          "brandIds": [
+              "123456"
+          ],
+          "minPrice": 1,
+          "maxPrice": 300
+        }
+      }
+    }
+  })
+  headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+  conn.request("POST", "/preview/retail-media/accounts/625702934721171442/audience-segments/estimate-size", payload, headers)
+  res = conn.getresponse()
+  data = res.read()
+  print(data.decode("utf-8"))
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+  MediaType mediaType = MediaType.parse("application/json");
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"retailerId\":\"1234\",\"channel\":\"Onsite\",\"events\":{\"shopperActivity\":\"Buy\",\"lookbackDays\":\"Last14Days\",\"categoryIds\":[\"123\",\"456\",\"789\"],\"brandIds\":[\"123456\"],\"minPrice\":1,\"maxPrice\":300}}}}");
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audience-segments/estimate-size")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audience-segments/estimate-size');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+    'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+  $request->setBody('{"data":{"attributes":{"retailerId":"1234","channel":"Onsite","events":{"shopperActivity":"Buy","lookbackDays":"Last14Days","categoryIds":["123","456","789"],"brandIds":["123456"],"minPrice":1,"maxPrice":300}}}}');
+  try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+      echo $response->getBody();
+    }
+    else {
+      echo 'Unexpected HTTP status:' . $response->getStatus() . ' ' .
+      $response->getReasonPhrase();
+    }
+  }
+  catch(HTTP_Request2_Exception $e) {
+    echo 'Error:' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample response**: audience segment size estimation returned successfully
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "RetailMediaAudienceSegment",
+          "attributes": {
+              "size": 194730,
+              "relativeSize": 0.01260
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+**Sample response**: estimation error returned from response code 200
+
+<CodeGroup>
+  ```bash bash
+  {
+      "errors": [
+          {
+              "type": "validation",
+              "code": "audience-segment-size-too-small",
+              "instance": "/accounts/625702934721171442/audience-segments/estimate-size",
+              // ...
+          }
+      ],
+      "warnings": []
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Responses
+
+| Response | Description                                                                                                                                                                                                                                                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢 `200` | Call completed successfully (or audience-level errors returned with specific details)                                                                                                                                                                                                                                         |
+| 🔴 `400` | Retailer must be authorized in provided account. Review the retailer ID provided                                                                                                                                                                                                                                              |
+| 🔴 `403` | One of the permission levels was not respected. Make sure that the respective API app has access to:- Read/Manage the domain "Audiences" (depending on the requested action). Review the Types of Permissions in [Authorization Requests](doc:authorization-requests)
+- the account or audience ID(s) provided in the request |
+
+***
+
+## Errors and warnings
+
+#### `segment-size-not-available`
+
+**Error**: Segment size not available **Message**: The segment size is currently not available.
+
+#### `segment-size-too-small`
+
+**Error**: Segment size is too small **Message**: Size is below the minimum: 20.
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+[Audiences Size](/retail-media/v2026-preview/docs/audience-size)
+
+[Catalog](/retail-media/v2026-preview/docs/catalogs)

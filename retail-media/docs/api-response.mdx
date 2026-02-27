@@ -1,0 +1,263 @@
+---
+title: "API Response"
+---
+
+1. Concepts
+
+## Introduction
+
+Our APIs respond with `data`, `errors`, and `meta`/`metadata` blocks where appropriate.
+
+For example:
+
+* `{entityId}` are unique across all Retail Media entities
+
+* `data` and `errors` blocks may be contained in responses expected to return multiple entities
+
+* `meta` (or `metadata`) appears only for paginated responses
+
+### Response example
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "{entityId}",
+              "type": "{entityType}",
+              "attributes": {
+                  "{fieldName}": {numericValue},
+                  "{fieldName}": "{stringValue}",
+                  // ...
+              }
+          },
+          
+          // ...
+          
+      ],
+      "errors": [
+          {
+              "traceId": "{traceId}",
+              "type": "{errorType}",
+              "code": "{errorCode}",
+              "instance": "{uri}",
+              "title": "{errorTitle}",
+              "detail": "{errorDetail}",
+              "source": {
+                  "{fieldName}": "{fieldPath}",
+                  // ...
+              }
+          },
+   
+          // ...
+           
+      ],
+      "metadata": {
+          "totalItemsAcrossAllPages": {numberOfEntities},
+          "currentPageSize": {pageSize},
+          "currentPageIndex": {pageIndex},
+          "totalPages": {numberOfPages},
+          "nextPage": "https://api.criteo.com/{endpoint}?pageIndex={pageIndex}&pageSize={pageSize}",
+          "previousPage": "https://api.criteo.com/{endpoint}?pageIndex={pageIndex}&pageSize={pageSize}"
+      }
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Data Attributes
+
+| Attribute    | Type   | Description                                                                                  |
+| ------------ | ------ | -------------------------------------------------------------------------------------------- |
+| `id`         | string | Unique ID for the entity. `Entity IDs` are unique across all Retail Media entities           |
+| `type`       | string | Type of entity                                                                               |
+| `attributes` | object | Entity attributes - may be omitted entirely if an entity does not have additional attributes |
+
+***
+
+## Error Attributes
+
+| Attribute  | Type   | Description                                                         |
+| ---------- | ------ | ------------------------------------------------------------------- |
+| `traceId`  | string | Unique ID for the error response                                    |
+| `type`     | string | Type of error; machine-readable (e.g. `validation`)                 |
+| `code`     | string | Short machine-readable string for the error (e.g. `required-field`) |
+| `instance` | string | URI referencing the endpoint that caused the error                  |
+| `title`    | string | Short human-readable string that summarizes the issue               |
+| `detail`   | string | Human-readable explanation of the issue                             |
+| `source`   | object | Object referencing the field that caused the error                  |
+
+***
+
+## Pagination
+
+Endpoints that retrieve all entities under a specific context supports pagination to navigate through all existing elements. Currently, there are two different formats to access the different pages that are based on different sets of query parameters and response blocks. Results are returned in ascending order by `id`
+
+Examples of endpoints:
+
+1. List all Accounts associated with your API credentials
+
+2. List all Brands associated with the Account
+
+3. List all Retailers associated with the Account
+
+### Offset & Limit
+
+| Query Parameters | Type    | Description                                                                                                                                                                               |
+| ---------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `offset`         | integer | Defines the starting point from which records should be returned, i.e., will skip the first `offset` records (ordered by `id`) and return the subsequent ones; defaults to `0` if omitted |
+| `limit`          | integer | Specifies the maximum number of entities returned in a single page; defaults to `500` entities per page (if no other value is specified at endpoint-level)                                |
+
+#### Response example
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "{entityId}",
+              "type": "{entityType}",
+              "attributes": {
+                  "{fieldName}": {numericValue},
+                  "{fieldName}": "{stringValue}",
+                  // ...
+              }
+          },
+          // ...
+          
+      ],
+      "meta": {
+          "count": {numberOfEntities},
+          "offset": {offset},
+          "limit": {limit}
+      }
+  }
+  ```
+</CodeGroup>
+
+### `pageIndex` & `pageSize`
+
+| Query Parameters | Type    | Description                                                                                            |
+| ---------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `pageIndex`      | integer | Returns the specified page of results given a `pageSize`; pages are 0-indexed                          |
+| `pageSize`       | integer | Specifies the maximum number of entities returned in a single page; defaults to `25` entities per page |
+
+### Response example
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "{entityId}",
+              "type": "{entityType}",
+              "attributes": {
+                  "{fieldName}": {numericValue},
+                  "{fieldName}": "{stringValue}",
+                  // ...
+              }
+          },
+          // ...
+          
+      ],
+      "metadata": {
+          "totalItemsAcrossAllPages": {numberOfEntities},
+          "currentPageSize": {pageSize},
+          "currentPageIndex": {pageIndex},
+          "totalPages": {numberOfPages},
+          "nextPage": "https://api.criteo.com/{endpoint}?pageIndex={pageIndex}&pageSize={pageSize}",
+          "previousPage": "https://api.criteo.com/{endpoint}?pageIndex={pageIndex}&pageSize={pageSize}"
+      }
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Filter by ID
+
+All endpoints that retrieve all entities under a specific context supports an optional query parameter `limitToId` that can be used to retrieve the respective element. This param can also be combined multiple times to retrieve multiple elements at the same time.
+
+Examples:
+
+1. Retrieve specific Account(s) from endpoint that lists all Accounts
+
+2. Retrieve specific Brand(s) from endpoint that lists all Brands associated with the Account
+
+3. Retrieve specific Retailer(s) from endpoint that lists all Retailers associated with the Account
+
+| Query Parameters | Type    | Description                                                                                           |
+| ---------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `limitToId`      | integer | Limits results to the entity IDs specified; parameter key is repeated, e.g. `limitToId=1&limitToId=2` |
+
+### Response example
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": [
+          {
+              "id": "1",
+              "type": "{entityType}",
+              "attributes": {
+                  "{fieldName}": {numericValue},
+                  "{fieldName}": "{stringValue}",
+                  // ...
+              }
+          },
+          {
+              "id": "2",
+              "type": "{entityType}",
+              "attributes": {
+                  "{fieldName}": {numericValue},
+                  "{fieldName}": "{stringValue}",
+                  // ...
+              }
+          },
+          
+      ],
+      "meta": {
+          "count": 2,
+          "offset": 0,
+          "limit": 500
+      }
+  }
+  ```
+</CodeGroup>
+
+***
+
+## HTTP Response Codes
+
+| Response                  | Description                                                                                                             |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 🔵`200 OK`                | Request successful                                                                                                      |
+| 🔵`201 Created`           | The new entity was successfully created                                                                                 |
+| 🔵`204 No Content`        | Request succeeded and no returned content should be expected                                                            |
+| 🟡`207 Multi-Status`      | This may occur when operating on multiple entities, such as the call resulting in some successes but also some failures |
+| 🔴`400 Bad Request`       | For improper syntax, check your call structure                                                                          |
+| 🔴`401 Unauthorized`      | If unauthenticated, refresh your access token                                                                           |
+| 🔴`403 Forbidden`         | Insufficient rights to perform this action                                                                              |
+| 🔴`404 Not Found`         | Resource not found, check your entity IDs in the call                                                                   |
+| 🔴`408 Timeout`           | Request timed out                                                                                                       |
+| 🔴`409 Conflict`          | Request conflicts with something, such as a campaign name that already exists                                           |
+| 🔴`429 Too Many Requests` | Too many requests                                                                                                       |
+| 🔴`5xx`                   | Something's wrong on Criteo's end...                                                                                    |
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [API Pattern](/retail-media/docs/api-pattern)
+* [Bulk Calls](/retail-media/docs/bulk-calls)
+* [Campaign Structure](/retail-media/docs/campaign-structure)
+* [List of Endpoints](/retail-media/docs/criteo-api-swagger)
+* [Rate Limits](/retail-media/docs/rate-limits)
+* [Statuses](/retail-media/docs/campaign-lineitem-status)

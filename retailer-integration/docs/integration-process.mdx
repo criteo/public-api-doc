@@ -1,0 +1,103 @@
+---
+title: "Integration process"
+description: "An overview of the integration process using the Direct API method"
+---
+
+## Overview
+
+To leverage all features offered by Criteo's Retail Media platform, it is necessary to integrate with the **Retail Media ad delivery system.**
+
+The Direct Ad Server integration entails three main steps that are detailed in this documentation:
+
+1. Requesting ads
+2. Rendering ads
+3. Tracking ads
+
+<Info>
+  The **Direct Ad Server Integration** is also referred to as the 'Direct API method', 'Delivery API method' or simply as 'API method'.
+</Info>
+
+It follows the process illustrated below:
+
+<Frame caption="The Direct Ad Server integration process">
+  <img src="/images/retailer-integration/docs/db5a1f7fe7970b94eef4b0c8654b92fd788e029a34879d70a055bbd0d70e999e-image.png" />
+</Frame>
+
+This is the preferred and recommended integration process. If for some reason you are unable to follow the given process, there could be alternative ways to integrate in which case you should reach out to your Criteo technical representative.
+
+***
+
+### Step 1: Requesting Ads
+
+When a user browses the retailer’s website and reaches a page with ad placements, an API call to request ads is triggered. This call, known as a Bid Request or Ad Request, is made from the retailer's site (server-side or client-side) to Criteo's servers via the Criteo Delivery API, allowing us to deliver the most relevant ads to the user.
+
+We detail the general ad server requirements [below](https://developers.criteo.com/retail-media-delivery/docs/integration-process#general-ad-server-requirements), [API calls](https://developers.criteo.com/retail-media-delivery/docs/api-calls) , [response formats](https://developers.criteo.com/retail-media-delivery/retail-media/docs/api-responses), as well as [how to use tokens](https://developers.criteo.com/retail-media-delivery/docs/using-tokens), and the [full detail of all API parameters](https://developers.criteo.com/retail-media-delivery/docs/api-parameters-1) in the **Requesting Ads** section.
+
+***
+
+### Step 2: Rendering Ads
+
+Once an ad has been requested, Criteo will run an auction based on the campaigns that have been set up and the present campaign settings, also taking into account the information provided in the API request.
+
+The results are the product IDs (SKUs) to show in ads alongside associated tracking beacons. The API response will return specific product, placement and beacon details in JSON format.
+
+The Retailer then handles the rendering of the ad, checking for the price, image, and name of the product and displays it on their website.
+
+We provide a [full format overview](https://developers.criteo.com/retail-media-delivery/docs/format-overview) and the details of the rendering for each format in the **Ad Rendering** section.
+
+***
+
+### Step 3: Tracking Ads
+
+Ad tracking is done through beacons that send data back to Criteo for every user interaction related to an ad.
+
+We provide [a general introduction](https://developers.criteo.com/retail-media-delivery/docs/introduction) about how we use beacons at Criteo, as well as [details on beacon types](https://developers.criteo.com/retail-media-delivery/docs/beacon-types), [the universal beacons feature](https://developers.criteo.com/retail-media-delivery/docs/universal-beacons), and [the BeaconSDK library](https://developers.criteo.com/retail-media-delivery/docs/beacon-sdk) in the **Ad Tracking** section.
+
+***
+
+## Prerequisites
+
+Before integrating with Criteo's Retail Media ad delivery system, ensure the following prerequisites are met:
+
+1. **Validated and configured product feed**: Send a product feed that has been validated and configured according to Criteo's specifications. Detailed guidelines for feed configuration can be found [here](/retailer-integration/docs/product-feed-parameters).
+2. **Configured account and ad inventory**: Have your account and ad inventory validated and configured in Criteo’s Retail Media Platform by your technical account manager.
+
+***
+
+## General Ad Server Requirements
+
+When integrating with Criteo's Retail Media Ad Delivery system, please adhere to the following ad server requirements:
+
+* **No caching of API responses**: The API response cannot be cached. It is generated based on real-time campaigns, inventory, price, and navigation data. Caching the response will distort attribution and reporting.
+
+* **Client-side or Server-side API calls**: The API can be called both on the client side and the server side.
+
+* **Server-side calls recommended**: We recommend server-side calls to allow for server-side rendering of the ads.
+
+* **Allowed request method**: The only request method allowed is the `GET` method.
+
+* **Headers for server-side requests**: To protect our partners and advertiser from being billed for illegitimate traffic, Criteo implemented Invalid Traffic (IVT) detection rules. As part of these rules, all server-side requests should contain the following headers:
+
+  * **Referer** (optional): Learn more by visiting the [Referer documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referer). Please note that for apps, deeplinks are recommended instead.
+  * **X-Forwarded-For**: [X-Forwarded-For documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For). This should be set to the IP address of the end-user.
+  * **User Agent**: [User-Agent documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent). Besides sending the `user-agent` header, it must comply with IAB's requisites. IAB provides a sample list of invalid user-agents [here](https://www.iab.com/guidelines/iab-abc-international-spiders-bots-list/).
+    * **Invalid User-Agent for android's default network framework**: Android's default network framework user agent, `okhttp/x.y.z` (where `x.y.z` it's the software version), is considered invalid and should be changed. Documentation on how to change it can be found [here](https://square.github.io/okhttp/features/interceptors/#application-interceptors). To facilitate troubleshooting, we recommend customizing your mobile app user-agent to include its operating system and app version. E.g. `app_android x.y.z`, `app_ios x.y.z`.
+
+***
+
+## Platform Service Agreements
+
+* **Response Time Guarantee**: Criteo guarantees a response time of 150ms or less at the 95th percentile. This response time pertains to our servers and does not include external network latencies, such as the time beyond the point of connection between Criteo and the internet.
+* **Availability Rate**: The availability rate of the Ad Delivery Service is calculated by dividing the number of minutes the service is available by the total number of minutes in the assessment period, which is defined as one calendar month. Criteo guarantees a monthly availability rate of at least 99.5% for the Ad Delivery Service.
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Glossary](/retailer-integration/docs/rm-glossary)

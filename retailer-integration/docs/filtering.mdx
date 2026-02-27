@@ -1,0 +1,127 @@
+---
+title: "Filters"
+---
+
+# Definition
+
+Filters in Criteo's Retail Media Delivery API are designed to mirror the filtering options that shoppers use when browsing product listings.
+
+This allows for a more targeted and relevant ad delivery based on specific product attributes.
+
+Each filter has three main properties:
+
+* name
+* operator
+* value
+
+***
+
+## Name
+
+This can be one of the standard filters (see below), or a custom filter that you've set up within the product feed.
+
+***
+
+## Operator
+
+The condition applied to the filter. Supported operators include:
+
+#### `eq`: equal to
+
+#### `gt`: greater than
+
+#### `lt`: less than
+
+#### `ge`: greater than or equal to
+
+#### `le`: less than or equal to
+
+#### `in`: membership in a list
+
+#### `neq`: not equal
+
+#### `nin`: not in
+
+***
+
+## Value
+
+The specific value(s) to filter on. This can be either a text string for filters like brand, or a numerical value for filters like price. The value(s) must match the exact values passed within the corresponding field of the product feed.
+
+**Note:** `eq` , `neq`, `in`, and `nin` operators can support multiple values, while the others only support single value.
+
+***
+
+# Standard Filters
+
+Criteo supports the following standard filters:
+
+* **brand**
+* **price**
+* **rating**
+
+These filters are pulled directly from the corresponding fields in the product feed. Additional custom filters must be configured within the product feed's `filters` field.
+
+Please refer to the [Criteo Feed Parameters](https://developers.criteo.com/retailer-integration/docs/product-feed-parameters#filters) page for more details.
+
+***
+
+# Examples
+
+## Single Filter
+
+* `filters=(price,le,500)`: Only allow products that are less than or equal to $500.
+* `filters=(color,eq,blue)`: Only allow products whose value for the "color" custom filter is "blue".
+* `filters=(brand,in,sony,hp,dell)`: Only allow products from the brands Sony, HP, or Dell.
+
+***
+
+## Multiple Filters
+
+* `filters=(brand,in,sony,hp,dell),(price,lt,500)`: Only allow products from the brands Sony, HP, or Dell that also cost less than $500.
+* `filters=(price,ge,100),(price,le,500)`: Only allow products with a price between $100 and $500, inclusive.
+
+<Warning>
+  **Multiple filters are a logical `AND`**
+
+  Sending multiple filters works as a logical `AND`, which means that the returned products will follow all the filter rules. This might lead to some unexpected behavior.
+
+  **For example**: when sending `(price,ge,80),(price,ge,100)` , the API will send back products with `price ≥ 80` **`AND`** `price ≥ 100`, i.e., effectively only products with `price ≥ 100`.
+</Warning>
+
+***
+
+## Sample API Call
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+  --data-urlencode "criteo-partner-id=12345" \
+  --data-urlencode "environment=d" \
+  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+  --data-urlencode "customer-id=123456789" \
+  --data-urlencode "page-id=viewSearchResult_API_desktop" \
+  --data-urlencode "event-type=viewCategory" \
+  --data-urlencode "keywords=black laptops" \
+  --data-urlencode "item=123|456|789" \
+  --data-urlencode "page-number=1" \
+  --data-urlencode "filters=(price,le,500)" \
+  -H "Referer: https://www.criteo.com" \
+  -H "X-Forwarded-For: 123.456.789.012" \
+  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  ```
+</CodeGroup>
+
+In this example, the filter `filters=(price,le,500)` is applied, meaning only products that are less than or equal to $500 (based on the product feed) will be considered.
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+What’s Next
+
+* [Ad request best practices](/retailer-integration/docs/requesting-ads-best-practices)

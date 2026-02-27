@@ -1,0 +1,440 @@
+---
+title: "Revenue Report"
+---
+
+1. Guides for Retail Media API
+2. [Supply Side Analytics (SSP)](/retail-media/v2024.10/docs/supply-side-reporting-ssp)
+
+v2 - supply side revenue report
+
+The revenue report serves as a vital tool for supply account owners, such as retailers, enabling them to grasp the origins of their retail media revenue. It offers comprehensive visibility across all advertisers, media platforms, and sales channels, encompassing direct, indirect, and private market avenues.
+
+This report delves into crucial aspects, including generated revenue, delivered impressions, clicks, average rates, and overall performance metrics. Through this API only, supply partners gain the ability to construct detailed reports by accessing a myriad of metrics and dimensions, empowering them with actionable insights to optimize their strategies effectively.
+
+## Endpoints
+
+The revenue report uses an asynchronous endpoint that is used to create the report, and then using the report `id` to download or view the report status using the following GET endpoint requests.
+
+| Verb     | Endpoint                        | Description                          |
+| -------- | ------------------------------- | ------------------------------------ |
+| **POST** | `/retail-media/reports/revenue` | Generate a retailer revenue report   |
+| **GET**  | `/reports/{reportId}/output`    | Download Output of a Specific Report |
+| **GET**  | `/reports/{reportId}/status`    | Get Status of a Specific Report      |
+
+## Attributes
+
+id
+
+***
+
+* **Data Type:** string
+
+  **Description:** The supply account ID to pull results for
+  * **Note:** For apps with access to multiple supply accounts, you also have the option to use an `ids` array for multiple IDs. The array helps pull results across multiple accounts. e.g. `"ids":["supplyAccountId_1","supplyAccountId_2"]`
+  **Accepted Values:** A single supply account id in a string format
+
+reportType
+
+***
+
+* **Data Type:** string
+
+  **Description:** Report types are pre-packaged reports that allow the specification of the report breakdown. They enable reports to view revenue distribution by advertiser, brand, environment, page category, and page type. The metrics and dimensions in these report types are limited. Use the `metrics` and `dimensions` arrays to build your report for additional fields. When metrics and dimensions are used, the report type is ignored.
+
+  **Accepted Values:** `advertiser`, `brand`, `environment`, `productCategory`, `pageType`
+
+revenueType
+
+***
+
+* **Data Type:** enum
+
+  **Description:** The revenue type used to filter report results. If the revenue type filter is not specified, the report will return all existing revenue data for sponsored products and preferred deals within the specified timeframe.
+
+  **Accepted Values:** `auction`, `preferred`
+
+soldBy
+
+***
+
+* **Data Type:** enum
+
+  **Description:** The sales channel of indirect sold, direct sold, or private market. This is an optional filter that can be used to narrow down results.
+
+  **Accepted Values:** `directSold`, `indirectSold`, `privateMarket`
+
+buyType
+
+***
+
+* **Data Type:** enum
+
+  **Description:** The campaign buying strategy. This optional filter can be used to filter down results
+
+  **Accepted Values:** `auction`, `preferredDeals`, `sponsorship`
+
+skuRelations
+
+***
+
+* **Data Type:** enum
+
+  **Description:** The attributed rule used to match an impression/click to a sale. The filter will narrow down results of the attributed rules set by the advertiser at the campaign level.
+
+  **Accepted Values:** `sameSku`, `sameParentSku`, `sameCategory`, `sameBrand`, `sameSeller`
+
+format
+
+***
+
+* **Data Type:** enum
+
+  **Description:** The format type the report should return results
+
+  **Accepted Values:** `json`, `json-compact`, `json-newline`, `csv`
+
+campaignType
+
+***
+
+* **Data Type:**&#x73;tring
+
+  **Description:** The campaign type to filter results
+
+  **Accepted Values:** `sponsoredProducts`, `onSiteDisplays`
+
+salesChannel
+
+***
+
+* **Data Type:** string
+
+  **Description:** The sales channel where attributed sales originated
+
+  **Accepted Values:** `offline`, `online`
+
+advertiserTypes
+
+***
+
+* **Data Type:** string array
+
+  **Description:** The advertiser type where campaigns originated from
+
+  **Accepted Values:** `retailer`, `brand`, `seller`
+
+clickAttributionWindow
+
+***
+
+* **Data Type:** string
+
+  **Description:** The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if `viewAttributionWindow` is one of the accepted values.
+
+  **Accepted Values:** `none`, `7D`, `14D`, `30D`
+
+viewAttributionWindow
+
+***
+
+* **Data Type:** string
+
+  **Description:** The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values.
+
+  **Accepted Values:** `none`, `1D`, `7D`, `14D`, `30D`
+
+dimensions
+
+***
+
+* **Data Type:** string enum values
+
+  **Description:** A string array used to define which dimensions you want to see with your report
+
+  **Accepted Values:** Refer to the [Metrics & Dimension](/retail-media/docs/metrics-and-dimensions-ssp) page for a complete list of supported dimensions
+
+metrics
+
+***
+
+* **Data Type:** string enum
+
+  **Description:** A string array used to define which metrics you want to see with your report
+
+  **Accepted Values:** Refer to the [Metrics & Dimension](/retail-media/docs/metrics-and-dimensions-ssp) page for a complete list of supported metrics
+
+startDate
+
+***
+
+* **Data Type:** date-time
+
+  **Description:** Earliest day to report; inclusive
+
+  **Accepted Values:** YYYY-MM-DD Thh:mm:ss.sTZD
+
+endDate
+
+***
+
+* **Data Type:** date-time
+
+  **Description:** Latest day to report; inclusive
+
+  **Accepted Values:** YYYY-MM-DD Thh:mm:ss.sTZD
+
+timezone
+
+***
+
+* **Data Type:** string
+
+  **Description:** Time zone of the report
+
+  **Accepted Values:** [database tz syntax ](https://nodatime.org/TimeZones), eg. `America/New_York`, `Europe/Paris`, `Asia/Tokyo`, `UTC`
+
+<Info>
+  ### Metrics and Dimensions
+
+  For a complete list of all supported metrics and dimension, check out the [Metrics and Dimensions](doc:metrics-and-dimensions-ssp)
+</Info>
+
+***
+
+## Generate Revenue Report
+
+![](/images/retail-media/v2024.10/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/reports/revenue
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L 'https://api.criteo.com/{version}/retail-media/reports/revenue' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+    "data": {
+          "type": "SSPRevenueReport",
+          "attributes": {
+            "id": "203209148566716416",
+            "revenueType": "auction",
+            "soldBy": "directSold",
+            "buyType": "auction",
+            "skuRelations": [
+              "sameSku"
+            ],
+            "format": "json",
+            "campaignType": "sponsoredProducts",
+            "salesChannel": "online",
+            "clickAttributionWindow": "7D",
+            "viewAttributionWindow": "1D",
+            "dimensions": [
+                "date",
+                "hour",
+                "advertiserType",
+                "accountName",
+                "campaignName",
+                "activityType",
+                "advProductId",
+                "advProductName",
+                "placementName",
+                "taxonomy1Name",
+                "taxonomy2Name",
+                "taxonomy3Name"      
+            ],
+            "metrics": [
+                "numberOfCampaigns",
+                "numberOfSkus",
+                "clicks",
+                "units",
+                "ctr",
+                "cr",
+                "workingMedia",
+                "netRevenue"
+            ],
+            "startDate": "2024-04-10T21:14:53.816Z",
+            "endDate": "2024-04-10T21:14:53.816Z",
+            "timezone": "UTC"
+       	 }
+      }
+    }
+  }'
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "RetailMediaReportStatus",
+          "id": "22fa642d-ab8a-463c-a2f6-fb174c2f72dd",
+          "attributes": {
+              "status": "pending",
+              "rowCount": null,
+              "fileSizeBytes": null,
+              "md5Checksum": null,
+              "createdAt": null,
+              "expiresAt": null,
+              "message": null
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+## Get Status of a Specific Report
+
+![](/images/retail-media/v2024.10/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/reports/{reportId}/status
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L 'https://api.criteo.com/{version}/retail-media/reports/22fa642d-ab8a-463c-a2f6-fb174c2f72dd/status' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "type": "RetailMediaReportStatus",
+          "id": "22fa642d-ab8a-463c-a2f6-fb174c2f72dd",
+          "attributes": {
+              "status": "success",
+              "rowCount": 2,
+              "fileSizeBytes": 341,
+              "md5Checksum": "f43cf2503a31a100f7b81db3c14d3fae",
+              "createdAt": "2023-07-10T16:00:32.000Z",
+              "expiresAt": "2023-07-17T16:00:32.000Z",
+              "message": null
+          }
+      }
+  }
+  ```
+</CodeGroup>
+
+## Download Output of a Specific Report
+
+![](/images/retail-media/v2024.10/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/reports/{reportId}/output
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f426xx/output" \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+</CodeGroup>
+
+**Sample Responses**
+
+*Report broken down by advertiser by JSON format*
+
+<CodeGroup>
+  ```bash bash
+  [
+      {
+          "date": "2024-04-10",
+          "hour": 15,
+          "advertiserType":"seller",
+          "accountName": "Account A",
+          "campaignName": "CampaignABC",
+          "placementName": "viewSearchResult",
+          "activityType": "imp",
+          "advProductId": "14364409",
+          "advProductName": "360 Deluxe (PC/Mac) - 5 Devices",
+          "taxonomy1Name": "computers & tablets",
+          "taxonomy2Name": "software",
+          "taxonomy3Name": "antivirus, security & utility software",
+          "numberOfCampaigns": 1,
+          "numberOfSkus": 1,
+          "clicks": 0,
+          "units": 1,
+          "ctr": null,
+          "cr": null,
+          "workingMedia": 0,
+          "netRevenue": 0
+      },
+      {
+          "date": "2024-04-10",
+          "hour": 11,
+          "advertiserType":"brand",
+          "accountName": "Account A",
+          "campaignName": "CampaignXYZ",
+          "placementName": "viewSearchResult",
+          "activityType": "click",
+          "advProductId": "15325425",
+          "advProductName": "Mini On-Ear Bluetooth Kids Headphones - Pink",
+          "taxonomy1Name": "audio",
+          "taxonomy2Name": "headphones",
+          "taxonomy3Name": "over-ear headphones",
+          "numberOfCampaigns": 1,
+          "numberOfSkus": 1,
+          "clicks": 0,
+          "units": 1,
+          "ctr": null,
+          "cr": null,
+          "workingMedia": 0,
+          "netRevenue": 0
+      },
+      {
+          "date": "2024-04-10",
+          "hour": 10,
+          "advertiserType":"seller",
+          "accountName": "Account B",
+          "campaignName": "CampaignDEF",
+          "placementName": "viewItem_API",
+          "activityType": "imp",
+          "advProductId": "17701444",
+          "advProductName": "City Pro Electric Scooter",
+          "taxonomy1Name": "sports, recreation & transportation",
+          "taxonomy2Name": "electric transportation",
+          "taxonomy3Name": "electric scooters",
+          "numberOfCampaigns": 1,
+          "numberOfSkus": 1,
+          "clicks": 0,
+          "units": 1,
+          "ctr": null,
+          "cr": null,
+          "workingMedia": 0,
+          "netRevenue": 0
+      }
+  ]
+  ```
+</CodeGroup>
+
+## Responses
+
+| Response | Description                                                                                                                                                                                                                                                                                                                                                                                               |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔵 `200` | Call executed with success                                                                                                                                                                                                                                                                                                                                                                                |
+| 🔴 `400` | Common Validation Errors- **endDate cannot be more than 100 days from startDate** - Using a date range with more than 100 days apart
+- **reportType invalid** - calling an unsupported report type will throw a 400 error
+- **timeZone must be a valid timezone** - using a time zone value that is not listed in the list tz database time zones
+- **format invalid** - using an unsupported file format |
+
+***
+
+[Supply Side Analytics (SSP)](/retail-media/v2024.10/docs/supply-side-reporting-ssp)
+
+[Metrics and Dimensions (SSP)](/retail-media/v2024.10/docs/metrics-and-dimensions-ssp)

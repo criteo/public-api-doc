@@ -1,0 +1,383 @@
+---
+title: "Partner Billing Report"
+---
+
+1. Guides for Retail Media API
+2. [Billing](/retail-media/v2025.07/docs/billing)
+
+## Introduction
+
+The Partner Billing Report (PBR) enables retailers to generate a billing report automatically through the API with custom date ranges and should contain data applicable for the specified retailer identified through the supply account.
+
+***
+
+## Endpoints
+
+The report generation uses an asynchronous endpoint that is used to receive the report creation request (using a POST request); then, using the `reportId` generated, it's possible to check the report status and download the output results using the following GET endpoint requests.
+
+| Verb     | Endpoint                                    | Description                               |
+| -------- | ------------------------------------------- | ----------------------------------------- |
+| **POST** | `/billing/partner-report`                   | Request a partner billing report creation |
+| **GET**  | `/billing/partner-report/{reportId}/status` | Get status of a specific report           |
+| **GET**  | `/billing/partner-report/{reportId}/output` | Download output of a specific report      |
+
+***
+
+## Report Request Attributes
+
+| Attribute     | Data Type | Description                                                                                                               |
+| ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `accountIds`  | list      | Account IDs (currently supports only Supply Account IDs)Accepted values: array of strings/int64Writeable? N / Nullable? N |
+| `retailerIds` | list      | [Retailer](doc:retailers) IDsAccepted values: array of strings/int64Writeable? N / Nullable? N                            |
+| `startDate`\* | date      | Start date of the report (inclusive)Accepted values: `yyyy-mm-dd`Writeable? N / Nullable? N                               |
+| `endDate`\*   | date      | End date of the report (inclusive)Accepted values: `yyyy-mm-dd`Writeable? N / Nullable? N                                 |
+| `format`      | enum      | The format type the report should return resultsAccepted values: `json`, `csv`Default: `json`Writeable? N / Nullable? N   |
+
+*\* Required*
+
+<Info>
+  ### Field Definitions
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+<Info>
+  ### Reporting Asynchronous Workflow: Step 1/3
+
+  * First, create a request for Partner Billing Report with the desired attributes
+  * This generates a `reportId` representing the report
+</Info>
+
+***
+
+## Create a Partner Billing Report request
+
+This endpoint receives requests to create Partner Billing Reports and returns a report `id` (to be used in the next steps) in case the request was successfully created; otherwise, it will expose errors details about the request issues
+
+![](/images/retail-media/v2025.07/docs/b0623eb-post.png)
+
+```
+https://api.criteo.com/{version}/retail-media/billing/partner-report
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/billing/partner-report' \
+      -H 'Content-Type: application/json' \
+      -H 'Accept: application/json' \
+      -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+      -d '{
+              "data": {
+                  "type": "PartnerBillingReportRequest",
+                  "attributes": {
+                      "accountIds": [
+                          "4257354123567401216"
+                      ],
+                      "retailerIds": [
+                          "1234",
+                          "5678"
+                      ],
+                      "startDate": "2025-01-01",
+                      "endDate": "2025-01-31",
+                      "format": "json"
+                  }
+              }
+          }'
+  ```
+
+  ```bash bash
+  import requests
+  import json
+
+  url = "https://api.criteo.com/{version}/retail-media/billing/partner-report"
+
+  payload = json.dumps({
+      "data": {
+          "type": "<string>",
+          "attributes": {
+              "accountIds": [
+                  "4257354123567401216"
+              ],
+              "retailerIds": [
+                  "1234",
+                  "5678"
+              ],
+              "startDate": "2025-01-01",
+              "endDate": "2025-01-31",
+              "format": "json"
+          }
+      }
+  })
+  headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+  }
+
+  response = requests.request("POST", url, headers=headers, data=payload)
+
+  print(response.text)
+  ```
+
+  ```bash bash
+  OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
+
+  MediaType mediaType = MediaType.parse("application/json");
+
+  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"<string>\",\"attributes\":{\"accountIds\":[\"4257354123567401216\"],\"retailerIds\":[\"1234\",\"5678\"],\"startDate\":\"2025-01-01\",\"endDate\":\"2025-01-31\",\"format\":\"json\"}}}");
+
+  Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/billing/partner-report")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
+
+  Response response = client.newCall(request).execute();
+  ```
+
+  ```bash bash
+  <?php
+  require_once 'HTTP/Request2.php';
+  $request = new HTTP_Request2();
+  $request->setUrl('https://api.criteo.com/{version}/retail-media/billing/partner-report');
+  $request->setMethod(HTTP_Request2::METHOD_POST);
+  $request->setConfig(array(
+      'follow_redirects' => TRUE
+  ));
+  $request->setHeader(array(
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json',
+      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  ));
+  $request->setBody('{"data":{"type":"<string>","attributes":{"accountIds":["4257354123567401216"],"retailerIds":["1234","5678"],"startDate":"2025-01-01","endDate":"2025-01-31","format":"json"}}}');
+  try {
+      $response = $request->send();
+      if ($response->getStatus() == 200) {
+          echo $response->getBody();
+      }
+      else {
+          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+          $response->getReasonPhrase();
+      }
+  }
+  catch(HTTP_Request2_Exception $e) {
+      echo 'Error: ' . $e->getMessage();
+  }
+  ```
+</CodeGroup>
+
+**Sample Response**: Report request successfully created (response status 🟢 `200`)
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "c19ed799-6747-4815-aa09-d3e04898xxxx",
+          "type": "PartnerBillingReportStatusV1",
+          "attributes": {
+              "status": "success",
+              "errorMessage": null,
+              "createdAt": "2025-03-27T14:43:28.3788206+00:00"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+<Info>
+  ### Reporting Asynchronous Workflow: Step 2/3
+
+  * Next, use the `reportId` to pull the report status endpoint until one is successfully computed
+</Info>
+
+**Sample Response**: Validation error when creating report request (response status 🔴 `400`)
+
+<CodeGroup>
+  ```bash bash
+  {
+      "warnings": [],
+      "errors": [
+          {
+              "traceId": "c19ed799-6747-4815-aa09-d3e04898xxxx",
+              "type": "validation",
+              "code": "model-validation-error",
+              "title": "Model validation error",
+              "detail": "data.attributes.endDate value is invalid"
+          }
+      ]
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Get status of specific report
+
+This endpoint retrieves the status of a specific report creation. Status can be `pending`, `success`, `failure`, or `expired`
+
+![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/billing/partner-report/{reportId}/status
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X GET 'https://api.criteo.com/{version}/retail-media/billing/partner-report/c19ed799-6747-4815-aa09-d3e04898xxxx/status' \
+      -H 'Accept: application/json' \
+      -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+  ```
+</CodeGroup>
+
+**Sample Response**
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "id": "c19ed799-6747-4815-aa09-d3e04898xxxx",
+          "type": "PartnerBillingReportStatusV1",
+          "attributes": {
+              "status": "pending",
+              "errorMessage": null,
+              "createdAt": "2025-03-27T14:43:28.3788206+00:00"
+          }
+      },
+      "warnings": [],
+      "errors": []
+  }
+  ```
+</CodeGroup>
+
+<Info>
+  ### Reporting Asynchronous Workflow: Step 3/3
+
+  * Finally, download the report using the report output endpoint
+  * Report outputs are cached for at least 1 hour before expiration
+</Info>
+
+***
+
+## Download output of specific report
+
+Once the report creation is completed (`"status": "success"` in response above), the report output will be available to download in this endpoint.
+
+The metrics definition of the Partner Billing Report is available in [PBR Metrics](doc:pbr-metrics)
+
+![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+
+```
+https://api.criteo.com/{version}/retail-media/billing/partner-report/{reportId}/output
+```
+
+**Sample Request**
+
+<CodeGroup>
+  ```bash bash
+  curl -L -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a4xxxxxx/output" \
+      -H 'Accept: application/json' \
+      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+  ```
+</CodeGroup>
+
+**Sample Responses**
+
+<CodeGroup>
+  ```bash bash
+  [
+      {
+          "AccountName": "Brand A US",
+          "AccountExternalId": "525404033764731234",
+          "IsUnbillable": "No",
+          "AccountCategory": "Network Demand",
+          "RetailerName": "My Retailer Shop",
+          "AccountService": null,
+          "AccountCurrencyCode": "USD",
+          "ExternalBalanceId": "525746374845021111",
+          "BalanceName": null,
+          "PurchaseOrder": null,
+          "BalanceStartDate": null,
+          "PrivateMarketPaymentOption": null,
+          "CampaignExternalId": null,
+          "CampaignName": "Brand A - Campaign Jan2025",
+          "CampaignType": "SponsoredProducts",
+          "BuyType": "Auction",
+          "LineItemId": 530088677885964287,
+          "LineItemName": "Brand A - My Retailer Shop - Jan2025",
+          "WorkingMediaSpend": 100.72000000,
+          "CreditSpend": 0.00000000,
+          "ValueAddSpend": 0.00000000,
+          "Clicks": 394,
+          "Impressions": 0,
+          "SupplyFeeAmount": 20.14400000,
+          "RetailerManagedFeeRate": 0.0,
+          "RetailerManagedFeeAmount": 0.0,
+          "RetailerAudienceDataFeeAmount": null,
+          "CriteoRetailerDataFeeAmount": null,
+          "UtcOffset": "-05:00"
+      },
+      // ...
+      {
+          "AccountName": "Brand B US",
+          "AccountExternalId": "137955447513525678",
+          "IsUnbillable": "No",
+          "AccountCategory": "Network Demand",
+          "RetailerName": "My Retailer Shop",
+          "AccountService": null,
+          "AccountCurrencyCode": "USD",
+          "ExternalBalanceId": "390893529643232222",
+          "BalanceName": null,
+          "PurchaseOrder": null,
+          "BalanceStartDate": null,
+          "PrivateMarketPaymentOption": null,
+          "CampaignExternalId": null,
+          "CampaignName": "Brand B - Auction 2025",
+          "CampaignType": "SponsoredProducts",
+          "BuyType": "Auction",
+          "LineItemId": 592048399992061951,
+          "LineItemName": "Brand B - My Retailer Shop - Jan2025",
+          "WorkingMediaSpend": 1497.28125424,
+          "CreditSpend": 0.00000000,
+          "ValueAddSpend": 0.00000000,
+          "Clicks": 5312,
+          "Impressions": 0,
+          "SupplyFeeAmount": 299.45625082,
+          "RetailerManagedFeeRate": 0.0,
+          "RetailerManagedFeeAmount": 0.0,
+          "RetailerAudienceDataFeeAmount": null,
+          "CriteoRetailerDataFeeAmount": null,
+          "UtcOffset": "-05:00"
+      }
+  ]
+  ```
+</CodeGroup>
+
+***
+
+## Responses
+
+| Response | Title                            | Detail                                                                                       | Troubleshooting                                                                                                                                                 |
+| -------- | -------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🟢 `200` |                                  |                                                                                              | Call executed with success                                                                                                                                      |
+| 🟢 `201` |                                  |                                                                                              | Report request created with success                                                                                                                             |
+| 🔴 `400` | **Validation error**             | Invalid date range. Maximum allowed is 31 days.                                              | Review the `startDate` and `endDate` provided, ensuring their maximum interval of 31 days                                                                       |
+| 🔴 `400` | **Model Validation error**       | `data.atributes.xxx` value is invalid.                                                       | Review the value of respective field provided, ensuring it was informed with a valid format                                                                     |
+| 🔴 `403` | **The scope Billing is missing** | The scope Billing is required to access this endpoint and is missing from the provided token | The respective API app doesn't have access to the domain/scope Billing. Review the Types of Permissions in [Authorization Requests](doc:authorization-requests) |
+| 🔴 `403` | **Authorization error**          | Resource access forbidden: all the accounts/retailers are not accessible.                    | Review the Account/Retailer ID(s) provided in the report request                                                                                                |
+
+***
+
+What’s Next
+
+* [PBR Metrics](/retail-media/v2025.07/docs/pbr-metrics)

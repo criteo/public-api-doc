@@ -1,0 +1,149 @@
+---
+title: "OAuth App – Authorization Code & PKCE Setup"
+---
+
+1. Getting Started
+2. [OAuth App Implementation](/retail-media/docs/oauth-app-implementation)
+
+This guide provides step-by-step instructions for implementing OAuth 2.0 Authorization Code with PKCE, including authorization requests and token exchange.
+
+## PKCE Overview
+
+Proof Key for Code Exchange (PKCE) is an extension of the OAuth 2.0 Authorization Code flow that enhances security for public or mobile clients that cannot safely store a client secret. It adds a verification step between the authorization request and token exchange to prevent intercepted authorization codes from being reused by malicious actors.
+
+You should use PKCE if your application is a mobile app, single-page app (SPA), or any client that cannot securely store a client secret. If your application is a traditional server-side (confidential) client, you can continue using the standard [Authorization Code flow](https://developers.criteo.com/retail-media/docs/oauth-app-authorization-code).
+
+<Info>
+  PKCE (RFC 7636) is also available to developers as an extension of the authorization code flow. To enable it, toggle `PKCE` in the App details page.
+
+  ![](/images/retail-media/docs/5d438b48f6491e173c4f3f92e9c350000b1ff8497477459e6db264edc8026016-pkce-gif.gif)
+</Info>
+
+<Warning>
+  Once PKCE is enabled, the application can only use the PKCE workflow. If PKCE parameters are not provided, the authorization code flow will fail. To switch back the toggle, the application should have no active keys.
+</Warning>
+
+***
+
+## Step 1. Consent URL
+
+Once your app parameters are set, you can implement the authorization code flow.
+
+### Consent URL
+
+To request access, create a Consent link that redirects the user.
+
+<Info>
+  #### Authorization Code vs. Client Credentials Consent URLs
+
+  If you're familiar with the [Client Credentials workflow](https://developers.criteo.com/retail-media/docs/oauth-app-client-credentials), you might notice that the **Generate Consent URL** button is not present in the partner portal for the authorization code workflow. This is because, with the authorization code method, you need to provide a redirect URI specific to your organization. Therefore, these URLs must be configured directly within your workflow.
+</Info>
+
+<Warning>
+  If the redirect URI is not declared in the application, the redirection will be blocked.
+</Warning>
+
+If you have PKCE enabled, then the consent URL will require additional parameters:
+
+<CodeGroup>
+  ```bash bash
+  https://consent.criteo.com/request?response_type=code
+  &client_id={client_id}
+  &redirect_uri={redirect_uri}
+  &state={state}
+  &code_challenge={code_challenge}
+  &code_challenge_method={code_challenge_method}
+  ```
+</CodeGroup>
+
+| Parameter               | Required                 | Description                                                                                                                                                                                                     |
+| ----------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `response_type=code`    | Yes                      | Indicates that an authorization code is expected as outcome.                                                                                                                                                    |
+| `client_id`             | Yes                      | Your public key from the app credentials section.                                                                                                                                                               |
+| `redirect_uri`          | Yes                      | The URL to redirect the user after consent. Must match the configured URI.                                                                                                                                      |
+| `state`                 | No                       | Optional string to prevent Cross-Site Request Forgery attacks.                                                                                                                                                  |
+| `code_challenge`        | Yes when PKCE is enabled | A challenge derived from the `code_verifier` that is sent in the authorization request, to be verified against later.                                                                                           |
+| `code_challenge_method` | No                       | A method that was used to derive `code_challenge`. The methods available: `plain`: no transformation (not recommended) `S256`: recommended & secure (hash + base64url)(also default when no method is provided) |
+
+***
+
+## Step 2. Exchanging the Access Code for the Access Token
+
+<Info>
+  You can find more details about the OAuth endpoint in [our API Reference](https://developers.criteo.com/retail-media/reference/apiv1oauth2tokenpost).
+</Info>
+
+If you have PKCE enabled and made the consent request with PKCE parameters, your access token request must have one more parameter, which is `code_verifier`:
+
+### Example Request
+
+<CodeGroup>
+  ```bash bash
+  curl -L 'https://api.criteo.com/oauth2/token' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'client_id=<MY_CLIENT_ID>' \
+  -d 'client_secret=<MY_CLIENT_SECRET>' \
+  -d 'redirect_uri=<MY_URI>' \
+  -d 'code=<MY_CODE>' \
+  -d 'grant_type=authorization_code' \
+  -d 'code_verifier=<MY_CODE_VERIFIER>'
+  ```
+</CodeGroup>
+
+### Example Response (Success)
+
+<CodeGroup>
+  ```bash bash
+  {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "bearer",
+    "expires_in": 3600,
+  }
+  ```
+</CodeGroup>
+
+### Parameters
+
+All the following parameters are required in the context of PKCE.
+
+| Parameter                       | Description                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------- |
+| `grant_type=authorization_code` | Indicates that you are providing an authorization code.                         |
+| `code`                          | Authorization code returned during redirection.                                 |
+| `redirect_uri`                  | Must match the `redirect_uri` used for the authorization request.               |
+| `client_id`                     | Your public key from the app credentials.                                       |
+| `client_secret`                 | Your secret key, accessible when creating credentials.                          |
+| `code_verifier`                 | A high-entropy random string created by the client (usually 43–128 characters). |
+
+### Using the Refresh Token
+
+To renew an access token, use the following request:
+
+<CodeGroup>
+  ```bash bash
+  curl -X POST https://api.criteo.com/oauth2/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=refresh_token&code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}"
+  ```
+</CodeGroup>
+
+| Parameter                  | Description                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `grant_type=refresh_token` | Indicates that you are providing a refresh token.                                                                     |
+| `refresh_token`            | Refresh token shared when requesting an access token.                                                                 |
+| `client_id`                | Your public key accessible in app credentials section.                                                                |
+| `client_secret`            | Your secret key, accessible only once when creating a pair of `client_id `and `client_secret` in credentials section. |
+
+The response will be the same as when issuing an access token.
+
+***
+
+Did anything feel unclear or missing on this page?
+
+Send feedback
+
+***
+
+[OAuth App - Authorization Code Setup](/retail-media/docs/oauth-app-authorization-code)
+
+[Troubleshooting Guide](/retail-media/docs/api-troubleshooting-guide)

@@ -1,0 +1,241 @@
+---
+title: "Placement Category"
+---
+
+1. Marketing Solutions Endpoints
+2. [Analytics](/marketing-solutions/v2024.10/docs/analytics)
+
+## **Introduction**
+
+The placement category endpoint provides transparency on which **categories** of domains your ads are being displayed on, as well provides visibility into the number of displays, clicks, and sales that have occurred via a given publisher.
+
+![](/images/marketing-solutions/v2024.10/docs/b0623eb-post.png)
+
+```
+ https://api.criteo.com/2024-10/categories/report
+```
+
+ 
+
+## **How It Works**
+
+A single domain can have several categories associated with it because the single page categorization is grouped at the domain level. Also, each individual page can hold several categories.
+
+For example, a news website could have pages linked to business, sports, and entertainment.
+
+<Info>
+  ### **How Hits are Normalized Into Displays**
+
+  On examplenewssite.com there are 50 hits on the following categories:
+
+  * News 10
+  * Travel 15
+  * Entertainment 25
+
+  Then take the ratio of each category compared to the total number of hits on examplesnewssite.com.
+
+  * News 0.2
+  * Travel 0.3
+  * Entertainment 0.5
+
+  Suppose there are 20 displays on examplenewssite.com and users clicked through 10 times, apply those ratios to both displays and clicks to get accurate category level data.
+
+  * News 4 displays / 2 clicks
+  * Travel 6 displays / 3 clicks
+  * Entertainment 10 displays / 5 clicks
+</Info>
+
+ 
+
+## **Making a Call**
+
+A POST request returns a report on categories based on the query. The query returns a predefined data set that includes displays, clicks, 30 day post click sales, and 1 day post view sales.
+
+![](/images/marketing-solutions/v2024.10/docs/b0623eb-post.png)
+
+```
+ https://api.criteo.com/2024-10/categories/report
+```
+
+<Warning>
+  ### Required Attributes
+
+  There are 4 required attributes when making a call. For additional fields see the **Attributes** table below.
+
+  * startDate
+  * endDate
+  * advertiserIds
+  * format
+</Warning>
+
+ 
+
+<CodeGroup>
+  ```bash bash
+  {
+      "data": {
+          "startDate": "2020-01-01",
+          "endDate": "2020-01-02", 
+          "advertiserIds": [
+              "123",
+              "456",
+              "789"
+          ],
+          "category": "News"
+          "domain": "example.com",
+          "timezone": "UTC",
+          "format": "json",
+      }
+  }
+  ```
+</CodeGroup>
+
+  The response is a file dictated by the "format" field in the request. This could be returned in JSON, XML, CSV, or XLS.
+
+<CodeGroup>
+  ```bash bash
+  [
+      {
+         "advertiserId": 123,
+         "category": "News",
+         "domain": "example.com",
+         "displays": 42,
+         "clicks": 12,
+         "salesPc30d":5,
+  	"salesPv1d": 1
+      },
+      {
+         "advertiserId": 456,
+         "category": "News",
+         "domain": "example.com",
+         "displays": 42,
+         "clicks": 12,
+         "salesPc30d":5,
+  	"salesPv1d": 1
+      },
+      {
+         "advertiserId": 789,
+         "category": "News",
+         "domain": "example.com",
+         "displays": 42,,
+         "clicks": 12,
+         "salesPc30d":5,
+  	"salesPv1d": 1
+      }
+  ]
+  ```
+</CodeGroup>
+
+ 
+
+<Warning>
+  ### **Limitations**
+
+  * This reporting is on publisher categories only.
+
+  * This display data is for the **web environment only** and does not support app display data.
+
+  * URL domains that fall under the category "Unknown" do not fall into any category.
+
+  * URL domains "Undisclosed" are not permitted to be displayed, and will appear as empty strings.
+
+  * If a domain has no category, then number of displays will be reported in the "Unknown" category. Additionally, if a domain has less category hits than displays, we do not correct the number of hits, and report the missing displays in the "Unknown" category.
+</Warning>
+
+  **Attributes**
+
+| Field                        | Type     | Required | Default Value | Description                                                |
+| ---------------------------- | -------- | -------- | ------------- | ---------------------------------------------------------- |
+| startDate                    | DateTime | Yes      |               | Start of the report in YY-MM-DD format                     |
+| endDate                      | DateTime | Yes      |               | End of the report in YY-MM-DD format                       |
+| advertiserIds                | string   | Yes      |               | Comma separated list of Advertiser IDs in an array         |
+| adsetId                      | string   | No       | null          | Report only on the specified adset Id                      |
+| category                     | string   | No       |               | Report only on the specified category                      |
+| domain                       | string   | No       |               | Report only on the specified domain                        |
+| shoudlDisplayDomainDimension | boolean  | No       | true          | Specify if the domain dimension is displayed in the report |
+| timezone                     | Timezone | No       | UTC           | Timezone used for dates                                    |
+| format                       | string   | Yes      | CSV           | Format of the report: JSON, XML, CSV, XLS                  |
+
+ 
+
+## **Errors and Warnings**
+
+API users must be authenticated in order to make calls to the category endpoint. For more information on authentication see [https://developers.criteo.com/marketing-solutions/docs/authentication](https://developers.criteo.com/marketing-solutions/docs/authentication).
+
+<CodeGroup>
+  ```bash bash
+  "errors": [{
+    "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+    "type": "access-control",
+    "code": "insufficient-advertiser-permissions",
+    "instance": "/advertisers/placements/report",
+    "title": "Insufficient advertisers permissions",
+    "detail": "You do not have the rights to report on these advertisers.",
+  }]
+  ```
+</CodeGroup>
+
+  There are 4 required fields when making a call: "startDate", "endDate", "advertiserIds", and "format".
+
+<CodeGroup>
+  ```bash bash
+  "errors": [{
+    "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+    "type": "validation",
+    "code": "required-field",
+    "instance": "/advertisers/placements/report",
+    "title": "<field> is required.",
+  }]
+  ```
+</CodeGroup>
+
+  Format must be in CSV, XML, XLS, or JSON.
+
+<CodeGroup>
+  ```bash bash
+  "errors": [{
+    "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+    "type": "validation",
+    "code": "invalid-format",
+    "instance": "/advertisers/placements/report",
+    "title": "<field> must be in list of required values",
+    "detail": "<field> must be one of 'csv', 'xml', 'excel' or 'json'. Value: '<value>'." ,
+  }]
+  ```
+</CodeGroup>
+
+  Date ranges are required and must have a valid start and end date.
+
+<CodeGroup>
+  ```bash bash
+  "errors": [{
+    "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+    "type": "validation",
+    "code": "invalid-date-range",
+    "instance": "/advertisers/placements/report",
+    "title": "Invalid date range",
+    "detail": "The 'startDate' can not be after 'endDate'.",
+  }]
+  ```
+</CodeGroup>
+
+  The default time zone for requests is UTC. See [this link](doc:campaign-statistics#timezones) for more information on supported time zones.
+
+<CodeGroup>
+  ```bash bash
+  "errors": [{
+      "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+      "type": "validation",
+      "code": "invalid-timezone",
+      "instance": "/advertisers/placements/report",
+      "title": "Invalid time zone",
+      "detail": "Time zone '<value>' is not valid.",
+  }]
+  ```
+</CodeGroup>
+
+***
+
+[Placement](/marketing-solutions/v2024.10/docs/placement)
+
+[Audiences](/marketing-solutions/v2024.10/docs/audiences)
