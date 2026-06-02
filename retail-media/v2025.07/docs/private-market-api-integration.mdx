@@ -1,0 +1,88 @@
+---
+title: Private Market API Integration
+hidden: true
+---
+
+## Private Market
+
+![Private Market Hierarchy ](https://files.readme.io/cdccbf0-image.png)
+
+A private market demand account is a subdomain of a supply account. It allows brands to have exclusive access to the retailer's inventory. Each brand that creates an account within the private market will have a demand account. In these demand accounts, brands can create and manage their campaigns and line items, promote products, and view reports.
+
+The API calls are similar, just as they have been when calling standard demand/supply accounts in the Criteo network. The only difference API developers must be aware of is the `accountId` that will be used. The retailer's supply account will have a master account ID, while each brand will have their demand account ID. Each private market demand account ID is unique.
+
+When structuring the API calls, make sure that you use the **private market demand account** that belongs to the end user responsible for triggering each API call. The private market demand account IDs will need to be passed either as a path variable for endpoints that take account ID in the request path.
+
+### Getting Started with App Setup
+
+All API applications will need consent granted to any account that it requires access to. Retailers who may have used their supply account to manage their direct sold or private markets through the Criteo API would be required to grant their apps consent to the supply account. In the private market account structure, API applications will need consent to not only the supply account but also each individual private market demand account that exists in your private market. 
+
+![32036b4 image](https://files.readme.io/32036b4-image.png)
+
+Consent can be granted to an API application connected to a private market in two ways: manual or programmatic.
+
+### Manual Consents
+
+**Setup level**: Easy
+
+Manual consents follow the same process of granting API consents as explained in  [Authorization Requests](/retail-media/v2025.07/docs/authorization-requests) process. A user accessing the API application will generate a consent URL in the `htts://partner.criteo.com` portal and share it with a retailer admin with the necessary permissions to grant API consent. 
+
+Manual consents involve minimal user intervention and may be more suited for private markets with a few demand accounts added monthly.
+
+<Note>
+  ### Retailer Admin Permission
+
+  In private market, only supply account users with **retailer access** and with the role of **admin** will have the permission to grant an API application consent to a private market demand account. A user who logs into the consent portal missing the necessary permission will see the option to grant consent to a private market account greyed out.
+</Note>
+
+![Process of granting consent for a private market demand account ](https://files.readme.io/0e40bea-image.png)
+
+### Programmatic Consents
+
+**Setup level:** Complex
+
+Programmatic consent is ideal for private markets scaling quickly and continuously. This consent flow is also intended to help segregate demand account data behind different access/refresh tokens and prevent data from one demand account from being accessed by another. This workflow consists of two API applications, an ***Admin*** and a ***Business*** application. The admin application is responsible for programmatically granting consent to each net new private market demand account that is created.
+
+For more details on how to setup a programmatic consent granting process, follow instruction in the [Private Market Programmatic Consent Granting](/retail-media/v2025.07/docs/private-market-programmatic-consent-granting)
+
+## Getting started with private market APIs
+
+All existing retail media endpoints are compatible with private market demand accounts. This means the same endpoints used for campaign/line-item creation, keyword targeting, catalog generation, etc., are compatible within the private market context. 
+
+In the private market context, when the endpoints ask for an `accountId`, `{campaignId}` or `{line-item-id}`, it means the resource ID of a particular private market demand account.
+
+**Campaign Creation Example**
+
+When creating a [Campaign](/retail-media/v2025.07/docs/campaign) for a private market demand account, in the documentation, where the `{accountId}`  value that is required to pass in the endpoint path is the private market demand account ID. This tells the endpoint to create the campaign under that specific private market demand account ID.
+
+### Private Market-Only Endpoints
+
+Supply accounts will have access to additional endpoints to support their private market needs. In addition to the endpoints 
+
+#### Account Creation
+
+Retailers can create demand brands or seller accounts in the private market. The account creation and management APIs will enable the private market retailer to create demand brand/seller accounts and map brand IDs to brand accounts and seller IDs to seller accounts. 
+
+* :point_right: For more details check out the [Account Creation and Management (Private Market)](/retail-media/v2025.07/docs/account-creation-and-management-private-market) guides
+
+#### Balance Management
+
+Retailers who bill their advertisers have the option to create and manage their own balances. This feature is available through the API. In addition to the existing [Balances](/retail-media/v2025.07/docs/balances) endpoints, which are intended to append or remove balance associations from a campaign, the balance management endpoints will provide a set of new endpoints that allow for balance creation and necessary updates. 
+
+* :point_right: For more details check out the [Balance Management](/retail-media/v2026-preview/docs/balance-management) guides. 
+
+#### Aggregated Reporting *(Optional)*
+
+The private market consists of multiple demand accounts, each with its own account ID. For retailers looking to pull reporting data across all private market demand accounts, an extra API endpoint is available that allows retailers to pull reports for up to ten (10) private market demand accounts in each API call. The endpoint requires special access, so please get in touch with your account representative to get started. 
+
+* :point_right: Check out the [Aggregated Reporting](/retail-media/v2025.07/docs/aggregated-reporting) guides for more details.
+
+<br />
+
+<Note>
+  ### Recap Reminder
+
+  * Only supply account users with  **retailer access** and with  **Admin** roles have permissions to grant or deny private market access to an API application
+  * All existing endpoints listed under the Retail Media guide sections are compatible with a private market accounts
+  * The process of granting consents to an API application is available either through manual or programmatic consents
+</Note>

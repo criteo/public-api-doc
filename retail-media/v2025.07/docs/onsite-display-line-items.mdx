@@ -1,0 +1,559 @@
+---
+title: Onsite Display Line Items
+hidden: true
+---
+
+* A *line item* holds *promoted products* to advertise on any single retailer
+* Line items have bid settings, start & end dates, and optional budgeting & pacing controls
+* Budgets may additionally be controlled at the campaign level
+* Several [reports](/retail-media/v2025.07/docs/demand-side-analytics-get-started) are available to measure line item performance
+* Campaigns are limited to 10,000 non-archived line items
+* Line items are archived automatically 90 days after its end date
+
+## Endpoints
+
+* `GET /campaigns/{campaignId}/preferred-line-items` Get all Onsite Display Deals Line items from a specific Campaign
+* `POST /campaigns/{campaignId}/preferred-line-items` Creates an Onsite Display Line item
+* `GET /preferred-line-items/{lineItemId}` Get a specific Onsite Display Line item
+* `PUT /preferred-line-items/{lineItemId}` Updates a specific Onsite Display Line item
+
+<Info>
+  * Create operations using the `POST` method expect every **Required (R)** field; omitting **Optional (O)** fields will set those fields to **Default** values* Update operations using the `PUT` method expect every **Write (W)** field; omitting these fields is equivalent to setting them to `null`, if possible
+</Info>
+
+## Line Item Attributes
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Description</th>
+      <th>Values</th>
+      <th>Required</th>
+      <th>Default</th>
+      <th>Write</th>
+      <th>Nullable</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code> string</td>
+      <td>Line item ID</td>
+      <td>int64</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+    </tr>
+    <tr>
+      <td><code>campaignId</code> string</td>
+      <td>Campaign ID</td>
+      <td>int64</td>
+      <td>Required</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+    </tr>
+    <tr>
+      <td><code>name</code> string</td>
+      <td>Line item name; must be unique within a <a href="/retail-media/v2026-preview/docs/campaigns">campaign</a></td>
+      <td>255 char limit</td>
+      <td>R</td>
+      <td>&#42;</td>
+      <td>Write</td>
+      <td>&#42;</td>
+    </tr>
+    <tr>
+      <td><code>targetRetailerId</code> string</td>
+      <td>ID of the <a href="/retail-media/v2025.07/docs/retailers">retailer</a> the line item serves on</td>
+      <td>int64</td>
+      <td>R</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+    </tr>
+    <tr>
+      <td><code>startDate</code> date</td>
+      <td>Line item start date in the <a href="/retail-media/v2026-preview/docs/accounts">account</a> <code>timeZone</code></td>
+      <td>YYYY-MM-DD</td>
+      <td>R</td>
+      <td>&#42;</td>
+      <td>W</td>
+      <td>&#42;</td>
+    </tr>
+    <tr>
+      <td><code>endDate</code> date</td>
+      <td>Line item end date in the <a href="/retail-media/v2026-preview/docs/accounts">account</a> <code>timeZone</code>; serves indefinitely if omitted or set to <code>null</code></td>
+      <td>YYYY-MM-DD</td>
+      <td>R</td>
+      <td><code>null</code></td>
+      <td>W</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>budget</code> number</td>
+      <td>Line item lifetime spend cap;</td>
+      <td>at least 0</td>
+      <td>R</td>
+      <td><code>null</code></td>
+      <td>W</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>budgetSpent</code> number</td>
+      <td>Amount the line item has already spent</td>
+      <td>at least 0</td>
+      <td>&#42;</td>
+      <td><code>0.0</code></td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+    </tr>
+    <tr>
+      <td><code>budgetRemaining</code> number</td>
+      <td>Amount the line item has remaining until cap is hit; <code>null</code> if budget is uncapped</td>
+      <td>between 0 and <code>budget</code></td>
+      <td>&#42;</td>
+      <td><code>null</code></td>
+      <td>&#42;</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>pacing</code> enum</td>
+      <td>Way the budget will be spent, between the following values:<br /><code>accelerated </code> (Spend as fast as possible) or <code>standard</code> (Spend evenly)</td>
+      <td><code>accelerated</code>, <code>standard</code></td>
+      <td>R</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>capping</code> object</td>
+      <td>Frequency capping object</td>
+      <td></td>
+      <td>O</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>capping:range</code> number</td>
+      <td>Frequency capping number</td>
+      <td>rangeline</td>
+      <td>R</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>capping:type</code> enum</td>
+      <td>Frequency capping type</td>
+      <td><code>day</code>, <code>session</code></td>
+      <td>R</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>page</code> object</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>page:pageType</code> enum</td>
+      <td>Page type to serve on</td>
+      <td><code>search</code>, <code>home</code>, <code>checkout</code>, <code>category</code>, <code>productDetail</code>, <code>confirmation</code>, <code>merchandising</code>, <code>deals</code></td>
+      <td>R</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>page:categories</code> objects array</td>
+      <td>Categories to serve on. Only applies to <code>category</code>, <code>productDetail</code> and <code>merchandising</code> page types</td>
+      <td></td>
+      <td>O</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>page:categories:categoryId:value</code></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>page:categories:includeChildren:value</code></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>page:searchKeywords</code> string array</td>
+      <td>Keywords to serve on. Only applies to <code>search</code> page type</td>
+      <td></td>
+      <td>O</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>creativeId</code> string</td>
+      <td>Identifier of the creative to be served with this line item</td>
+      <td></td>
+      <td>R</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>status</code> enum</td>
+      <td>Line item status; can only be updated by a user to <code>active</code> or <code>paused</code>; all other values are applied automatically depending on flight dates, financials, or missing attributes required for line item to serve</td>
+      <td><code>active</code>, <code>paused</code>, <code>scheduled</code>, <code>ended</code>, <code>budgetHit</code>, <code>noFunds</code>, <code>draft</code>, <code>archived</code></td>
+      <td>&#42;</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>createdAt</code> timestamp</td>
+      <td>Timestamp in UTC of line item creation</td>
+      <td>ISO-8601</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+    </tr>
+    <tr>
+      <td><code>updatedAt</code> timestamp</td>
+      <td>Timestamp in UTC of last line item update</td>
+      <td>ISO-8601</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+      <td>&#42;</td>
+    </tr>
+  </tbody>
+</table>
+
+## Create an Onsite Display Line Item
+
+This endpoint creates a new onsite display line item in the specified campaign
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}/preferred-line-items
+```
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/campaigns/329628911113846784/preferred-line-items' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IkZMNllURk1pcVliT1RGUW4yUmh3cWFLTnhuaGV1MFBJTjFlZU9ydnBoSWMiLCJ0eXAiOiJKV1QifQ.eyJjbGllbnRfaWQiOiJiZTYyYWJmYmNhYWI0NzdhOWQwYzYyNTMzNGEzMGIwNiIsInR5cGUiOiJhY2Nlc3NfdG9rZW4iLCJpYXQiOjE2NTY1MzYxMzksImV4cCI6MTY1NjUzNzA5OSwiaXNzIjoicHJpdmF0ZS1jcml0ZW8tZXhhbW9hdXRoIiwiYXVkIjoicHJpdmF0ZS1jcml0ZW8tZXhhbW9hdXRoIn0.FmNUnRDfkT3KZAnGCwzmbtnXEXvUB5VpsZ7-f2QgW94AJrLziFKYwBpHckxiH4Dg0BcM0o5UFbeB5qIkdBl8NFvgWYnMpnaZLj7z32U-jk7Cwm2kMVH4DwqONd_qRsSPhn4MGKgK74qXY4L1shAKKchIVQQ-j5tBmiIvbQxJriALdCPm61ZHtSXJkPWAt8eBSGjPrfXFdOlb4auVzuHb57mr-YHIJBgm7LiVb-43mKVZtSf9sIiJafCwV2iCnqD8WlVzuwrcP7HZsnYgiIjQg3-E00vE8BptesIKpJyTf-xIzQ52KyzVeIGrx4EU9F5dBPug49J0H3HgGqrVyzEXxg' \
+--data-raw '{
+    "data": {
+        "type": "RetailMediaPDCampaignCreation",
+        "attributes": {
+            "name": "API PD Campaign V4 - categories",
+            "startDate": "2022-06-29",
+            "endDate": "2022-06-30",
+            "pacing": "standard",
+            "page": {
+                "pageType": "category",
+                "categories": [
+                    {
+                        "categoryID": "3595128",
+                         "includeChildren": "false"
+                    }
+                ]
+            },
+            "targetRetailerId": "299",
+            "budget": "1.00",
+            "status": "draft",
+            "capping": {
+                "type": "day",
+                "count": "5"
+            },
+            "creativeId": "231059293677002752"
+        }
+    }
+}'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": "API PD Campaign V4 - categories",
+            "startDate": "2022-06-29",
+            "endDate": "2022-06-30",
+            "status": "draft",
+            "pacing": "standard",
+            "capping": {
+                "type": "day",
+                "count": 5
+            },
+            "page": {
+                "pageType": "category",
+                "categories": [
+                    {
+                        "categoryId": "3595128",
+                        "includeChildren": false
+                    }
+                ],
+                "searchKeywords": null
+            },
+            "targetRetailerId": "299",
+            "budget": 1.00000000,
+            "campaignId": "329628911113846784",
+            "budgetSpent": 0.00000000,
+            "budgetRemaining": 1.00000000,
+            "createdAt": "2022-06-29T21:01:04+00:00",
+            "updatedAt": "2022-06-29T21:01:06+00:00",
+            "creativeId": "231059293677002752",
+            "id": "330090318158475264"
+        },
+        "id": "330090318158475264",
+        "type": "RetailMediaPreferredLineItem"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+## Get All Onsite Display Line Items
+
+This endpoint lists all onsite display line items in the specified campaign.
+
+Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively. See [API Response](/retail-media/v2025.07/docs/api-response#pagination).
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}/preferred-line-items?pageIndex={pageIndex}&pageSize={pageSize}
+```
+
+**Sample Request**
+
+```bash
+curl -X GET "https://api.criteo.com/{version}/retail-media/campaigns/8343086999167541140/preferred-line-items?pageIndex=0&pageSize=25" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaLineItem",
+            "id": "9979917896105882144",
+            "attributes": {
+                "campaignId": "8343086999167541140",
+                "name": "My New Line Item 3",
+                "targetRetailerId": "18159942378514859684",
+                "startDate": "2021-07-10",
+                "endDate": "2021-07-14",
+                "budget": 1520.00,
+                "budgetSpent": 20.00,
+                "budgetRemaining": 1500.00,
+                "pacing": "accelerated",
+                "capping": {
+                    "type": "day",
+                    "type": "day",
+                    "count": 5
+                },
+                "page": {
+                    "pageType": "home",
+                    "categories": null,
+                    "searchKeywords": null
+                },
+                "status": "draft",
+                "createdAt": "2020-04-04T06:11:23+00:00",
+                "updatedAt": "2020-04-05T06:11:23+00:00",
+                "creativeId": "231059024123875072"
+            }
+        },
+        // ...
+        {
+            "type": "RetailMediaLineItem",
+            "id": "6854840188706902009",
+            "attributes": {
+                "campaignId": "8343086999167541140",
+                "name": "My New Line Item",
+                "targetRetailerId": "18159942378514859684",
+                "startDate": "2021-07-20",
+                "endDate": "2021-07-21",
+                "budget": 10.00,
+                "budgetSpent": null,
+                "budgetRemaining": null,
+                "pacing": "standard",
+                "capping": {
+                    "type": "day",
+                    "count": 5
+                },
+                "page": {
+                    "pageType": "home",
+                    "categories": null,
+                    "searchKeywords": null
+                },
+                "status": "draft",
+                "createdAt": "2020-04-06T06:11:23+00:00",
+                "updatedAt": "2020-04-06T06:11:23+00:00",
+                "creativeId": "231059024123875072"      
+            }
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 105,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 5,
+        "nextPage": "https://api.criteo.com/{version}/retail-media/campaigns/8343086999167541140/preferred-line-items?pageIndex=1&pageSize=25",
+        "previousPage": null
+    }
+}
+```
+
+# Get a Specific Onsite Display Line Item
+
+This endpoint retrieves the specified onsite display line item.
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+<CodeGroup>
+
+```text Text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{lineItemId}
+```
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+```json JSON
+{
+    "data": { 
+        "type": "RetailMediaLineItem",
+        "id": "2465695028166499188",
+        "attributes": {
+            "campaignId": "8343086999167541140",
+            "name": "My New Line Item",
+            "targetRetailerId": "18159942378514859684",
+            "startDate": "2021-07-20",
+            "endDate": "2021-07-21",
+            "budget": 10.00,
+            "budgetSpent": null,
+            "budgetRemaining": null,
+            "pacing": "standard",
+            "page": {
+                "pageType": "home",
+                "categories": null,
+                "searchKeywords": null
+            },
+            "capping": {
+                "type": "day",
+                "count": 5
+            },
+            "status": "draft",
+            "createdAt": "2020-04-06T06:11:23+00:00",
+            "updatedAt": "2020-04-06T06:11:23+00:00",
+            "creativeId": "231059024123875072"
+        }
+    }
+}
+```
+</CodeGroup>
+
+# Update a Specific Onsite Display Line Item
+
+This endpoint updates the specified onsite display line item.  In this example, we update the pacing status from `accelerated` to `standard`. Also note the draft state of the line item because products to be promoted have not yet been added.
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{lineItemId}
+```
+
+**Sample Request**
+
+```bash
+curl -X PUT "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaLineItem",
+                "id": "2465695028166499188",
+                "attributes": {
+                    "name": "My New Line Item",
+                    "targetRetailerId": "18159942378514859684",
+                    "startDate": "2021-07-20",
+                    "endDate": "2021-07-21",
+                    "budget": 10.00,
+                    "pacing": "standard",
+                    "page": {
+                        "pageType": "home",
+                        "categories": null,
+                        "searchKeywords": null
+                    },
+                    "capping": {
+                         "type": "day",
+                         "count": 5
+                    },
+                    "status": "paused",
+                    "creativeId": "231059024123875072"
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": { 
+        "type": "RetailMediaLineItem",
+        "id": "2465695028166499188",
+        "attributes": {
+            "name": "My New Line Item",
+            "targetRetailerId": "18159942378514859684",
+            "startDate": "2021-07-20",
+            "endDate": "2021-07-21",
+            "budget": 10.00,
+            "budgetSpent": null,
+            "budgetRemaining": null,
+            "page": {
+                "pageType": "home",
+                "categories": null,
+                "searchKeywords": null
+            },
+            "pacing": "standard",
+            "capping": {
+                "type": "day",
+                "count": 5
+            },
+            "status": "draft",
+            "createdAt": "2020-04-06T06:11:23+00:00",
+            "updatedAt": "2020-04-06T06:17:48+00:00",
+            "creativeId": "231059024123875072"
+        }
+    }
+}
+```

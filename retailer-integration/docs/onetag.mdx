@@ -1,5 +1,5 @@
 ---
-title: "Overview"
+title: OneTag for Retail Media Onsite
 ---
 
 <Info>
@@ -22,18 +22,12 @@ This approach is similar to [Direct Ad Server integration](/retailer-integration
 ## Process overview
 
 1. The user visits a page.
-
 2. Criteo's OneTag is triggered.
-
 3. The tag sends user interaction data (e.g., keywords or categories) to Criteo.
-
 4. If the page is set up to receive ads, Criteo runs an auction and returns:
-
    1. The winning IDs for sponsored products, and/or the creative images and rendering attributes for display ads.
    2. Tracking beacons for loads, views, and clicks.
-
 5. The Criteo JavaScript library injects the ads onto the page.
-
 6. Interaction data (loads, views, and clicks) are sent back to Criteo for tracking.
 
 ***
@@ -60,13 +54,11 @@ This approach is similar to [Direct Ad Server integration](/retailer-integration
 
 Add the following script to all pages in order to load your dedicated JavaScript library, ensuring you **populate the placeholder with your dedicated Criteo Partner ID**. Your dedicated library will be responsible for triggering the ad requests to Criteo and rendering the ads to your site's specific look at feel. Without the loader, tags cannot be triggered
 
-<CodeGroup>
-  ```bash bash
-  <!-- Criteo Loader File -->
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=##PartnerID##" async="true"></script>
-  <!-- END Criteo Loader File -->
-  ```
-</CodeGroup>
+```javascript
+<!-- Criteo Loader File -->
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=##PartnerID##" async="true"></script>
+<!-- END Criteo Loader File -->
+```
 
 ***
 
@@ -74,13 +66,54 @@ Add the following script to all pages in order to load your dedicated JavaScript
 
 These events should be set on all page types
 
-| Event                  | Key       | Example value          | Description                                                                                                                                                 | Required?                                                                          |
-| ---------------------- | --------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `setAccount`           | `account` | `12345`                | Criteo Account/Partner ID, provided by your technical contact.                                                                                              | Yes                                                                                |
-| `setRetailerVisitorId` | `id`      | `0193553C0A39937F23FC` | A unique, unauthenticated user ID valid for at least 30 days. Used to track visitor behavior across sessions. Typically retrieved via a first-party cookie. | Yes                                                                                |
-| `setCustomerId`        | `id`      | `1SDFJI435FH12HFK2`    | A consistent, internal ID for logged-in users, linked to accounts, purchase history, or membership programs.                                                | Highly recommended to improve x-device ROAS and enable in-store sales attribution. |
-| `setEmail`             | `email`   | `d9c37700(...)18be88`  | User’s email address in SHA256 hash format.                                                                                                                 | Highly recommended to improve offsite retargeting.                                 |
-| `setSiteType`          | `type`    | `d`                    | Device type: `d` for desktop, `m` for mobile, `t` for tablet.                                                                                               | No                                                                                 |
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Key</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>setAccount</code></td>
+      <td><code>account</code></td>
+      <td><code>12345</code></td>
+      <td>Criteo Account/Partner ID, provided by your technical contact.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>setRetailerVisitorId</code></td>
+      <td><code>id</code></td>
+      <td><code>0193553C0A39937F23FC</code></td>
+      <td>A unique, unauthenticated user ID valid for at least 30 days. Used to track visitor behavior across sessions. Typically retrieved via a first-party cookie.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>setCustomerId</code></td>
+      <td><code>id</code></td>
+      <td><code>1SDFJI435FH12HFK2</code></td>
+      <td>A consistent, internal ID for logged-in users, linked to accounts, purchase history, or membership programs.</td>
+      <td>Highly recommended to improve x-device ROAS and enable in-store sales attribution.</td>
+    </tr>
+    <tr>
+      <td><code>setEmail</code></td>
+      <td><code>email</code></td>
+      <td><code>d9c37700(...)18be88</code></td>
+      <td>User’s email address in SHA256 hash format.</td>
+      <td>Highly recommended to improve offsite retargeting.</td>
+    </tr>
+    <tr>
+      <td><code>setSiteType</code></td>
+      <td><code>type</code></td>
+      <td><code>d</code></td>
+      <td>Device type: <code>d</code> for desktop, <code>m</code> for mobile, <code>t</code> for tablet.</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -90,371 +123,702 @@ These events should be set on all page types
 
 When adding tags to the homepage, specify the universal events as well as the `viewHome` event and its associated parameters:
 
-| Event      | Parameter  | Example value                                                                              | Description                                             | Required?                                                                                                                                                                                                                                     |
-| ---------- | ---------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `viewHome` | `page_id`  | **EMEA:** `viewHomeDesktop` `viewHomeMobile`**AMER:** `viewHome_desktop` `viewHome_mobile` | Use standard page IDs unless otherwise specified.       | Yes                                                                                                                                                                                                                                           |
-| `viewHome` | `store_id` | `1537`                                                                                     | The ID of the specific store that the user is browsing. | Only pass this value if your product feed \[includes regiondata]\(tps\://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-datahttps\://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data. |
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Parameter</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>viewHome</code></td>
+      <td><code>page&#95;id</code></td>
+      <td><strong>EMEA:</strong><br /><code>viewHomeDesktop</code><br /><code>viewHomeMobile</code><br /><strong>AMER:</strong><br /><code>viewHome&#95;desktop</code><br /><code>viewHome&#95;mobile</code></td>
+      <td>Use standard page IDs unless otherwise specified.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewHome</code></td>
+      <td><code>store&#95;id</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed [includes regiondata](tps://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-datahttps://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data.</td>
+    </tr>
+  </tbody>
+</table>
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // Guest user ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // Logged-in user ID
-      { 
-        event: "setEmail", 
-        email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // Hashed email (SHA-256)
-      },
-      { event: "setSiteType", type: "d" }, // Device type
-      { 
-        event: "viewHome", 
-        page_id: "viewHomeDesktop", // Platform-specific page ID
-        store_id: "1537" // Store-specific ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // Guest user ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // Logged-in user ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // Hashed email (SHA-256)
+    },
+    { event: "setSiteType", type: "d" }, // Device type
+    { 
+      event: "viewHome", 
+      page_id: "viewHomeDesktop", // Platform-specific page ID
+      store_id: "1537" // Store-specific ID
+    }
+  );
+</script>
+```
+
+<br />
 
 ## Browse Page
 
-For all category or taxonomy browse pages displaying a grid/list of products, or if you display a tailored collection of products, specify in the tag the universal events as well as the `viewCategory` event and its associated parameters:
+For all category or taxonomy browse pages displaying a grid/list of products, or if you display a  
+tailored collection of products, specify in the tag the universal events as well as the `viewCategory` event and its associated parameters:
 
-| Event          | Parameter     | Example value                                                                                              | Description                                                                                                                                                                                                                                                                                                                                  | Required?                                                                                                                                              |
-| -------------- | ------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `viewCategory` | `page_id`     | **EMEA:** `viewCategoryDesktop` `viewCategoryMobile`**AMER:** `viewCategory_desktop` `viewCategory_mobile` | Use standard page IDs unless otherwise specified.                                                                                                                                                                                                                                                                                            | Yes                                                                                                                                                    |
-| `viewCategory` | `item`        | `["123","321","456"]`                                                                                      | IDs of the organic products shown, matching the IDs passed in the product feed. Used for deduplication.                                                                                                                                                                                                                                      | Required for ad de-duplication.Recommended for offsite targeting and audience building.                                                                |
-| `viewCategory` | `page_number` | `2`                                                                                                        | The page number that the user is browsing. Make sure to re-fire the tag as the user navigates through each page so that fresh ads can be requested and rendered.                                                                                                                                                                             | Recommended to vary ad selection as the user navigates the grid.                                                                                       |
-| `viewCategory` | `category`    | `"Men>Shoes>Slippers"` or `"21>45732>23568553"`                                                            | Category path, matching the `product_type_key` passed in the feed.                                                                                                                                                                                                                                                                           | Yes                                                                                                                                                    |
-| `viewCategory` | `filters`     | `{name: "brand", operator: "eq", value: "Nike"}`                                                           | Restricts ad response to specific attributes. Ensure these filter names and values match exactly what is [passed in the feed](https://developers.criteo.com/retailer-integration/docs/feed-parameters#filters). A list of accepted filter operators can be found [here](https://developers.criteo.com/retailer-integration/docs/filtering) . | Recommended to improve relevant advertising on filtered pages.                                                                                         |
-| `viewCategory` | `store_id`    | `1537`                                                                                                     | The ID of the specific store that the user is browsing.                                                                                                                                                                                                                                                                                      | Only pass this value if your product feed [includes regiondata](https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data) |
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Parameter</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>page&#95;id</code></td>
+      <td><strong>EMEA:</strong><br /><code>viewCategoryDesktop</code><br /><code>viewCategoryMobile</code><br /><strong>AMER:</strong><br /><code>viewCategory&#95;desktop</code><br /><code>viewCategory&#95;mobile</code></td>
+      <td>Use standard page IDs unless otherwise specified.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>item</code></td>
+      <td><code>["123","321","456"]</code></td>
+      <td>IDs of the organic products shown, matching the IDs passed in the product feed. Used for deduplication.</td>
+      <td>Required for ad de-duplication.<br />Recommended for offsite targeting and audience building.</td>
+    </tr>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>page&#95;number</code></td>
+      <td><code>2</code></td>
+      <td>The page number that the user is browsing. Make sure to re-fire the tag as the user navigates through each page so that fresh ads can be requested and rendered.</td>
+      <td>Recommended to vary ad selection as the user navigates the grid.</td>
+    </tr>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>category</code></td>
+      <td><code>"Men&gt;Shoes&gt;Slippers"</code> or <code>"21&gt;45732&gt;23568553"</code></td>
+      <td>Category path, matching the <code>product&#95;type&#95;key</code> passed in the feed.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>filters</code></td>
+      <td><code>&#123;name: "brand", operator: "eq", value: "Nike"&#125;</code></td>
+      <td>Restricts ad response to specific attributes. Ensure these filter names and values match exactly what is passed in the feed. A list of accepted filter operators can be found here .</td>
+      <td>Recommended to improve relevant advertising on filtered pages.</td>
+    </tr>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>store&#95;id</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed includes regiondata</td>
+    </tr>
+  </tbody>
+</table>
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
-      { event: "setEmail", email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" }, // User's SHA-256 hashed email
-      { event: "setSiteType", type: "d" }, // User's device type
-      { 
-        event: "viewCategory",
-        item: ["123", "321", "456"], // All organic products in order
-        page_id: "viewCategory_desktop", // Platform-specific page ID
-        page_number: "2", // Page number of the grid
-        category: "21>45732>23568553", // Category breadcrumb of the browse page
-        filters: [
-          {
-            name: "brand",
-            operator: "eq",
-            value: "Nike" // Filters set by the user
-          }
-          // Add a line for each filter set on the page
-        ],
-        store_id: "1537" // User's store ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { event: "setEmail", email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" }, // User's SHA-256 hashed email
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewCategory",
+      item: ["123", "321", "456"], // All organic products in order
+      page_id: "viewCategory_desktop", // Platform-specific page ID
+      page_number: "2", // Page number of the grid
+      category: "21>45732>23568553", // Category breadcrumb of the browse page
+      filters: [
+        {
+          name: "brand",
+          operator: "eq",
+          value: "Nike" // Filters set by the user
+        }
+        // Add a line for each filter set on the page
+      ],
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
 
 ## Merchandising page
 
-For all top-level category or taxonomy browse pages that do not display a listing of products, specify in the tag the universal events as well as the following additional parameters:
+For all top-level category or taxonomy browse pages that do not display a listing of products,  
+specify in the tag the universal events as well as the following additional parameters:
 
-| Event          | Parameter  | Example value                                                                                                                  | Description                                                               | Required?                                                                                                                                                                                                                                      |
-| -------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `viewCategory` | `page_id`  | **EMEA:** `viewMerchandisingDesktop` `viewMerchandisingMobile`**AMER:** `viewMerchandising_desktop` `viewMerchandising_mobile` | Use standard page IDs unless otherwise specified.                         | Yes                                                                                                                                                                                                                                            |
-| `viewCategory` | `item`     | `["None"]`                                                                                                                     | Enter this hardcoded value when there is no product grid on listing pages | No                                                                                                                                                                                                                                             |
-| `viewCategory` | `category` | `"Men"` or `"21"`                                                                                                              | Category path, matching the `product_type_key` passed in the feed.        | Yes                                                                                                                                                                                                                                            |
-| `viewCategory` | `store_id` | `1537`                                                                                                                         | The ID of the specific store that the user is browsing.                   | Only pass this value if your product feed \[includes regiondata]\(tps\://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-datahttps\://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data . |
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Parameter</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>page&#95;id</code></td>
+      <td><strong>EMEA:</strong><br /><code>viewMerchandisingDesktop</code><br /><code>viewMerchandisingMobile</code><br /><strong>AMER:</strong><br /><code>viewMerchandising&#95;desktop</code><br /><code>viewMerchandising&#95;mobile</code></td>
+      <td>Use standard page IDs unless otherwise specified.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>item</code></td>
+      <td><code>["None"]</code></td>
+      <td>Enter this hardcoded value when there is no product grid on listing pages</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>category</code></td>
+      <td><code>"Men"</code> or <code>"21"</code></td>
+      <td>Category path, matching the <code>product&#95;type&#95;key</code> passed in the feed.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewCategory</code></td>
+      <td><code>store&#95;id</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed [includes regiondata](tps://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-datahttps://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data .</td>
+    </tr>
+  </tbody>
+</table>
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
-      { 
-        event: "setEmail", 
-        email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
-      },
-      { event: "setSiteType", type: "d" }, // User's device type
-      { 
-        event: "viewCategory",
-        item: ["None"],
-        page_id: "viewMerchandising_desktop", // Platform-specific page ID
-        category: "21", // Category breadcrumb of the browse page
-        store_id: "1537" // User's store ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewCategory",
+      item: ["None"],
+      page_id: "viewMerchandising_desktop", // Platform-specific page ID
+      category: "21", // Category breadcrumb of the browse page
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
+
+<br />
 
 ## Search Page
 
 For all search result pages displaying a grid/listing of products, specify in the tag the universal events as well as the following additional parameters.
 
-| Event              | Parameter     | Example value                                                                                                              | Description                                                                                                                                                                                                                                                                                                                                   | Required?                                                                                                                                               |
-| ------------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `viewSearchResult` | `page_id`     | **EMEA:** `viewSearchResultDesktop` `viewSearchResultMobile`**AMER:** `viewSearchResult_desktop` `viewSearchResult_mobile` | Use standard page IDs unless otherwise specified.                                                                                                                                                                                                                                                                                             | Yes                                                                                                                                                     |
-| `viewSearchResult` | `item`        | `["123", "321", "456"]`                                                                                                    | IDs of the organic products shown, matching the IDs passed in the product feed. Used for deduplication.                                                                                                                                                                                                                                       | Required for ad de-duplication.Recommended for offsite targeting and audience building.                                                                 |
-| `viewSearchResult` | `page_number` | `2`                                                                                                                        | The page number that the user is browsing. Make sure to re-fire the tag as the user navigates through each page so that fresh ads can be requested and rendered.                                                                                                                                                                              | Recommended to vary ad selection as the user navigates the grid.                                                                                        |
-| `viewSearchResult` | `keywords`    | `running shoes`                                                                                                            | User-entered search term. If you perform a spell check internally before rendering results, please pass in the *corrected* keyword.                                                                                                                                                                                                           | Yes                                                                                                                                                     |
-| `viewSearchResult` | `filters`     | `{name: "brand", operator: "eq", value: "Nike"}`                                                                           | Restricts ad response to specific attributes. Ensure these filter names and values match exactly what is [passed in the feed](https://developers.criteo.com/retailer-integration/docs/feed-parameters#filters) . A list of accepted filter operators can be found [here](https://developers.criteo.com/retailer-integration/docs/filtering) . | Recommended to improve relevant advertising on filtered pages.                                                                                          |
-| `viewSearchResult` | `store_id`    | `1537`                                                                                                                     | The ID of the specific store that the user is browsing.                                                                                                                                                                                                                                                                                       | Only pass this value if your product feed [includes regiondata](https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data). |
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Parameter</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>page&#95;id</code></td>
+      <td><strong>EMEA:</strong><br /><code>viewSearchResultDesktop</code><br /><code>viewSearchResultMobile</code><br /><strong>AMER:</strong><br /><code>viewSearchResult&#95;desktop</code><br /><code>viewSearchResult&#95;mobile</code></td>
+      <td>Use standard page IDs unless otherwise specified.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>item</code></td>
+      <td><code>["123", "321", "456"]</code></td>
+      <td>IDs of the organic products shown, matching the IDs passed in the product feed. Used for deduplication.</td>
+      <td>Required for ad de-duplication.<br />Recommended for offsite targeting and audience building.</td>
+    </tr>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>page&#95;number</code></td>
+      <td><code>2</code></td>
+      <td>The page number that the user is browsing. Make sure to re-fire the tag as the user navigates through each page so that fresh ads can be requested and rendered.</td>
+      <td>Recommended to vary ad selection as the user navigates the grid.</td>
+    </tr>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>keywords</code></td>
+      <td><code>running shoes</code></td>
+      <td>User-entered search term. If you perform a spell check internally before rendering results, please pass in the &#95;corrected&#95; keyword.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>filters</code></td>
+      <td><code>&#123;name: "brand", operator: "eq", value: "Nike"&#125;</code></td>
+      <td>Restricts ad response to specific attributes. Ensure these filter names and values match exactly what is <a href="https://developers.criteo.com/retailer-integration/docs/feed-parameters#filters">passed in the feed</a> . A list of accepted filter operators can be found <a href="https://developers.criteo.com/retailer-integration/docs/filtering">here</a> .</td>
+      <td>Recommended to improve relevant advertising on filtered pages.</td>
+    </tr>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>store&#95;id</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed <a href="https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data">includes regiondata</a>.</td>
+    </tr>
+  </tbody>
+</table>
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
-      { 
-        event: "setEmail", 
-        email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
-      },
-      { event: "setSiteType", type: "d" }, // User's device type
-      { 
-        event: "viewSearchResult",
-        item: ["123", "321", "456"], // All organic products in order
-        page_id: "viewSearchResultMobile", // Platform-specific page ID
-        page_number: "2", // Page number of the grid
-        keywords: "running shoes", // User's entered keyword
-        filters: [
-          {
-            name: "brand",
-            operator: "eq",
-            value: "Nike" // Filters set by the user
-          }
-          // Add a line for each filter set on the page
-        ],
-        store_id: "1537" // User's store ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewSearchResult",
+      item: ["123", "321", "456"], // All organic products in order
+      page_id: "viewSearchResultMobile", // Platform-specific page ID
+      page_number: "2", // Page number of the grid
+      keywords: "running shoes", // User's entered keyword
+      filters: [
+        {
+          name: "brand",
+          operator: "eq",
+          value: "Nike" // Filters set by the user
+        }
+        // Add a line for each filter set on the page
+      ],
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
+
+<br />
 
 ## Null search result page
 
 For all search result pages not displaying any products, specify in the tag the universal events as well as the following additional parameters.
 
-| Key                | Parameter  | Example value                                                                                                                              | Description                                                                                                                         | Required?                                                                                                                                               |
-| ------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `viewSearchResult` | `page_id`  | **EMEA:** `viewNullSearchResultDesktop` `viewNullSearchResultMobile`**AMER:** `viewNullSearchResult_desktop` `viewNullSearchResult_mobile` | Use standard page IDs unless otherwise specified.                                                                                   | Yes                                                                                                                                                     |
-| `viewSearchResult` | `item`     | `["None"]`                                                                                                                                 | Enter this hardcoded value when there is no product grid on listing pages                                                           | No                                                                                                                                                      |
-| `viewSearchResult` | `keywords` | `jsdadfnuiwf`                                                                                                                              | User-entered search term. If you perform a spell check internally before rendering results, please pass in the *corrected* keyword. | Yes                                                                                                                                                     |
-| `viewSearchResult` | `store_id` | `1537`                                                                                                                                     | The ID of the specific store that the user is browsing.                                                                             | Only pass this value if your product feed [includes regiondata](https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data). |
+<table>
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th>Parameter</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>page&#95;id</code></td>
+      <td><strong>EMEA:</strong><br /><code>viewNullSearchResultDesktop</code><br /><code>viewNullSearchResultMobile</code><br /><strong>AMER:</strong><br /><code>viewNullSearchResult&#95;desktop</code><br /><code>viewNullSearchResult&#95;mobile</code></td>
+      <td>Use standard page IDs unless otherwise specified.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>item</code></td>
+      <td><code>["None"]</code></td>
+      <td>Enter this hardcoded value when there is no product grid on listing pages</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>keywords</code></td>
+      <td><code>jsdadfnuiwf</code></td>
+      <td>User-entered search term. If you perform a spell check internally before rendering results, please pass in the &#95;corrected&#95; keyword.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewSearchResult</code></td>
+      <td><code>store&#95;id</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed <a href="https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data">includes regiondata</a>.</td>
+    </tr>
+  </tbody>
+</table>
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
-      { 
-        event: "setEmail", 
-        email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
-      },
-      { event: "setSiteType", type: "d" }, // User's device type
-      { 
-        event: "viewSearchResult",
-        item: ["None"],
-        page_id: "viewNullSearchResultMobile", // Platform-specific page ID
-        keywords: "jsdadfnuiwf", // User's entered keyword
-        store_id: "1537" // User's store ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewSearchResult",
+      item: ["None"],
+      page_id: "viewNullSearchResultMobile", // Platform-specific page ID
+      keywords: "jsdadfnuiwf", // User's entered keyword
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
 
-## Product detail page
+<br />
 
-| Event      | Parameter      | Example value                                                                              | Description                                                                                                                    | Required?                                                                                                                                               |
-| ---------- | -------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `viewItem` | `page_id`      | **EMEA:** `viewItemDesktop` `viewItemMobile`**AMER:** `viewItem_desktop` `viewItem_mobile` | Use standard page IDs unless otherwise specified.                                                                              | Yes                                                                                                                                                     |
-| `viewItem` | `item`         | `1573236`                                                                                  | SKU ID of the currently visited product. Must match the value passed in the `id` column of the product feed.                   | Yes                                                                                                                                                     |
-| `viewItem` | `parent_item`  | `P64388324`                                                                                | The parent ID of the currently visited product. Must match the value passed in the `item_group_id` column of the product feed. | No                                                                                                                                                      |
-| `viewItem` | `price`        | `5.99`                                                                                     | The current unit price of the visited product, leveraged for real-time updates in Criteo's system.                             | Yes                                                                                                                                                     |
-| `viewItem` | `availability` | `1`                                                                                        | Product availability: `1` for in stock, `0` for out of stock.                                                                  | Yes                                                                                                                                                     |
-| `viewItem` | `store_id`     | `1537`                                                                                     | The ID of the specific store that the user is browsing.                                                                        | Only pass this value if your product feed [includes regiondata](https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data). |
+## Product Detail Page
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
-      { 
-        event: "setEmail", 
-        email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
-      },
-      { event: "setSiteType", type: "d" }, // User's device type
-      { 
-        event: "viewItem",
-        page_id: "viewItem_mobile", // Platform-specific page ID
-        item: "1573236", // Viewed item's SKU ID
-        parent_item: "P64388324", // Viewed item's parent ID
-        price: "5.99", // Viewed item's current unitary price
-        availability: "1", // Viewed item's availability status
-        store_id: "1537" // User's store ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Parameter</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>viewItem</code></td>
+      <td><code>page&#95;id</code></td>
+      <td><strong>EMEA:</strong><br /><code>viewItemDesktop</code><br /><code>viewItemMobile</code><br /><strong>AMER:</strong><br /><code>viewItem&#95;desktop</code><br /><code>viewItem&#95;mobile</code></td>
+      <td>Use standard page IDs unless otherwise specified.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewItem</code></td>
+      <td><code>item</code></td>
+      <td><code>1573236</code></td>
+      <td>SKU ID of the currently visited product. Must match the value passed in the <code>id</code> column of the product feed.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewItem</code></td>
+      <td><code>parent&#95;item</code></td>
+      <td><code>P64388324</code></td>
+      <td>The parent ID of the currently visited product. Must match the value passed in the <code>item&#95;group&#95;id</code> column of the product feed.</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>viewItem</code></td>
+      <td><code>price</code></td>
+      <td><code>5.99</code></td>
+      <td>The current unit price of the visited product, leveraged for real-time updates in Criteo's system.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewItem</code></td>
+      <td><code>availability</code></td>
+      <td><code>1</code></td>
+      <td>Product availability: <code>1</code> for in stock, <code>0</code> for out of stock.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>viewItem</code></td>
+      <td><code>store&#95;id</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed <a href="https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data">includes regiondata</a>.</td>
+    </tr>
+    <tr>
+      <td><code>viewItem</code></td>
+      <td><code>category</code></td>
+      <td><code>123&gt;4567&gt;89012</code></td>
+      <td>Category path, matching the `product&#95;type&#95;key passed in the feed. If not passed, Criteo defaults to the primary taxonomy of the SKU in the item parameter.</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table>
+
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewItem",
+      page_id: "viewItem_mobile", // Platform-specific page ID
+      item: "1573236", // Viewed item's SKU ID
+      parent_item: "P64388324", // Viewed item's parent ID
+      price: "5.99", // Viewed item's current unitary price
+      availability: "1", // Viewed item's availability status
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
+
+<br />
 
 ## Add-to-cart event
 
-| Event       | Parameter  | Example value                                        | Description                                                                                                                                                               | Required?                                                                                                                                               |
-| ----------- | ---------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `addToCart` | `page_id`  | Use the same `page_id` of where the event took place | This is not a page view, but rather an event that takes place after the page has been loaded. For that reason, the page\_id remains unchanged from the initial page load. | Yes                                                                                                                                                     |
-| `addToCart` | `item`     | `[{id:"123", price:3.99, quantity:3}]`               | A product array for the SKU added to the basket with ID, **unit**price, and quantity. IDs must match the `id` column of the product feed.                                 | Yes                                                                                                                                                     |
-| `addToCart` | `store_id` | `1537`                                               | The ID of the specific store that the user is browsing.                                                                                                                   | Only pass this value if your product feed [includes regiondata](https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data). |
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Parameter</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>addToCart</code></td>
+      <td><code>page&#95;id</code></td>
+      <td>Use the same <code>page&#95;id</code> of where the event took place</td>
+      <td>This is not a page view, but rather an event that takes place after the page has been loaded. For that reason, the page&#95;id remains unchanged from the initial page load.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>addToCart</code></td>
+      <td><code>item</code></td>
+      <td><code>[&#123;id:"123", price:3.99, quantity:3&#125;]</code></td>
+      <td>A product array for the SKU added to the basket with ID, <strong>unit</strong>price, and quantity. IDs must match the <code>id</code> column of the product feed.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>addToCart</code></td>
+      <td><code>store&#95;id</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed <a href="/retailer-integration/docs/feed-parameters#regional-data">includes regiondata</a>.</td>
+    </tr>
+  </tbody>
+</table>
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
-      { 
-        event: "setEmail", 
-        email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
-      },
-      { event: "setSiteType", type: "d" }, // User's device type
-      { 
-        event: "addToCart",
-        page_id: "viewSearchResult_desktop", // Platform-specific page ID
-        item: [
-          {
-            id: "123", // Added product's ID
-            price: "3.99", // Added product's unitary price
-            quantity: "3" // Quantity of product added to cart
-          }
-        ],
-        store_id: "1537" // User's store ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "addToCart",
+      page_id: "viewSearchResult_desktop", // Platform-specific page ID
+      item: [
+        {
+          id: "123", // Added product's ID
+          price: "3.99", // Added product's unitary price
+          quantity: "3" // Quantity of product added to cart
+        }
+      ],
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
+
+<br />
 
 ## Basket page
 
-| Parameter  | Event        | Example value                                                                                      | Description                                                                                                                  | Required?                                                                                                                                               |
-| ---------- | ------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `page_id`  | `viewBasket` | **EMEA:** `viewBasketDesktop` `viewBasketMobile`**AMER:** `viewBasket_desktop` `viewBasket_mobile` | Use standard page IDs unless otherwise specified.                                                                            | Yes                                                                                                                                                     |
-| `item`     | `viewBasket` | If empty: `["None"]`If populated: `[{id:"123", price:3.99, quantity:3}]`                           | An array of products in the basket with ID, **unit**price, and quantity. IDs must match the `id` column of the product feed. | Yes                                                                                                                                                     |
-| `store_id` | `viewBasket` | `1537`                                                                                             | The ID of the specific store that the user is browsing.                                                                      | Only pass this value if your product feed [includes regiondata](https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data). |
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Event</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>page&#95;id</code></td>
+      <td><code>viewBasket</code></td>
+      <td><strong>EMEA:</strong><br /><code>viewBasketDesktop</code><br /><code>viewBasketMobile</code><br /><strong>AMER:</strong><br /><code>viewBasket&#95;desktop</code><br /><code>viewBasket&#95;mobile</code></td>
+      <td>Use standard page IDs unless otherwise specified.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>item</code></td>
+      <td><code>viewBasket</code></td>
+      <td>If empty: <code>["None"]</code><br />If populated: <code>[&#123;id:"123", price:3.99, quantity:3&#125;]</code></td>
+      <td>An array of products in the basket with ID, <strong>unit</strong>price, and quantity. IDs must match the <code>id</code> column of the product feed.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>store&#95;id</code></td>
+      <td><code>viewBasket</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed <a href="https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data">includes regiondata</a>.</td>
+    </tr>
+  </tbody>
+</table>
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
-      { 
-        event: "setEmail", 
-        email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
-      },
-      { event: "setSiteType", type: "d" }, // User's device type
-      { 
-        event: "viewBasket",
-        page_id: "viewBasketMobile", // Platform-specific page ID
-        item: [
-          {
-            id: "123", // Product's ID
-            price: "3.99", // Product's unitary price
-            quantity: "3" // Quantity of the product in the cart
-          }
-          // Add an object for each product in the cart
-        ],
-        store_id: "1537" // User's store ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewBasket",
+      page_id: "viewBasketMobile", // Platform-specific page ID
+      item: [
+        {
+          id: "123", // Product's ID
+          price: "3.99", // Product's unitary price
+          quantity: "3" // Quantity of the product in the cart
+        }
+        // Add an object for each product in the cart
+      ],
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
+
+<br />
 
 ## Order confirmation page
 
-| Event              | Parameter  | Example value                                                                                                              | Description                                                                                                                  | Required?                                                                                                                                               |
-| ------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `trackTransaction` | `page_id`  | **EMEA:** `trackTransactionDesktop` `trackTransactionMobile`**AMER:** `trackTransaction_desktop` `trackTransaction_mobile` | Use standard page IDs unless otherwise specified.                                                                            | Yes                                                                                                                                                     |
-| `trackTransaction` | `id`       | `51852389`                                                                                                                 | The unique order/transaction ID of the completed purchase                                                                    | Yes                                                                                                                                                     |
-| `trackTransaction` | `item`     | `[{id:"123", price:3.99, quantity:3}]`                                                                                     | An array of products in the order with ID, **unit** price, and quantity. IDs must match the `id` column of the product feed. | Yes                                                                                                                                                     |
-| `trackTransaction` | `store_id` | `1537`                                                                                                                     | The ID of the specific store that the user is browsing.                                                                      | Only pass this value if your product feed [includes regiondata](https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data). |
+<table>
+  <thead>
+    <tr>
+      <th>Event</th>
+      <th>Parameter</th>
+      <th>Example value</th>
+      <th>Description</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>trackTransaction</code></td>
+      <td><code>page&#95;id</code></td>
+      <td><strong>EMEA:</strong><br /><code>trackTransactionDesktop</code><br /><code>trackTransactionMobile</code><br /><strong>AMER:</strong><br /><code>trackTransaction&#95;desktop</code><br /><code>trackTransaction&#95;mobile</code></td>
+      <td>Use standard page IDs unless otherwise specified.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>trackTransaction</code></td>
+      <td><code>id</code></td>
+      <td><code>51852389</code></td>
+      <td>The unique order/transaction ID of the completed purchase</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>trackTransaction</code></td>
+      <td><code>item</code></td>
+      <td><code>[&#123;id:"123", price:3.99, quantity:3&#125;]</code></td>
+      <td>An array of products in the order with ID, <strong>unit</strong> price, and quantity. IDs must match the <code>id</code> column of the product feed.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>trackTransaction</code></td>
+      <td><code>store&#95;id</code></td>
+      <td><code>1537</code></td>
+      <td>The ID of the specific store that the user is browsing.</td>
+      <td>Only pass this value if your product feed <a href="https://developers.criteo.com/retailer-integration/docs/feed-parameters#regional-data">includes regiondata</a>.</td>
+    </tr>
+  </tbody>
+</table>
 
-<CodeGroup>
-  ```bash bash
-  <script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
-  <script type="text/javascript">
-    window.criteo_q = window.criteo_q || [];
-    window.criteo_q.push(
-      { event: "setAccount", account: "12345" }, // Your partner ID
-      { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
-      { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
-      { 
-        event: "setEmail", 
-        email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
-      },
-      { event: "setSiteType", type: "d" }, // User's device type
-      { 
-        event: "trackTransaction",
-        page_id: "trackTransaction_mobile", // Platform-specific page ID
-        id: "51852389", // User's unique order ID
-        item: [
-          {
-            id: "123", // Purchased product's ID
-            price: "3.99", // Purchased product's unitary price
-            quantity: "3" // Quantity of the product purchased
-          }
-          // Add an object for each product in the order
-        ],
-        store_id: "1537" // User's store ID
-      }
-    );
-  </script>
-  ```
-</CodeGroup>
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "trackTransaction",
+      page_id: "trackTransaction_mobile", // Platform-specific page ID
+      id: "51852389", // User's unique order ID
+      item: [
+        {
+          id: "123", // Purchased product's ID
+          price: "3.99", // Purchased product's unitary price
+          quantity: "3" // Quantity of the product purchased
+        }
+        // Add an object for each product in the order
+      ],
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
+<Danger>
+  **SEND FEEDBACK CUSTOM COMPONENT**
+</Danger>
+## What's next
 
-***
-
-What’s Next
-
-* [OneTag for existing CMS retailer](/retailer-integration/docs/onetag)
+* [OneTag for existing CMS retailer](/retailer-integration/docs/onetag-for-existing-cms-retailer)
 * [OneTag for Offsite](/retailer-integration/docs/onetag-for-offsite)

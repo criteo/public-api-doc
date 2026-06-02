@@ -1,0 +1,157 @@
+---
+title: API 응답 구조
+description: This is a translated version of the Commerce Onsite Video documentation
+hidden: true
+---
+
+## 응답 요소
+
+모든 포맷은 아래에 설명된 동일한 API 응답 구조를 가집니다.
+
+### `상태`
+
+유형: `문자열`
+
+값: `OK`(성공적인 응답의 경우) 또는 오류 유형.
+
+오류가 발생한 경우 해당 오류 메시지 목록이 포함된 배열이 응답에 추가됩니다(예: `Missing required parameter x`).
+
+***
+
+### `배치`
+
+유형: `배치 객체의 배열`
+
+각 배치 이름은 키로 사용됩니다(예: `viewCategory_API_desktop-Video`).
+
+각 키의 값은 광고의 배열입니다. 각 광고에는 다음과 같은 속성이 있습니다.
+
+* **`format`**: 반환되는 포맷을 나타냅니다.
+
+* **`products`**: 광고 포맷에 포함되는 SKU 목록과 각 SKU에 대한 추가 메타데이터(이미지, 제품 URL, 상위 SKU ID 등)입니다.<br/>
+
+* **`products_order`**: SKU의 재고 여부에 따라 일부 실시간 제품 대체가 허용됩니다:<br/>
+
+  * **`products`**: 제품 ID의 배열입니다. 크리테오에서 반품되는 제품의 순서는 사이트에 표시된 SKU의 순서와 일치해야 합니다. 단, SKU가 없거나 재고가 없는 경우는 예외입니다.<br/>
+  * **`isMandatory`**: 참(true)인 경우, 해당 제품이 없는 경우 전체 광고 단위는 표시되면 **않됩니다**. 거짓(false)인 경우 광고는 표시될 수 있지만, 버튼/제품 타일은 해당 광고 단위에서 제거되어야 합니다.
+
+***
+
+### `렌더링`
+
+* **`rendering`**: 이미지 애셋, 색상, 사용자 정의 라벨을 포함해 광고를 렌더링할 때 사용하는 포맷별 속성입니다.
+
+<Warning>
+  렌더링 섹션의 모든 비디오 파라미터는 **비디오 포맷을 렌더링하는 데 사용해서는 안 됩니다.** 자세한 내용은 [아래 표](/retailer-integration/docs/api-response-structure#rendering-fields)를 참조하세요.
+
+  크리테오는 향후 언제든지 이러한 비디오 값을 삭제할 권리가 있습니다.
+</Warning>
+
+<Info>
+  **비디오 포맷**
+
+  렌더링 기능에 대한 자세한 내용은 [포맷 사양](/retailer-integration/docs/format-overview)(광고 렌더링 섹션)을 참조하세요. 이 섹션에서 [Commerce Video Spotlight 사양](/retailer-integration/docs/commerce-video-spotlight)도 찾을 수 있습니다.
+</Info>
+
+아래 설명된 `TagVideoVAST` 필드를 참조하세요.
+
+***
+
+### `TAGVideoVAST`
+
+* **`TagVideoVAST`**또는 **`XmlVideoVAST`:**
+  * **`TagVideoVAST`** *(기본값)* **:** VAST를 지원하는 비디오 플레이어를 통해 VAST XML을 로드하는 URL입니다.
+  * **`XmlVideoVAST`** *(유통사가 VAST 정의를 가져오기 위해 추가 API 호출을 하지 않는 경우)*: VAST 표준을 지원하는 비디오 플레이어를 제공하는 VAST XML입니다.
+
+* **`OnViewBeacon`,`OnLoadBeacon`, `OnClickBeacon` 등**: 특정 조치가 취해질 때 크리테오로 트리거/실행되는 비콘입니다. 자세한 내용은 해당 섹션을 참조하세요.
+
+***
+
+## 예
+
+![API 응답 구조 보기](https://files.readme.io/6da8237-image.png)
+
+<br />
+
+### 제품 비콘
+
+```json
+{
+  "OnViewBeacon": "//b.us5.us.criteo.com/rm?rm_e=s8ly6TMLiDfPTKFfXm_9jzkwZuAATAS9FwGwUZ5NvnDY6LnNvBC-8AFQtntlkS50apl_jVhQvRg0-u3hWpur4RF0HikgBSOlggUUkzoK6gg9E7yC-eas9rFlwoxTuvObWpo4Yv0uedvzqBKRk-BQgcCsPHzIURbtCi_Uf5InvFyWoUkbah_XRajDvrj7oLrV-RjcYeixGYTcBoi89hqLhak5FB7_2zPWNAZMVPUCw23MNX4t0OC70fDyIL68g7RUGtBtrVvbMkMafb30uMp_L1WlmSeGHdM-EP6aUYjKRS0VBwwZkaVStkauo1XrT5-dwiyB8zm2AlAVk0AwGMNdmFlCBac-MQWycvgjgOWm-p7cGLVi5Fq3gIrUGVI5Jqq&ev=4",
+  "OnClickBeacon": "//b.us5.us.criteo.com/rm?rm_e=MrPLtLUJfBxGX1zJk2imKaKpINZcbhVh4D9KELEKwSgdZe8-YiW50o4eQvi4SQGyvk-qeuvO1GZCJkmhfpBHJYoxcNaFwMFqtBLjax-lgCevbaCxmjOQjxqFgBXAG0CAvZx4klriBNrRrVXKIk2NI8-jpplFURhS_hDuGcMgUICraKi4wi7x958r0VNKA7iE6f-N2yyQWLlILI4yNFgqZPp_0sP-b2ks72ZdxeiJQbDko0FVMJYPClVooJPRXBWJjOvph2OOrZyh0tY4LwGp6D2p8W_rD_5HN94RR5Cewl8ojB6WFjoq_PAaJGPptLjEUV9kx-EUMFhve6vGfAlHeJ7P-ILh44mp8nOKyIsoLSIwR9HYhghChXJ4M-3EVAs&ev=4",
+  "OnBasketChangeBeacon": "//b.us5.us.criteo.com/rm?rm_e=mlh4P3Tin3uct-JUxYugi37w__lZ0FOoCZ06TrhlXtQKc2faGpFFiK6g4zKwyFmd2NwXBMhVZGVtFK5T9e9KvdteZRrqZxcVW08Y9i8ecjt9m1DbEQunU8uMblAIF8yZ3bqjt71Niurwrzm-iiF-B2av8zEd0lj-Lt5AGeX1dgyP3jJdO-5Ddmw6-H5L9JTAksWT8QWbKoVwOQtwYU8r2M4yzpCGGvcvvwu6QdoC_GCfazwEsIRt446HA0AVqOwss26id8ZDjTSrwbOjSVMu5JS92mGU_3wR3Fyb2w5M8AJcLUlIXTD8oaLc9CFyAQQrbkurtKsHFPfNWRyuZOxnZr0FgSgRvHIi55eP-yr5usr4of31iaYPQvKrdTbGiEX&ev=4",
+  "OnWishlistBeacon": "//b.us5.us.criteo.com/rm?rm_e=F--9mZ6kqtpHdJjjowDoZJixm4BjF12sLm6qFd0fCcnunZ1oT-owxZowTezzt4Je3Q7MQiLTAyZNVlB7v-feDJHnczt4q-f43SEE67RxRFL-PWGl4jCW7F7CKBZ5WNMxBmU0eC4d88xec7diCgp-Ifhgs-Qp135jF8-BrQ7kVj9RlRan2QTtLKxCXTytdydHRhwaAsdCyOA-VStX4ZNRI297WGRTXfRepsCLAr6E5DTDdoccag4lx5v_LSUNO82i0D11y5O3xqs1QSKCIANY802UBDPdV89lEqbofgL1Gp7CYd0OSxM_545fzsFVA2RWG4ufFDIF71aXrbKhZuRencstNQ8xMWH0KMKACEk7DQWE9WObogGMEaoSf8t664O&ev=4"
+}
+```
+
+***
+
+### 배치 / 포맷 비콘
+
+배치 및 포맷 비콘은 일반적으로 `TagVideoVAST` 바로 아래에 있습니다.
+
+```json
+{
+  "OnLoadBeacon": "//b.us5.us.criteo.com/rm?rm_e=OvODs4ECUFFfQHTXDM5FiIOKZruyseTgpUr_Xt4DVTUPBoNNtG8VsH3Jo21jPK_hMV6-9I89Az0ZP2H8yslVjFaeW_HqR0Tee4gUCZ-aJMGxpkz2bjGguRcAv-jd9ocPs2HOgk24DtDHJ_D4MJJ1b0I2bILdRCp2AyfGmrj1acfyvMqngJeS4eWiDOYOkNTaYmd0uIo3bAcGObFt4DALVQE-AJXUhBjo3lyY6Kcn7n6xS1bAkK_kqT6sBtSk2KRmX_dPNKucLowpkgsRwpr-XgfcmV1VVvkCH8uXbmYbEPTQVE103_4r7zHgvpZaiU8qbROlMwCHVqvx-aY1tNuDKa0uwoqyCm6JHC2yTo06XfnqZhJphbc50hjGbPZHa24ZAdMq7bBr3G9YpxycnMQ_B-7zyNFQeSNH_M_pYAgIvo6eXjgAYA376LoJostZTGhmEEKUvgrY-7hbU_ezG5D2_BCA7Yh2xkDQHmERLd4FgWyUxcSlkksvUmIlpd1S5-b&ev=4",
+  "OnViewBeacon": "//b.us5.us.criteo.com/rm?rm_e=qjke4FNkDL1z46EuOhojBxciTQ6Xp09cJDentgGUVT0kah-rPIHg9DUOFugsUOiCrUvFnJtuj5yYXehZp5-Ryvzf5WLl9gmin_wz4ekX7Fu_ePZKpnpNgyBBR-1Jjuqzdvkq6aIktA4r5HGzyyPF9TQDrrhYgmldAW8QYjfTk6WiI7jlZmUZnIvVah3HJi4I6QzTCTTwRXBJrFNYgJKgt2M419DkJA1UyGsnCmld5E-q4Ms3znTBEIF4fgVj6ExNAM1O_HgmgcKrDYCpo9ZVkd037dHoDiYiZVfmymlSIcubD73ZB_sBl20rsUxIujMsbLt3jliMFEthtJ8oZ3mL5Ax2HwOA2Qm58M0InNlmQf88ulFpw_IWYI6iklgleE3GrvqHb-eNj7Fg77qvKRYrHmE1gLF66WVjyactaWqP0RsIpqcAGlrjHTI7I_lQxE6&ev=4",
+  "OnClickBeacon": "//b.us5.us.criteo.com/rm?rm_e=xt13W_TJWbSrXdNa2RG3qhZiHotcnySWD0gLaHC_PbIZyrh_V_zxUVBnIP66uaFp58Y8R0Q6ALpYjkAac-2iecIRrcEVriwqPrGkjbDFHjBsGPD4q0JTEH1mZrp2oMndYCXQEOQjAzDIBR4e52DU-koOXViZcXi9_S-bLmQA_PFop4u0ilGtfJ2AJeCOtwyNnluCwE3INkF1AEN4HqMnOgtiHcm00o9DojZemXKd_B-4bRl3eRmFR_s0jVRjwbAYHegtP7WKujHi5iRiBYogpOpVhMCkg3DciZZpza9IcBxsQVgEonlADyJYzUtvEzMZpzBE1_x6NyjUPECJUSHrxvzSI7UKgPwSukP5sCvSxY6AFqTIXXHCXKjJKFH2uQwsvi0VtHobEv_c13tm3QaIg&ev=4",
+  "OnFileClickBeacon": "//b.us5.us.criteo.com/rm?rm_e=3wgFCc5lMY0fItQj4jiSm37070kK2zoFJlbFRWEZd3CB9_0DjnEp1Iq7Q1xG5mTffdi1SAarVTiAILArYOPRbbyiJ3eB_t4Y29BWqAhUbIrP6nAFT0W2DxVbOdlRLFYoISPpbV-EhVsA-oh9kXPKSk53p7w1MZAm9LS45SVZ_tZQh7-SPz2MLF4hoJGteus6hkWyfsVbgTym2gpu7JobVmaFLGrc8CyymYkfH5Xf1JKiGeNa2ZPsQtZxpnt1Dzl4Bm_BAfKYjQZnOCyWt6peHIN-azNeYwe34M9H85x1SWn5y_PKpIQZYiB_1YvdBac2VSrkBqO6SO1OgB2NiveM923Ew4Npm2rgUYUZ5bjvgL3KufQJK4FucRbvjAxEQJS&ev=4",
+  "OnBundleBasketChangeBeacon": "//b.us5.us.criteo.com/rm?rm_e=FSx1IlEiuPZ8UZ6-SLMpMc_icIPoxT57Ozjvievjn-9la70L5yC5VtSagxSUpBlat4BEQLu8hrqXDcNY8kUTLylv7fdvT2B7x-NkYCfYEGZZj1lJdRLhQxckVsgIk-PyjILwpnwEODcV1wvMmXnFH5ttrA5iSp847tgW-2fvZxS1w7YX30tbLYvAmZTvJxPnOXKPcmwnJz3BJ6d8CMLgdVoJN67AtgRKTpkb1s0eYk-ANM_gv7cgtEME2142W8vlv6-NayvCwGvw_CtH-OWVZoEJ52TJMMbj3Aa6jPHBRgw9P-LVsFWY3f_kxauVNl7mHTAyVvajrcPeYl7_8ygq6hFtqm9IBryXB8iMctEXDronoGT-VHfrAqet9nVvPYMyATWjm-X21M88YLAGoaDuQ&ev=4"
+}
+```
+
+***
+
+## 렌더링 필드
+
+다음은 API 응답에서 필드를 렌더링하는 예입니다.
+
+```json
+{
+  "rendering": {
+    "background_video": "{\n  \"url\": \"https://static.criteo.net/design/dt/commerce_max/retailer_06/d97eb13b8e3d496eaddef7b4c998d286_video.mp4\",\n  \"width\": 720,\n  \"height\": 1280,\n  \"duration\": \"00:00:06\"\n}",
+    "video_caption_file": "https://static.criteo.net/video/onsite_cc/laptop_vertical.vtt",
+    "video_alt_text": "Laptop",
+    "border_color": "#712329",
+    "video_optional_redirect_url": "https://www.retailer.com/shop/search-results.html?q=laptop",
+    "video_optional_redirect_url_app": "",
+    "video_media_files": "[\"background_video\"]"
+  }
+}
+```
+
+아래는 페이지 내에서 포맷을 렌더링하기 위한 API 응답 필드에 대한 설명입니다.
+
+<Warning>
+  이러한 필드는 비디오 포맷에 따라 변경될 수 있습니다.
+</Warning>
+
+<table>
+  <thead>
+    <tr>
+      <th>필드</th>
+      <th>설명</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>video&#95;background</code> (이 필드 내의 모든 정보 포함)</td>
+      <td><strong>이 필드는 사용하지 마십시오.</strong> 크리테오 전용입니다. 모든 비디오 관련 정보, 애셋 및 트래킹은 VAST XML에서만 사용해야 합니다.</td>
+    </tr>
+    <tr>
+      <td><code>video&#95;caption&#95;file</code></td>
+      <td>비디오 캡션 파일(WebVTT)</td>
+    </tr>
+    <tr>
+      <td><code>video&#95;optional&#95;redirect&#95;url</code> <code>video&#95;optional&#95;redirect&#95;url&#95;app</code></td>
+      <td><strong>이 필드는 사용하지 마십시오.</strong> 크리테오 전용입니다</td>
+    </tr>
+  </tbody>
+</table>
+## What's next
+
+* [Video Player Specification (Korean)](/retailer-integration/docs/video-player-specification-korean)
+* [Tracking Ad-related Activity (Korean)](/retailer-integration/docs/tracking-ad-related-activity-korean)
+* [Video player implementation (desktop/mobile) (Korean)](/retailer-integration/docs/video-player-implementation-desktopmobile-korean)
+* [Video player implementation (App: Android)(Korean)](/retailer-integration/docs/video-player-implementation-app-androidkorean)
+* [Video player implementation (App: iOS)(Korean)](/retailer-integration/docs/video-player-implementation-app-ioskorean)

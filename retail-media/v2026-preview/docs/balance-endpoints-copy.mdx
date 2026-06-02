@@ -1,0 +1,656 @@
+---
+title: Balance Endpoints (COPY)
+hidden: true
+---
+
+<Note>
+  ### A FEW THINGS TO KNOW
+
+  Learn more about campaign management with our API [**here**](/retail-media/v2026-preview/docs/balances)!
+</Note>
+
+## **Endpoints**
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/balances</code></td>
+      <td>Get All Balances</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/balances/&#123;balanceId&#125;/campaigns</code></td>
+      <td>Get All Campaigns on a Specific Balance</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/balances/&#123;balanceId&#125;/campaigns/append</code></td>
+      <td>Add Campaigns to a Specific Balance</td>
+    </tr>
+    <tr>
+      <td><strong>DELETE</strong></td>
+      <td><code>/balances/&#123;balanceId&#125;/campaigns</code></td>
+      <td>Remove Campaigns from a Specific Balance</td>
+    </tr>
+  </tbody>
+</table>
+
+  
+
+## **Request Body Parameters**
+
+#### `id` Required for POST requests
+
+- **Data Type:** string
+
+**Description:** Campaign ID to which balance should be appended or deleted from
+- **Values:** int64
+
+## **Balance Response Attributes**
+
+#### `id`
+
+- **Data Type:** string
+- **Values:** int64
+
+**Description:** Balance ID
+
+#### `name`
+
+- **Data Type:** string
+- **Values:** -
+
+**Description:** Balance name
+
+#### `poNumber`
+
+- **Data Type:** string
+- **Values:** -
+
+**Description:** Purchase order number
+
+#### `deposited`
+
+- **Data Type:** number
+- **Values:** -
+
+**Description:** Amount of funds deposited, uncapped if `null`
+
+#### `spent`
+
+- **Data Type:** number
+- **Values:** Amount of funds already spent
+
+**Description:** Amount of funds already spent
+
+#### `remaining`
+
+- **Data Type:** number
+- **Values:** between 0 and `deposited`
+
+**Description:** Amount of funds remaining until cap is hit, `null` if not set
+
+#### `startDate`
+
+- **Data Type:** date
+- **Values:** YYYY-MM-DD
+
+**Description:** Balance start date in the [account](/retail-media/docs/accounts-endpoints) timeZone if not set
+
+#### `endDate`
+
+- **Data Type:** date
+- **Values:** YYYY-MM-DD
+
+**Description:** Balance end date in the [account](/retail-media/docs/accounts-endpoints) timeZone available indefinitely if `null`
+
+#### `status`
+
+- **Data Type:** enum
+- **Values:** `active`, `scheduled`, `ended`
+
+**Description:** Balance status
+
+#### `createdAt`
+
+- **Data Type:** timestamp
+- **Values:** ISO-8601
+
+**Description:** Timestamp in UTC of balance creation
+
+#### `updatedAt`
+
+- **Data Type:** timestamp
+- **Values:** ISO-8601
+
+**Description:** Timestamp in UTC of balance updated
+
+ 
+
+## **Get All Balances**
+
+This endpoint lists all balances in an account.  Response results will be provided in paginated form.
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/balances
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/preview/retail-media/accounts/18446744073709551616/balances" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/preview/retail-media/accounts/4/balances"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts/4/balances")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts/4/balances');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaBalance",
+            "id": "14094543095747588032",
+            "attributes": {
+                "name": "Balance 123",
+                "poNumber": "13993827",
+                "memo": "uncapped balance, free to spend!",
+                "deposited": null,
+                "spent": 42931.28,
+                "remaining": null,
+                "startDate": "2020-04-06",
+                "endDate": null,
+                "status": "active",
+                "createdAt": "2020-04-06T00:02:41+00:00",
+                "updatedAt": "2020-04-06T00:02:41+00:00"    
+            }
+        },
+ 
+        // ...
+ 
+        {
+            "type": "RetailMediaBalance",
+            "id": "4237496305219757554",
+            "attributes": {
+                "name": "Balance 789",
+                "poNumber": null,
+                "memo": "10k for the special 2s-day promotion",
+                "deposited": 10000.00,
+                "spent": 0.00,
+                "remaining": 10000.00,
+                "startDate": "2025-02-22",
+                "endDate": null,
+                "status": "scheduled",
+                "createdAt": "2020-04-06T00:48:11+00:00",
+                "updatedAt": "2020-04-07T22:19:57+00:00"
+            }
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 3,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 1,
+        "nextPage": null,
+        "previousPage": null
+    }
+}
+```
+
+## **Add Campaigns to a Specific Balance**
+
+This endpoint adds one or more campaigns to the specified balance.  The resulting state of the balance is returned as a single page.  In this example, a campaign had already existed on the balance before two new additions.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media//balances/{balanceId}/campaigns/append
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/preview/retail-media/balances/14094543095747588032/campaigns/append" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": [
+                {
+                    "type": "RetailMediaCampaign",
+                    "id": "3683145960016759663"
+                },
+                {
+                    "type": "RetailMediaCampaign",
+                    "id": "16108177282234788969"
+                }
+            ]
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/preview/retail-media/balances/13/campaigns/append"
+
+payload = json.dumps({
+  "data": [
+    {
+      "id": "1280",
+      "type": "RetailMediaCampaign"
+    }
+  ]
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": [\n    {\n      \"id\": \"1280\",\n      \"type\": \"RetailMediaCampaign\"\n    }\n  ]\n}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/balances/13/campaigns/append")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/balances/13/campaigns/append');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{\n  "data": [\n    {\n      "id": "1280",\n      "type": "RetailMediaCampaign"\n    }\n  ]\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaCampaign",
+            "id": "8343086999167541140"
+        },
+        {
+            "type": "RetailMediaCampaign",
+            "id": "3683145960016759663"
+        },
+        {
+            "type": "RetailMediaCampaign",
+            "id": "16108177282234788969"
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 3,
+        "currentPageSize": 3,
+        "currentPageIndex": 0,
+        "totalPages": 1,
+        "nextPage": null,
+        "previousPage": null
+    }
+}
+```
+
+## **Remove Campaigns from a Specific Balance**
+
+This endpoint removes one or more campaigns from the specified balance.  The resulting state of the balance is returned as a single page.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/balances/{balanceId}/campaigns/delete
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.criteo.com/preview/retail-media/balances/14094543095747588032/campaigns/delete" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": [
+                {
+                    "type": "RetailMediaCampaign",
+                    "id": "16108177282234788969"
+                }
+            ]
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/preview/retail-media/balances/13/campaigns/delete"
+
+payload = json.dumps({
+  "data": [
+    {
+      "id": "1280",
+      "type": "RetailMediaCampaign"
+    }
+  ]
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": [\n    {\n      \"id\": \"1280\",\n      \"type\": \"RetailMediaCampaign\"\n    }\n  ]\n}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/balances/13/campaigns/delete")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/balances/13/campaigns/delete');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{\n  "data": [\n    {\n      "id": "1280",\n      "type": "RetailMediaCampaign"\n    }\n  ]\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaCampaign",
+            "id": "8343086999167541140"
+        },
+        {
+            "type": "RetailMediaCampaign",
+            "id": "3683145960016759663"
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 2,
+        "currentPageSize": 2,
+        "currentPageIndex": 0,
+        "totalPages": 1,
+        "nextPage": null,
+        "previousPage": null
+    }
+}
+```
+
+## **Get All Campaigns on a Specific Balance**
+
+This endpoint lists all campaigns on the specified balance.  Response results will be provided in paginated form.
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/balances/{balanceId}/campaigns
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/preview/retail-media/balances/14094543095747588032/campaigns" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/preview/retail-media/balances/13/campaigns"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/balances/13/campaigns")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/balances/13/campaigns');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaCampaign",
+            "id": "8343086999167541140"
+        },
+        {
+            "type": "RetailMediaCampaign",
+            "id": "3683145960016759663"
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 2,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 1,
+        "nextPage": null,
+        "previousPage": null
+    }
+}
+```

@@ -1,5 +1,5 @@
 ---
-title: "Mobile Deeplinks Guide for Offsite"
+title: Mobile Deeplinks Guide for Offsite
 ---
 
 ## Introduction
@@ -14,7 +14,9 @@ At Criteo, **Offsite Retail Media for App** currently supports the following dee
 * **App Links** on Android.
 
 <Warning>
-  **Important** URI schemes are *not supported* for Offsite Retail Media App integrations. Only Universal Links and App Links are accepted.
+  **Important**
+  URI schemes are _not supported_ for Offsite Retail Media App integrations.
+  Only Universal Links and App Links are accepted.
 </Warning>
 
 ***
@@ -27,7 +29,7 @@ Both systems rely on HTTPS URLs and allow a fallback to the mobile website if th
 
 **Example:**
 
-```
+```text
 https://www.mystore.com/products?id=abc123
 ```
 
@@ -43,11 +45,32 @@ Deep linking configuration depends on the type of ad being delivered.
 
 Dynamic Ads use Criteo’s Product Recommendation Engine to optimize engagement and conversions. Deep links may vary by banner zone:
 
-| Zone             | Description                                                                            | Requirement                                                                                     |
-| ---------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **Logo Zone**    | Contains advertiser branding (typically top-left). Redirects to the app’s main screen. | **Mandatory:** Universal/App Link to main screen.                                               |
-| **Product Zone** | Displays products from the catalog. Redirects to product detail screens.               | **Mandatory:** Product-specific Universal/App Link.                                             |
-| **Coupon Zone**  | Optional area showing discounts or special offers.                                     | **Optional:** Universal/App Link to main or promotional screen (e.g., category or search page). |
+<table>
+  <thead>
+    <tr>
+      <th>Zone</th>
+      <th>Description</th>
+      <th>Requirement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Logo Zone</strong></td>
+      <td>Contains advertiser branding (typically top-left). Redirects to the app’s main screen.</td>
+      <td><strong>Mandatory:</strong> Universal/App Link to main screen.</td>
+    </tr>
+    <tr>
+      <td><strong>Product Zone</strong></td>
+      <td>Displays products from the catalog. Redirects to product detail screens.</td>
+      <td><strong>Mandatory:</strong> Product-specific Universal/App Link.</td>
+    </tr>
+    <tr>
+      <td><strong>Coupon Zone</strong></td>
+      <td>Optional area showing discounts or special offers.</td>
+      <td><strong>Optional:</strong> Universal/App Link to main or promotional screen (e.g., category or search page).</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -59,7 +82,7 @@ Static Ads have fixed creative content and a single redirection target.
 
 * **Mandatory:** One Universal Link or App Link that opens the app and navigates to either the main screen or a specific landing page.
 
-This configuration is available in the **self-service platform** when creating an ad under *Web Redirection*.
+This configuration is available in the **self-service platform** when creating an ad under _Web Redirection_.
 
 ***
 
@@ -69,7 +92,7 @@ This configuration is available in the **self-service platform** when creating a
 
 * **Mandatory:** One Universal Link or App Link that opens the app and navigates to either the main screen or a specific landing page.
 
-This configuration is also available in the **self-service platform** under *Web Redirection*.
+This configuration is also available in the **self-service platform** under _Web Redirection_.
 
 ***
 
@@ -89,26 +112,24 @@ The AASA file:
 
 **Example AASA file:**
 
-<CodeGroup>
-  ```bash bash
-  {
-    "applinks": {
-      "details": [
-        {
-          "appIDs": ["ABCDE12345.com.example.app"],
-          "components": [
-            { "/": "/buy/*" },
-            { "/": "/help/*", "?": { "articleNumber": "????" } }
-          ]
-        }
-      ]
-    },
-    "webcredentials": {
-      "apps": ["ABCDE12345.com.example.app"]
-    }
+```json
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["ABCDE12345.com.example.app"],
+        "components": [
+          { "/": "/buy/*" },
+          { "/": "/help/*", "?": { "articleNumber": "????" } }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["ABCDE12345.com.example.app"]
   }
-  ```
-</CodeGroup>
+}
+```
 
 <Info>
   For more details, refer to Apple’s [Universal Links documentation](https://developer.apple.com/documentation/xcode/allowing-apps-and-websites-to-link-to-your-content).
@@ -132,28 +153,24 @@ The `assetlinks.json` file must contain:
 
 Generate the fingerprint with:
 
-<CodeGroup>
-  ```bash bash
-  keytool -list -v -keystore my-release-key.keystore
-  ```
-</CodeGroup>
+```bash
+keytool -list -v -keystore my-release-key.keystore
+```
 
 **Example with the `assetlinks.json` file:**
 
-<CodeGroup>
-  ```bash bash
-  [{
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.example",
-      "sha256_cert_fingerprints": [
-        "14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5"
-      ]
-    }
-  }]
-  ```
-</CodeGroup>
+```json
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.example",
+    "sha256_cert_fingerprints": [
+      "14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5"
+    ]
+  }
+}]
+```
 
 <Info>
   For more details, refer to Google’s [App Links documentation](https://developer.android.com/training/app-links/).
@@ -163,19 +180,35 @@ Generate the fingerprint with:
 
 ## Summary
 
-| Platform | Supported Method | Fallback   | Required Configuration            |
-| -------- | ---------------- | ---------- | --------------------------------- |
-| iOS      | Universal Links  | Mobile Web | AASA file + Associated Domains    |
-| Android  | App Links        | Mobile Web | `assetlinks.json` + Intent Filter |
+<table>
+  <thead>
+    <tr>
+      <th>Platform</th>
+      <th>Supported Method</th>
+      <th>Fallback</th>
+      <th>Required Configuration</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>iOS</td>
+      <td>Universal Links</td>
+      <td>Mobile Web</td>
+      <td>AASA file + Associated Domains</td>
+    </tr>
+    <tr>
+      <td>Android</td>
+      <td>App Links</td>
+      <td>Mobile Web</td>
+      <td><code>assetlinks.json</code> + Intent Filter</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
-Did anything feel unclear or missing on this page?
+<Danger>
+  **SEND FEEDBACK CUSTOM COMPONENT**
+</Danger>
 
-Send feedback
-
-***
-
-[Ad Rendering Best Practices](/retailer-integration/docs/ad-rendering-best-practices)
-
-[Introduction to Beacons](/retailer-integration/docs/introduction-to-beacons)
+<br />

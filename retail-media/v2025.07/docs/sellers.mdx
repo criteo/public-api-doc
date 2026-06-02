@@ -1,9 +1,6 @@
 ---
-title: "Sellers"
+title: Sellers
 ---
-
-1. Guides for Retail Media API
-2. [Account](/retail-media/v2025.07/docs/account)
 
 ## Introduction
 
@@ -11,96 +8,157 @@ A seller represents an external entity that sells products in the retailers' env
 
 Sellers entities are, initially, available through retailers' catalogs and can aggregate different products offered by them in the retailer marketplace.
 
-A demand account can be associated with multiple sellers (across multiple retailers) and be willing to serve ads across them.
+A demand account can be associated with multiple sellers (across multiple retailers) and be willing to serve ads across them. 
 
 This endpoint provides a programatic way to identify all sellers (and, consequently, retailers) associated with the respective account, so that campaigns can be set up accordingly.
 
 ## **Endpoints**
 
-| Verb     | Endpoint                   | Description                                                        |
-| -------- | -------------------------- | ------------------------------------------------------------------ |
-| **POST** | `/accounts/sellers/search` | Search for Sellers, associated with retailers, given an account ID |
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/sellers/search</code></td>
+      <td>Search for Sellers, associated with retailers, given an account ID</td>
+    </tr>
+  </tbody>
+</table>
 
 ## **Sellers Accounts Search Attributes**
 
-| Attribute        | Data Type | Description                                                                                                                                                                                          |
-| ---------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accountId`\*    | string    | [Account](doc:account) ID, to consider in the search for Seller accountsAccepted values: int64Writeable? N / Nullable? N                                                                             |
-| `includeDetails` | boolean   | Flag indicating to include accounts' details in the response, such as `name`.It may improve performance when set to `false`Accepted values: `true`/`false`Default: `false`Writeable? N / Nullable? Y |
-| `sellerId`       | string    | Seller ID, specific to the associated RetailerAccepted values: int64Writeable? N / Nullable? N                                                                                                       |
-| `retailerId`     | integer   | [Retailer](docs:retailers) ID which the seller account is associated withAccepted values: int32Writeable? N / Nullable? N                                                                            |
-| `name`           | string    | Seller nameAccepted values: stringWriteable? N / Nullable? Y                                                                                                                                         |
+Attribute
+Data Type
+Description
+accountId
+*
+string
+Account
+ID, to consider in the search for Seller accounts
+Accepted values: int64
+Writeable? N / Nullable? N
+includeDetails
+boolean
+Flag indicating to include accounts' details in the response, such as
+name
+.
+It may improve performance when set to
+false
+Accepted values:
+true
+/
+false
+Default:
+false
+Writeable? N / Nullable? Y
+sellerId
+string
+Seller ID, specific to the associated Retailer
+Accepted values: int64
+Writeable? N / Nullable? N
+retailerId
+integer
+Retailer
+ID which the seller account is associated with
+Accepted values: int32
+Writeable? N / Nullable? N
+name
+string
+Seller name
+Accepted values: string
+Writeable? N / Nullable? Y
 
-*\* Required*
+_\* Required_
 
 ## **Search for Sellers associated with Account**
 
 This endpoint returns a list of Seller IDs (each associated with a different retailer) available for the given account ID:
 
-![](/images/retail-media/v2025.07/docs/b0623eb-post.png)
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/accounts/sellers/search
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/sellers/search' \
-      -H 'Content-Type: application/json' \
-      -H 'Accept: application/json' \
-      -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-      -d '{
-              "data": {
-                  "type": "<string>",
-                  "attributes": {
-                      "accountIds": [
-                          "100000002342852933"
-                      ],
-                      "includeDetails": false
-                  }
-              }
-          }'
-  ```
-</CodeGroup>
+```bash
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/sellers/search' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+    -d '{
+            "data": {
+                "type": "<string>",
+                "attributes": {
+                    "accountIds": [
+                        "100000002342852933"
+                    ],
+                    "includeDetails": false
+                }
+            }
+        }'
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "SellerSearchResult",
-              "attributes": {
-                  "accountId": "100000002342852933",
-                  "sellers": [
-                      {
-                          "sellerId": "xxxxxxxxxxxxxxxxxxxxxxxx",
-                          "retailerId": 123,
-                          "name": null
-                      }
-                  ]
-              }
-          }
-      ],
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": [
+        {
+            "type": "SellerSearchResult",
+            "attributes": {
+                "accountId": "100000002342852933",
+                "sellers": [
+                    {
+                        "sellerId": "xxxxxxxxxxxxxxxxxxxxxxxx",
+                        "retailerId": 123,
+                        "name": null
+                    }
+                ]
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
 
 ## **Responses**
 
-| Response | Error               | Message                                                | Description                                                                                                                                                                     |
-| -------- | ------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🟢 `200` |                     |                                                        | Call completed successfully                                                                                                                                                     |
-| 🔴 `400` | Validation Error    | `Error deserializing request`                          | One of the parameters provided in the request does not match the format accepted. Check the error details and the parameters informed in the call                               |
-| 🔴 `403` | Authorization Error | `Resource access forbidden: does not have permissions` | API user does not have the authorization to make requests to the account ID. For an authorization request, follow the [authorization request](doc:authorization-requests) steps |
-
-***
-
-[Brands](/retail-media/v2025.07/docs/brands)
-
-[Retailers](/retail-media/v2025.07/docs/retailers)
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Error</th>
+      <th>Message</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>🟢 <code>200</code></td>
+      <td></td>
+      <td></td>
+      <td>Call completed successfully</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle: <code>400</code></td>
+      <td>Validation Error</td>
+      <td><code>Error deserializing request</code></td>
+      <td>One of the parameters provided in the request does not match the format accepted. Check the error details and the parameters informed in the call</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle: <code>403</code></td>
+      <td>Authorization Error</td>
+      <td><code>Resource access forbidden: does not have permissions</code></td>
+      <td>API user does not have the authorization to make requests to the account ID. For an authorization request, follow the <a href="/retail-media/v2025.07/docs/authorization-requests">authorization request</a>  steps</td>
+    </tr>
+  </tbody>
+</table>

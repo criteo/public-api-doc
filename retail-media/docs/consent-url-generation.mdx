@@ -1,9 +1,6 @@
 ---
-title: "Consent URL Generation"
+title: Consent URL Generation
 ---
-
-1. Getting Started
-2. [API Authorization](/retail-media/docs/api-authorization)
 
 ## Overview
 
@@ -23,21 +20,19 @@ To do this, you will need to direct the user to a unique consent delegation page
 
 ### Client Credentials
 
-For client credential application, once you have logged in to the [Criteo Partners Portal](https://partners.criteo.com/), find your application under `My apps` and navigate to your `Application details` page.
+For client credential application, once you have logged in to the [ Criteo Partners Portal](https://partners.criteo.com/), find your application under `My apps` and navigate to your `Application details` page.
 
-![](/images/retail-media/docs/fbfdafc-image.png)
+![fbfdafc image](/images/retail-media/docs/fbfdafc-image.png)
 
 At the top of your `App` page, you will see a `Generate new URL` button. Click the button to generate a single consent URL which can be easily copied to your clipboard.
 
-![](/images/retail-media/docs/614681e-consenturl.gif)
+![614681e consenturl](/images/retail-media/docs/614681e-consenturl.gif)
 
 The consent URL has two query parameters:
 
-<CodeGroup>
-  ```bash bash
-  https://consent.criteo.com/request?nonce=<nonce>&hmac=<signature>
-  ```
-</CodeGroup>
+```text URL
+https://consent.criteo.com/request?nonce=<nonce>&hmac=<signature>
+```
 
 Each button click will generate a new URL. A fresh consent URL must be generated whenever a new authorization is needed from the advertiser.
 
@@ -50,12 +45,12 @@ Each button click will generate a new URL. A fresh consent URL must be generated
 Share the consent URL with an **admin or business manager** of the advertiser account you need access to. The user will be redirected to the Criteo's consent portal to approve your API application access.
 
 <Info>
-  For more details, consent granters should follow the instructions provided on the [Authorization Request page.](https://developers.criteo.com/retail-media/docs/authorization-requests)
+  For more details, consent granters should follow the instructions provided on the [Authorization Request page.](/retail-media/docs/authorization-requests)
 </Info>
 
 ### Authorization Code
 
-Generating a consent URL for authorization code applications requires a separate process. This option is not available under the `Application details` page. For guidance on generating the consent URL, refer to the instructions for the [Authorization Code](https://developers.criteo.com/retail-media/docs/oauth-app-authorization-code#21---consent-url-creation) application setup.
+Generating a consent URL for authorization code applications requires a separate process. This option is not available under the `Application details` page. For guidance on generating the consent URL, refer to the instructions for the [Authorization Code](/retail-media/docs/oauth-app-authorization-code#21---consent-url-creation) application setup.
 
 ***
 
@@ -69,7 +64,7 @@ Log in to the [Criteo Partners Portal](https://partners.criteo.com/) and navigat
 
 Scroll to the `Connector Parameters` section and click `Create a new connector`. You will be prompted to enter a callback URL. After registration, the callback URL can be modified at any time, while the associated key pair remains the same.
 
-![](/images/retail-media/docs/39e9cb6-image.png)
+![39e9cb6 image](/images/retail-media/docs/39e9cb6-image.png)
 
 Upon completion, your browser will download a `.txt` file containing your public and private key pair.
 
@@ -83,104 +78,124 @@ Upon completion, your browser will download a `.txt` file containing your public
 
 The consent URL has the following structure and parameters:
 
-<CodeGroup>
-  ```bash bash
-  https://consent.criteo.com/request?key=<public signing key>&timestamp=<UNIX timestamp in seconds>&state=<state>&redirect-uri=<redirect URI>&signature=<hashed signature>
-  ```
-</CodeGroup>
+```text http URL
+https://consent.criteo.com/request?key=<public signing key>&timestamp=&lt;UNIX timestamp in seconds&gt;&state=<state>&redirect-uri=<redirect URI>&signature=<hashed signature>
+```
 
-| Parameter      | Description                                                                                     |
-| -------------- | ----------------------------------------------------------------------------------------------- |
-| `key`          | Your public signing key                                                                         |
-| `timestamp`    | The UNIX timestamp of when your URL was generated, in seconds                                   |
-| `state`        | An arbitrary string to be included in the consent callback (e.g., the User ID of your app user) |
-| `redirect-uri` | The URL to redirect the user to after consent delegation                                        |
-| `signature`    | The HMAC-SHA512 hashed query string of the previous four parameters, in order                   |
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>key</code></td>
+      <td>Your public signing key</td>
+    </tr>
+    <tr>
+      <td><code>timestamp</code></td>
+      <td>The UNIX timestamp of when your URL was generated, in seconds</td>
+    </tr>
+    <tr>
+      <td><code>state</code></td>
+      <td>An arbitrary string to be included in the consent callback (e.g., the User ID of your app user)</td>
+    </tr>
+    <tr>
+      <td><code>redirect-uri</code></td>
+      <td>The URL to redirect the user to after consent delegation</td>
+    </tr>
+    <tr>
+      <td><code>signature</code></td>
+      <td>The HMAC-SHA512 hashed query string of the previous four parameters, in order</td>
+    </tr>
+  </tbody>
+</table>
 
 The `signature` is created by hashing the following string using the `key`, `timestamp`, `state`, and `redirect-uri` values:
 
-<CodeGroup>
-  ```bash bash
-  ?key=<public signing key>&timestamp=<UNIX timestamp in seconds>&state=<state>&redirect-uri=<redirect URI>
-  ```
-</CodeGroup>
+```text URL
+?key=<public signing key>&timestamp=&lt;UNIX timestamp in seconds&gt;&state=<state>&redirect-uri=<redirect URI>
+```
 
 Code examples for generating a Consent URL can be found below:
 
 <CodeGroup>
-  ```bash bash
-  const sha512 = require('js-sha512').sha512;
 
-  function generateConsentURL(publicSigningKey, signingSecret, redirect, state){
-      const timestamp = Math.round(Date.now() / 1000);
-      const query = `?key=${publicSigningKey}&timestamp=${timestamp}&state=${state}&redirect-uri=${redirect}`;
-      return `https://consent.criteo.com/request${query}&signature=${sha512.hmac(signingSecret, query)}`;
-  }
+```javascript JavaScript
+const sha512 = require('js-sha512').sha512;
 
-  const res = generateConsentURL('public key', 'private key', 'https://example.com/app-landing-page', 'userID');
-  console.log(res);
-  ```
+function generateConsentURL(publicSigningKey, signingSecret, redirect, state){
+    const timestamp = Math.round(Date.now() / 1000);
+    const query = `?key=${publicSigningKey}&timestamp=${timestamp}&state=${state}&redirect-uri=${redirect}`;
+    return `https://consent.criteo.com/request${query}&signature=${sha512.hmac(signingSecret, query)}`;
+}
 
-  ```bash bash
-  using System;
-  using System.Text;
-  using System.Security.Cryptography;
+const res = generateConsentURL('public key', 'private key', 'https://example.com/app-landing-page', 'userID');
+console.log(res);
+```
 
-  /*
-     
-     Enter your public signing key and signing secret in between the quotations below. You can also choose to modify your redirect URL (where your consent giver will be redirected too after they accept your consent request). You can also choose to pass in parameters inside the state object.
+```text csharp
+using System;
+using System.Text;
+using System.Security.Cryptography;
 
-  */
+/*
+   
+   Enter your public signing key and signing secret in between the quotations below. You can also choose to modify your redirect URL (where your consent giver will be redirected too after they accept your consent request). You can also choose to pass in parameters inside the state object.
 
-  public class Program
-  {
-  	public static void Main()
-  	{
-  		// MODIFY THIS
-  		var publicSigningKey = "<public signing key>";
-  		var signingSecret = "<private signing key>";
-  		var redirectUri = "https://developers.criteo.com/";
-  		var state = "userID";
-  		//
+*/
 
-  		long timestamp = ((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds();
-  		var signature = createSignature(publicSigningKey, timestamp, state, redirectUri, signingSecret);
-  		
-  		Console.WriteLine(generateUrl(publicSigningKey, timestamp, state, redirectUri, signature));
-  	}
-  	
-  	public static string createSignature(string publicSigningKey, long timestamp, string state, string redirectUri, string signingSecret)
-  	{
-  		var message = $"?key={publicSigningKey}&timestamp={timestamp}&state={state}&redirect-uri={redirectUri}";
-  		return HmacUtil.Sign(message, Encoding.UTF8.GetBytes(signingSecret));
-  	}
-  		
-  	public static string generateUrl(string publicSigningKey, long timestamp, string state, string redirectUri, string signature)
-  	{
-  		return $"https://consent.criteo.com/request?key={publicSigningKey}&timestamp={timestamp}&state={state}&redirect-uri={redirectUri}&signature={signature}";
-  	}
-  }
+public class Program
+{
+	public static void Main()
+	{
+		// MODIFY THIS
+		var publicSigningKey = "<public signing key>";
+		var signingSecret = "<private signing key>";
+		var redirectUri = "https://developers.criteo.com/";
+		var state = "userID";
+		//
 
-  public static class HmacUtil
-  {
-  	public static string Sign(string message, byte[] signingKeyBytes)
-  	{
-  		using (var hmac = new HMACSHA512(signingKeyBytes))
-  		{
-  			var hashedMessage = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+		long timestamp = ((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds();
+		var signature = createSignature(publicSigningKey, timestamp, state, redirectUri, signingSecret);
+		
+		Console.WriteLine(generateUrl(publicSigningKey, timestamp, state, redirectUri, signature));
+	}
+	
+	public static string createSignature(string publicSigningKey, long timestamp, string state, string redirectUri, string signingSecret)
+	{
+		var message = $"?key={publicSigningKey}&timestamp={timestamp}&state={state}&redirect-uri={redirectUri}";
+		return HmacUtil.Sign(message, Encoding.UTF8.GetBytes(signingSecret));
+	}
+		
+	public static string generateUrl(string publicSigningKey, long timestamp, string state, string redirectUri, string signature)
+	{
+		return $"https://consent.criteo.com/request?key={publicSigningKey}&timestamp={timestamp}&state={state}&redirect-uri={redirectUri}&signature={signature}";
+	}
+}
 
-  			var stringBuilder = new StringBuilder();
-  			foreach (var value in hashedMessage)
-  			{
-  				stringBuilder.Append(value.ToString("x2"));
-  			}
+public static class HmacUtil
+{
+	public static string Sign(string message, byte[] signingKeyBytes)
+	{
+		using (var hmac = new HMACSHA512(signingKeyBytes))
+		{
+			var hashedMessage = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
 
-  			return stringBuilder.ToString();
-  		}
-  	}
+			var stringBuilder = new StringBuilder();
+			foreach (var value in hashedMessage)
+			{
+				stringBuilder.Append(value.ToString("x2"));
+			}
 
-  }
-  ```
+			return stringBuilder.ToString();
+		}
+	}
+
+}
+```
 </CodeGroup>
 
 ***
@@ -195,40 +210,38 @@ After the user completes the Consent Delegation flow, an HTTP callback will be s
   `CriteoService` values have been updated for consistency. Possible values are `MarketingSolutions` and `RetailMedia`.
 </Warning>
 
-<CodeGroup>
-  ```bash bash
-  {
-      "Type": "ConsentGranted",
-      "Data": {
-          "Key": "971062d8161ba4ef8f78f3201a6f361f",
-          "Timestamp": 1614366053,
-          "State": "",
-          "ApplicationId": 2,
-          "ApplicationName": "Test App",
-          "RequestedScopes": [
-              {
-                  "AccessLevel": "Read",
-                  "Domain": "Analytics",
-                  "CriteoService": "MarketingSolutions"
-              }
-          ],
-          "AcceptedScopes": [
-              {
-                  "AccessLevel": "Read",
-                  "Domain": "Analytics",
-                  "CriteoService": "MarketingSolutions"
-              }
-          ],
-          "Advertisers": [
-              {
-                  "Id": "12345",
-                  "Name": "Example Advertiser"
-              }
-          ]
-      }
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "Type": "ConsentGranted",
+    "Data": {
+        "Key": "971062d8161ba4ef8f78f3201a6f361f",
+        "Timestamp": 1614366053,
+        "State": "",
+        "ApplicationId": 2,
+        "ApplicationName": "Test App",
+        "RequestedScopes": [
+            {
+                "AccessLevel": "Read",
+                "Domain": "Analytics",
+                "CriteoService": "MarketingSolutions"
+            }
+        ],
+        "AcceptedScopes": [
+            {
+                "AccessLevel": "Read",
+                "Domain": "Analytics",
+                "CriteoService": "MarketingSolutions"
+            }
+        ],
+        "Advertisers": [
+            {
+                "Id": "12345",
+                "Name": "Example Advertiser"
+            }
+        ]
+    }
+}
+```
 
 For Marketing Solutions apps, shared entities are listed under `Advertisers`, while for Retail Media apps, they are under `Accounts`.
 
@@ -250,13 +263,14 @@ If the first callback attempt fails, it is retried up to two more times before r
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
+<br />
 
-***
-
-What’s Next
+<Danger>
+  **SEND FEEDBACK CUSTOM COMPONENT**
+</Danger>
+## What's next
 
 * [Authorization Requests](/retail-media/docs/authorization-requests)
 * [OAuth App Implementation](/retail-media/docs/oauth-app-implementation)

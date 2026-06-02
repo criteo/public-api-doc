@@ -1,0 +1,884 @@
+---
+title: Catalog Endpoints
+description: Generate and download a copy of retailer's inventory
+hidden: true
+---
+
+## Endpoints
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/brand-catalog-export</code></td>
+      <td>Create a request to export existing catalogs from a Brand account</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/seller-catalog-export</code></td>
+      <td>Create a request to export existing catalogs from a Seller account</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/catalogs/&#123;catalogId&#125;/status</code></td>
+      <td>Retrieve the status of a specific catalog request.</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/catalogs/&#123;catalogId&#125;/output</code></td>
+      <td>Download the output of a specific catalog once it's ready.</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+## Attributes
+
+### Catalog Export Request Attributes
+
+#### Brand Accounts
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>brandIdFilter</code></td>
+      <td>list&#92;</td>
+      <td><code>Brand(s) ids</code> used to filter down catalog results based on specified brands. Note: If nothing is entered, you will get all brands<br />Accepted values: <code>int64</code></td>
+    </tr>
+    <tr>
+      <td><code>retailerIdFilter</code></td>
+      <td>list&#92;</td>
+      <td><code>Retailer(s) ids</code> used to filter down catalog results based on specified retailers. Note: If nothing is entered you will get all retailers<br />Accepted values: <code>int64</code></td>
+    </tr>
+    <tr>
+      <td><code>modifiedAfter</code></td>
+      <td>timestamp</td>
+      <td>Modifie stamp which will only include the SKUs modified after the specified time. The upper limit of this field is set to -18 hours from current time. After which, the user will be asked to do a full export instead.<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss±hh:mm</code> (in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a></td>
+    </tr>
+    <tr>
+      <td><code>includeFields</code></td>
+      <td>list&#92;</td>
+      <td>Additional fields that can be added to the catalog export. If they are not included, when the output endpoint is called, the fields will return with “null” values.<br />Accepted values: <code>"RetailerName"</code>,<code>"Description"</code>, <code>"BrandName"</code>,<code>"GoogleCategory"</code>,<code>"Category"</code>,<code>"ImageUrl"</code></td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+#### Seller Accounts
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>sellers</code></td>
+      <td>list&#92;</td>
+      <td><code>retailerId</code>: The id that represents the retailer providing advertising inventory for brands to promote their products.<br />Accepted values: string<br /><code>sellerId</code>: Seller id(s) in respective retailers' catalogs, used to filter down catalog items.<br />Accepted values: string</td>
+    </tr>
+    <tr>
+      <td><code>modifiedAfter</code></td>
+      <td>timestamp</td>
+      <td>Mofified timestamp which will only include the skus modified after the specified time. Upper limit of this field is set to -18 hours from current time. After which user will be asked to do a full export instead.<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss±hh:mm</code> (in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a></td>
+    </tr>
+    <tr>
+      <td><code>includeFields</code></td>
+      <td>list&#92;</td>
+      <td>Additional fields that can be added to the catalog export. If they are not included, when the output endpoint is called, the fields will return with “null” values.<br />Accepted values: <code>"RetailerName"</code>,<code>"Description"</code>, <code>"BrandName"</code>,<code>"GoogleCategory"</code>,<code>"Category"</code>,<code>"ImageUrl"</code></td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+### Catalog Status Response Attributes
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>string</td>
+      <td>ID of the catalog creation status request<br />Values: int64</td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>string</td>
+      <td>Type definition of the response<br />Values: <code>"RetailMediaCatalogStatus"</code></td>
+    </tr>
+    <tr>
+      <td><code>status</code></td>
+      <td>string</td>
+      <td>Status of the response<br />Possible Values: <code>pending</code>, <code>success</code>, <code>failure</code>, <code>expired</code>, <code>unknown</code></td>
+    </tr>
+    <tr>
+      <td><code>currency</code></td>
+      <td>string</td>
+      <td>ISO-4217 currency of the items in the respective catalog<br />Values: <code>USD</code>, <code>EUR</code>, etc.</td>
+    </tr>
+    <tr>
+      <td><code>rowCount</code></td>
+      <td>integer</td>
+      <td>Number of products contained in the catalog (available when creation reaches <code>success</code> status)<br />Max Value: 100000<br />Values: int32</td>
+    </tr>
+    <tr>
+      <td><code>fileSizeBytes</code></td>
+      <td>integer</td>
+      <td>Size of catalog, in bytes (available when creation reaches <code>success</code> status)<br />Values: int32</td>
+    </tr>
+    <tr>
+      <td><code>md5Checksum</code></td>
+      <td>string</td>
+      <td>MD5 checksum of catalog's content (available when creation reaches <code>success</code> status)<br />Values: 32-char alphalphanumeric strings</td>
+    </tr>
+    <tr>
+      <td><code>createdAt</code></td>
+      <td>timestamp</td>
+      <td>Timestamp of the creation<br />Values: ISO-8601</td>
+    </tr>
+    <tr>
+      <td><code>message</code></td>
+      <td>string</td>
+      <td>Optional informative message, for developer consconsumption</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+### Catalog Output Response Attributes
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>string</td>
+      <td>Retailer product ID, established by the retailer<br />Values: 500 char limit</td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>string</td>
+      <td>Retailer product name<br />Values: 1000 char limit</td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>string</td>
+      <td>Retailer product description<br />Values: 5000 char limit</td>
+    </tr>
+    <tr>
+      <td><code>category</code></td>
+      <td>string</td>
+      <td>Retailer product category<br />Values: 1000 char limit</td>
+    </tr>
+    <tr>
+      <td><code>categoryId</code></td>
+      <td>string</td>
+      <td>Category ID associated with the product, derived from the retailer catalog.</td>
+    </tr>
+    <tr>
+      <td><code>googleCategory</code></td>
+      <td>string</td>
+      <td>Category associated with the product, derived from the <a href="https://www.google.com/basepages/producttype/taxonomy-with-ids.en-US.txt">Google Product Taxonomy</a> list.</td>
+    </tr>
+    <tr>
+      <td><code>brandId</code></td>
+      <td>string</td>
+      <td>Brand ID of the product<br />For brand accounts, it is derived from the Universal Catalog.<br />For retailer accounts, it is derived from the Retailer Catalog.</td>
+    </tr>
+    <tr>
+      <td><code>brandName</code></td>
+      <td>string</td>
+      <td>Brand name of the product; names are standardized across retailers<br />Values: 120 char limit</td>
+    </tr>
+    <tr>
+      <td><code>sellerId</code></td>
+      <td>string</td>
+      <td>Seller ID(s) in the respective retailers' catalogs, used to filter down catalog items.</td>
+    </tr>
+    <tr>
+      <td><code>sellerName</code></td>
+      <td>string</td>
+      <td>Name of the seller associated with the <code>sellerId</code>.</td>
+    </tr>
+    <tr>
+      <td><code>retailerId</code></td>
+      <td>string</td>
+      <td>Retailer ID carrying the product<br />Values: int64</td>
+    </tr>
+    <tr>
+      <td><code>retailerName</code></td>
+      <td>string</td>
+      <td>Name of the retailer associated with <code>retailerId</code>, carrying the product.<br />Values: 100 char limit</td>
+    </tr>
+    <tr>
+      <td><code>price</code></td>
+      <td>number</td>
+      <td>Retailer product price in USD</td>
+    </tr>
+    <tr>
+      <td><code>isInStock</code></td>
+      <td>boolean</td>
+      <td>Whether or not the product is in stock<br />Values: <code>true</code>, <code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>minBid</code></td>
+      <td>number</td>
+      <td>Minimum Cost-Per-Click (CPC) an advertiser must bid for the product, established by the retailer; any <a href="https://developers.criteo.com/retail-media/docs/line-items">line item</a> with this product must have targetBid meet this value<br />Values: greater than 0</td>
+    </tr>
+    <tr>
+      <td><code>gtin</code></td>
+      <td>string</td>
+      <td>Global Trade Item Number (GTIN), if available; also known as European Article Number (EAN) or Universal Product Code (UPC)</td>
+    </tr>
+    <tr>
+      <td><code>mpn</code></td>
+      <td>string</td>
+      <td>Manufacturer Part Number (MPN), if available</td>
+    </tr>
+    <tr>
+      <td><code>imageUrl</code></td>
+      <td>string</td>
+      <td>An http image URL provided by the retailer</td>
+    </tr>
+    <tr>
+      <td><code>updatedAt</code></td>
+      <td>timestamp</td>
+      <td>Timestamp in UTC of last update<br />Values: ISO-8601</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+## Export Catalog of a Specific Account
+
+### Brand account
+
+This endpoint allows you to generate the most up-to-date catalog for a specific brand account.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/brand-catalog-export
+```
+
+<Note>
+  ### Best Practice Tip!
+
+  If you wish to filter SKUs modified within the last 18 hours, you can use `modifiedAfter` field. The request should be formatted according to ISO 8601 standards. Although the example provided uses Eastern Standard Time (EST), you can specify any time zone.
+
+  Important: If the specified time exceeds the 18-hour limit, the request will return a 400 response, advising you to perform a full catalog export instead.
+</Note>
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/4/brand-catalog-export' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+--data-raw '{
+  "data": {
+    "type": "<string>",
+    "attributes": {
+      "brandIdFilter": [
+        "123"
+      ],
+      "retailerIdFilter": [
+        "456"
+      ],
+      "modifiedAfter": "2025-03-21T08:00:00-5:00",
+      "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description"]
+    }
+  }
+}'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/4/brand-catalog-export"
+
+payload = json.dumps({
+  "data": {
+    "type": "<string>",
+    "attributes": {
+      "brandIdFilter": [
+        "123"
+      ],
+      "retailerIdFilter": [
+        "456"
+      ],
+      "modifiedAfter": "2025-03-21T08:00:00-5:00",
+      "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description"]
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n   \"type\": \"<string>\",\n   \"attributes\": {\n     \"brandIdFilter\": [\n       \"123\"\n     ],\n     \"retailerIdFilter\": [\n       \"456\"\n     ],\n     \"modifiedAfter\": \"2025-03-21T08:00:00-5:00\",\n     \"includeFields\": [\"ImageUrl\",\"GoogleCategory\", \"RetailerName\", \"Category\", \"BrandName\",\"Description\"]\n   }\n }\n}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/4/brand-catalog-export")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/4/brand-catalog-export');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{\n  "data": {\n   "type": "<string>",\n   "attributes": {\n     "brandIdFilter": [\n       "123"\n     ],\n     "retailerIdFilter": [\n       "456"\n     ],\n     "modifiedAfter": "2025-03-21T08:00:00-5:00",\n     "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description"]\n   }\n }\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "type": "RetailMediaCatalogStatus",
+        "id": "1122850670915847014",
+        "attributes": {
+            "status": "pending",
+            "currency": null,
+            "rowCount": null,
+            "fileSizeBytes": null,
+            "md5Checksum": null,
+            "createdAt": "2025-01-22T23:10:12.21+00:00",
+            "message": null
+        }
+    }
+}
+```
+
+***
+
+### Seller account
+
+This endpoint allows you to generate the most up-to-date catalog for a specific seller account.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/seller-catalog-export
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/4/seller-catalog-export' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+--data-raw '{
+  "data": {
+    "type": "<string>",
+    "attributes": {
+      "sellers": [
+        {
+          "retailerId": "123",
+          "sellerId": "5e0axxxxxxxxxx"
+        }
+      ],
+      "modifiedAfter": "",
+      "includeFields": [
+        "ImageUrl",
+        "Description"
+      ]
+    }
+  }
+}'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/4/seller-catalog-export"
+
+payload = json.dumps({
+  "data": {
+    "type": "<string>",
+    "attributes": {
+      "sellers": [
+        {
+          "retailerId": "123",
+          "sellerId": "5e0axxxxxxxxxx"
+        }
+      ],
+      "modifiedAfter": "",
+      "includeFields": [
+        "ImageUrl",
+        "Description"
+      ]
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n \"data\": {\n   \"type\": \"<string>\",\n   \"attributes\": {\n     \"sellers\": [\n       {\n         \"retailerId\": \"123\",\n         \"sellerId\": \"5e0axxxxxxxxxx\"\n       }\n     ],\n     \"modifiedAfter\": \"\",\n     \"includeFields\": [\n     \"ImageUrl\",\n     \"Description\"\n     ]\n   }\n }}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/4/seller-catalog-export")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/4/seller-catalog-export');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{\n "data": {\n   "type": "<string>",\n   "attributes": {\n     "sellers": [\n       {\n         "retailerId": "123",\n         "sellerId": "5e0axxxxxxxxxx"\n       }\n     ],\n     "modifiedAfter": "",\n     "includeFields": [\n     "ImageUrl",\n     "Description"\n     ]\n   }\n }}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "type": "RetailMediaCatalogStatus",
+        "id": "1122850670915847014",
+        "attributes": {
+            "status": "pending",
+            "currency": null,
+            "rowCount": null,
+            "fileSizeBytes": null,
+            "md5Checksum": null,
+            "createdAt": "2025-01-22T23:10:12.21+00:00",
+            "message": null
+        }
+    }
+}
+```
+
+***
+
+## Get Status of a Specific Catalog
+
+This endpoint retrieves the status of a specific catalog.  Status can be `pending`, `success`, `failure`, or `expired`
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/catalogs/{catalogId}/status
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/catalogs/1122850670915847014/status" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/status"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/status")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/status');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "type": "RetailMediaCatalogStatus",
+        "id": "1122850670915847014",
+        "attributes": {
+            "status": "success",
+            "currency": "USD",
+            "rowCount": 1001,
+            "fileSizeBytes": 353293,
+            "md5Checksum": "2c15b77740028435ca476823df7fb4f8",
+            "createdAt": "2020-04-06T05:11:41.351+00:00",
+            "message": null
+        }
+    }
+}
+```
+
+<br />
+
+***
+
+## Download Output of a Specific Catalog
+
+This endpoint returns the products in a specific catalog as a [newline-delimited JSON byte stream](https://en.wikipedia.org/wiki/JSON_streaming) 
+
+> **NOTE:** The limit will be capped at 100000 rows. If a user reaches this limit, they will need to revise their request to fall within the limit.
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/catalogs/{catalogId}/output
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/catalogs/1122850670915847014/output" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import http.client
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = ''
+headers = {
+  'Accept': 'application/x-json-stream',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("GET", "/{version}/retail-media/catalogs/357957813719011328/output", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/output")
+  .method("GET", body)
+  .addHeader("Accept", "application/x-json-stream")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/catalogs/357957813719011328/output');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/x-json-stream',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json Newline-Delimited JSON
+{ \
+    "id": "sku_1", \
+    "name": "Product Name", \
+    "category": "clothing, shoes & accessories|men’s clothing|bottoms|shorts", \
+    "categoryId": "1234xxxx", \
+    "brandId": "123456xxxxxx", \
+    "brandName": "Brand Name", \
+    "retailerId": "54321xxxxxx", \
+    "retailerName": "Retailer Name", \
+    "price": 1.00, \
+    "isInStock": true, \
+    "minBid": 0.30, \
+    "gtin": "abc12xx", \
+    "mpn": "34abxxx", \
+    "imageUrl": "/image1.jpg", \
+    "updatedAt": "2020-04-06T02:23:07Z", \
+    "sellerId": "60axxxxxxxxxxxxxxxx", \
+    "sellerName": "Seller Name", \
+    "googleCategory": null, \
+    "description": "Product's Description" \
+}
+ 
+// ... newline-delimited, no comma
+ 
+{ \
+    "id": "sku_2", \
+    "name": "Product Name", \
+    "category": "clothing, shoes & accessories|men’s clothing|bottoms|shorts", \
+    "categoryId": "1234xxxx", \
+    "brandId": "567890xxxxxx", \
+    "brandName": "Brand Name", \
+    "retailerId": "098765xxxxxx", \
+    "retailerName": "Retailer Name", \
+    "price": 1.00, \
+    "isInStock": true, \
+    "minBid": 0.30, \
+    "gtin": "xyz12xx", \
+    "mpn": "78asdxxx", \
+    "imageUrl": "/image1.jpg", \
+    "updatedAt": "2020-04-06T02:23:07Z", \
+    "sellerId": null, \
+    "sellerName": "Seller Name", \
+    "googleCategory": null, \
+    "description": "Product's Description" \
+}
+
+// ... newline-delimited, no comma
+ 
+{ \
+    "id": "sku_3", \
+    "name": "Product Name", \
+    "category": "clothing, shoes & accessories|men’s clothing|bottoms|shorts", \
+    "categoryId": "4568xxxx", \
+    "brandId": "96385xxxxxx", \
+    "brandName": "Brand Name", \
+    "retailerId": "412587xxxxxx", \
+    "retailerName": "Retailer Name", \
+    "price": 1.00, \
+    "isInStock": true, \
+    "minBid": 0.30, \
+    "gtin": "xyz12xx", \
+    "mpn": "56wsdxxx", \
+    "imageUrl": "/image1.jpg", \
+    "updatedAt": "2020-04-06T02:23:07Z", \
+    "sellerId": null, \
+    "sellerName": null, \
+    "googleCategory": null, \
+    "description": "Product's Description" \
+}
+```
+
+***
+
+## Responses
+
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:green&#95;circle:<br /><code>200</code></td>
+      <td>Success</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>400</code></td>
+      <td>The indicated catalog is not available for retrieval, wait for a success status</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>403</code></td>
+      <td>API user does not have the authorization to make requests to the account ID. For an authorization request, follow the<br /><a href="/retail-media/v2026-preview/docs/authorization-requests">authorization request</a><br />steps</td>
+    </tr>
+  </tbody>
+</table>

@@ -1,51 +1,144 @@
 ---
-title: "DSP Analytics Endpoints"
+title: DSP Analytics Endpoints
+description: Setup your endpoints, view report attributes, and examples of requests
 ---
-
-1. Guides for Retail Media API
-2. [Demand Side Analytics (DSP)](/retail-media/docs/analytics)
-
-Setup your endpoints, view report attributes, and examples of requests
 
 ## Endpoints
 
 Four separate endpoints support requests to create campaign and line item reports and retrieve the report data and status.
 
-| Verb     | Endpoint                     | Description                          |
-| -------- | ---------------------------- | ------------------------------------ |
-| **POST** | `/reports/campaigns`         | Create a Campaign report request     |
-| **POST** | `/reports/line-items`        | Create a Line Item report request    |
-| **GET**  | `/reports/{reportId}/status` | Get status of a specific report      |
-| **GET**  | `/reports/{reportId}/output` | Download output of a specific report |
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/reports/campaigns</code></td>
+      <td>Create a Campaign report request</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/reports/line-items</code></td>
+      <td>Create a Line Item report request</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/reports/&#123;reportId&#125;/status</code></td>
+      <td>Get status of a specific report</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/reports/&#123;reportId&#125;/output</code></td>
+      <td>Download output of a specific report</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
 ## Report Request Attributes
 
-| Attribute                | Data Type               | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id` / `ids`\*           | string / list`<string>` | Campaign or Line Item ID(s) of the desired reportExamples: `id: "12345"` `ids: ["12345", "67890"]`Accepted values: single or list of string/int64 (max 50 ids per call) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `reportType`             | enum                    | Report types are pre-packaged reports that allow the specification of the report breakdown. See [Report Types](doc:report-types) for more details about each of them.**Note:** when `metrics` and `dimensions` are used, `reportType` is ignored.Accepted values: refer to [Report Types](doc:report-types) page for a complete list of available values Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `dimensions`             | list`<enum>`            | Dimension attributes desired for metrics breakdown for the custom report of the campaign(s) / line item(s).**Note:** when `metrics` and `dimensions` are used, `reportType` is automatically ignoredAccepted values: refer to [Metrics and Dimensions](doc:metrics-and-dimensions) page for a complete list of available values Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `metrics`                | list`<enum>`            | Quantitative metrics desired in the custom report of the campaign(s) / line item(s).**Note:**- when `metrics` and `dimensions` are used, the `reportType` is automatically ignored
-- when including `winRate` metric, it is required to either define `campaignType` as `sponsoredProducts` or include `campaignTypeName` in the list of dimensionsAccepted values: refer to [Metrics and Dimensions](doc:metrics-and-dimensions) page for a complete list of available values Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                          |
-| `startDate`\*            | date                    | Start date to report (inclusive)Accepted values: `YYYY-MM-DD` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `endDate`\*              | date                    | End date to report (inclusive)Accepted values: `YYYY-MM-DD` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `campaignType`           | enum                    | [Campaign](doc:campaign) typeAccepted values: `sponsoredProducts`, `onSiteDisplays` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `timeZone`               | string                  | Time zone to consider in the reportAccepted values: [IANA (TZ database)](https://www.iana.org/time-zones) time zones (example: `America/New_York`, `Europe/Paris`, `Asia/Tokyo`, `UTC`) Writeable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `clickAttributionWindow` | enum                    | The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if `viewAttributionWindow` is one of the accepted values.The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click. Defaults to campaign settings if omitted; must be specified if `viewAttributionWindow` is one of the accepted values.Accepted values: `none`, `7D`, `14D`, `30D` Writeable? N / Nullable? Y                                                                                                                                             |
-| `viewAttributionWindow`  | enum                    | The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values.The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression. Defaults to campaign settings if omitted; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values.Accepted values: `none`, `1D`, `7D`, `14D`, `30D` Writeable? N / Nullable? Y |
-| `salesChannel`           | enum                    | Filter on specific sales channel: online or offlineAccepted values: `online`, `offline` Writeable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `format`                 | enum                    | Format of the report data returnedAccepted values: `json`, `json-compact`, `json-newline`, `csv` Default: `json` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `searchTermTypes`        | string                  | The match type used to associate a search term and keywords entered for the campaign.Accepted values: `Entered`: the search term matches exactly what was entered manually by the Commerce Max user `Searched`: the search term matches what a shopper searched on the retailer’s website.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `searchTermTargeting`    | string                  | Indicates how the keyword was targeted — either manually by the user or automatically by the platform.Accepted values: `Manual`: The search term matches a keyword entered in Commerce Max or a variation created via stemming. `Automatic`: The search term was added by the automated keyword tool.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `targetedKeywordType`    | string                  | Specifies the conquesting strategy used with the keyword.Accepted values: `Conquesting`: Targets competitors' branded keywords. `Branded`: Targets the advertiser’s own branded keywords. `Generic`: Targets neutral or non-branded keywords.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `mediaType`              | string                  | The type of creative asset used in the ad, such as Display or Video.Accepted values: `video`, `display`, `all`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code> / <code>ids</code>&#42;</td>
+      <td>string / list``</td>
+      <td>Campaign or Line Item ID(s) of the desired report<br />Examples: <code>id: "12345"</code> <code>ids: ["12345", "67890"]</code><br />Accepted values: single or list of string/int64 (max 50 ids per call)<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>reportType</code></td>
+      <td>enum</td>
+      <td>Report types are pre-packaged reports that allow the specification of the report breakdown. See <a href="/retail-media/docs/report-types">Report Types</a> for more details about each of them.<br /><strong>Note:</strong> when <code>metrics</code> and <code>dimensions</code> are used, <code>reportType</code> is ignored.<br />Accepted values: refer to <a href="/retail-media/docs/report-types">Report Types</a> page for a complete list of available values<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>dimensions</code></td>
+      <td>list``</td>
+      <td>Dimension attributes desired for metrics breakdown for the custom report of the campaign(s) / line item(s).<br /><strong>Note:</strong> when <code>metrics</code> and <code>dimensions</code> are used, <code>reportType</code> is automatically ignored<br />Accepted values: refer to <a href="/retail-media/docs/metrics-and-dimensions">Metrics and Dimensions</a> page for a complete list of available values<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>metrics</code></td>
+      <td>list``</td>
+      <td>Quantitative metrics desired in the custom report of the campaign(s) / line item(s).<br /><strong>Note:</strong><br /><ul><li>when <code>metrics</code> and <code>dimensions</code> are used, the <code>reportType</code> is automatically ignored</li><li>when including <code>winRate</code> metric, it is required to either define <code>campaignType</code> as <code>sponsoredProducts</code> or include <code>campaignTypeName</code> in the list of dimensions</li></ul><br />Accepted values: refer to <a href="/retail-media/docs/metrics-and-dimensions">Metrics and Dimensions</a> page for a complete list of available values<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>startDate</code>&#42;</td>
+      <td>date</td>
+      <td>Start date to report (inclusive)<br />Accepted values: <code>YYYY-MM-DD</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>endDate</code>&#42;</td>
+      <td>date</td>
+      <td>End date to report (inclusive)<br />Accepted values: <code>YYYY-MM-DD</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>campaignType</code></td>
+      <td>enum</td>
+      <td><a href="/retail-media/docs/campaign">Campaign</a> type<br />Accepted values: <code>sponsoredProducts</code>, <code>onSiteDisplays</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>timeZone</code></td>
+      <td>string</td>
+      <td>Time zone to consider in the report.<br />Defaults to UTC if omitted.<br />Accepted values: <a href="https://www.iana.org/time-zones">IANA (TZ database)</a> time zones (example: <code>America/New&#95;York</code>, <code>Europe/Paris</code>, <code>Asia/Tokyo</code>, <code>UTC</code>)<br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>clickAttributionWindow</code></td>
+      <td>enum</td>
+      <td>The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if <code>viewAttributionWindow</code> is one of the accepted values.<br />The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click. Defaults to campaign settings if omitted; must be specified if <code>viewAttributionWindow</code> is one of the accepted values.<br />Accepted values: <code>none</code>, <code>7D</code>, <code>14D</code>, <code>30D</code><br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>viewAttributionWindow</code></td>
+      <td>enum</td>
+      <td>The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to <code>clickAttributionWindow</code>; must be specified if <code>clickAttributionWindow</code> is one of the accepted values.<br />The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression. Defaults to campaign settings if omitted; must be less than or equal to <code>clickAttributionWindow</code>; must be specified if <code>clickAttributionWindow</code> is one of the accepted values.<br />Accepted values: <code>none</code>, <code>1D</code>, <code>7D</code>, <code>14D</code>, <code>30D</code><br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>salesChannel</code></td>
+      <td>enum</td>
+      <td>Filter on specific sales channel: online or offline<br />Accepted values: <code>online</code>, <code>offline</code><br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>format</code></td>
+      <td>enum</td>
+      <td>Format of the report data returned<br />Accepted values: <code>json</code>, <code>json-compact</code>, <code>json-newline</code>, <code>csv</code> Default: <code>json</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>searchTermTypes</code></td>
+      <td>string</td>
+      <td>The match type used to associate a search term and keywords entered for the campaign.<br />Accepted values:<br /><code>Entered</code>: the search term matches exactly what was entered manually by the Commerce Max user<br /><code>Searched</code>: the search term matches what a shopper searched on the retailer’s website.</td>
+    </tr>
+    <tr>
+      <td><code>searchTermTargeting</code></td>
+      <td>string</td>
+      <td>Indicates how the keyword was targeted — either manually by the user or automatically by the platform.<br />Accepted values:<br /><code>Manual</code>: The search term matches a keyword entered in Commerce Max or a variation created via stemming.<br /><code>Automatic</code>: The search term was added by the automated keyword tool.</td>
+    </tr>
+    <tr>
+      <td><code>targetedKeywordType</code></td>
+      <td>string</td>
+      <td>Specifies the conquesting strategy used with the keyword.<br />Accepted values:<br /><code>Conquesting</code>: Targets competitors' branded keywords. <code>Branded</code>: Targets the advertiser’s own branded keywords.<br /><code>Generic</code>: Targets neutral or non-branded keywords.</td>
+    </tr>
+    <tr>
+      <td><code>mediaType</code></td>
+      <td>string</td>
+      <td>The type of creative asset used in the ad, such as Display or Video.<br />Accepted values: <code>video</code>, <code>display</code>, <code>all</code></td>
+    </tr>
+  </tbody>
+</table>
 
-*\*Required*
+_*Required_
 
 <Info>
-  ### Reporting Asynchronous Workflow: Step 1 of 3
+  **Reporting Asynchronous Workflow: Step 1 of 3**
 
   * First, create a request for the campaign or line item report with the desired attributes
   * This generates a `reportId` representing the report
@@ -59,272 +152,272 @@ Reporting endpoints provide two separate endpoints that allow downloading report
 
 ### Campaigns Level Report
 
-![](/images/retail-media/docs/b0623eb-post.png)
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/reports/campaigns
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -X POST "https://api.criteo.com/{version}/retail-media/reports/campaigns" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-      -H "Content-Type: application/json" \
-      -d '{
-              "data": {
-                  "type": "RetailMediaReportRequest",
-                  "attributes": {
-                      "id": "8343086999167541140",
-                      "metrics": ["impressions"],
-                      "dimensions": ["date"],
-                      "reportType": "summary",
-                      "startDate": "2025-01-01",
-                      "endDate": "2025-01-31",
-                      "timeZone": "America/New_York",
-                      "campaignType": "sponsoredProducts",
-                      "salesChannel": "offline"
-                  }
-              }
-          }'
-  ```
 
-  ```bash bash
-  import requests
-  import json
+```bash cURL
+curl -X POST "https://api.criteo.com/{version}/retail-media/reports/campaigns" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaReportRequest",
+                "attributes": {
+                    "id": "8343086999167541140",
+                    "metrics": ["impressions"],
+                    "dimensions": ["date"],
+                    "reportType": "summary",
+                    "startDate": "2025-01-01",
+                    "endDate": "2025-01-31",
+                    "timeZone": "America/New_York",
+                    "campaignType": "sponsoredProducts",
+                    "salesChannel": "offline"
+                }
+            }
+        }'
+```
 
-  url = "https://api.criteo.com/{version}/retail-media/reports/campaigns"
+```python Python
+import requests
+import json
 
-  payload = json.dumps({
-    "data": {
-      "type": "RetailMediaReportRequest",
-      "attributes": {
-        "id": "1285",
-        "metrics": [
-         		 "impressions"
-        		 ],
-        "dimensions": [
-       		   "date"
-       			 ],
-        "reportType": "summary",
-        "startDate": "2025-01-01",
-        "endDate": "2025-01-31",
-        "timeZone": "America/New_York",
-        "campaignType": "sponsoredProducts",
-        "salesChannel": "offline"
-      }
-    }
-  })
-  headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-  }
+url = "https://api.criteo.com/{version}/retail-media/reports/campaigns"
 
-  response = requests.request("POST", url, headers=headers, data=payload)
-
-  print(response.text)
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-  MediaType mediaType = MediaType.parse("application/json");
-
-  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"RetailMediaReportRequest\",\"attributes\":{\"id\":\"8343086999167541140\",\"metrics\":[\"impressions\"],\"dimensions\":[\"date\"],\"reportType\":\"summary\",\"startDate\":\"2025-01-01\",\"endDate\":\"2025-01-31\",\"timeZone\":\"America/New_York\",\"campaignType\":\"sponsoredProducts\",\"salesChannel\":\"offline\"}}}");
-
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/reports/campaigns")
-    .method("POST", body)
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/reports/campaigns');
-  $request->setMethod(HTTP_Request2::METHOD_POST);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Content-Type' => 'application/json',
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-  $request->setBody('{\"data\":{\"type\":\"RetailMediaReportRequest\",\"attributes\":{\"id\":\"8343086999167541140\",\"metrics\":[\"impressions\"],\"dimensions\":[\"date\"],\"reportType\":\"summary\",\"startDate\": \"2025-01-01\",\"endDate\":\"2025-01-31\",\"timeZone\":\"America/New_York\",\"campaignType\":\"sponsoredProducts\",\"salesChannel\":\"offline\"}}}');
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaReportRequest",
+    "attributes": {
+      "id": "1285",
+      "metrics": [
+       		 "impressions"
+      		 ],
+      "dimensions": [
+     		   "date"
+     			 ],
+      "reportType": "summary",
+      "startDate": "2025-01-01",
+      "endDate": "2025-01-31",
+      "timeZone": "America/New_York",
+      "campaignType": "sponsoredProducts",
+      "salesChannel": "offline"
     }
   }
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"RetailMediaReportRequest\",\"attributes\":{\"id\":\"8343086999167541140\",\"metrics\":[\"impressions\"],\"dimensions\":[\"date\"],\"reportType\":\"summary\",\"startDate\":\"2025-01-01\",\"endDate\":\"2025-01-31\",\"timeZone\":\"America/New_York\",\"campaignType\":\"sponsoredProducts\",\"salesChannel\":\"offline\"}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/reports/campaigns")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/reports/campaigns');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{\"data\":{\"type\":\"RetailMediaReportRequest\",\"attributes\":{\"id\":\"8343086999167541140\",\"metrics\":[\"impressions\"],\"dimensions\":[\"date\"],\"reportType\":\"summary\",\"startDate\": \"2025-01-01\",\"endDate\":\"2025-01-31\",\"timeZone\":\"America/New_York\",\"campaignType\":\"sponsoredProducts\",\"salesChannel\":\"offline\"}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-  ```
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 ### Line Items Level Report
 
-![](/images/retail-media/docs/b0623eb-post.png)
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/reports/line-items
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -X POST "https://api.criteo.com/{version}/retail-media/reports/line-items" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-      -H "Content-Type: application/json" \
-      -d '{
-              "data": {
-                  "type": "RetailMediaReportRequest",
-                  "attributes": {
-                      "id": "8343086999167541140",
-                      "metrics": [
-                          "impressions"
-                      ],
-                      "dimensions": [
-                          "date"
-                      ],
-                      "reportType": "summary",
-                      "startDate": "2020-04-06",
-                      "endDate": "2020-06-04",
-                      "timeZone": "America/New_York",
-                      "campaignType": "sponsoredProducts",
-                      "salesChannel": "offline"
-                  }
-              }
-          }'
-  ```
 
-  ```bash bash
-  import requests
-  import json
+```bash cURL
+curl -X POST "https://api.criteo.com/{version}/retail-media/reports/line-items" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaReportRequest",
+                "attributes": {
+                    "id": "8343086999167541140",
+                    "metrics": [
+                        "impressions"
+                    ],
+                    "dimensions": [
+                        "date"
+                    ],
+                    "reportType": "summary",
+                    "startDate": "2020-04-06",
+                    "endDate": "2020-06-04",
+                    "timeZone": "America/New_York",
+                    "campaignType": "sponsoredProducts",
+                    "salesChannel": "offline"
+                }
+            }
+        }'
+```
 
-  url = "https://api.criteo.com/{version}/retail-media/reports/line-items"
+```python Python
+import requests
+import json
 
-  payload = json.dumps({
-    "data": {
-      "type": "RetailMediaReportRequest",
-      "attributes": {
-        "id": "1285",
-        "metrics": [
-         		 "impressions"
-        		 ],
-        "dimensions": [
-       		   "date"
-       			 ],
-        "reportType": "summary",
-        "startDate": "2022-06-06",
-        "endDate": "2022-07-04",
-        "timeZone": "America/New_York",
-        "campaignType": "sponsoredProducts",
-        "salesChannel": "offline"
-      }
-    }
-  })
-  headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-  }
+url = "https://api.criteo.com/{version}/retail-media/reports/line-items"
 
-  response = requests.request("POST", url, headers=headers, data=payload)
-
-  print(response.text)
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-  MediaType mediaType = MediaType.parse("application/json");
-
-  RequestBody body = RequestBody.create(mediaType, "{\n            \"data\": {\n                \"type\": \"RetailMediaReportRequest\",\n                \"attributes\": {\n                    \"id\": \"8343086999167541140\",\n                    \"metrics\": [\n       \t\t\t\t\t\t\t\t \"impressions\"\n      \t\t\t\t\t\t\t\t ],\n      \t\t\t\t\t\t  \"dimensions\": [\n        \t\t\t\t\t\t   \"date\"\n      \t\t\t\t\t\t\t\t ],\n                    \"reportType\": \"summary\",\n                    \"startDate\": \"2020-04-06\",\n                    \"endDate\": \"2020-06-04\",\n                    \"timeZone\": \"America/New_York\",\n                    \"campaignType\": \"sponsoredProducts\",\n      \t\t\t\t\t\t  \"salesChannel\": \"offline\"\n                }\n            }\n        }");
-
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/reports/line-items")
-    .method("POST", body)
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/reports/line-items');
-  $request->setMethod(HTTP_Request2::METHOD_POST);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Content-Type' => 'application/json',
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-  $request->setBody('{\n            \"data\": {\n                \"type\": \"RetailMediaReportRequest\",\n                \"attributes\": {\n                    \"id\": \"8343086999167541140\",\n                    \"metrics\": [\n       \t\t\t\t\t\t\t\t \"impressions\"\n      \t\t\t\t\t\t\t\t ],\n      \t\t\t\t\t\t  \"dimensions\": [\n        \t\t\t\t\t\t   \"date\"\n      \t\t\t\t\t\t\t\t ],\n                    \"reportType\": \"summary\",\n                    \"startDate\": \"2020-04-06\",\n                    \"endDate\": \"2020-06-04\",\n                    \"timeZone\": \"America/New_York\",\n                    \"campaignType\": \"sponsoredProducts\",\n      \t\t\t\t\t\t  \"salesChannel\": \"offline\"\n                }\n            }\n        }');
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaReportRequest",
+    "attributes": {
+      "id": "1285",
+      "metrics": [
+       		 "impressions"
+      		 ],
+      "dimensions": [
+     		   "date"
+     			 ],
+      "reportType": "summary",
+      "startDate": "2022-06-06",
+      "endDate": "2022-07-04",
+      "timeZone": "America/New_York",
+      "campaignType": "sponsoredProducts",
+      "salesChannel": "offline"
     }
   }
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n            \"data\": {\n                \"type\": \"RetailMediaReportRequest\",\n                \"attributes\": {\n                    \"id\": \"8343086999167541140\",\n                    \"metrics\": [\n       \t\t\t\t\t\t\t\t \"impressions\"\n      \t\t\t\t\t\t\t\t ],\n      \t\t\t\t\t\t  \"dimensions\": [\n        \t\t\t\t\t\t   \"date\"\n      \t\t\t\t\t\t\t\t ],\n                    \"reportType\": \"summary\",\n                    \"startDate\": \"2020-04-06\",\n                    \"endDate\": \"2020-06-04\",\n                    \"timeZone\": \"America/New_York\",\n                    \"campaignType\": \"sponsoredProducts\",\n      \t\t\t\t\t\t  \"salesChannel\": \"offline\"\n                }\n            }\n        }");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/reports/line-items")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/reports/line-items');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{\n            \"data\": {\n                \"type\": \"RetailMediaReportRequest\",\n                \"attributes\": {\n                    \"id\": \"8343086999167541140\",\n                    \"metrics\": [\n       \t\t\t\t\t\t\t\t \"impressions\"\n      \t\t\t\t\t\t\t\t ],\n      \t\t\t\t\t\t  \"dimensions\": [\n        \t\t\t\t\t\t   \"date\"\n      \t\t\t\t\t\t\t\t ],\n                    \"reportType\": \"summary\",\n                    \"startDate\": \"2020-04-06\",\n                    \"endDate\": \"2020-06-04\",\n                    \"timeZone\": \"America/New_York\",\n                    \"campaignType\": \"sponsoredProducts\",\n      \t\t\t\t\t\t  \"salesChannel\": \"offline\"\n                }\n            }\n        }');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-  ```
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "RetailMediaReportStatus",
-          "id": "2e733b8c-9983-4237-aab9-17a42f4267cb",
-          "attributes": {
-              "status": "pending",
-              "rowCount": null,
-              "fileSizeBytes": null,
-              "md5Checksum": null,
-              "createdAt": null,
-              "expiresAt": null,
-              "message": null
-          }
-      }
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "type": "RetailMediaReportStatus",
+        "id": "2e733b8c-9983-4237-aab9-17a42f4267cb",
+        "attributes": {
+            "status": "pending",
+            "rowCount": null,
+            "fileSizeBytes": null,
+            "md5Checksum": null,
+            "createdAt": null,
+            "expiresAt": null,
+            "message": null
+        }
+    }
+}
+```
 
 <Info>
-  ### Reporting Asynchronous Workflow: Step 2 of 3
+  **Reporting Asynchronous Workflow: Step 2 of 3**
 
   * Next, use the `reportId` to poll the report status endpoint until one is successfully computed
 </Info>
@@ -333,112 +426,111 @@ https://api.criteo.com/{version}/retail-media/reports/line-items
 
 ## Get Status of a Specific Report
 
-This endpoint retrieves the status of a specific report. Status can be `pending`, `success`, `failure`, or `expired`
+This endpoint retrieves the status of a specific report.  Status can be `pending`, `success`, `failure`, or `expired`
 
-![](/images/retail-media/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/reports/{reportId}/status
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/status" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
-  ```
 
-  ```bash bash
-  import requests
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/status" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
 
-  url = "https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status"
+```python Python
+import requests
 
-  payload={}
-  headers = {
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+url = "https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-
-  response = requests.request("GET", url, headers=headers, data=payload)
-
-  print(response.text)
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-  MediaType mediaType = MediaType.parse("text/plain");
-
-  RequestBody body = RequestBody.create(mediaType, "");
-
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status")
-    .method("GET", body)
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status');
-  $request->setMethod(HTTP_Request2::METHOD_GET);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
-    }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
-  }
-  ```
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "attributes": {
-              "status": "success",
-              "rowCount": 50,
-              "fileSizeBytes": 9711,
-              "md5CheckSum": "b92bf24cd899f172907f8b001b8a5edb",
-              "createdAt": "2025-02-19T19:40:27.000Z",
-              "expiresAt": "2025-02-26T19:40:30.000Z",
-              "message": "rows_count=50",
-              "id": "16d70ce4-6917-48b8-8a55-184809dd59b5"
-          },
-          "id": "16d70ce4-6917-48b8-8a55-184809dd59b5",
-          "type": "StatusResponse"
-      },
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "attributes": {
+            "status": "success",
+            "rowCount": 50,
+            "fileSizeBytes": 9711,
+            "md5CheckSum": "b92bf24cd899f172907f8b001b8a5edb",
+            "createdAt": "2025-02-19T19:40:27.000Z",
+            "expiresAt": "2025-02-26T19:40:30.000Z",
+            "message": "rows_count=50",
+            "id": "16d70ce4-6917-48b8-8a55-184809dd59b5"
+        },
+        "id": "16d70ce4-6917-48b8-8a55-184809dd59b5",
+        "type": "StatusResponse"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
 
 <Info>
-  ### Reporting Asynchronous Workflow: Step 3 of 3
+  **Reporting Asynchronous Workflow: Step 3 of 3**
 
   * Finally, download the report using the report output endpoint
   * Report outputs are cached for at least 1 hour before expiration
@@ -451,163 +543,159 @@ https://api.criteo.com/{version}/retail-media/reports/{reportId}/status
 
 This endpoint returns the specific report in the requested format.
 
-![](/images/retail-media/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/reports/{reportId}/output
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/output" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
-  ```
 
-  ```bash bash
-  import requests
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/output" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
 
-  url = "https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output"
+```python Python
+import requests
 
-  payload={}
-  headers = {
-    'Accept': 'application/octet-stream',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+url = "https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output"
+
+payload={}
+headers = {
+  'Accept': 'application/octet-stream',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output")
+  .method("GET", body)
+  .addHeader("Accept", "application/octet-stream")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/octet-stream',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-
-  response = requests.request("GET", url, headers=headers, data=payload)
-
-  print(response.text)
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-  MediaType mediaType = MediaType.parse("text/plain");
-
-  RequestBody body = RequestBody.create(mediaType, "");
-
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output")
-    .method("GET", body)
-    .addHeader("Accept", "application/octet-stream")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output');
-  $request->setMethod(HTTP_Request2::METHOD_GET);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Accept' => 'application/octet-stream',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
-    }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
-  }
-  ```
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-*Campaign Summary Report*
+_Campaign Summary Report_
 
-<CodeGroup>
-  ```bash bash
-  {
-      "columns": [
-          "campaignId", "campaignName", "campaignTypeName", "date", "impressions", "clicks", 
-          "attributedOrders", "attributedUnits", "attributedSales", "ctr", "spend", "cpc", "cpo", 
-          "roas", "uniqueVisitors", "frequency"
-      ],
-      "data": [
-          [
-              "1285", "End of Summer Sale", "Open Auction", "2025-01-31", 0, 0, 
-              1, 1, 76.9400, null, 0.0000, null, 0.0000, 
-              null, null, null
-          ],
-          [
-              "1285", "End of Summer Sale", "Open Auction", "2025-01-29", 1883, 6, 
-              8, 8, 1749.2600, 0.0032, 3.7000, 0.6167, 0.4625, 
-              472.7730, null, null
-          ],
-          [
-              "1285", "End of Summer Sale", "Open Auction", "2025-01-28", 0, 0, 
-              1, 1, 99.4600, null, 0.0000, null, 0.0000, 
-              null, null, null
-          ],
-          [
-              "1285", "End of Summer Sale", "Open Auction", "2025-01-27", 35087, 107, 
-              25, 25, 4381.2700, 0.0030, 96.3000, 0.9000, 3.8520, 
-              45.4961, null, null
-          ] 
-      ], 
-      "rows":4
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "columns": [
+        "campaignId", "campaignName", "campaignTypeName", "date", "impressions", "clicks", 
+        "attributedOrders", "attributedUnits", "attributedSales", "ctr", "spend", "cpc", "cpo", 
+        "roas", "uniqueVisitors", "frequency"
+    ],
+    "data": [
+        [
+            "1285", "End of Summer Sale", "Open Auction", "2025-01-31", 0, 0, 
+            1, 1, 76.9400, null, 0.0000, null, 0.0000, 
+            null, null, null
+        ],
+        [
+            "1285", "End of Summer Sale", "Open Auction", "2025-01-29", 1883, 6, 
+            8, 8, 1749.2600, 0.0032, 3.7000, 0.6167, 0.4625, 
+            472.7730, null, null
+        ],
+        [
+            "1285", "End of Summer Sale", "Open Auction", "2025-01-28", 0, 0, 
+            1, 1, 99.4600, null, 0.0000, null, 0.0000, 
+            null, null, null
+        ],
+        [
+            "1285", "End of Summer Sale", "Open Auction", "2025-01-27", 35087, 107, 
+            25, 25, 4381.2700, 0.0030, 96.3000, 0.9000, 3.8520, 
+            45.4961, null, null
+        ] 
+    ], 
+    "rows":4
+}
+```
 
-*Campaign Attribution Report*
+_Campaign Attribution Report_
 
-<CodeGroup>
-  ```bash bash
-  {
-      "columns": [
-          "purchasedDate", "purchasedHour", "advDate", "advHour", "daysDifference", 
-          "campaignId", "campaignName", "lineItemId", "lineItemName", 
-          "advProductId", "advProductGtin", "advProductMpn", "advProductName", 
-          "advProductCategory", "purchasedProductId", "purchasedProductGtin", 
-          "purchasedProductMpn", "purchasedProductName", "purchasedProductCategory", 
-          "attributedUnits", "attributedSales", "advEngagement", 
-          "advToPurchasedProductRelationship", "salesChannel", "retailerName", 
-          "pageTypeName", "keyword", "attributionWindow"
-      ],
-      "data": [
-          [
-              "2022-10-21", 16, "2022-10-21", 16, 0, 
-              "1344", "End to end testing", "2602", "LJ Test", 
-              "426292", null, null, 
-              "Arm & Hammer Pure Baking Soda, 13.5 lbs", "hardware > tools > hammers > powered hammers", "426292", null, null, 
-              "Arm & Hammer Pure Baking Soda, 13.5 lbs", "hardware > tools > hammers > powered hammers", 
-              1, 8.6900, "click", 
-              "same sku", "online", "Costco", 
-              "category", "", "C30V01"
-          ]
-      ],
-      "rows": 1
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "columns": [
+        "purchasedDate", "purchasedHour", "advDate", "advHour", "daysDifference", 
+        "campaignId", "campaignName", "lineItemId", "lineItemName", 
+        "advProductId", "advProductGtin", "advProductMpn", "advProductName", 
+        "advProductCategory", "purchasedProductId", "purchasedProductGtin", 
+        "purchasedProductMpn", "purchasedProductName", "purchasedProductCategory", 
+        "attributedUnits", "attributedSales", "advEngagement", 
+        "advToPurchasedProductRelationship", "salesChannel", "retailerName", 
+        "pageTypeName", "keyword", "attributionWindow"
+    ],
+    "data": [
+        [
+            "2022-10-21", 16, "2022-10-21", 16, 0, 
+            "1344", "End to end testing", "2602", "LJ Test", 
+            "426292", null, null, 
+            "Arm & Hammer Pure Baking Soda, 13.5 lbs", "hardware > tools > hammers > powered hammers", "426292", null, null, 
+            "Arm & Hammer Pure Baking Soda, 13.5 lbs", "hardware > tools > hammers > powered hammers", 
+            1, 8.6900, "click", 
+            "same sku", "online", "Costco", 
+            "category", "", "C30V01"
+        ]
+    ],
+    "rows": 1
+}
+```
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-What’s Next
+<Danger>
+  **SEND FEEDBACK CUSTOM COMPONENT**
+</Danger>
+## What's next
 
 * [Report Types](/retail-media/docs/report-types)
 * [Metrics and Dimensions](/retail-media/docs/metrics-and-dimensions)

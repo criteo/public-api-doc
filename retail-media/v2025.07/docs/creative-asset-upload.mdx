@@ -1,0 +1,199 @@
+---
+title: Creative Asset Upload
+hidden: true
+---
+
+* Assets are media used in creatives, for example, the background image of a banner ad
+
+* Upload content for a new Retail Media asset using a form
+
+## **Endpoints**
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/assets</code></td>
+      <td>Upload creative asset image file</td>
+    </tr>
+  </tbody>
+</table>
+
+ 
+
+## **Creative Asset Attributes**
+
+#### `id` Required
+
+- **Data Type:** string
+- **Value:**
+
+**Description:** Uploaded asset id
+
+#### `AssetFile` Required
+
+- **Data Type:** file
+- **Value:**formatData
+
+**Description:** The asset binary content
+
+#### `fileExtension`
+
+- **Data Type:** string
+- **Value:**
+- `jpg`,
+- `png`,
+- `gif`
+
+**Description:** File extension type
+
+#### `fileLocation`
+
+- **Data Type:** string
+- **Value:** file path
+
+**Description:** A url pointing towards the static file the asset represents. Uploaded asset is in a draft state available to internal audiences
+
+## **Upload Image Asset**
+
+The endpoint will allow to upload image assets files
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/assets
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/assets' \
+-H 'Accept: text/plain' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-F 'AssetFile=@"/C:/Users/<user_profile>/<folder>/Interactive-Header-Background-Image.jpg"'
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/assets"
+
+payload={}
+files=[
+  ('AssetFile',('Interactive-Header-Background-Image.jpg',open('/C:/Users/<user_profile>/<folder>/Interactive-Header-Background-Image.jpg','rb'),'image/jpeg'))
+]
+headers = {
+  'Accept': 'text/plain',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload, files=files)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("multipart/form-data");
+
+RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
+  .addFormDataPart("AssetFile","/C:/Users/<user>/<path/<to>/<folder>/Interactive-Header-Background-Image.jpg",
+    RequestBody.create(MediaType.parse("application/octet-stream"),
+    new File("/C:/Users/<user>/<path/<to>/<folder>/Interactive-Header-Background-Image.jpg")))
+  .build();
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/assets")
+  .method("POST", body)
+  .addHeader("Accept", "text/plain")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/assets');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'text/plain',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->addUpload('AssetFile', '/C:/Users/<user>/<path/<to>/<folder>/Interactive-Header-Background-Image.jpg', '/C:/Users/j.carvalho/Downloads/Interactive-Header-Background-Image.jpg', '&lt;Content-Type Header&gt;');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response 1**
+
+```json JSON
+{
+    "data": {
+        "attributes": {
+            "fileExtension": "jpg",
+            "fileLocation": "https://crtormassetmguseprod.blob.core.windows.net/creativeassets-live/c62129d534f3475ba91de6adb54d41faf2d12e4a6c2a17a57dc1efd056a23998.jpg"
+        },
+        "id": "c62129d534f3475ba91de6adb54d41faf2d12e4a6c2a17a57dc1efd056a23998",
+        "type": "RetailMediaAsset"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+**Sample Response 2**\
+*If the image was previously uploaded, a warning will be shown in the response*
+
+```json
+{
+    "data": {
+        "attributes": {
+            "fileExtension": "jpg",
+            "fileLocation": "https://crtormassetmguseprod.blob.core.windows.net/creativeassets-live/0fab8060578680dd895c51b5c2eb8331774fe168338fbb1e3ced85940b013314.jpg"
+        },
+        "id": "0fab8060578680dd895c51b5c2eb8331774fe168338fbb1e3ced85940b013314",
+        "type": "RetailMediaAsset"
+    },
+    "warnings": [
+        {
+            "traceIdentifier": "27b6f2813d90b048b4c6d70679ae48ae",
+            "type": "validation",
+            "code": "asset-already-exists",
+            "instance": "/api/{version}/external/assets",
+            "title": "Existing asset",
+            "detail": "Asset already uploaded with id 0fab8060578680dd895c51b5c2eb8331774fe168338fbb1e3ced85940b013314.jpg",
+            "source": null
+        }
+    ],
+    "errors": []
+}
+```

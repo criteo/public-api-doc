@@ -1,14 +1,12 @@
 ---
-title: "OAuth App - Authorization Code Setup"
+title: OAuth App - Authorization Code Setup
+description: This guide provides step-by-step instructions on setting up an API application
+  using the authorization code workflow
 ---
 
-1. Getting Started
-2. [OAuth App Implementation](/retail-media/docs/oauth-app-implementation)
-
-This guide provides step-by-step instructions on setting up an API application using the authorization code workflow
-
 <Info>
-  This guide describes OAuth App setup using the Authorization Code flow. If your application is a mobile app, single-page app (SPA), or other public client that cannot securely store a client secret, you must use the [Authorization Code with PKCE](https://developers.criteo.com/retail-media/docs/oauth-app-authorization-code-pkce-setup) instead.
+  This guide describes OAuth App setup using the Authorization Code flow.
+  If your application is a mobile app, single-page app (SPA), or other public client that cannot securely store a client secret, you must use the [Authorization Code with PKCE](/retail-media/docs/oauth-app-authorization-code-pkce-setup) instead.
 </Info>
 
 ***
@@ -19,9 +17,9 @@ This guide provides step-by-step instructions on setting up an API application u
 
 ### Creating an authorization code app
 
-Log in to the Criteo Partners Portal and create a new app by clicking the ➕ button in the `My apps` section.
+Log in to the Criteo Partners Portal and create a new app by clicking the :heavy_plus_sign: button in the `My apps` section.
 
-![](/images/retail-media/docs/862451e-image.png)
+![862451e image](/images/retail-media/docs/862451e-image.png)
 
 This will open a modal where you can select type of application.
 
@@ -32,18 +30,18 @@ This will open a modal where you can select type of application.
 #### App details
 
 * Provide your app name and description. Optionally, add an image to identify your application.
-* On your app page, you can define the scope of your application and OAuth parameters. For more details, please refer to [Getting connected to the API](doc:connect-to-the-api).
+* On your app page, you can define the scope of your application and OAuth parameters. For more details, please refer to [Getting connected to the API](/retail-media/docs/connect-to-the-api).
 
-![](/images/retail-media/docs/abc222c-portal-_step1_1.gif)
+![abc222c portal _step1_1](/images/retail-media/docs/abc222c-portal-_step1_1.gif)
 
 ***
 
 #### Authentication method
 
-* Select your app's authentication method: choose between "*Client Credentials*" or "*Authorization Code*".
-* For this setup, we are selecting "*Authorization Code*", but you can review our [OAuth App implementation](doc:oauth-app-implementation) guide to determine the best option for your organization.
+* Select your app's authentication method: choose between "_Client Credentials_" or "_Authorization Code_".
+* For this setup, we are selecting "_Authorization Code_", but you can review our [OAuth App implementation](/retail-media/docs/oauth-app-implementation) guide to determine the best option for your organization.
 
-![](/images/retail-media/docs/190da94-auth_methods.png)
+![190da94 auth_methods](/images/retail-media/docs/190da94-auth_methods.png)
 
 ***
 
@@ -53,7 +51,7 @@ This will open a modal where you can select type of application.
 
 Choose the Criteo service your API application will use: select C-Growth for Marketing Solutions or C-Max for Retail Media.
 
-![](/images/retail-media/docs/4a14336-services.png)
+![4a14336 services](/images/retail-media/docs/4a14336-services.png)
 
 ***
 
@@ -63,7 +61,7 @@ Choose the Criteo service your API application will use: select C-Growth for Mar
 
 Choose the domains that define the permission access your application needs.
 
-![](/images/retail-media/docs/fb84380-portal-_step4final_1.gif)
+![fb84380 portal _step4final_1](/images/retail-media/docs/fb84380-portal-_step4final_1.gif)
 
 After completing these steps, click `Activate app` to activate the application.
 
@@ -71,7 +69,7 @@ After completing these steps, click `Activate app` to activate the application.
 
 * For applications using the authorization code workflow, you need to specify a **Redirect URI** as part of your app scope.
 
-![](/images/retail-media/docs/706af65-2023-06-30_14_57_56-My_First_App-Criteo_Developer_Portal.png)
+![706af65 2023 06 30_14_57_56 My_First_App___Criteo_Developer_Portal](https://files.readme.io/706af65-2023-06-30_14_57_56-My_First_App___Criteo_Developer_Portal.png)
 
 ***
 
@@ -79,11 +77,28 @@ After completing these steps, click `Activate app` to activate the application.
 
 After defining your application’s scope, set up the necessary parameters for the authorization code workflow.
 
-| Parameters      | Description                                                                                                                                                      |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `client_id`     | Your public key, accessible in the app credentials section. You can manage up to 5 pairs of credentials, even after the app has been activated.                  |
-| `client_secret` | Your secret key, accessible only once when creating a pair of `client_id` and `client_secret`. You can manage up to 5 pairs of credentials after app activation. |
-| `redirect_uri`  | The URL to redirect the user to after consent. Requires HTTPS. You can add up to 30 redirect URIs, manageable after app activation.                              |
+<table>
+  <thead>
+    <tr>
+      <th>Parameters</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>client&#95;id</code></td>
+      <td>Your public key, accessible in the app credentials section. You can manage up to 5 pairs of credentials, even after the app has been activated.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;secret</code></td>
+      <td>Your secret key, accessible only once when creating a pair of <code>client&#95;id</code> and <code>client&#95;secret</code>. You can manage up to 5 pairs of credentials after app activation.</td>
+    </tr>
+    <tr>
+      <td><code>redirect&#95;uri</code></td>
+      <td>The URL to redirect the user to after consent. Requires HTTPS. You can add up to 30 redirect URIs, manageable after app activation.</td>
+    </tr>
+  </tbody>
+</table>
 
 You can now publish the app and initiate the authorization code workflow.
 
@@ -98,31 +113,56 @@ Once your app parameters are set, you can implement the authorization code flow.
 1. To request access, create a Consent link that redirects the user, using the following structure:
 
 <Info>
-  ### Authorization Code v. Client Credentials Consent URLs
+  **Authorization Code v. Client Credentials Consent URLs**
 
   If you're familiar with the Client Credentials workflow, you might notice that the `Generate Consent URL` button is not present in the partner portal for the authorization code workflow. This is because, with the authorization code method, you need to provide a redirect URI specific to your organization. Therefore, these URLs must be configured directly within your workflow.
 </Info>
 
 You will need to construct a consent URL similar to the example below while passing the required parameters for your application:
 
-<CodeGroup>
-  ```bash bash
-  https://consent.criteo.com/request?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&state={state}
-  ```
-</CodeGroup>
+```text http URL
+https://consent.criteo.com/request?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&state={state}
+```
 
-| Parameters           | Required | Description                                                                |
-| -------------------- | -------- | -------------------------------------------------------------------------- |
-| `response_type=code` | Yes      | Indicates that an authorization code is expected as outcome.               |
-| `client_id`          | Yes      | Your public key from the app credentials section.                          |
-| `redirect_uri`       | Yes      | The URL to redirect the user after consent. Must match the configured URI. |
-| `state`              | No       | Optional string to prevent Cross-Site Request Forgery attacks.             |
+<table>
+  <thead>
+    <tr>
+      <th>Parameters</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>response&#95;type=code</code></td>
+      <td>Yes</td>
+      <td>Indicates that an authorization code is expected as outcome.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;id</code></td>
+      <td>Yes</td>
+      <td>Your public key from the app credentials section.</td>
+    </tr>
+    <tr>
+      <td><code>redirect&#95;uri</code></td>
+      <td>Yes</td>
+      <td>The URL to redirect the user after consent. Must match the configured URI.</td>
+    </tr>
+    <tr>
+      <td><code>state</code></td>
+      <td>No</td>
+      <td>Optional string to prevent Cross-Site Request Forgery attacks.</td>
+    </tr>
+  </tbody>
+</table>
 
 2. The consent link directs users to the `Criteo Consent page`, where they can select which advertisers to grant access to and approve the request.
 
 <Frame caption="The Criteo Consent page allows selecting the advertisers to grand access to">
-  <img src="/images/retail-media/docs/0151441-consentgeneration3.png" />
+  <img src="/images/retail-media/docs/0151441-consentgeneration3.png" alt="The Criteo Consent page allows selecting the advertisers to grand access to" />
 </Frame>
+
+<br />
 
 <Info>
   **Notes**
@@ -142,18 +182,30 @@ You will need to construct a consent URL similar to the example below while pass
 
 Upon completing the Consent Delegation, users are redirected to a URL similar to the example below:
 
-<CodeGroup>
-  ```bash bash
-  https://www.yourdomain.com/?code=58f4cd15-8087-48af-bab7-bba06d2df1da&state=4lr4e
-  ```
-</CodeGroup>
+```text http URL
+https://www.yourdomain.com/?code=58f4cd15-8087-48af-bab7-bba06d2df1da&state=4lr4e
+```
 
 This URL is forged with the authorized `redirect_uri` and the following query parameters:
 
-| Parameter | Description                                              |
-| --------- | -------------------------------------------------------- |
-| `code`    | A single-use authorization code valid for 60 seconds.    |
-| `state`   | The originally provided state parameter, returned as-is. |
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>code</code></td>
+      <td>A single-use authorization code valid for 60 seconds.</td>
+    </tr>
+    <tr>
+      <td><code>state</code></td>
+      <td>The originally provided state parameter, returned as-is.</td>
+    </tr>
+  </tbody>
+</table>
 
 If consent is denied, the redirect will include an `error` query parameter instead of a `code`.
 
@@ -163,58 +215,95 @@ If consent is denied, the redirect will include an `error` query parameter inste
 
 With an authorization code, you can request an access token via a `POST` request:
 
-<CodeGroup>
-  ```bash bash
-  curl -L 'https://api.criteo.com/oauth2/token' \
-  -d 'client_id=<MY_CLIENT_ID>' \
-  -d 'client_secret=<MY_CLIENT_SECRET>' \
-  -d 'redirect_uri=<MY_URI>' \
-  -d 'code=<MY_CODE>' \
-  -d 'grant_type=authorization_code'
-  ```
-</CodeGroup>
+```bash
+curl -L 'https://api.criteo.com/oauth2/token' \
+-d 'client_id=<MY_CLIENT_ID>' \
+-d 'client_secret=<MY_CLIENT_SECRET>' \
+-d 'redirect_uri=<MY_URI>' \
+-d 'code=<MY_CODE>' \
+-d 'grant_type=authorization_code'
+```
 
 ### Example
 
-<CodeGroup>
-  ```bash bash
-  curl -L 'https://api.criteo.com/oauth2/token?grant_type=authorization_code&client_id=<MY_CLIENT_ID>&client_secret=<MY_CLIENT_SECRET>&redirect_uri=<MY_URI>' \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'client_id=<MY_CLIENT_ID>' \
-  -d 'client_secret=<MY_CLIENT_SECRET>' \
-  -d 'redirect_uri=<MY_URI>' \
-  -d 'code=<MY_CODE>' \
-  -d 'grant_type=authorization_code'
-  ```
-</CodeGroup>
+```bash
+curl -L 'https://api.criteo.com/oauth2/token?grant_type=authorization_code&client_id=<MY_CLIENT_ID>&client_secret=<MY_CLIENT_SECRET>&redirect_uri=<MY_URI>' \
+-H 'Content-Type: application/x-www-form-urlencoded' \
+-d 'client_id=<MY_CLIENT_ID>' \
+-d 'client_secret=<MY_CLIENT_SECRET>' \
+-d 'redirect_uri=<MY_URI>' \
+-d 'code=<MY_CODE>' \
+-d 'grant_type=authorization_code'
+```
 
-| Parameter                       | Description                                                      |
-| ------------------------------- | ---------------------------------------------------------------- |
-| `grant_type=authorization_code` | Indicates that you are providing an authorization code           |
-| `code`                          | Authorization code returned during redirection                   |
-| `redirect_uri`                  | Must match the `redirect_uri` used for the authorization request |
-| `client_id`                     | Your public key from the app credentials                         |
-| `client_secret`                 | Your secret key, accessible when creating credentials            |
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>grant&#95;type=authorization&#95;code</code></td>
+      <td>Indicates that you are providing an authorization code</td>
+    </tr>
+    <tr>
+      <td><code>code</code></td>
+      <td>Authorization code returned during redirection</td>
+    </tr>
+    <tr>
+      <td><code>redirect&#95;uri</code></td>
+      <td>Must match the <code>redirect&#95;uri</code> used for the authorization request</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;id</code></td>
+      <td>Your public key from the app credentials</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;secret</code></td>
+      <td>Your secret key, accessible when creating credentials</td>
+    </tr>
+  </tbody>
+</table>
 
 The response from Criteo API will be the following:
 
-<CodeGroup>
-  ```bash bash
-  {
-      "access_token": "eyJhbGciOixxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "token_type": "Bearer",
-      "refresh_token": "eyJhbGciOxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "expires_in": 900
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "access_token": "eyJhbGciOixxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "token_type": "Bearer",
+    "refresh_token": "eyJhbGciOxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "expires_in": 900
+}
+```
 
-| Parameter           | Description                                                                                                             |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `access_token`      | A short-lived (valid for 900 seconds) access token.                                                                     |
-| `refresh_token`     | A long-lived refresh token (that expires after 6 months) that can be used to renew the access token (see next section). |
-| `token_type=Bearer` | Type of token.                                                                                                          |
-| `expires_in`        | Lifetime of the token in seconds.                                                                                       |
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>access&#95;token</code></td>
+      <td>A short-lived (valid for 900 seconds) access token.</td>
+    </tr>
+    <tr>
+      <td><code>refresh&#95;token</code></td>
+      <td>A long-lived refresh token (that expires after 6 months) that can be used to renew the access token (see next section).</td>
+    </tr>
+    <tr>
+      <td><code>token&#95;type=Bearer</code></td>
+      <td>Type of token.</td>
+    </tr>
+    <tr>
+      <td><code>expires&#95;in</code></td>
+      <td>Lifetime of the token in seconds.</td>
+    </tr>
+  </tbody>
+</table>
 
 <Warning>
   **Token Lifetime**
@@ -228,20 +317,39 @@ The response from Criteo API will be the following:
 
 To renew an access token, use the following request:
 
-<CodeGroup>
-  ```bash bash
-  curl -X POST https://api.criteo.com/oauth2/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=refresh_token&code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}"
-  ```
-</CodeGroup>
+```bash
+curl -X POST https://api.criteo.com/oauth2/token \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-d "grant_type=refresh_token&code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}"
 
-| Parameter                  | Description                                                                                                           |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `grant_type=refresh_token` | Indicates that you are providing a refresh token.                                                                     |
-| `refresh_token`            | Refresh token shared when requesting an access token.                                                                 |
-| `client_id`                | Your public key accessible in app credentials section.                                                                |
-| `client_secret`            | Your secret key, accessible only once when creating a pair of `client_id `and `client_secret` in credentials section. |
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>grant&#95;type=refresh&#95;token</code></td>
+      <td>Indicates that you are providing a refresh token.</td>
+    </tr>
+    <tr>
+      <td><code>refresh&#95;token</code></td>
+      <td>Refresh token shared when requesting an access token.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;id</code></td>
+      <td>Your public key accessible in app credentials section.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;secret</code></td>
+      <td>Your secret key, accessible only once when creating a pair of <code>client&#95;id </code>and <code>client&#95;secret</code> in credentials section.</td>
+    </tr>
+  </tbody>
+</table>
 
 The response will be the same as when issuing an access token
 
@@ -252,67 +360,66 @@ The response will be the same as when issuing an access token
 Below is a demo application code (index.js) in **NodeJS** using the **Express JS** framework:
 
 <CodeGroup>
-  ```bash bash
-  var express = require('express');
-  var passport = require('passport');
-  var OAuth2Strategy = require('passport-oauth2').Strategy;
-  var app = express();
-  var port = 3000;
 
-  // Passport setup
-  passport.use(new OAuth2Strategy({
-      clientID: 'CLIENT_ID', // Enter your client_id here
-      clientSecret: 'CLIENT_SECRET', // Enter your client_secret here
-      authorizationURL: 'https://consent.criteo.com/request',
-      callbackURL: `http://localhost:${port}/criteo-auth/callback`,
-      tokenURL: 'https://api.criteo.com/oauth2/token',
-      state: 'togorot'
-    },
-    function(accessToken, refreshToken, profile, cb) {
-      cb(null, { accessToken, refreshToken });
-    }
-  ));
-  app.use(passport.initialize());
+```javascript JavaScript
+var express = require('express');
+var passport = require('passport');
+var OAuth2Strategy = require('passport-oauth2').Strategy;
+var app = express();
+var port = 3000;
 
-  // Route declarations
-  app.get('/', function(req, res) {
-    res.send('<a href="/criteo-auth">Link my Criteo account!</a>');
-  });
-
-  app.get('/criteo-auth', passport.authenticate('oauth2'));
-
-  app.get('/criteo-auth/callback',
-    passport.authenticate('oauth2', { session: false }),
-    function(req, res) {
-      res.send(`<div>Authentication successful!</div><div>Access token:</div><textarea>${req.user.accessToken}</textarea><div>Refresh token:</div><textarea>${req.user.refreshToken}</textarea>`);
-    }
-  );
-
-  console.log(`OAuth test app started on http://localhost:${port}`);
-  app.listen(port);
-  ```
-</CodeGroup>
-
-<CodeGroup>
-  ```bash bash
-  {
-      "name": "oauth-node",
-      "version": "1.0.0",
-      "description": "",
-      "main": "index.js",
-      "scripts": {
-          "start": "node index.js"
-      },
-      "author": "",
-      "license": "ISC",
-      "dependencies": {
-          "ejs": "^3.1.6",
-          "express": "^4.17.1",
-          "passport": "^0.4.1",
-          "passport-oauth2": "^1.6.0"
-      }
+// Passport setup
+passport.use(new OAuth2Strategy({
+    clientID: 'CLIENT_ID', // Enter your client_id here
+    clientSecret: 'CLIENT_SECRET', // Enter your client_secret here
+    authorizationURL: 'https://consent.criteo.com/request',
+    callbackURL: `http://localhost:${port}/criteo-auth/callback`,
+    tokenURL: 'https://api.criteo.com/oauth2/token',
+    state: 'togorot'
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    cb(null, { accessToken, refreshToken });
   }
-  ```
+));
+app.use(passport.initialize());
+
+// Route declarations
+app.get('/', function(req, res) {
+  res.send('<a href="/criteo-auth">Link my Criteo account!</a>');
+});
+
+app.get('/criteo-auth', passport.authenticate('oauth2'));
+
+app.get('/criteo-auth/callback',
+  passport.authenticate('oauth2', { session: false }),
+  function(req, res) {
+    res.send(`<div>Authentication successful!</div><div>Access token:</div><textarea>${req.user.accessToken}</textarea><div>Refresh token:</div><textarea>${req.user.refreshToken}</textarea>`);
+  }
+);
+
+console.log(`OAuth test app started on http://localhost:${port}`);
+app.listen(port);
+```
+
+```json JSON
+{
+    "name": "oauth-node",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "ejs": "^3.1.6",
+        "express": "^4.17.1",
+        "passport": "^0.4.1",
+        "passport-oauth2": "^1.6.0"
+    }
+}
+```
 </CodeGroup>
 
 ***
@@ -337,12 +444,11 @@ Below is a demo application code (index.js) in **NodeJS** using the **Express JS
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-What’s Next
+<Danger>
+  **SEND FEEDBACK CUSTOM COMPONENT**
+</Danger>
+## What's next
 
 * [OAuth App – Authorization Code & PKCE Setup](/retail-media/docs/oauth-app-authorization-code-pkce-setup)

@@ -1,0 +1,214 @@
+---
+title: Get Started with MCP
+hidden: true
+---
+
+## Overview
+
+Criteo MCP is the connection layer between your AI application or agent environment and Criteo capabilities.
+
+This guide is for partners who want to connect an MCP-compatible AI application or agent environment to Criteo MCP and understand how to set it up.
+
+Typical users include:
+
+* **Agencies, brands, retailers, and third-party platforms** using MCP-compatible AI applications
+* **Teams building proprietary agent environments** that need access to Criteo capabilities
+* **Technical owners** responsible for setup and configuration
+* **Business or test owners** defining initial workflows to validate
+
+<Warning>
+  **Current scope**
+
+  MCP supports read-only Retail Media workflows (Context & Measure). Other capabilities may be added in future releases.
+</Warning>
+
+***
+
+## Why MCP?
+
+Criteo MCP sits on top of Criteo APIs and exposes capabilities in a way that is easier for AI applications and agents to use. In practice, this helps partners by:
+
+* Reducing bespoke integration work between the AI application and individual APIs.
+* Making structured capabilities easier to discover and invoke.
+* Supporting natural-language workflows that combine retrieval, explanation, and next-step reasoning.
+
+Partners may still use raw APIs directly where appropriate, MCP is seen as complementary to this existing capability.
+
+<Info>
+  MCP is most useful when the goal is to power AI-assisted workflows requiring LLM reasoning.
+</Info>
+
+***
+
+# Get Started
+
+## Prerequisites
+
+Before connecting to Criteo MCP, make sure you have:
+
+* A Criteo API application and valid credentials (provisioned by Criteo)
+* Organization and credential access approved for MCP (granted by Criteo)
+* An MCP-compatible client, AI application, or agent platform that supports MCP integrations and can be configured
+* A shortlist of workflows you want to test first
+* Named technical and business owners on your side
+
+## Environments and Access
+
+Criteo currently provides the following MCP environment:
+
+<table>
+  <thead>
+    <tr>
+      <th>Environment</th>
+      <th>MCP URL</th>
+      <th>Typical use</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Production</td>
+      <td><code>https://mcp.criteo.com/mcp</code></td>
+      <td>Partner testing on approved live environments and approved production credentials</td>
+    </tr>
+  </tbody>
+</table>
+
+<Warning>
+  Ensure your agentic platform supports MCP integrations and that you are able to configure them. Before testing, confirm that the organization and credentials you plan to use have been approved for MCP access.
+</Warning>
+
+<Info>
+  For complex authorization behavior, please reach out to your Criteo point of contact.
+</Info>
+
+***
+
+## Supported Integration Patterns
+
+Criteo MCP can be used through several integration patterns, depending on the partner's environment.
+
+### Off-the-shelf AI applications
+
+Validated examples from current testing include:
+
+* [ChatGPT](https://chatgpt.com/overview/)
+* [Claude](https://claude.com/product/overview)
+* [Langdock.ai](https://langdock.com/)
+* [VS Code with GitHub Copilot](https://code.visualstudio.com/docs/copilot/overview)
+* [Claude Code](https://claude.com/product/claude-code)
+
+### Proprietary or Custom Agent Environments
+
+Partners may also connect their own agent environments or orchestration layers, provided they support MCP-compatible connection patterns.
+
+### Development Tools & IDEs
+
+For technical setup and experimentation, IDE-based MCP clients can be a practical starting point.
+
+<Warning>
+  As of April 2026, **Microsoft Copilot is not part of the recommended current testing set for Criteo MCP.**
+</Warning>
+
+***
+
+## Connection Details
+
+<Info>
+  Criteo MCP supports multiple authentication methods.  
+  The exact method depends on the MCP client and the partner's setup.
+</Info>
+
+### Supported Authentication Methods
+
+Criteo MCP currently supports the following authentication patterns:
+
+#### 1. Recommended: Authorization Header (Basic Auth)
+
+The preferred approach is to use a standard Authorization header with Basic authentication:
+
+```text
+Authorization: Basic <base64(client_id:client_secret)>
+```
+
+This method aligns with common HTTP authentication standards and is recommended for most MCP-compatible clients.
+
+<Info>
+  Even when using Basic authentication, credentials must be treated as sensitive and handled securely.
+</Info>
+
+#### 2. Supported: Custom Headers (Legacy / Compatibility)
+
+Custom headers are also supported for clients that require them:
+
+```text
+X-CRITEO-CLIENT-ID: <your_client_id>
+X-CRITEO-CLIENT-SECRET: <your_client_secret>
+```
+
+This approach is maintained for compatibility with existing integrations but is not the preferred long-term option.
+
+### Example Configuration
+
+Below is a canonical example showing how a partner might configure the Retail Media Context & Measure MCP server using header-based authentication:
+
+```json
+{
+  "servers": {
+    "criteo-rm-context-measure": {
+      "type": "http",
+      "url": "https://mcp.criteo.com",
+      "headers": {
+        "Authorization": "Basic <base64(client_id:client_secret)>"
+      }
+    }
+  }
+}
+```
+
+<Warning>
+  Never expose real credentials in docs, tickets, or code.  
+  Always use placeholder values in examples.
+</Warning>
+
+***
+
+## Step-by-Step Integration Flow
+
+### Step 1. Create or Obtain Credentials
+
+Reach out to the Criteo team to validate and create credentials for your use case.
+
+### Step 2. Confirm Access
+
+Make sure the organization and credentials you plan to use are approved for the environment you want to test, this includes **organization-level MCP access approval**.
+
+### Step 3. Configure the MCP Endpoint in your Client
+
+Add the relevant MCP server URL and authentication settings to your MCP-compatible client or agent environment.
+
+### Step 4. Validate the Connection
+
+Start with a simple scope or discovery test, such as:
+
+* Confirm which accounts are visible.
+* Confirm which tools are accessible.
+* Confirm that the returned scope matches the expected user, brand, or organization access.
+
+### Step 5. Move into First Workflow Testing
+
+Once setup is validated, begin testing a few agreed workflows rather than exploring every tool at once.
+
+### What Good Looks Like
+
+A successful first integration should allow a partner to:
+
+* Connect to the MCP server without major setup blockers.
+* Retrieve the correct account, retailer, or brand scope.
+* Complete meaningful first workflows without manually stitching together raw API calls.
+* Receive outputs that are accurate, understandable, and useful to the intended user.
+* Clearly identify where the MCP is already valuable and where coverage is still missing.
+## What's next
+
+* [Access Flows](/retail-media/v2026-preview/docs/access-flows)
+* [Example Workflows](/retail-media/v2026-preview/docs/example-workflows)
+* [MCP Troubleshooting](/retail-media/v2026-preview/docs/mcp-troubleshooting)

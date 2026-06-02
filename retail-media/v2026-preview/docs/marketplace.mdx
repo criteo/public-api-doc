@@ -1,0 +1,204 @@
+---
+title: Marketplace
+---
+
+## Introduction
+
+The Marketplace endpoints are used to update the product catalog with the latest status of a product. Products should be updated with the same information on the Product Detail Page found on the retailer's website.
+
+Note: These APIs are going to be processed **asynchronously**, so success response indicates the request was accepted but not yet completed.
+
+<Info>
+  You can also find the Marketplace endpoints in our API Reference [here](https://developers.criteo.com/retail-media/v2026-preview/reference/offersetbbwv1) for updating the buy box winner and [here](https://developers.criteo.com/retail-media/v2026-preview/reference/offerupdatev1) for updating offers.
+</Info>
+
+***
+
+## URLs
+
+* For AMERICAS: [api.us.criteo.com](api.us.criteo.com)
+* For APAC: [api.as.criteo.com](api.as.criteo.com)
+* For EMEA: [api.eu.criteo.com](api.eu.criteo.com)
+
+***
+
+## Endpoints
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>POST</td>
+      <td><code>/preview/retail-media/retailers/&#123;retailer-id&#125;/products/set-buy-box-winners</code></td>
+      <td>Update the buy box winner for one or more products</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td><code>/preview/retail-media/retailers/&#123;retailer-id&#125;/offers/update</code></td>
+      <td>Update one or more offers by replacing each offer's price and availability with the given values</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+## Marketplace Properties
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>retailer-id</code>&#42;</td>
+      <td>String</td>
+      <td>The ID of the retailer.<br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>offerId</code>&#42;</td>
+      <td>String</td>
+      <td>Identifies an existing offer.<br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>availability</code>&#42;</td>
+      <td>String</td>
+      <td>Accepted values: outOfStock, preOrder, inStock, backOrder<br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>price</code>&#42;</td>
+      <td>double</td>
+      <td>Product’s price at this store<br />Writeable? Y / Nullable? N</td>
+    </tr>
+  </tbody>
+</table>
+
+(*) Required
+
+<Info>
+  **Field Definitions**
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+</Info>
+
+***
+
+## Update BuyBoxWinner
+
+The Buy Box Winner for multiple products can be updated for a retailer by making a `POST` call to the BuyBoxWinner endpoint. For each product specified, the designated offer becomes the new buy box winner, while the previous buy box winner for that product becomes a loser.
+
+The request body should specify the **Offer ID** of the current buy box winner. We support a maximum of 5000 buy box winners to be updated simultaneously.
+
+<Info>
+  **Use case**: Update the Buy Box Winner for one or more products by only sending the new winner
+</Info>
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/retailers/{retailer-id}/products/set-buy-box-winners
+```
+
+**Sample request**
+
+```json JSON
+{
+  "data": {
+    "type": "SetProductBuyBoxWinnersRequest",
+    "attributes": {
+      "productBuyBoxWinners": [
+        {
+          "offerId": "123"
+        },
+        {
+          "offerId": "456"
+        }
+      ]
+    }
+  }
+}
+
+```
+
+**Sample response**
+
+```json JSON
+{
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Update Offers
+
+Offers can be updated for multiple offers on a specific retailer by making a `POST` call to the Offer endpoint.
+
+The request body should specify the **Offer ID**, availability, and price of the offer. We support a maximum of 5000 offers to be updated simultaneously.
+
+<Info>
+  **Use case**: Update the price and availability for an offer
+</Info>
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/retailers/{retailer-id}/offers/update
+```
+
+**Sample request**
+
+```json JSON
+{
+  "data": {
+    "type": "UpdateOffersRequest",
+    "attributes": {
+      "offerUpdates": [
+        {
+          "offerId": "123",
+          "price": 100.00,
+          "availability": "preOrder"
+        },
+        {
+          "offerId": "456",
+          "price": 200.00,
+          "availability": "preOrder"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Sample response**
+
+```json JSON
+{
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Validation errors
+
+**`invalid-retailer-id`**  
+The request contains an invalid Retailer ID
+
+**`duplicate-offer-id`**  
+An duplicate Offer ID has been found in the request.
+
+**`REQUIRED_FIELD`**  
+The required field is missing.

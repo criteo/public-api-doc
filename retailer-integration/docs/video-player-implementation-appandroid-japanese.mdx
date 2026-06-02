@@ -1,0 +1,859 @@
+---
+title: ビデオプレーヤーの実装（アプリ：Android）
+description: This is a translated version of the Commerce Onsite Video documentation
+hidden: true
+---
+
+<Warning>
+  **Android 対 iOS**
+
+  **このページでは、Android 向けのビデオプレーヤーの実装についてのみ説明します**。 iOS での実装については、[こちらのページ](https://developers.criteo.com/retailer-integration/video-player-implementation-app-ios-japanese)を参照してください。 両プラットフォームのコード例を提供し、プラットフォーム固有の情報がある場合は、明確に記載します。
+</Warning>
+
+<Warning>
+  Commerce Video is available as a beta feature.
+</Warning>
+
+***
+
+# はじめに
+
+このドキュメントの目的は、**モバイルプラットフォーム、Android、iOS でのOn-Site Commerce Video 広告の実装**に関する詳細なガイドラインを提供することです。
+
+このページではモバイルでの実装にフォーカスしています。 対象を広げるには、[デスクトップ向けビデオプレーヤー実装ガイド](/retailer-integration/docs/video-player-implementation-guide-desktopmobile-japanese)を参照してください。
+
+<Note>
+  ### Android OM SDK ドキュメント
+
+  Android OM SDK の詳細については、[IAB が提供するこちらのページ](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKAndroid/)も参照してください。
+</Note>
+
+<Info>
+  当社では IAB が提供する OM SDK を使用しており、そのライブラリでは `minSdkVersion="16"` と `targetSdkVersion="30"` が指定されています。 SDK を使用する Android アプリケーションは、Android 4.1（API レベル 16）以降を実行しているデバイスと互換性があり、アプリは Android 11（API レベル 30）向けに最適化されている必要があります。
+</Info>
+
+***
+
+# ビデオプレーヤー実装ガイド
+
+動画広告を実装する際には、以下の大まかな手順を考慮します。
+
+1. VAST tag を要求して解析する
+2. DOM に挿入するプレーヤーの HTML 構造を作成する
+3. 動画の再生中に適切なタイミングで beacons 起動する
+4. 追加の検証スクリプト（OMID）を組み込む
+
+<Info>
+  Criteo は **VAST 4.2** をサポートしています（IAB 仕様は[こちら](https://iabtechlab.com/wp-content/uploads/2019/06/VAST_4.2_final_june26.pdf)で入手できます）。
+</Info>
+
+***
+
+## ステップ1：VAST タグのリクエストと解析
+
+ビデオ プレーヤーのデータを取得するには、まず Criteo API 広告レスポンスから VAST 情報を取得します。
+
+VAST を（必要に応じて）リクエストし、解析する方法の例を以下に示します。
+
+```java
+DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();  
+DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();  
+Document doc = dBuilder.parse('VAST TAG URL');  
+doc.getDocumentElement().normalize();
+```
+
+<Warning>
+  `dBuilder` は内部で VAST URL をクエリしますが、これはネットワーククエリであるため、メイン UI スレッドでは実行されません（例： [Android でネットワークリクエストを実行する方法](https://developer.android.com/develop/background-work/background-tasks/asynchronous)）
+</Warning>
+
+解析された VAST タグを取得したら、このドキュメントで概説されている次の必要な情報を抽出できます。
+
+* 動画広告のリンク
+* VAST XMLトラッキングビーコン
+* OMID 検証スクリプトと `VerificationParameters `
+* クローズド・キャプション・ファイル
+
+***
+
+## ステップ2：ビデオプレーヤーの作成
+
+当社のビデオ プレーヤーはネイティブ・モバイル・ビデオプレーヤー（Android では `ExoPlayer` を使用）を中心に構築されており、`play()`、`pause()` などのメソッドと、`volume`、`duration`、`currentPosition` などのプロパティを提供します。
+
+これらのプロパティは、ビデオプレーヤーを操作してミュートまたはミュート解除したり、再生の進行状況を追跡したりするのに役立ちます。
+
+<Note>
+  ### Android 向け ExoPlayer
+
+  Android 向け ExoPlayer の詳細については、[こちらのページ](https://developer.android.com/media/media3/exoplayer)を参照してください。
+</Note>
+
+これらの機能を管理するため、「再生/一時停止」、「ミュート/ミュート解除」、「CC（クローズドキャプション）」ボタン用の追加のコントロール要素を組み込みます。
+
+再生、一時停止、音量コントロールを処理するために、これらのボタンにクリックリスナーを追加します。
+
+また、地域の規制によっては、必須の通知に**コールアウト**または**ポップアップ**が必要になる場合がありますのでご注意ください。
+
+プレーヤーの UI レイアウトを設定する必要があります。 広告用のビデオプレーヤーとミュートボタンだけが含まれています。
+
+```xml
+ <androidx.media3.ui.PlayerView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/videoView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    &lt;LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"&gt;
+
+        &lt;TextView
+            android:id="@+id/muteTextView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Mute" /&gt;
+    &lt;/LinearLayout&gt;
+
+</androidx.media3.ui.PlayerView>
+```
+
+レイアウトが整ったら、以下の操作を実行するための、コンポーネントのインスタンス化に進みます。
+
+* UI 要素のハンドルの取得
+* クリックリスナーの設定
+* VAST のクエリと解析
+* プレーヤーの準備と広告の配信
+
+```java
+public class VideoAdNativeActivity extends Activity implements Player.Listener, View.OnClickListener {
+
+    private static final int PLAYER_UNMUTE = 1;
+    private static final int PLAYER_MUTE = 0;
+    private PlayerView playerView;
+    private ExoPlayer player;
+    private TextView muteTextView;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.video_ad_native_detail);
+
+        playerView = findViewById(R.id.videoView);
+        muteTextView = findViewById(R.id.muteTextView);
+
+        playerView.requestFocus();
+        playerView.setOnClickListener(this);
+        muteTextView.setOnClickListener(this);
+// VAST のクエリと解析を行います
+        ...
+// VAST のメディアアイテムを使用して動画広告プレイヤーをインスタンス化します
+        initializePlayer(videoUrl);
+    }
+
+    private void initializePlayer(String videoUrl) {
+// ExoPlayer を作成してコンテンツと広告のプレイヤーとして設定します
+        player = new ExoPlayer.Builder(this)
+                .build();
+// MediaItem を作成して再生します
+        MediaItem mediaItem =
+                new MediaItem.Builder()
+                        .setUri(Uri.parse(videoUrl))
+                        .build();
+        player.setMediaItem(mediaItem);
+// プレイヤーイベントのリスナーを追加します
+        player.addListener(this);
+
+        player.setVolume(PLAYER_VOLUME);
+        playerView.setPlayer(player);
+// デフォルトのプレーヤーコントロールを無効にします（デフォルトのコントロールではシーキングが可能）
+        playerView.setUseController(false);
+        player.setPlayWhenReady(true);
+        player.prepare();
+    }
+}
+
+```
+
+***
+
+## ステップ3：OMID 広告セッションの設定
+
+クライアントは、プレーヤーが追加のスクリプトを実行できるように OMID をサポートし、Criteo が動画のビューアビリティを追跡できるようにする必要があります。 これにより、Criteo は VAST XML 内で独自の検証スクリプトを送信し、動画のビューアビリティを追跡できるようになります。
+
+<Info>
+  **OMID について**
+
+  [Open Measurement Interface Definition (OMID)](https://iabtechlab.com/standards/open-measurement-sdk/) は、さまざまなプラットフォームやデバイスにわたるデジタル広告、特に動画広告のビューアビリティを測定および検証するために IAB によって提供される標準化されたテクノロジーです。
+
+  OMID は、業界標準に準拠して、表示可能なインプレッションや表示可能な動画再生などのビューアビリティ指標を測定するための一貫したフレームワークを提供します。 OMID を実装すると、広告のパフォーマンスとユーザー・エンゲージメントに関する正確な分析情報が得られるほか、すべての小売業者にわたって同じ方法で動画のビューアビリティを追跡できるため、ネットワーク全体の一貫性が確保されます。
+
+  このドキュメントの OM SDK は、**モバイルプラットフォーム（Android/iOS）向けの OM SDK** を指します。
+</Info>
+
+[VAST 仕様](https://www.iab.com/wp-content/uploads/2016/04/VAST4.0_Updated_April_2016.pdf)のセクション3.16では、これらの検証が存在するオプションの `AdVerifications` 要素について概説しています。 `AdVerifications` 内にネストされた各検証要素には、検証に必要なリソースの詳細が記載されています。
+
+<Info>
+  **Open-Measurement SDK**
+
+  これらのリソースを処理するため、IAB が提供する Open-Measurement SDK にリソースを渡します。 Android 向けの公式 OM SDK 実装ガイドについては、[こちら](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKAndroid/)を参照してください。 ドキュメントには、ビューアビリティの統合に必要な、各ステップのコードスニペットが記載されています。
+</Info>
+
+大まかに言うと、プロセスは以下のようになります。
+
+* OMID サービススクリプトをロードする
+* 広告セッション設定と広告セッションそのものを作成する
+* 広告を表示するプレーヤーを登録して広告セッションを開始する
+* 動画および広告関連のイベントが発生したときに OM SDK に対して `adEvents` および `mediaEvents` イベントをトリガーする
+
+<Warning>
+  [IAB 実装ガイド](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKAndroid)では、一部の Criteo ビデオプレーヤーの仕様（バッファリングイベントのサポート、トラッキングイベントの1回のみの起動、再生/一時停止イベントが OM SDK に通知されないなど）がカバーされていません。 そのため、[IAB ドキュメント](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKAndroid/validation.html)に従い、統合を検証することを強くお勧めします。
+</Warning>
+
+![](https://files.readme.io/96d3750dc86afc5ab1a34c348239ea59193c70c5c230401225fca1feec67fc7c-image.png)
+
+<Info>
+  Criteo 検証スクリプトは VAST XML ファイルから取得されます。
+</Info>
+
+OM SDK を通じて、Criteo OMID 検証スクリプトから Criteo サーバーにいくつかのイベントが送信されます。
+
+<table>
+  <thead>
+    <tr>
+      <th>レベル</th>
+      <th>ビーコン名</th>
+      <th>説明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>OMID（<code>VerificationParameters</code>）</td>
+      <td><code>omidTrackView</code></td>
+      <td>OMID 広告セッションが適切に初期化されたことを示します。</td>
+    </tr>
+    <tr>
+      <td>OMID（<code>VerificationParameters</code>）</td>
+      <td><code>start</code></td>
+      <td>動画が開始され、ビューポートで動画が100%表示されていることを示します。</td>
+    </tr>
+    <tr>
+      <td>OMID（<code>VerificationParameters</code>）</td>
+      <td><code>firstQuartile</code></td>
+      <td>動画がちょうど25%のクォータイルに到達し、ビューポートで動画が100%表示されていることを示します。</td>
+    </tr>
+    <tr>
+      <td>OMID（<code>VerificationParameters</code>）</td>
+      <td><code>midpoint</code></td>
+      <td>動画がちょうど50%のクォータイルに到達し、ビューポートで動画が100%表示されていることを示します。</td>
+    </tr>
+    <tr>
+      <td>OMID（<code>VerificationParameters</code>）</td>
+      <td><code>thirdQuartile</code></td>
+      <td>動画が75%のクォータイルに到達し、ビューポートで動画が100%表示されていることを示します。</td>
+    </tr>
+    <tr>
+      <td>OMID（<code>VerificationParameters</code>）</td>
+      <td><code>complete</code></td>
+      <td>動画が完了し、ビューポートで動画が100%表示されていることを示します。</td>
+    </tr>
+    <tr>
+      <td>OMID（<code>VerificationParameters</code>）</td>
+      <td><code>twoSecondsFiftyPercentView</code></td>
+      <td>動画が2秒間連続して再生され、ビューポートで動画が50%以上表示されていることを示します。 動画をバッファリングしたり一時停止したりすると、2秒のカウンターがリセットされることに注意してください。</td>
+    </tr>
+    <tr>
+      <td>VAST XML - OMID</td>
+      <td><code>&lt;Tracking event="verificationNotExecuted"&gt;</code></td>
+      <td>検証スクリプトの初期化に失敗したことを示します。</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  ビューポート表示の100%は、クォータイルなどの再生イベントを追跡するための業界標準です。 ビューポートでの連続2秒間と50%の表示は MRC 標準です。
+</Info>
+
+***
+
+### 1. OMID サービススクリプトをロードする
+
+この IAB OM SDK は、クリエイティブでビューアビリティをサポートする上で組み込む必要があるスクリプト（`omweb-v1.js`）とモバイルライブラリで構成されています。
+
+<Note>
+  ### スクリプトは、自身でホストすることも、コピーをホストしている Criteo の CDN から取得することもできます。 ファイルは、[こちらのページ](https://static.criteo.net/banners/android/1.5.2/omsdk-v1_1.5.2.js)から確認できます。
+
+  Omweb-v1.js は、ウェブコンテキスト向けの OMID JS ライブラリです。
+</Note>
+
+***
+
+### 2. 広告セッション設定と広告セッションそのものを作成する
+
+広告セッションを初期化する前に、OM SDK をアクティブ化する必要があります。 また、広告セッションでは、Criteo の統合に関連するパラメータを指定する必要があります。
+
+<Info>
+  OMID `VerificationScript`、`VerificationParameters`、および `VendorKey` は VAST 内で提供されます。
+</Info>
+
+```java
+public AdSession getNativeAdSession(Context context) {
+    Omid.activate(context.getApplicationContext());
+
+    AdSessionConfiguration adSessionConfiguration =
+        AdSessionConfiguration.createAdSessionConfiguration(
+            CreativeType.VIDEO,
+            ImpressionType.VIEWABLE,
+            Owner.NATIVE,
+            Owner.NATIVE, false);
+
+    Partner partner = Partner.createPartner("criteo", "<version name>");
+    final String omidJs = getOmidJs(context);
+
+    VerificationScriptResource verificationScripts =
+        VerificationScriptResource.createVerificationScriptResourceWithParameters(
+            vendorKey,
+            omidVerificationScript,
+            omidVerificationParameters);
+
+    AdSessionContext adSessionContext = AdSessionContext.createNativeAdSessionContext(
+        partner,
+        omidJs,
+        Collections.singletonList(verificationScripts),
+        null,
+        null);
+
+    AdSession adSession = AdSession.createAdSession(adSessionConfiguration, adSessionContext);
+    return adSession;
+}
+
+public static String getOmidJs(Context context) {
+    Resources res = context.getResources();
+    try (InputStream inputStream = res.openRawResource(R.raw.omsdk_v1)) {
+        byte[] b = new byte[inputStream.available()];
+        final int bytesRead = inputStream.read(b);
+        return new String(b, 0, bytesRead, "UTF-8");
+    } catch (IOException e) {
+        throw new UnsupportedOperationException("OM SDK JS library resource not found", e);
+    }
+}
+
+```
+
+***
+
+### 3. 広告を表示するプレーヤーを登録して広告セッションを開始する
+
+広告セッションが開始されると、Criteo 検証スクリプトが自動的に読み込まれます。 この時点で、Criteo 検証スクリプトは、OM SDK に対してトリガーされるすべての `AdEvents` と `MediaEvents` の監視を開始します。
+
+<Warning>
+  OMID セッションの準備に失敗した場合は、`verificationNotExecuted`VAST トラッカー（VAST 内に存在する場合）を呼び出すことが重要です。
+</Warning>
+
+```java
+public class VideoAdNativeActivity extends Activity implements Player.Listener, View.OnClickListener {
+    [...]
+
+    private MediaEvents mediaEvents;
+    private AdEvents adEvents;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        [...]
+
+        try {
+// VAST のパラメータ、OMID 認証スクリプトを抽出します
+            ...
+
+            adSession = getNativeAdSession(this);
+        } catch (Exception e) {
+// OMID セッションの準備中にエラーが発生した場合に
+// 「verificationNotExecuted」トラッカーを呼び出します
+            emitBeacon(adVerificationNotExecuted);
+        }
+
+        mediaEvents = MediaEvents.createMediaEvents(adSession);
+        adEvents = AdEvents.createAdEvents(adSession);
+        adSession.registerAdView(playerView);
+        adSession.start();
+
+        [...]
+    }
+
+    [...]
+}
+
+```
+
+***
+
+### 4. 動画と広告関連のイベントが発生したときに、OM SDK に `adEvents` および `mediaEvents` イベントをトリガーします。
+
+<Note>
+  ### 利用可能な `AdEvents` と `MediaEvents` の完全なリストには [IAB の Github](https://github.com/InteractiveAdvertisingBureau/) からアクセスできます。
+</Note>
+
+これらの呼び出しを通じて、Criteo 検証スクリプトは高度なビューアビリティ・イベントを計算できるようになります。
+
+* Criteo はクォータイルイベントを追跡することができるようになります（動画がビューポートの100%を占めている場合）
+* 高度なイベントは、動画の50%が2秒間連続して再生され、ビューポートに表示されているかどうかを追跡するために計算されます。
+
+`AdEvents` と `MediaEvents` の両方に対するすべての呼び出しは、クォータイルおよびディスプレイ・イベントの既存のトラッキングビーコンとは別にトリガーされる必要があります。 また、動画バッファリング・イベントをトリガーする必要があります。
+
+OMID イベントのトリガーは VAST トラッカーのトリガーと似ています。以下のセクションで両方について説明します。
+
+***
+
+## ステップ4：動画再生中にビーコンを起動する
+
+最初に起動しなければならないビーコンは、**VAST インプレッション・トラッキング・ビーコン**（配信面、各商品、および VAST からの動画向け）です。
+
+これをトリガーするには、プレーヤー要素に `STATE_READY` イベントのイベントリスナーを追加します。 このイベントは、ビューポート内の位置に関係なく、プレーヤーが動画をすぐに再生できるときに送信されます。
+
+<Info>
+  時間の経過に伴うプレーヤーの状態の変化をリッスンするには、`VideoAdNativeActivity` が `Player.Listener` から継承される必要があります。 `onPlayerStateChanged` を実装することで、開発者はビデオプレーヤー関連のイベントの通知を受け取ることができます。
+</Info>
+
+```java
+public class VideoAdNativeActivity extends Activity implements Player.Listener, View.OnClickListener {
+    [...]
+
+    private final OkHttpClient client = new OkHttpClient();
+    private final Callback emptyCallback = new Callback() {
+        @Override
+        public void onFailure(Call call, IOException e) { }
+
+        @Override
+        public void onResponse(Call call, Response response) { }
+    };
+
+    private void emitBeacon(String url) {
+        Request request = new Request.Builder().url(url).build();
+        client.newCall(request).enqueue(emptyCallback);
+    }
+
+    @Override
+    public void onPlaybackStateChanged(@Player.State int playbackState) {
+        switch (playbackState) {
+            case ExoPlayer.STATE_READY:
+                onStateReady();
+                break;
+            case ExoPlayer.STATE_ENDED:
+                onStateEnded();
+                break;
+            case ExoPlayer.STATE_BUFFERING:
+                onStateBuffering();
+                break;
+            case ExoPlayer.STATE_IDLE:
+                break;
+            default:
+                throw new IllegalStateException("Unknown playbackState: " + playbackState);
+        }
+    }
+
+    private boolean loaded = false;
+
+    private void onStateReady() {
+        if (!loaded) {
+            emitBeacon(adImpression);
+            loaded = true;
+// OMID にイベントを転送します
+            VastProperties vastProperties = VastProperties.createVastPropertiesForNonSkippableMedia(false, Position.STANDALONE);
+            adEvents.loaded(vastProperties);
+            adEvents.impressionOccurred();
+        }
+// OMID にイベントを転送します
+        mediaEvents.bufferFinish();
+// ポーリングスレッドを開始して動画の進捗をモニタリングします
+        postProgress();
+    }
+
+    private void onStateBuffering() {
+// OMID にイベントを転送します
+        mediaEvents.bufferStart();
+    }
+
+    [...]
+}
+
+```
+
+<Warning>
+  \*\*[正確なビーコンのトラッキング](/retailer-integration/docs/tracking-ad-related-activity-japanese)**を確実に行うには、**&#x518D;生ビーコ&#x30F3;**（開始ビーコンとクォータイルビーコン）**&#x304C;**動画の最初の再生中に1回だけ発信される必要があります**。 重複を防ぐため、動画では発信されたビーコンそれぞれの状態を維持することが重要です。
+
+  ただし、**インタラクションビーコン**（クリック、ミュート、ミュート解除、一時停止、再開など）は、**対応するユーザーアクションが発生するたびに発信される必要があります。**
+</Warning>
+
+開始、`firstQuartile`、`midpoint`、および `thirdQuartile` ビーコンは、ポーリングスレッドによってトリガーされる関数で管理されます。
+
+`onProgress` メソッドは、広告セッションがまだ有効であり、動画がまだ一度も完了していないことを確認した後、現在のクォータイルを計算して対応するビーコンをドロップする `updateQuartile` メソッドを呼び出します。 また、`play` イベントと `pause` イベントを監視する `updatePlayPause` メソッドも呼び出します。
+
+最後に、`postProgress` メソッドを起動し、`ProgressRunnable` の別の実行をキューに入れてループを閉じます。
+
+```java
+public class VideoAdNativeActivity extends Activity implements Player.Listener, View.OnClickListener {
+    [...]
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final ProgressRunnable progressRunnable = new ProgressRunnable(this);
+    private static final int PROGRESS_INTERVAL_MS = 100;
+
+    private static class ProgressRunnable implements Runnable {
+        private final WeakReference&lt;VideoAdNativeActivity&gt; videoAdNativeActivityWeakReference;
+
+        ProgressRunnable(VideoAdNativeActivity videoAdNativeActivity) {
+            this.videoAdNativeActivityWeakReference = new WeakReference<>(videoAdNativeActivity);
+        }
+
+        @Override
+        public void run() {
+            VideoAdNativeActivity videoAdNativeActivity = videoAdNativeActivityWeakReference.get();
+            if (videoAdNativeActivity == null) {
+                return;
+            }
+            videoAdNativeActivity.onProgress();
+        }
+    }
+
+    private void onProgress() {
+        if (adSession == null) { 
+            return; 
+        }
+        if (complete) { 
+            return; 
+        }
+
+        updateQuartile();
+        postProgress();
+    }
+
+    private void postProgress() {
+        handler.removeCallbacks(progressRunnable);
+        handler.postDelayed(progressRunnable, PROGRESS_INTERVAL_MS);
+    }
+
+    [...]
+}
+
+```
+
+この `updateQuartile` 関数内で、動画広告がまだ完了していないことを確認します。 完了していない場合は、現在の再生クォータイルを計算し、以前にイベントとして送信されていないことを確認して送信します。 つまり、最初に開始ビーコンを送信し、動画再生時間の25%が経過したら `firstQuartile`、次に `midpoint`、最後に `thirdQuartile` を送信します。
+
+```java
+// updateQuartile メソッドは、現在実行中のクォータイルを取得するために計算や
+// セーフティチェックを行い、クォータイルイベントをトリガーします
+private Quartile lastSentQuartile = Quartile.UNKNOWN;
+
+private void updateQuartile() {
+    final long duration = player.getDuration();
+    final long currentPosition = player.getCurrentPosition();
+
+    if (duration != 0 && !complete) {
+        final Quartile currentQuartile = getQuartile(currentPosition, duration);
+// すでに送信またはパスした古いクォータイル統計を送信しないでください
+        if (currentQuartile != lastSentQuartile && currentQuartile.ordinal() > lastSentQuartile.ordinal()) {
+            sendQuartile(currentQuartile);
+            lastSentQuartile = currentQuartile;
+        }
+    }
+}
+
+private void sendQuartile(Quartile quartile) {
+    switch (quartile) {
+        case START:
+// 開始ビーコンを起動します
+            emitBeacon(adStarted);
+// OMID にイベントを転送します
+            mediaEvents.start(player.getDuration(), PLAYER_VOLUME);
+            break;
+
+        case FIRST:
+// firstQuartile ビーコンを起動します
+            emitBeacon(adFirstQuartile);
+// OMID にイベントを転送します
+            mediaEvents.firstQuartile();
+            break;
+
+        case SECOND:
+// 中間ビーコンを起動します
+            emitBeacon(adMidpoint);
+// OMID にイベントを転送します
+            mediaEvents.midpoint();
+            break;
+
+        case THIRD:
+// thirdQuartile ビーコンを起動します
+            emitBeacon(adThirdQuartile);
+// OMID にイベントを転送します
+            mediaEvents.thirdQuartile();
+            break;
+
+        case UNKNOWN:
+        default:
+            break;
+    }
+}
+// Enum は動画の位置を最も近い完了したクォータイルに丸める一部のヘルパーメソッドを表します
+public enum Quartile { UNKNOWN, START, FIRST, SECOND, THIRD }
+// クォータイルイベントが発生するタイミングを検出する方法です
+private static Quartile getQuartile(long position, long duration) {
+    final double completionFraction = position / (double) duration;
+
+    if (lessThan(completionFraction, 0.01)) {
+        return Quartile.UNKNOWN;
+    }
+
+    if (lessThan(completionFraction, 0.25)) {
+        return Quartile.START;
+    }
+
+    if (lessThan(completionFraction, 0.5)) {
+        return Quartile.FIRST;
+    }
+
+    if (lessThan(completionFraction, 0.75)) {
+        return Quartile.SECOND;
+    }
+// completionFraction が 1 未満の場合にあえて Quartile.THIRD をレポートするのは
+// トラックが形式上、完了後の経過時間をレポートする可能性があり、
+// Quartile.THIRD がまだレポートされていない場合、データ失われるためです
+    return Quartile.THIRD;
+}
+
+private static boolean lessThan(double a, double b) {
+    return b - a > EPSILON;
+}
+
+```
+
+完全なビーコンを処理するには、ビデオプレーヤーによって発生する終了イベントをリッスンします。 このイベントを受信すると、動画がまだ完了していないかどうかを確認し、完了している場合は完了ビーコンをドロップします。
+
+その後、`completed` を true に設定し、動画に対して `play()` を呼び出してループ効果を作成します。 後続の「終了」イベントでは、動画のみが再開されます。
+
+```java
+private void onStateEnded() {
+    if (!complete) {
+        emitBeacon(adCompleted);
+// OMID にイベントを転送します
+        mediaEvents.complete();
+        complete = true;
+    }
+// 動画を再開します
+    player.seekTo(0);
+    player.play();
+}
+```
+
+**すべての再生ビーコンは、プレーヤーが再生しているときにのみ起動されます。**
+
+<Warning>
+  IAB 標準に従って広告が表示されるようにするには、**ビデオプレーヤーの50%以上がビューポート内にある必要があります**。 UI が描画される直前に呼び出される UI スレッドのリスナーを使用します。このリスナーでは、プレーヤーがビューポートの50%以上を占めているかどうかを確認し、占めていない場合は動画を一時停止します。
+</Warning>
+
+```java
+private void initializePlayer(String videoUrl) {
+    [...]
+
+    playerView.getViewTreeObserver().addOnPreDrawListener(() -> {
+// 動画の50%以上が視聴され、
+// ユーザーが再生を明示的に停止しなかったことを確認します
+        if (isPlayingWhen50Visible && isVideoViewAtLeast50Visible(playerView)) {
+            playVideo();
+        } else {
+            pauseVideo();
+        }
+        return true;
+    });
+}
+
+private boolean isVideoViewAtLeast50Visible(View videoView) {
+// ビューの可視矩形を取得します
+    Rect visibleRect = new Rect();
+    boolean isVisible = videoView.getGlobalVisibleRect(visibleRect);
+    if (!isVisible) {
+        return false;
+    }
+// 動画ビューの全域を取得します
+    int totalArea = videoView.getWidth() * videoView.getHeight();
+    if (totalArea == 0) {
+        return false;
+    }
+// 可視領域を取得します
+    int visibleArea = visibleRect.width() * visibleRect.height();
+    return (visibleArea >= totalArea / 2);
+}
+
+```
+
+`click` イベントのイベントリスナーをビデオプレーヤーに接続することで、`ClickTracking` ビーコンを処理します。 `handler` 関数では、ビーコンをドロップし、*リダイレクト URL が提供されている場合のみ*、ブラウザに VAST タグから `ClickThrough` URL を開くように指示します。
+
+リダイレクト URL が提供されていない場合は、動画を一時停止/再開し、対応するトラッキングビーコンをトリガーします。
+
+```java
+public class VideoAdNativeActivity extends Activity implements Player.Listener, View.OnClickListener {
+    [...]
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.videoView:
+                if (clickThroughUrl != null) {
+                    clickThroughHandler();
+                } else {
+                    handlePlayPause();
+                }
+                break;
+            case R.id.muteTextView:
+                toggleMute(mediaEvents, player, muteTextView);
+                break;
+        }
+    }
+
+    public void clickThroughHandler() {
+// クリックビーコンを発信します
+        if (adClickThrough != null) {
+            emitBeacon(adClickThrough);
+        }
+// クリックスルー URL にユーザーをリダイレクトします
+        try {
+            Intent externalIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(clickThroughUrl));
+            this.startActivity(externalIntent);
+        } catch (ActivityNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean isPlayingWhen50Visible = true;
+
+    public void handlePlayPause() {
+        if (isPlaying) {
+            pauseVideo();
+            emitBeacon(adPause);
+        } else {
+            playVideo();
+            emitBeacon(adPlay);
+        }
+        isPlayingWhen50Visible = !isPlayingWhen50Visible;
+    }
+
+    private void playVideo() {
+        player.play();
+// OMID にイベントを転送します
+        mediaEvents.resume();
+    }
+
+    private void pauseVideo() {
+        player.pause();
+// OMID にイベントを転送します
+        mediaEvents.pause();
+    }
+
+    [...]
+}
+
+```
+
+最後に、ミュート ボタンにもリスナーをアタッチして同様に処理します。
+
+プレーヤーの音量を変更し、トラッキングビーコンをトリガーします。
+
+```java
+public void toggleMute() {
+    int PLAYER_MUTE = 0;
+    int PLAYER_UNMUTE = 1;
+    float currentVolume = player.getVolume();
+    float targetVolume;
+
+    if (currentVolume == PLAYER_MUTE) {
+        targetVolume = PLAYER_UNMUTE;
+        muteTextView.setText("Mute");
+
+        emitBeacon(adUnmute);
+    } else {
+        targetVolume = PLAYER_MUTE;
+        muteTextView.setText("Unmute");
+
+        emitBeacon(adMute);
+    }
+
+    player.setVolume(targetVolume);
+// OMID にイベントを転送します
+    mediaEvents.volumeChange(targetVolume);
+}
+
+```
+
+***
+
+## ステップ5：広告セッションを終了する
+
+プレーヤーと広告セッションの破棄を正しく処理することが重要です。
+
+```java
+public class VideoAdNativeActivity extends Activity implements Player.Listener, View.OnClickListener {
+    [...]
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        adSession.finish();
+        adSession = null;
+
+        handler.removeCallbacksAndMessages(null);
+        releasePlayer();
+    }
+
+    private void releasePlayer() {
+        if (player != null) {
+            player.release();
+            player = null;
+        }
+    }
+
+    [...]
+}
+
+```
+
+## 補遺：クローズドキャプション（CC）の取り扱い
+
+クローズドキャプションを追加するには、CC URL を含む `SubtitleConfiguration` オブジェクトを `MediaItem.Builder` に提供する必要があります。
+
+```java
+private void initializePlayer(String videoUrl, String ccUrl) {
+    [...]
+// MediaItem を作成して再生します
+    MediaItem.Builder mediaItemBuilder =
+        new MediaItem.Builder()
+            .setUri(Uri.parse(videoUrl));
+
+    if (ccUrl != null) {
+// VTT サブタイトル URI を設定します
+        Uri subtitleUri = Uri.parse(ccUrl);
+// サブタイトル設定を準備します
+        MediaItem.SubtitleConfiguration subtitleConfig = new MediaItem.SubtitleConfiguration.Builder(subtitleUri)
+            .setMimeType(MimeTypes.TEXT_VTT) // The MIME type for WebVTT subtitles
+            .setLanguage("en") // Optional: Specify the language
+            .setSelectionFlags(C.SELECTION_FLAG_DEFAULT) // Optional: Set flags like default
+            .build();
+
+        mediaItemBuilder.setSubtitleConfigurations(Collections.singletonList(subtitleConfig));
+    }
+
+    MediaItem mediaItem = mediaItemBuilder.build();
+  
+    [...]
+}
+```
+
+<Info>
+  **注記**
+
+  CC へのリンクは VAST の `ClosedCaptionFile` タグ内で提供されています。
+</Info>
+## What's next
+
+* [Video Player Implementation (App: iOS)(Japanese)](/retailer-integration/docs/video-player-implementation-app-ios-japanese)

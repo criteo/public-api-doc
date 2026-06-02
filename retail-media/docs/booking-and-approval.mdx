@@ -1,0 +1,202 @@
+---
+title: DECOMMISSIONED - Do not use - Booking and Approval (v1)
+description: "This endpoint has been decommissioned. Please do not use. \n\nSubmit\
+  \ and view your creative booking proposals"
+hidden: true
+---
+
+<Note>
+  ### Getting Started
+
+  The endpoints here will **only support the booking and approval process for demand-side users**. The GET call will allow demand-side users to see the current status of their creative proposal. 
+
+  In the booking approval v1, we introduce two endpoints. A GET *(Fetch proposal)* and a POST *(Submit Proposal)* for review processes.
+
+  **Brands**
+
+  Brands or demand accounts, when calling the POST *(Submit Proposal)* will trigger the creative Proposal for the retailer to review. Creative booking status will remain pending, and the line-item will not begin to serve until the retailer reviews and approves the creative.
+
+  **Retailers**
+
+  Retailers submitting direct sold line items are not required to review and approve their creatives. So if you have an app with API access to a retailer or a supply account, calling the *submit proposal* endpoint will automatically approve the creative proposal. Following the creative approval step, the line item will activate as long as the line item is correctly set up.
+
+  **:warning: Important note for retailers**
+
+  Applications using this endpoint must have the proper workflow setup to ensure only users with the appropriate permissions within their application can trigger this endpoint. In the case of this endpoint, we highly recommend that only retail managers who have the approval to review and approve creatives can call the POST endpoint. Failing to set up the correct workflow within your application can risk having the proposal approved before the retail managers can review and approve the creative proposals.
+
+  **Consult with your application UI and UX teams to ensure you have the correct user workflow for these endpoints.**
+</Note>
+
+## **Endpoints**
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>GET</code></td>
+      <td><code>/preferred-deal-line-items/&#123;id&#125;/proposal</code></td>
+      <td>Fetch the status of a proposal to modify a Preferred Deal Line Item</td>
+    </tr>
+    <tr>
+      <td><code>POST</code></td>
+      <td><code>/preferred-deal-line-items/&#123;id&#125;/proposal/submit</code></td>
+      <td>Submit a proposal to modify a Preferred Deal Line Item for review.</td>
+    </tr>
+  </tbody>
+</table>
+
+## **Attributes**
+
+#### `id` Required
+
+- **Data Type:** string
+- **Values:** -
+
+**Description:** The external line item id used to retrieve and submit proposal
+
+#### `negotiationState`
+
+- **Data Type:** enum
+- **Values:** `Invalid`, `Modified`, `Submitted`, `Reviewed`, `Approved`
+
+**Description:** The state of the proposal.
+
+#### `bookingStatus`
+
+- **Data Type:** string
+- **Values:** `NotSubmitted`, `Submitted`, `Rejected`, `Approved`
+
+**Description:** The status of the proposal for the purpose of booking.
+
+#### `runnableStatus`
+
+- **Data Type:** string
+- **Values:** `NotSubmitted`, `Submitted`, `Rejected`, `Approved`
+
+**Description:** The status of the proposal for the purpose of running in delivery.
+
+#### `comment`
+
+- **Data Type:** string
+- **Values:** `NotSubmitted`, `Submitted`, `Rejected`, `Approved`
+
+**Description:** Comment supplied by supply side. Required only if some part of the proposal is rejected. An automatic comment will be provided for auto-approved proposals.
+
+#### `createdAt`
+
+- **Data Type:** string
+- **Values:** date-time
+
+**Description:** Creative proposal creation date
+
+#### `updatedAt`
+
+- **Data Type:** string
+- **Values:** date-time
+
+**Description:** Date of last update made to the creative proposal
+
+## **Get Line Item Creative Proposal**
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-deal-line-items/{lineItemId}/proposal
+```
+
+**Sample Request**
+
+```bash
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/preferred-deal-line-items/408713406654238720/proposal' \
+-H 'Accept: text/plain' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "id": "408713406654238720",
+        "type": "RetailMediaProposalStatusModel",
+        "attributes": {
+            "negotiationState": "Approved",
+            "bookingStatus": "Approved",
+            "runnableStatus": "Approved",
+            "comment": "Proposal was auto-approved",
+            "createdAt": "2023-02-01T20:01:09.7427245",
+            "updatedAt": "2023-02-01T20:03:47.1133981"
+        }
+    }
+}
+```
+
+## **Submit Line Item Creative Proposal**
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-deal-line-items/{lineItemId}/proposal/submit
+```
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/preferred-deal-line-items/408713406654238720/proposal/submit' \
+-H 'Accept: text/plain' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "id": "408713406654238720",
+        "type": "RetailMediaProposalStatusModel",
+        "attributes": {
+            "negotiationState": "Approved",
+            "bookingStatus": "Approved",
+            "runnableStatus": "Approved",
+            "comment": "Proposal was auto-approved",
+            "createdAt": "2023-02-01T20:01:09.7427245",
+            "updatedAt": "2023-02-01T20:03:47.1133981Z"
+        }
+    }
+}
+```
+
+## **Responses**
+
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:large&#95;blue&#95;circle:<br /><code>200</code><br />&#92;- Success</td>
+      <td>Call executed with success</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>400</code><br />&#92;- Bad Request</td>
+      <td>API call was not set up correctly. Please verify your call. If the issue continues please get in touch with your account representative for additional support</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>403</code><br />&#92;- Forbidden</td>
+      <td>API application doesn't have access to make calls to the line item</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>500</code><br />&#92;- Server Error</td>
+      <td>Internal services may be down. If you continue to experience the problem after a few minutes, please get in touch with your account representative for additional support.</td>
+    </tr>
+  </tbody>
+</table>

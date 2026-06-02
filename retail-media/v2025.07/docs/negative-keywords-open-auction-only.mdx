@@ -1,0 +1,469 @@
+---
+title: Negative Keyword Targeting
+hidden: true
+---
+
+<Note>
+  ### Getting Started
+
+  For an overview, read more about how [**Negative Keyword Targeting**](https://help.retailmedia.criteo.com/kb/guide/en/negative-keyword-targeting-zgMmEUbU8V/Steps/1208564) works in our Help Center
+</Note>
+
+ 
+
+## **Endpoints**
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/auction-line-items/&#123;line-item-id&#125;/targeting/keywords</code></td>
+      <td>Get All Negated Keywords on a specific Line Item</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/auction-line-items/&#123;line-item-id&#125;/targeting/keywords/append</code></td>
+      <td>Add Negated Keywords to a Specific Line Item</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/auction-line-items/&#123;line-item-id&#125;/targeting/keywords/delete</code></td>
+      <td>Remove Negated Keywords from a Specific Line Item</td>
+    </tr>
+  </tbody>
+</table>
+
+ 
+
+ 
+
+## **Negated Keyword Attributes**
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>keywords</code>&#92;&#42;</td>
+      <td>object</td>
+      <td>Keywords structure, with dictionary of keywords and <code>matchType</code> pairs<br />Possible match types for those endpoints: <code>negativeExact</code> and <code>negativeBroad</code></td>
+    </tr>
+  </tbody>
+</table>
+
+*\*Required*
+
+<br />
+
+## **Get all Negated Keywords on a Line item**
+
+This endpoint list all negated keywords to an Onsite Sponsored Products Line item
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/auction-line-items/{line-item-id}/targeting/keywords
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/auction-line-items/2465695028166499188/targeting/keywords" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaKeywordTarget",
+        "id": "2465695028166499188",
+        "attributes": {
+            "keywords": {
+                "chips": "negativeExact",
+                "soda": "negativeBroad"
+            }
+        }
+    },
+    /* omitted if no errors */
+    "errors": [],
+    /* omitted if no warnings */
+    "warnings": []
+}
+```
+
+<br />
+
+## **Add Negated Keywords on a Line item**
+
+This endpoint adds negated keywords to an Onsite Sponsored Products Line item
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/auction-line-items/{line-item-id}/targeting/keywords/append
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.criteo.com/{version}/retail-media/auction-line-items/2465695028166499188/targeting/keywords/append" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": [
+                {
+                    "type": "RetailMediaKeywordTarget",
+                    "attributes": {
+                        "keywords": {
+                            "chips": "negativeExact",
+                            "soda": "negativeBroad"
+                        }
+                    }
+                }
+            ]
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords/append"
+
+payload = json.dumps({
+  "data": {
+    "type": "<string>",
+    "attributes": {
+      "keywords": {
+        "pasta": "NegativeExact",
+        "juice": "NegativeBroad"
+      }
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"keywords\": {\n        \"pasta\": \"NegativeExact\",\n        \"juice\": \"NegativeBroad\"\n      }\n    }\n  }\n}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords/append")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords/append');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{\n  "data": {\n    "type": "<string>",\n    "attributes": {\n      "keywords": {\n        "pasta": "NegativeExact",\n        "juice": "NegativeBroad"\n      }\n    }\n  }\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaKeywordTarget",
+        "id": "2465695028166499188",
+        "attributes": {
+            "keywords": {
+                "chips": "negativeExact",
+                "soda": "negativeBroad"
+            }
+        }
+    },
+    /* omitted if no errors */
+    "errors": [],
+    /* omitted if no warnings */
+    "warnings": []
+}
+```
+
+<br />
+
+## **Remove Negated Keywords on a Line Item**
+
+This endpoint removes previously negated keywords (as a result, these keywords might be targeted)
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/auction-line-items/{line-item-id}/targeting/keywords/delete
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.criteo.com/{version}/retail-media/auction-line-items/2465695028166499188/targeting/keywords/delete" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": [
+                {
+                    "type": "RetailMediaPromotedProduct",
+                    "attributes": {
+                        "keywords": {
+                            "chips": "negativeExact"
+                        }
+                    }
+                }
+            ]
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords/delete"
+
+payload = json.dumps({
+  "data": {
+    "type": "<string>",
+    "attributes": {
+      "keywords": {
+        "apple": "negativeBroad",
+        "juice": "NegativeBroad"
+      }
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"keywords\": {\n        \"apple\": \"negativeBroad\",\n        \"juice\": \"NegativeBroad\"\n      }\n    }\n  }\n}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords/delete")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/auction-line-items/325713346766241792/targeting/keywords/delete');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{\n  "data": {\n    "type": "<string>",\n    "attributes": {\n      "keywords": {\n        "apple": "negativeBroad",\n        "juice": "NegativeBroad"\n      }\n    }\n  }\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaPromotedProduct",
+            "attributes": {
+                "keywords": {
+                    "chips": "negativeBroad"
+                }
+            }
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 4,
+        "currentPageSize": 4,
+        "currentPageIndex": 0,
+        "totalPages": 1,
+        "nextPage": null,
+        "previousPage": null
+    }
+}
+```
+
+<br />
+
+## **Responses**
+
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:large&#95;blue&#95;circle:<br /><code>200</code></td>
+      <td>Call completed with success</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>400</code></td>
+      <td>Bad request, validation error</td>
+    </tr>
+  </tbody>
+</table>

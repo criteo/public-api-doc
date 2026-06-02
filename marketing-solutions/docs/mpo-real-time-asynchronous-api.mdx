@@ -1,0 +1,117 @@
+---
+title: MPO Real-Time Asynchronous API (Multi-Seller)
+hidden: true
+---
+
+# Getting real-time statistics 
+
+This page explains **how to use the MPO Real-Time Asynchronous API with multi-seller campaigns**. It assumes you already:
+
+* Have **multi-seller campaigns** live in MPO (one campaign shared by many sellers).
+* Know your **advertiserId**, **campaignId**, and (optionally) **sellerId** values.
+* Understand the basics of [multi-seller MPO campaigns](/marketing-solutions/docs/marketplace-performance-outcomes).
+
+For the **full API workflow and schema**, see the canonical reference:  
+[**MPO Real-Time Asynchronous API**](/marketing-solutions/docs/getting-realtime-mpo-statistics).
+
+***
+
+## When to use real-time stats with multi-seller campaigns
+
+Use the Real-Time API when you need **near real-time views** on:
+
+* Overall **multi-seller campaign health** (clicks, displays, cost).
+* **Per-seller performance inside a pooled campaign**.
+* **Fast troubleshooting** (sudden spikes or drops in impressions, clicks, or spend).
+
+Key properties:
+
+* Data latency is about **10 minutes**.
+* Data is intended **only for real-time reporting**, not for billing or financial decisions.
+* The API is shared across **multi-seller and Single-Seller**; this page focuses on multi-seller usage patterns.
+
+***
+
+## Typical identifier patterns (Multi-Seller)
+
+For multi-seller campaigns, you will usually:
+
+* Set `advertiserIds` to **your marketplace advertiser**.
+* Filter and group by:
+  * `campaignIds` when you want **campaign-level** aggregation.
+  * `sellerIds` when you need **per-seller views inside multi-seller campaigns**.
+* Optionally add:
+  * `productId` to see **product-level performance**.
+  * `hour` or `minute` for time-series views.
+
+Examples of common use cases:
+
+1. **Monitor a multi-seller campaign as a whole**
+   * `advertiserIds = [<yourAdvertiserId>]`
+   * `campaignIds = [<campaignId>]`
+   * `dimensions = ["campaignId"]`
+   * `metrics = ["clicks", "displays", "cost"]`
+   * `lookbackWindow = 60`
+
+2. **See top/bottom sellers inside a multi-seller campaign**
+   * `advertiserIds = [<yourAdvertiserId>]`
+   * `campaignIds = [<campaignId>]`
+   * `dimensions = ["sellerId"]`
+   * `metrics = ["clicks", "displays", "cost"]`
+   * `lookbackWindow = 240`
+
+3. **Drill into a single seller within a pooled setup**
+   * `advertiserIds = [<yourAdvertiserId>]`
+   * `campaignIds = [<campaignId>]`
+   * `sellerIds = [<sellerId>]`
+   * `dimensions = ["sellerId", "productId"]` (optional)
+   * `metrics = ["clicks", "displays", "cost"]`
+   * `lookbackWindow = 60`
+
+***
+
+## How it fits with multi-seller budgets
+
+In multi-seller mode:
+
+* You typically manage **shared budgets** at the campaign level.
+* Sellers share targeting and budget, but you still want **per-seller visibility** to decide:
+  * Whether to adjust CPCs / pacing.
+  * Whether to move a seller into **Single-Seller** for more control.
+
+The Real-Time API is **read-only**:
+
+1. You continue to **configure campaigns and budgets** via the existing MPO APIs.
+2. You use **Real-Time stats** to:
+   * Detect under- or over-exposed sellers.
+   * Validate changes shortly after deployment.
+3. You may then:
+   * Tune **bids / pacing** on the multi-seller campaign.
+   * Move selected sellers to a **Single-Seller** setup if they require dedicated budgets and reporting.
+
+***
+
+## Using the Real-Time API
+
+The Real-Time API uses an **async export workflow** common to both multi-seller and Single-Seller:
+
+1. **Create a report job**  
+   `POST /realtime-reports/export`  
+   with your `advertiserIds`, and optionally `campaignIds`, `sellerIds`, `dimensions`, `metrics`, and time filters.
+
+2. **Poll the job**  
+   `GET /report-jobs/{reportId}`  
+   until `status == Done` (avoid polling more than once every 5–10 seconds).
+
+3. **Download the export**  
+   `GET /realtime-reports/{reportId}` (CSV or JSON).
+
+For complete details on:
+
+* Request attributes (`RealTimeProductReportJob`)
+* Dimensions and metrics
+* Validation rules (including time intervals and dimension combinations)
+* Error codes and file lifecycle / expiry
+
+see the canonical reference:  
+[**MPO Real-Time Asynchronous API**](/marketing-solutions/docs/getting-realtime-mpo-statistics).

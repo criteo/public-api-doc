@@ -1,0 +1,152 @@
+---
+title: GAM configuration
+hidden: true
+---
+
+***
+
+# Introduction
+
+Retailers with existing GAM integrations will already have existing Ad units.  
+
+We want to enable them to access Retail Media demand easily.
+
+There are 4 areas in GAM that we’ll need to be aware of:
+
+* **Orders**: an order will need to be created to represent the relationship between the Publisher and Criteo.  This order will act as a parent container for Retail Media line items.
+* **Line items**: at least one line item will be created within this order.  The line item acts as a parent for the Creative and determines which Ad Unit is targeted.
+* **creatives**: at least one `Third Party` creative will be created for this line item.  The creative should have a `Standard `code type and have associated ad technology provider = `Criteo`.  The creative body itself is a script tag whose `src` attribute is an RM Delivery call URL.
+* **Ad units**: the Ad Unit is the target for the line item and is where the GPT is generated.  Retail Media will need to have a placement created that represents the Ad unit.
+
+![Screenshot of the Google Ad Manager back office and main menu
+
+](https://files.readme.io/e60333a3aedf3fbbeabfafe5cf6e6ec6219da2f4c8a85db2b5427a1529204df7-image.png)
+
+The following diagram illustrates how these elements interact to serve an ad from Retail Media via GAM:
+
+![](https://files.readme.io/b614b81af56af8a52861468163770a6deeb2872b28434293ece39a911d326a8b-image.png)
+
+<br />
+
+***
+
+# Configuration
+
+## Ad Unit
+
+The Retailer likely already has an Ad Unit configured in GAM.  
+
+For the sake of configuring Retail Media, we’ll want to know:
+
+* The name of the Ad unit
+
+<Info>
+  While not mandatory, it is strongly advised to name the placement in Retail Media in a manner that clearly points to the corresponding ad unit.
+</Info>
+
+***
+
+## Order and Line Item
+
+Configuring the Order and Line Item in GAM is largely up to the Retailer.  
+
+The Line Item configuration in particular governs when they’ll call Criteo.  Aspects of the Line Item configuration that we should be aware of are:
+
+* Which Ad Unit(s) is the line item targeting?
+* In the event that Criteo can't serve an ad, is there a secondary line item that should be served instead?
+
+***
+
+## Creative Configuration
+
+A new third party creative will be created in GAM that embodies the call to RM Delivery. The body of the creative is a `<script/>` tag, which source is a call to the endpoint.
+
+Some of the parameters of this call will be hard-coded as they are specific to the Retailer, while others may be mapped from parameters supplied to the GPT.  
+
+Here is an example:
+
+```javascript
+<script async src="https://d.us.criteo.com/delivery/v1/rmgam?criteo-partner-id=108747&retailer-visitor-id=%%PATTERN:rvid%%&page-id=%%PATTERN:pa%%&placement-id=%%PATTERN:pl%%&context=%%PATTERN:kwd%%&cb=%%CACHEBUSTER%%></script>`
+```
+
+In this example, parameters to the RM Delivery request are populated as follows:
+
+* The `criteo-partner-id` is hard-coded to be `108747`.  This value is unique to each Retailer.
+* The `retailer-visitor-id` is being populated by Macros:  `%%PATTERN:rvid%%&`
+* The `page-id` is being populated by a macro:  `%%PATTERN:pa%%`
+* The `placement-id` is being populated by a macro:  `%%PATTERN:pl%%`
+* The context is being populated by a macro:  `%%PATTERN:kwd%%`
+* `&cb=%%CACHEBUSTER%%` is just a macro that expands to a random number to prevent caching.
+
+<Info>
+  Note that `criteo-partner-id`,  `page-id`, and `placement-id` are **supply-side concepts** that are specific to the inventory where this creative will serve, while `retailer-visitor-id` and `context` are **request-specific concepts**.
+
+  `criteo-partner-id` can be hard-coded because this creative will only ever serve on a specific publisher, but using Macros for `page-id` and `placement-id` allows the creative to serve on multiple ad units for this publisher.
+</Info>
+
+We could also allocate one creative per page or ad unit and hard-code those values in the creative, omitting their macros.  We would still need the macros for `retailer-visitor-id` and `context` because they can vary by request.
+
+How these `%%PATTERN%%` macros are replaced is covered in the GPT Modification section.
+
+***
+
+## RM.js Considerations
+
+<Info>
+  RM.js is a JavaScript library used in Retail Media integrations to handle rendering and beaconing for ads served by RM Delivery. **(TO DO: LINK?)**
+</Info>
+
+The example Creative described above is using the `delivery/v1/rmgam` endpoint.
+
+The endpoint returns a response that will first download the RM.js library, and then pass the Delivery response into RM.js for rendering. If there are multiple placements that call RM Delivery on the same page, downloading RM.js multiple times is redundant and will increase overall latency.
+
+<Warning>
+  **v2 endpoint**
+
+  If the page already has RM.js downloaded - either outside of the GPT or as part of the GPT - the creative can leverage a different Delivery endpoint: `delivery/v2/rmgam`. This endpoint assumes that RM.js is already available and does not attempt to download it as part of the RM Delivery response.
+
+  **TO DO: check with product if / how we want to highlight this endpoint**
+</Warning>
+
+***
+
+### Response example
+
+#### If ad(s) are found
+
+Status Code: `200 OK`
+
+Content-type: `application/javascript`
+
+A script that, when executed, will load RM.js and pass the response to RM.js for rendering and beaconing.
+
+```javascript
+var renderingJs = '/ClientPaths/Library/rm.js?a=[criteo-partner-id]';
+var retailMediaAdResponse = {json delivery response in a form that is rm.js compatible};
+
+var scriptElement = document.currentScript;
+var parentDiv = scriptElement.parentNode;
+var newDiv = document.createElement("div");
+newDiv.id = "GamCriteoSlot";
+parentDiv.appendChild(newDiv);
+
+var scriptTag = document.createElement('script');
+scriptTag.setAttribute('src', renderingJs);
+
+scriptTag.onload = function() {
+    var createdDiv = document.getElementById('GamCriteoSlot');
+    if (createdDiv) {
+        window.RMJS.render(retailMediaAdResponse);
+    }
+};
+
+document.head.appendChild(scriptTag);
+```
+
+#### If ads are not found
+
+TO DO
+## What's next
+
+* [Macros & mapping](/retailer-integration/docs/macros-mapping)
+* [Google Publisher Tag (GPT)](/retailer-integration/docs/google-publisher-tag-gpt)

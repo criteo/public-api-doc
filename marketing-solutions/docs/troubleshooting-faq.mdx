@@ -1,0 +1,187 @@
+---
+title: Troubleshooting & FAQ
+---
+
+## General
+
+## 1. How should I handle API errors?
+
+As a general rule:
+
+* `4xx` errors indicate an input or business logic issue. Read the error payload carefully — it will contain field-level detail to help you correct the request before retrying.
+* `500` and `503` errors are typically caused by a temporary network or service issue. Implement an exponential backoff policy: wait 10 seconds before the first retry, 20 seconds before the second, 40 seconds before the third, and so on.
+
+## 2. What is the maximum payload size?
+
+The API accepts up to **2,000 budget objects per call** with no defined maximum payload size.
+
+## 3. Does the API support partial failures?
+
+Partial failure is not supported at the request level. However, if a call fails, the error response will include detail records identifying which items caused the failure, so you can correct and resubmit.
+
+## 4. Why is my seller-campaign not delivering even though it looks active?
+
+Check the `suspendedSince` and `suspensionReasons` fields on the seller-campaign:
+
+* If `suspendedSince` is `null` and `suspensionReasons` is empty, the campaign appears active to the API. If it is still not delivering, check that the template campaign is active and the budget meets the minimum per-seller threshold.
+* If `suspensionReasons` contains a value, see the table below.
+
+<table>
+  <thead>
+    <tr>
+      <th>Reason</th>
+      <th>Meaning</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ManuallyStopped</code></td>
+      <td>Budget manually suspended</td>
+      <td>Resume via budget <code>PATCH</code></td>
+    </tr>
+    <tr>
+      <td><code>NoBudgetDefined</code></td>
+      <td>No active budget exists</td>
+      <td>Create a valid budget</td>
+    </tr>
+    <tr>
+      <td><code>NoCpcDefined</code></td>
+      <td>No CPC set</td>
+      <td>Set a CPC bid</td>
+    </tr>
+    <tr>
+      <td><code>NoMoreBudget</code></td>
+      <td>Budget fully spent</td>
+      <td>Create a new budget for a future period</td>
+    </tr>
+    <tr>
+      <td><code>RemovedFromCatalog</code></td>
+      <td>All products removed</td>
+      <td>Restore products in the catalog</td>
+    </tr>
+    <tr>
+      <td><code>NotYetStarted</code></td>
+      <td>Newly created, not yet processed</td>
+      <td>Wait for provisioning</td>
+    </tr>
+    <tr>
+      <td><code>NoMoreDailyBudget</code></td>
+      <td>Daily spend limit reached</td>
+      <td>No action needed; resets the next day</td>
+    </tr>
+    <tr>
+      <td><code>Other</code></td>
+      <td>Internal error</td>
+      <td>Contact Criteo Product or R&amp;D</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  Note that bulk endpoints do not always return HTTP `200`. Authorization and validation errors are returned with their appropriate status codes. For example, an invalid seller-campaign mapping returns a `403`:
+</Info>
+
+```text json
+[
+{
+"detail": "Seller-campaign mappings are invalid. Invalid seller-campaigns: (campaign: 562108, seller: 1111)",
+"status": 403,
+"source": {
+"body": ""
+}
+}
+]
+```
+
+## 5. How are sellers added to the system?
+
+In the most common scenario, sellers are added automatically from the catalog you have provided to Criteo. You must include the seller identifier in the `seller_id` field of each product in your catalog feed. The value is case-sensitive.
+
+Once the catalog is imported, it typically takes **3–4 hours** for sellers to appear in the system.
+
+## Sellers
+
+### 6. How do I look up a seller's ID?
+
+Use the sellers endpoint with a name filter:
+
+```text http
+GET /marketplace-performance-outcomes/sellers?sellerName=YourSellerName
+```
+
+## Campaigns
+
+### 7. What is the difference between a campaign and a seller-campaign?
+
+A campaign (also referred to as an ad set in Commerce Growth) is the top-level configuration managed by Criteo. You do not create or modify it directly via the MPO API.
+
+A seller-campaign is automatically created for each seller when the seller is set up. For example, if there are two MPO campaigns (one for web and one for app), two seller-campaigns will be created per seller by default. Seller-campaigns are the entities you manage via the API bids, and run state.
+
+### 8. Where do I get the campaign ID?
+
+Campaign IDs are assigned and managed by Criteo. You can obtain the campaign ID:
+
+* Directly from your Criteo point of contact.
+* Via the `GET /marketplace-performance-outcomes/campaigns` endpoint.
+
+### 9. How do I start or stop a seller-campaign?
+
+There is no single flag that starts or stops a seller-campaign. A seller-campaign becomes active when it meets a set of conditions — including having a valid budget, a CPC bid, and active products in the catalog. See [Managing Campaigns](/marketing-solutions/docs/multiseller-managing-campaigns) for the full list of conditions. :llmCitationRef[0]
+
+To stop a seller-campaign, set the budget to `isSuspended: true` via:
+
+```text http
+PATCH /marketplace-performance-outcomes/budgets
+```
+
+### 10. Why does a seller-campaign show as active when it is not delivering?
+
+This can happen when the suspension reason is not yet surfaced by the API. Common causes include:
+
+* The daily budget has been exhausted (`NoMoreDailyBudget`).
+* An internal system issue is preventing delivery (`Other`).
+
+Check the `suspendedSince` and `suspensionReasons` fields when retrieving a seller-campaign. If both are `null`, the campaign appears active. If `suspendedSince` is set, the campaign is inactive — check `suspensionReasons` for details. :llmCitationRef[1]
+
+## Budgets
+
+### 11. How do I check the remaining budget?
+
+There is no dedicated endpoint for remaining budget. Calculate it usin
+
+```text
+remaining budget = amount − spend
+```
+
+Both `amount` and `spend` are available from:
+
+* `GET /marketplace-performance-outcomes/budgets`
+* `GET /marketplace-performance-outcomes/budgets/{budgetId}`
+
+### 12. Can budget periods overlap for the same seller?
+
+No. For a given (`sellerId`, `campaignId`) pair, budget periods must not overlap. If you need to extend a period, update the existing budget. If you need to replace it, create a new one with non-overlapping dates.
+
+**Important distinction:**
+
+* Past or expired budgets do not block new budgets for the same date range.
+* Suspended budgets are not treated as canceled; they can be reactivated. A suspended budget still occupies its date range and will block a new budget for overlapping dates.
+
+If you need to free up a date range currently held by a suspended budget, you must delete or expire the suspended budget before creating a new one for that period.
+
+### 13. Can I schedule future budgets?
+
+Yes. You can create budgets with future `startDate` values as long as their date ranges do not overlap with any existing active budgets for the same (`sellerId`, `campaignId`) pair.
+
+## Statistics
+
+### 14. Are statistics available in local time zones (for example, KST)?
+
+Yes. While statistics data defaults to UTC, the Stats API supports a `timezone` parameter so you can retrieve data in your preferred local time zone directly.
+
+### 15. What is the data latency for statistics?
+
+Statistics are typically available with a latency of a few hours. Exact latency may vary; refer to the [Getting Statistics](/marketing-solutions/docs/multiseller-getting-statistics) page for current SLA guidance. :llmCitationRef[2]
+
+<br />

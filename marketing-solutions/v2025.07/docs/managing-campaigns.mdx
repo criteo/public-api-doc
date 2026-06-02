@@ -1,9 +1,6 @@
 ---
-title: "Managing Campaigns"
+title: Managing Campaigns
 ---
-
-1. Marketing Solutions Endpoints
-2. [Marketplace Performance Outcomes](/marketing-solutions/v2025.07/docs/marketplace-performance-outcomes)
 
 <Info>
   A MPO-Campaign is a course of action to advertise the products of your sellers.
@@ -19,17 +16,22 @@ Campaigns are not added with the API. Instead, they are created, started and sto
 
 A Seller-Campaign contains all the information relative to the advertisement for the products of a Seller in a Campaign. In particular, it contains information about bid and status:
 
-**`bid`** Bid specified for this Seller in this Campaign
+**`bid`**  
+Bid specified for this Seller in this Campaign
 
-**`suspendedSince`** Date and time since we stopped delivering ads for this Seller in this Campaign.
+**`suspendedSince`**  
+Date and time since we stopped delivering ads for this Seller in this Campaign.
 
-**`suspensionReasons`** List of reasons why the campaign is suspended (possible values are: `NoMoreBudget`, `ManuallyStopped`, `NoBudgetDefined`, `NoCpcDefined`, `RemovedFromCatalog`)
+**`suspensionReasons`**  
+List of reasons why the campaign is suspended (possible values are: `NoMoreBudget`, `ManuallyStopped`, `NoBudgetDefined`, `NoCpcDefined`, `RemovedFromCatalog`)
 
 Every Seller-Campaign is identified by:
 
-**`sellerId`** `SellerId` of the seller associated to this Seller-Campaign
+**`sellerId`**  
+`SellerId` of the seller associated to this Seller-Campaign
 
-**`campaignId`** `CampaignId` of the MPO-campaign associated to this Seller-Campaign
+**`campaignId`**  
+`CampaignId` of the MPO-campaign associated to this Seller-Campaign
 
 ***
 
@@ -45,40 +47,38 @@ Seller-Campaigns get automatically created for every Campaign and every Seller i
 
 To see what Seller-Campaigns are available, can make the following query:
 
-![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 /marketplace-performance-outcomes/seller-campaigns
 ```
 
 **Sample response**
 
-<CodeGroup>
-  ```bash bash
-  [{
-      "id": "1.10001",
-      "suspendedSince": "2018-07-30T18:00:13.333",
-      "suspensionReasons": ["NoMoreBudget"],
-      "sellerId": "1",
-      "campaignId": 10001,
-      "bid": null
-  },{
-      "id": "2.10001",
-      "suspendedSince": "2018-09-03T09:00:23.8",
-      "suspensionReasons": ["ManuallyStopped"],
-      "sellerId": "2",
-      "campaignId": 10001,
-      "bid": null
-  },{
-      "id": "3.10001",
-      "suspendedSince": "2018-09-03T09:00:23.8",
-      "suspensionReasons": ["NoCpcDefined"], 
-      "sellerId": "3",
-      "campaignId": 10001,
-      "bid": null
-  }]
-  ```
-</CodeGroup>
+```json JSON
+[{
+    "id": "1.10001",
+    "suspendedSince": "2018-07-30T18:00:13.333",
+    "suspensionReasons": ["NoMoreBudget"],
+    "sellerId": "1",
+    "campaignId": 10001,
+    "bid": null
+},{
+    "id": "2.10001",
+    "suspendedSince": "2018-09-03T09:00:23.8",
+    "suspensionReasons": ["ManuallyStopped"],
+    "sellerId": "2",
+    "campaignId": 10001,
+    "bid": null
+},{
+    "id": "3.10001",
+    "suspendedSince": "2018-09-03T09:00:23.8",
+    "suspensionReasons": ["NoCpcDefined"], 
+    "sellerId": "3",
+    "campaignId": 10001,
+    "bid": null
+}]
+```
 
 ***
 
@@ -86,28 +86,26 @@ To see what Seller-Campaigns are available, can make the following query:
 
 You can also fetch the details of a single Seller-campaign using the following request:
 
-![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 /marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}
 ```
 
 **Sample response**
 
-<CodeGroup>
-  ```bash bash
-  {
-    "id": "543210.123456",
-    "sellerId": "543210",
-    "campaignId": 123456,
-    "bid": 1.55,
-    "suspendedSince": "2018-07-30T15:15:24.813",
-    "suspensionReasons": [
-      "NoMoreBudget"
-    ]
-  }
-  ```
-</CodeGroup>
+```json
+{
+  "id": "543210.123456",
+  "sellerId": "543210",
+  "campaignId": 123456,
+  "bid": 1.55,
+  "suspendedSince": "2018-07-30T15:15:24.813",
+  "suspensionReasons": [
+    "NoMoreBudget"
+  ]
+}
+```
 
 An active seller campaign meets these conditions:
 
@@ -134,48 +132,92 @@ Additionally, an active seller campaign must have an active total budget (capped
 
 The following endpoint retrieves a list of budgets for the specified seller campaign, applying any optional filters provided.
 
-If no filters are set, it returns all accessible budgets except those with an `endDate` in the past. When multiple filters are applied, only budgets meeting all criteria are included.
+If no filters are set, it returns all accessible budgets except those with an `endDate` in the past.  
+When multiple filters are applied, only budgets meeting all criteria are included.
 
-![](/images/marketing-solutions/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 /marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}/budgets
 ```
 
 **Sample response**
 
-<CodeGroup>
-  ```bash bash
-  [
-    {
-      "id": "6907877",
-      "sellerId": "10624700",
-      "campaignIds": [
-        225662
-      ],
-      "budgetType": "Daily",
-      "amount": 12.0000,
-      "startDate": "2021-02-25",
-      "endDate": "Never",
-      "spend": null,
-      "status": "Current",
-      "isSuspended": false
-    }
-  ]
-  ```
-</CodeGroup>
+```json
+[
+  {
+    "id": "6907877",
+    "sellerId": "10624700",
+    "campaignIds": [
+      225662
+    ],
+    "budgetType": "Daily",
+    "amount": 12.0000,
+    "startDate": "2021-02-25",
+    "endDate": "Never",
+    "spend": null,
+    "status": "Current",
+    "isSuspended": false
+  }
+]
+```
 
 You can apply the following query parameters to the endpoint to specify filters:
 
-| Parameter          | Definition                                                                                                              | Type      | Required? |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------- | --------- | --------- |
-| `sellerCampaignId` | Filters budgets belonging to the specified seller campaign.                                                             | `string`  | Yes       |
-| `endAfterDate`     | Returns budgets ending after the specified date (`yyyy-MM-DD`). Defaults to only active (not ended) budgets if omitted. | `string`  | No        |
-| `startBeforeDate`  | Returns budgets starting on or before the specified date (`yyyy-MM-DD`).                                                | `string`  | No        |
-| `status`           | Filters budgets by their status. Possible values: **Archived**, **Current**, **Scheduled**.                             | `string`  | No        |
-| `type`             | Filters budgets by the specified budget type.                                                                           | `string`  | No        |
-| `withBalance`      | Returns only budgets with a positive balance.                                                                           | `boolean` | No        |
-| `withSpend`        | Returns budgets with a positive spend amount.                                                                           | `boolean` | No        |
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Definition</th>
+      <th>Type</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>sellerCampaignId</code></td>
+      <td>Filters budgets belonging to the specified seller campaign.</td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>endAfterDate</code></td>
+      <td>Returns budgets ending after the specified date (<code>yyyy-MM-DD</code>). Defaults to only active (not ended) budgets if omitted.</td>
+      <td><code>string</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>startBeforeDate</code></td>
+      <td>Returns budgets starting on or before the specified date (<code>yyyy-MM-DD</code>).</td>
+      <td><code>string</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>status</code></td>
+      <td>Filters budgets by their status. Possible values: <strong>Archived</strong>, <strong>Current</strong>, <strong>Scheduled</strong>.</td>
+      <td><code>string</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>Filters budgets by the specified budget type.</td>
+      <td><code>string</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>withBalance</code></td>
+      <td>Returns only budgets with a positive balance.</td>
+      <td><code>boolean</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>withSpend</code></td>
+      <td>Returns budgets with a positive spend amount.</td>
+      <td><code>boolean</code></td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -184,8 +226,8 @@ You can apply the following query parameters to the endpoint to specify filters:
 In order to start delivering ads for a Seller in a Campaign, the Seller-Campaign needs to:
 
 * be part of a running Campaign,
-* have a bid (see "[Setting the Bid for a given Seller-Campaign](doc:managing-campaigns#setting-the-bids-of-seller-campaigns)" section),
-* have an active budget (see "[Managing Budgets](doc:managing-budgets)" section),
+* have a bid (see "[Setting the Bid for a given Seller-Campaign](/marketing-solutions/v2025.07/docs/managing-campaigns#setting-the-bids-of-seller-campaigns)" section),
+* have an active budget (see "[Managing Budgets](/marketing-solutions/v2025.07/docs/managing-budgets)" section),
 
 When a Seller-Campaign becomes inactive, the `suspendedSince` flag is null.
 
@@ -195,8 +237,8 @@ When a Seller-Campaign becomes inactive, the `suspendedSince` flag is null.
 
 In order to stop delivering ads for a Seller in a Campaign, you can do one of the following actions:
 
-* set the bid of the Seller-Campaign to null (see "[Setting the Bid for a given Seller-Campaign](doc:managing-campaigns#setting-the-bids-of-seller-campaigns)" section),
-* suspend the current budget (see "[Suspend a Budget](doc:managing-budgets#suspending-budgets)" section),
+* set the bid of the Seller-Campaign to null (see "[Setting the Bid for a given Seller-Campaign](/marketing-solutions/v2025.07/docs/managing-campaigns#setting-the-bids-of-seller-campaigns)" section),
+* suspend the current budget (see "[Suspend a Budget](/marketing-solutions/v2025.07/docs/managing-budgets#suspending-budgets)" section),
 * remove products of this Seller from the feed (if you have several MPO-Campaigns, this will also stop the Seller in the other MPO-Campaigns).
 
 When a Seller-Campaign becomes inactive, the `suspendedSince` flag is set to the current date.
@@ -207,36 +249,31 @@ When a Seller-Campaign becomes inactive, the `suspendedSince` flag is set to the
 
 In order to have a Sellers active in the campaign, you have to specify the bids that will be used for these Sellers in the given Campaign.
 
-![](/images/marketing-solutions/v2025.07/docs/04a928f-patch.png)
-
-```
+```text
 /marketplace-performance-outcomes/seller-campaigns
 ```
 
 **Sample response**
 
-<CodeGroup>
-  ```bash bash
-  [{
-      "id": "1.10001",
-      "bid": 0.3
-  },{
-      "id": "2.10001",
-      "bid": 0.6
-  },{
-      "id": "3.10001",
-      "bid": 0.5
-  }]
-  ```
-</CodeGroup>
+```json JSON
+[{
+    "id": "1.10001",
+    "bid": 0.3
+},{
+    "id": "2.10001",
+    "bid": 0.6
+},{
+    "id": "3.10001",
+    "bid": 0.5
+}]
+```
 
 <Warning>
   Note that the ID is defined by “seller ID” dot “campaign ID” (e.g 1.10001 for seller ID 1 and campaign 10001).
 </Warning>
 
-***
-
-What’s Next
+<br />
+## What's next
 
 * [Managing Budgets](/marketing-solutions/v2025.07/docs/managing-budgets)
 * [Getting statistics](/marketing-solutions/v2025.07/docs/getting-statistics)

@@ -1,0 +1,753 @@
+---
+title: '비디오 플레이어 구현 (앱: iOS)'
+description: This is a translated version of the Commerce Onsite Video documentation
+hidden: true
+---
+
+<Warning>
+  Commerce Video is available as a beta feature.
+</Warning>
+
+***
+
+# 소개
+
+이 문서의 목적은 **iOS 모바일 플랫폼에서 온사이트 커머스 비디오 광고를 구현하는 방법**에 대한 자세한 지침을 제공하는 것입니다.
+
+<Info>
+  **Android vs iOS**
+
+  **이 페이지는 iOS용 비디오 플레이어를 구현하는 방법에 대해서만 다룹니다.** Android 구현에 대해서는 [이 페이지](/retailer-integration/docs/video-player-implementation-app-android-korean)를 참조하세요.
+</Info>
+
+<Info>
+  **앱 vs 웹(데스크톱 및 모바일)**
+
+  이 페이지는 \*\* 모바일 구현에 중점을 둡니다\*\*. 더 광범위한 맥락에서 알아보려면 [웹용 비디오 플레이어 구현 가이드](/retailer-integration/docs/video-player-implementation-guide-desktopmobile-korean)를 방문하세요.
+</Info>
+
+<Warning>
+  **버전 요구 사항**
+
+  iOS의 경우 지원되는 최소 iOS 버전은 **9.0**이지만 최신 5개 버전을 지원하도록 선택할 수 있습니다.
+</Warning>
+
+***
+
+# 비디오 플레이어 구현 가이드
+
+비디오 광고 구현을 위해서는 몇 가지 주요 단계를 고려해야 합니다.
+
+1. VAST tag 요청 및 구문 분석,
+2. 광고를 표시할 비디오 플레이어 생성,
+3. 광고 세션 설정,
+4. 비디오 재생 중 적절한 시간에 비콘 실행,
+5. 광고 세션 마무리,
+6. 자막 처리.
+
+<Info>
+  크리테오는 **VAST 4.2**를 지원합니다(IAB 사양은 [여기](https://iabtechlab.com/wp-content/uploads/2019/06/VAST_4.2_final_june26.pdf)에서 확인할 수 있습니다).
+</Info>
+
+***
+
+## 1단계: VAST 태그 요청 및 구문 분석
+
+비디오 플레이어에 대한 데이터를 얻으려면 먼저 크리테오 API 광고 응답에서 VAST 정보를 가져옵니다.
+
+다음은 VAST 파일을 요청하고(필요한 경우) XPath을 사용해 가져와 구문 분석하는 방법의 예입니다.
+
+* 비디오 미디어 파일의 링크,
+* VAST XML 트래킹 비콘,
+* OMID 검증 URL 및 `VerificationParameters`,
+* 자막 파일.
+
+```text swift
+public func fetchVAST(_ remoteURL: URL,
+                          _ statusHandler: @escaping (_ message: String) -> (),
+                          _ completionHandler: @escaping (_ videoAdURL: URL, 
+                                                          _ captionsURL: URL,
+                                                          _ verificationURL: String, 
+                                                          _ verificationParameters: String, 
+                                                          _ vendorKey: String, 
+                                                          _ tracking: Dictionary&lt;String, URL&gt;) -> (),
+                          _ errorHandler: @escaping (_ message: String) -> ()) {
+    DispatchQueue.main.async {
+        statusHandler("Fetching VAST...");
+    }
+
+    print("Fetching VAST from '\(remoteURL)'.")
+    self.VASTDownloadTask = URLSession.shared.downloadTask(with: remoteURL) {
+        (fileURL, response, error) in
+        guard let fileURL = fileURL else {
+            DispatchQueue.main.async {
+                errorHandler("Unable to fetch VAST from remote URL: \(remoteURL)")
+            }
+            return
+        }
+        
+        do {
+            let fileData = try Data(contentsOf: fileURL)
+// 필요에 따라 파일 데이터 처리
+            let mediaFile = self.evaluateXPath(xmlString: fileData, xpath: "//MediaFile/text()");
+            let captions = self.evaluateXPath(xmlString: fileData, xpath: "//ClosedCaptionFile/text()");
+            let verifScript = self.evaluateXPath(xmlString: fileData, 
+                                                 xpath: "//Verification[@vendor='criteo.com-omid']/JavaScriptResource/text()");
+            let verifParameters = self.evaluateXPath(xmlString: fileData, 
+                                                     xpath: "//Verification[@vendor='criteo.com-omid']/VerificationParameters/text()");
+// VAST 트래킹 URL 가져오기
+            var tracking: Dictionary&lt;String, URL&gt; = Dictionary(minimumCapacity: 15);
+            let events = self.evaluateXPath(xmlString: fileData, xpath: "//Linear/TrackingEvents/Tracking/@event");
+            events.forEach {
+                let url = self.evaluateXPath(xmlString: fileData, xpath: "//Linear/TrackingEvents/Tracking[@event='"+$0+"']");
+                tracking[$0] = URL(string: url[0]);
+            }
+            tracking["impression"] = URL( string: self.evaluateXPath(xmlString: fileData, xpath: "//Impression")[0]);
+            tracking["error"] = URL(string: self.evaluateXPath(xmlString: fileData, xpath: "//Error")[0]);
+            tracking["click"] = URL(string: self.evaluateXPath(xmlString: fileData, xpath: "//VideoClicks/ClickTracking/text()")[0]);
+// URL 생성
+            let videoAdURL = URL(string: mediaFile[0])!;
+            let captionsURL = URL(string: captions[0])!;
+            let verificationURL = verifScript[0];            
+            DispatchQueue.main.async {
+                completionHandler(videoAdURL, captionsURL, verificationURL, verifParameters[0], "criteo", tracking)
+            }
+        } catch {
+            DispatchQueue.main.async {
+                errorHandler("Unable to read file content: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    self.VASTDownloadTask?.resume()
+}
+```
+
+그리고 XPath를 평가하는 구문 분석 함수는 다음과 같습니다.
+
+```text swift
+private func evaluateXPath(xmlString: Data, xpath: String) -> [String] {
+  var results: [String] = [];
+// XML 문자열을 C 문자열로 변환
+  let bytes = UnsafeMutablePointer&lt;UInt8&gt;.allocate(capacity: xmlString.count + 1)
+  defer { bytes.deallocate() }
+  xmlString.copyBytes(to: bytes, count: xmlString.count)
+  bytes[xmlString.count] = 0;
+  let xmlCString = UnsafeRawPointer(bytes).assumingMemoryBound(to: CChar.self)
+// XML 구문 분석
+  let xmlDoc = xmlParseDoc(xmlCString)
+  guard let doc = xmlDoc else { return results }
+// XPath 컨텍스트 생성
+  let xpathCtx = xmlXPathNewContext(doc)
+  guard let context = xpathCtx else {
+    xmlFreeDoc(doc)
+    return results
+  }
+// XPath 표현식 평가
+  let xpathObj = xmlXPathEvalExpression(xpath, context)
+  guard let xpathObject = xpathObj else {
+    xmlXPathFreeContext(context)
+    xmlFreeDoc(doc)
+    return results
+  }
+// 노드 추출
+  let nodes = xpathObject.pointee.nodesetval
+  if let nodeSet = nodes {
+    for i in 0..<nodeSet.pointee.nodeNr {
+      if let node = nodeSet.pointee.nodeTab[Int(i)] {
+        if let content = xmlNodeGetContent(node) {
+          let cString = content.withMemoryRebound(to: CChar.self, capacity: 1) { $0 }
+          if let result = String(cString: cString, encoding: .utf8) {
+            results.append(result)
+          }
+          xmlFree(content)
+        }
+      }
+    }
+  }
+// 클린 업
+  xmlXPathFreeObject(xpathObject)
+  xmlXPathFreeContext(context)
+  xmlFreeDoc(doc)
+
+  return results
+}
+```
+
+***
+
+## 2단계: 비디오 플레이어 생성
+
+<Info>
+  **UIKit vs SwiftUI**
+
+  비디오 플레이어의 iOS 예제는 인터페이스 빌더와 뷰 컨트롤러를 사용하여 사용자 인터페이스를 구축하는 전통적인 방법인 `UIKit`을 사용하여 구축되었습니다. `SwiftUI`를 사용하는 경우 `UIKit` 뷰와 `SwiftUI` 뷰 내부의 뷰 컨트롤러를 통합하려면 [이 Apple 문서](https://developer.apple.com/tutorials/swiftui/interfacing-with-uikit)를 참조하세요.
+</Info>
+
+크리테오의 비디오 플레이어는 `AVPlayer`라는 네이티브 구성 요소로 구축되었으며, 이는 `play()`, `pause()`와 같은 메소드와 `volume`, `duration`과 같은 속성을 제공하여 비디오 플레이어와 상호작용하는 데 도움을 줍니다. 비디오 플레이어 사양을 따르기 위해, 클릭 리스너를 사용하여 `재생/일시 중지`, `음소거/음소거 해제` 및 `자막 활성화/비활성화`를 위한 버튼 제어 요소를 통합했습니다.
+
+또한, 현지 규정에 따라 필수 공지사항의 경우 **콜아웃**이나 **팝업**이 필요할 수 있습니다.
+
+관행으로, 인터페이스 빌더의 플레이어 컨테이너에 대해 `playerView`라는 `UIView`를 추가합니다. 이 뷰는 광고 세션과도 연결되며 OM SDK와 상호 작용합니다.
+
+비디오 플레이어는 프로그래매틱 방식으로 생성되어 이 컨테이너에 추가될 수 있습니다.
+
+```text swift
+func createMediaPlayer(withAsset asset: AVAsset) {
+        let player = AVQueuePlayer()
+    let looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: asset!))
+
+    player.isMuted = true
+    self.attachUnMuteButtonImage()
+
+    guard let videoView = playerView else {
+      fatalError("VideoView is not initialized")
+    }
+
+    let videoPlayerLayer = AVPlayerLayer(player: player)
+    videoPlayerLayer.bounds = videoView.bounds
+    videoPlayerLayer.frame = videoView.bounds
+    videoPlayerLayer.videoGravity = AVLayerVideoGravity.resizeAspect;
+    videoPlayerLayer.player?.volume = 1.0;
+
+    videoView.layer.insertSublayer(videoPlayerLayer, at: 0)
+}
+```
+
+간단한 `AVPlayer` 대신 `AVQueuePlayer`와 `AVPlayerLooper`를 사용하여 비디오 광고가 무한 반복되도록 했습니다. 또한 `isMuted` 속성을 true로 설정하여 기본적으로 비디오는 음소거 상태로 시작합니다.
+
+미디어 애셋은 `let asset = AVAsset(url: localVideoURL)`로 생성할 수 있습니다. 자막이 포함된 미디어 애셋을 만드는 방법은 아래 섹션을 참조하세요.
+
+***
+
+## 3단계: OMID 광고 세션 설정
+
+클라이언트는 플레이어가 추가 스크립트를 실행할 수 있도록 OMID를 지원해야 하며, 이를 통해 크리테오는 비디오의 뷰어빌리티를 추적할 수 있습니다. 이는 크리테오가 VAST XML 내에서 자체적인 검증 스크립트를 전송하여 비디오의 뷰어빌리티를 추적할 수 있도록 합니다.
+
+<Info>
+  **OMID 소개**
+
+  OMID([오픈 측정 인터페이스 정의)](https://iabtechlab.com/standards/open-measurement-sdk/)는 IAB에서 제공하는 표준화된 기술로, 다양한 플랫폼과 디바이스에서 디지털 광고, 특히 비디오 광고의 뷰어빌리티를 측정하고 검증합니다.
+
+  OMID는 업계 표준을 준수하여 조회 가능한 노출 수, 조회 가능한 비디오 재생 수 등 뷰어빌리티 지표를 측정하기 위한 일관된 프레임워크를 제공합니다. OMID를 구현하면 광고 성과와 사용자 참여에 대한 정확한 인사이트를 얻을 수 있으며, 모든 유통사에서 동일한 방식으로 비디오 뷰어빌리티를 추적하여 네트워크 전반에서 일관성을 보장할 수 있습니다.
+
+  이 문서에서 OM SDK는 **모바일 플랫폼(iOS)용 OM SDK**를 의미합니다.
+</Info>
+
+[VAST 사양](https://www.iab.com/wp-content/uploads/2016/04/VAST4.0_Updated_April_2016.pdf)의 섹션 3.16은 이러한 검증이 있는 선택적 `AdVerifications` 요소를 설명합니다. `AdVerifications` 내부에 중첩된 각 검증 요소는 검증에 필요한 리소스를 자세히 설명합니다.
+
+<Info>
+  **OM(Open-measurement) SDK**
+
+  이러한 리소스를 처리하기 위해, 크리테오는 IAB에서 제공하는 OM SDK에 이를 전달합니다. iOS용 공식 OM SDK 구현 가이드는 [여기](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKiOS/)에서 확인할 수 있습니다. 이 문서에서는 뷰어빌리티 통합을 위한 각 단계에 필요한 코드 스니펫을 제공합니다.
+</Info>
+
+그 과정은 크게 다음과 같은 단계로 나뉩니다.
+
+* OMID 서비스 스크립트를 로드합니다.
+* 광고 세션 구성과 광고 세션 자체를 생성합니다.
+* 광고를 표시하는 플레이어를 등록하고 광고 세션을 시작합니다.
+* 비디오 및 광고 관련 이벤트가 발생하면 OM SDK에 `adEvents` 및 `mediaEvents` 이벤트를 트리거합니다.
+
+<Warning>
+  [IAB 구현 가이드](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKiOS/)는 크리테오의 비디오 플레이어 사양을 모두 포괄하기에는 충분하지 않습니다. 이러한 이유로 \*\*[iOS용 IAB 설명서](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKiOS/validation.html)\*\*에 따라 크리테오의 검증 스크립트를 사용하여 통합을 검증하길 권합니다.
+</Warning>
+
+![](https://files.readme.io/96d3750dc86afc5ab1a34c348239ea59193c70c5c230401225fca1feec67fc7c-image.png)
+
+<Info>
+  크리테오의 검증 스크립트는 VAST XML 파일에서 제공됩니다.
+</Info>
+
+OM SDK를 통해 크리테오의 OMID 검증 스크립트에서 크리테오 서버로 여러 이벤트가 방출됩니다.
+
+<table>
+  <thead>
+    <tr>
+      <th>레벨</th>
+      <th>비콘 이름</th>
+      <th>설명</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>OMID (<code>VerificationParameters</code>)</td>
+      <td><code>omidTrackView</code></td>
+      <td>OMID 광고 세션이 올바르게 초기화되었음을 나타냅니다.</td>
+    </tr>
+    <tr>
+      <td>OMID (<code>VerificationParameters</code>)</td>
+      <td><code>start</code></td>
+      <td>비디오가 방금 시작되었으며, 비디오가 뷰포트에 100% 표시되었음을 나타냅니다.</td>
+    </tr>
+    <tr>
+      <td>OMID (<code>VerificationParameters</code>)</td>
+      <td><code>firstQuartile</code></td>
+      <td>비디오가 방금 25% 사분위수에 도달했으며, 비디오가 뷰포트에 100% 표시되었음을 나타냅니다.</td>
+    </tr>
+    <tr>
+      <td>OMID (<code>VerificationParameters</code>)</td>
+      <td><code>midpoint</code></td>
+      <td>비디오가 방금 50% 사분위수에 도달했으며, 비디오가 뷰포트에 100% 표시되었음을 나타냅니다.</td>
+    </tr>
+    <tr>
+      <td>OMID (<code>VerificationParameters</code>)</td>
+      <td><code>thirdQuartile</code></td>
+      <td>비디오가 방금 75% 사분위수에 도달했으며, 비디오가 뷰포트에 100% 표시되었음을 나타냅니다.</td>
+    </tr>
+    <tr>
+      <td>OMID (<code>VerificationParameters</code>)</td>
+      <td><code>complete</code></td>
+      <td>비디오가 방금 완료되었으며, 비디오가 뷰포트에 100% 표시되었음을 나타냅니다.</td>
+    </tr>
+    <tr>
+      <td>OMID (<code>VerificationParameters</code>)</td>
+      <td><code>twoSecondsFiftyPercentView</code></td>
+      <td>비디오가 2초 연속 재생되었고, 비디오가 뷰포트에 최소 50% 표시되었음을 나타냅니다. 비디오를 버퍼링하거나 일시 중지하면 2초 카운터가 재설정됩니다.</td>
+    </tr>
+    <tr>
+      <td>VAST XML - OMID</td>
+      <td><code>&lt;Tracking event="verificationNotExecuted"&gt;</code></td>
+      <td>검증 스크립트 초기화에 실패했음을 나타냅니다.</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  뷰포트 표시에서 100%는 사분위수 같은 재생 이벤트를 추적하는 데 사용되는 산업 표준입니다. 뷰포트에 연속된 2초와 50% 표시는 MRC 표준입니다.
+</Info>
+
+***
+
+### 1. OMID 서비스 스크립트를 로드합니다.
+
+제공된 IAB OM SDK는 광고 소재의 뷰어빌리티를 지원하기 위해 포함되어야 하는 스크립트(`omweb-v1.js`)와 모바일 라이브러리로 구성됩니다.
+
+<Note>
+  ### 스크립트는 자체 호스팅할 수도 있고, 사본을 호스팅하는 크리테오의 CDN에서 가져올 수도 있습니다. 해당 파일은 [이 페이지에서](https://static.criteo.net/banners/android/1.5.2/omsdk-v1_1.5.2.js) 찾을 수 있습니다.
+
+  `omweb-v1.js`는 웹 컨텍스트를 위한 OMID JS 라이브러리입니다.
+</Note>
+
+***
+
+### 2. 광고 세션 구성과 광고 세션 자체를 생성합니다.
+
+광고 세션을 초기화하기 전에 OM SDK를 활성화해야 합니다. 광고 세션에는 크리테오 통합과 관련된 일부 파라미터도 지정해야 합니다.
+
+<Info>
+  OMID `VerificationScript`, `VerificationParameters` 및 `VendorKey`는 VAST 내부에서 제공됩니다.
+</Info>
+
+```text swift
+private static func createAdSession(adView: UIView?, vendorKey:String, verificationScriptURL: String, verificationParameters: String) -> OMIDCriteoAdSession {
+// OMID가 이미 활성화되었는지 확인
+    guard OMIDCriteoSDK.shared.isActive else {
+        fatalError("OMID is not active")
+    }
+// 광고 세션 컨텍스트 아래를 참조하세요
+    let context = createAdSessionContext(withPartner: partner, adView: adView, vendorKey: vendorKey, verificationScriptURL: verificationScriptURL, verificationParameters: verificationParameters)
+// 광고 세션 설정 확보 아래를 참조하세요
+    let configuration = createAdSessionConfiguration()
+
+    do {
+// 광고 세션 생성
+        let session = try OMIDCriteoAdSession(configuration: configuration, adSessionContext: context)
+
+        print("Session created")
+// 측정을 메인 광고 뷰 제공
+        guard let adView = adView else {
+            fatalError("Ad View is not initialized")
+        }
+        session.mainAdView = adView
+        return session
+    } catch {
+        fatalError("Unable to instantiate ad session: \(error)")
+    }
+
+}
+    
+private static func createAdSessionContext(withPartner partner: OMIDCriteoPartner, adView: UIView?, vendorKey: String, verificationScriptURL: String, verificationParameters: String) -> OMIDCriteoAdSessionContext {
+    do {  
+// 광고 응답에 제공된 값을 사용하여 검증 리소스 생성
+        guard let verificationResource = createVerificationScriptResource(vendorKey: vendorKey,
+                                                                          verificationScriptURL: verificationScriptURL,
+                                                                          parameters: verificationParameters)
+        else {
+            fatalError("Unable to instantiate session context: verification resource cannot be nil")
+        }
+    
+    
+        return try OMIDCriteoAdSessionContext(partner: partner,
+                                        script: omidJSService,
+                                        resources: [verificationResource],
+                                        contentUrl: nil,
+                                        customReferenceIdentifier: nil)
+    
+    } catch {
+        fatalError("Unable to create ad session context: \(error)")
+    }
+}
+
+private static func createAdSessionConfiguration() -> OMIDCriteoAdSessionConfiguration {
+    do {
+        return try OMIDCriteoAdSessionConfiguration(creativeType: .video,
+                                                  impressionType: .beginToRender,
+                                                  impressionOwner: .nativeOwner,
+                                                  mediaEventsOwner: .nativeOwner,
+                                                  isolateVerificationScripts: false)
+    
+    } catch {
+        fatalError("Unable to create ad session configuration: \(error)")
+    }
+}
+```
+
+***
+
+### 3. 광고를 표시하는 플레이어를 등록하고 광고 세션을 시작합니다.
+
+광고 세션이 시작되면 크리테오의 검증 스크립트가 자동으로 로드됩니다. 이 시점에서 크리테오의 검증 스크립트는 OM SDK로 트리거되는 모든 `AdEvents` 및 `MediaEvents`를 관찰하기 시작합니다.
+
+```text swift
+func startSession() {
+    print("Starting session for \(adSession.debugDescription)")
+
+    createAdEventsPublisher()
+    createMediaEventsPublisher()
+
+    adSession.start()
+}
+
+private func createAdEventsPublisher() {
+// 세션을 시작하기 전에 이벤트 매체사 생성
+    do {
+        self.adEvents = try OMIDCriteoAdEvents(adSession: adSession)
+    } catch {
+        fatalError("Unable to instantiate OMIDAdEvents: \(error)")
+    }
+}
+
+private func createMediaEventsPublisher() {
+    do {
+        self.mediaEvents = try OMIDCriteoMediaEvents(adSession: adSession)
+    } catch {
+        fatalError("Unable to instantiate OMIDMediaEvents: \(error)")
+    }
+}
+```
+
+***
+
+### 4. 비디오 및 광고 관련 이벤트가 발생하면 OM SDK로 `adEvents` 및 `mediaEvents` 이벤트를 트리거합니다.
+
+<Note>
+  ### 사용 가능한 `AdEvents` 및 `MediaEvents`의 전체 목록은 [IAB의 Github에서](https://github.com/InteractiveAdvertisingBureau/) 확인할 수 있습니다.
+</Note>
+
+이러한 호출을 통해 크리테오의 검증 스크립트는 고급 뷰어빌리티 이벤트를 계산할 수 있습니다.
+
+* 크리테오는 사분위수 이벤트를 추적할 수 있습니다(비디오가 뷰포트의 100%인 경우)
+* 고급 이벤트는 2초 연속으로 뷰포트에서 비디오의 50%가 재생되고 표시되는지 추적하기 위해 계산됩니다.
+
+`AdEvents` 및 `MediaEvents`에 대한 모든 호출은 사분위수 및 디스플레이 이벤트에 대한 기존 추적 비콘과 별도로 트리거되어야 합니다. 또한, 비디오 버퍼링 이벤트가 트리거되어야 합니다.
+
+OMID 이벤트를 트리거하는 것은 VAST 트래커를 트리거하는 것과 비슷합니다. 두 가지 모두 다음 섹션에서 설명합니다.
+
+***
+
+## 4단계: 비디오 재생 중 비콘 실행
+
+광고 소재가 다운로드되면 OMID 세션을 시작하고 `loaded` 이벤트를 트리거할 수 있습니다.
+
+```text swift
+func didFinishFetchingCreative() {
+  sessionInteractor?.startSession()
+// OMID로 VAST 속성 보고
+  let VASTProperties = OMIDCriteoVASTProperties(autoPlay: true, position: .standalone)
+  sessionInteractor?.fireAdLoaded(vastProperties: VASTProperties)
+// 플레이어를 준비하고 청취자 첨부
+  createMediaPlayer(withAsset: getVideoAndCaptions()!)
+  addQuartileTrackingToVideoPlayer()
+  attachPauseButtonImage()
+  presentAd()
+}
+```
+
+광고가 게재된 직후 VAST에서 OMID로 `노출` 비콘을 실행할 수 있습니다.
+
+```text swift
+func emitBeacon(type: Beacon) {        
+  let task = URLSession.shared.dataTask(with: self.tracking![type.rawValue]!);
+  task.resume()
+}
+
+func didPresentAd() {
+   emitBeacon(type: .impression);
+   sessionInteractor?.fireImpression()
+ }
+```
+
+`start`, `firstQuartile`, `midpoint`, `thirdQuartile` 및 `complete` 비콘은 폴링 스레드에 의해 트리거되는 함수에서 관리됩니다. 각 재생 이벤트에 대해 VAST와 OMID 비콘이 모두 전송됩니다.
+
+```text swift
+func addQuartileTrackingToVideoPlayer() {
+  guard let player = player else { return }
+  player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1, preferredTimescale: 10),
+                                 queue: DispatchQueue.main) { [weak self] _ in
+    guard let self = self else { return }
+    self.recordQuartileChange()
+  }
+  currentQuartile = .tracking
+}
+
+func recordQuartileChange() {
+  guard let quartile = currentQuartile,
+  let currentItem = player?.currentItem
+  else {
+    return
+  }
+
+  let currentTime = currentItem.currentTime().seconds
+  let duration = currentItem.duration.seconds
+  guard duration > 0 else { return }
+
+  let progress = currentTime / duration
+  switch quartile {
+    case .tracking:
+    if (progress > 0) {
+      emitBeacon(type: .start);
+
+      sessionInteractor?.getMediaEventsPublisher().start(withDuration: CGFloat(duration),
+                                                         mediaPlayerVolume: playerVolume())
+      currentQuartile = .start
+    }
+    case .start:
+    if (progress > 0.25) {
+      emitBeacon(type: .firstQuartile);
+
+      sessionInteractor?.getMediaEventsPublisher().firstQuartile()
+      currentQuartile = .firstQuartile
+    }
+    case .firstQuartile:
+    if (progress > 0.5) {
+      emitBeacon(type: .midpoint);
+
+      sessionInteractor?.getMediaEventsPublisher().midpoint()
+      currentQuartile = .midpoint
+    }
+    case .midpoint:
+    if (progress > 0.75) {
+      emitBeacon(type: .thirdQuartile);
+
+      sessionInteractor?.getMediaEventsPublisher().thirdQuartile()
+      currentQuartile = .thirdQuartile
+    }
+    case .thirdQuartile:
+    if (progress >= 1.0) {
+      emitBeacon(type: .complete);
+
+      sessionInteractor?.getMediaEventsPublisher().complete()
+      currentQuartile = .complete
+    }
+    case .complete:
+    break
+  }
+}
+```
+
+<Warning>
+  \*\*[정확한 비콘 추적](/retailer-integration/docs/tracking-ad-related-activity-korean)**을 보장하려면** 재생 비&#xCF58;**(시작 및 사분위수 비콘)은 비디오가 재생되는 동안 비디오의 첫 번째 재생 중에 한 번만 방출되어야 합니다.**
+
+  하지만 **상호작용 비콘** (클릭, 음소거, 음소거 해제, 일시 중지, 재개 등)은 **해당 사용자 동작이 발생할 때마다 방출되어야 합니다.**
+</Warning>
+
+버튼에 이벤트 리스너를 연결하여 **일시 중지/재개** 비콘을 처리합니다. 플레이어가 현재 재생 중이면 일시 중지하고 OMID와 VAST 일시 중지 비콘을 내보냅니다. 그렇지 않으면 재개 비콘이 방출됩니다. 또한 재생 및 일시 중지 버튼을 표시하는 버튼 이미지도 변경되었습니다.
+
+```text swift
+@IBAction func tappedPlayingControl() {
+  changePlayingControls()
+}
+
+func changePlayingControls() {
+  if let player = player, player.rate == 0 {
+    play()
+    attachPauseButtonImage()
+    sessionInteractor?.getMediaEventsPublisher().resume()
+    emitBeacon(type: .resume)
+  } else {
+    pause()
+    attachPlayButtonImage()
+    sessionInteractor?.getMediaEventsPublisher().pause()
+    emitBeacon(type: .pause)
+  }
+}
+```
+
+인터페이스 빌더에서 `탭 제스처 인식기`를 생성하여 **클릭** 비콘을 처리합니다. 이 인식기는 `playerView`에 연결되고 컨트롤러에서 `clickHandler` 작업을 트리거합니다. 이 함수로 OMID와 VAST `클릭` 비콘을 전송하고 VAST 태그에서 URL을 열도록 브라우저에 지시합니다(리디렉션 URL이 제공된 경우에만 해당).
+
+리디렉션 URL이 제공되지 않으면 비디오를 일시 중지/재개하고 해당 추적 비콘을 트리거합니다.
+
+```text swift
+@IBAction func handleClick() {
+  let clickThroughURL = self.tracking![Beacon.click.rawValue];
+
+  if((clickThroughURL) != nil) {
+    sessionInteractor?.getMediaEventsPublisher().adUserInteraction(withType: .click)
+    emitBeacon(type: .click)
+
+    UIApplication.shared.open(clickThroughURL!)
+  } else {
+    changePlayingControls();
+  }
+}
+```
+
+마지막으로, **음소거/음소거 해제** 비콘도 비슷한 방식으로 처리합니다. 즉, 해당 버튼에 리스너를 연결합니다.  리스너는 플레이어의 상태와 버튼의 이미지를 변경하고, VAST와 OMID 추적 비콘을 트리거합니다.
+
+```text swift
+@IBAction func toggleMute() {
+  player.isMuted = !player.isMuted
+  player.isMuted ? attachUnMuteButtonImage() : attachMuteButtonImage();
+
+  sessionInteractor?.getMediaEventsPublisher().volumeChange(to: playerVolume())
+  emitBeacon(type: player.isMuted ? .mute : .unmute);
+}
+```
+
+<Info>
+  **OMID & 버튼**
+
+  OM SDK는 비디오 플레이어 `UIView`에 액세스할 수 있으므로 표시되는 비디오의 비율을 확인하여 전송합니다. 따라서 버튼이 플레이어 오버레이에 있는 경우 다음과 같이 선언해야 합니다.
+
+  ```swift
+   adSession.addFriendlyObstruction(element, // muteButton, playButton
+                                    purpose: .mediaControls,
+                                    detailedReason: "Media Controls over video");
+  ```
+</Info>
+
+***
+
+## 5단계: 광고 세션 마무리
+
+플레이어와 광고 세션의 파괴를 올바르게 처리하는 것이 중요합니다.
+
+```text swift
+func willDismissAd() {
+// 측정 종료
+    print("Ending measurement session now")
+    sessionInteractor?.stopSession()
+}
+
+func didDismissAd() {
+// 광고 파괴
+    destroyAd()
+}
+
+/**
+  Releases any resources that the ad may still be using after dismissal.
+  */
+func destroyAd() {
+    hidePlayerControls()
+
+    guard let videoPlayerLayer = playerLayer else { return }
+    videoPlayerLayer.player = nil
+    videoPlayerLayer.removeFromSuperlayer()
+    try? FileManager.default.removeItem(at: localAssetURL)
+}
+```
+
+***
+
+## 추가: 자막(CC) 처리
+
+비디오 URL만을 사용하여 `AVAsset`을 생성하는 것이 아니라, 3개의 트랙이 있는 `AVMutableComposition`을 생성합니다.
+
+* 하나는 비디오용이고,
+* 두 번째는 오디오용이며,
+* 세 번째는 자막을 위한 것입니다.
+
+전체 코드 예는 다음과 같습니다.
+
+```text coffeescript Swift
+func getVideoAndCaptions() -> AVMutableComposition? {
+  let videoAndCaptions = AVMutableComposition()
+  let videoTrack = videoAndCaptions.addMutableTrack(withMediaType:.video , preferredTrackID: kCMPersistentTrackID_Invalid)
+
+  let localVideoAsset = AVURLAsset(url: localAssetURL)
+  do {
+
+    guard localVideoAsset.tracks.count > 0 else
+    {
+// 오류 메시지
+      return nil;
+    }
+    try? videoTrack?.insertTimeRange(CMTimeRangeMake(start: CMTime.zero, duration: localVideoAsset.duration),
+                                     of: localVideoAsset.tracks(withMediaType: .video)[0],
+      at: CMTime.zero)
+  }
+
+  let audioTrack = videoAndCaptions.addMutableTrack(withMediaType:.audio , preferredTrackID: kCMPersistentTrackID_Invalid)
+  do {
+
+    guard localVideoAsset.tracks.count > 0 else
+    {
+// 오류 메시지
+      return nil;
+    }
+    try? audioTrack?.insertTimeRange(CMTimeRangeMake(start: CMTime.zero, duration: localVideoAsset.duration),
+                                     of: localVideoAsset.tracks(withMediaType: .audio)[0],
+      at: CMTime.zero)
+  }
+
+  let subtitleAsset = AVURLAsset(url: localCaptionsURL)
+  let subtitleTrack = videoAndCaptions.addMutableTrack(withMediaType: .text, preferredTrackID: kCMPersistentTrackID_Invalid)
+  do {
+    guard subtitleAsset.tracks.count > 0 else{
+// 오류 메시지
+      return nil;
+    }
+    try? subtitleTrack?.insertTimeRange(CMTimeRangeMake(start: CMTime.zero, duration: localVideoAsset.duration),
+                                        of: subtitleAsset.tracks(withMediaType: .text)[0],
+      at: CMTime.zero)
+  }
+  return videoAndCaptions;
+}
+```
+
+<Info>
+  **참고**
+
+  iOS 15 이전 버전의 경우, `AVMutableComposition`은 로컬에 저장된 애셋의 삽입만 지원하며, 원격 항목은 사용할 수 없습니다. 이 때문에 플레이어를 초기화하기 전에 미디어 파일과 자막을 로컬에 다운로드하여 저장합니다.
+</Info>
+
+```text coffeescript Swift
+public func fetch(_ remoteURL: URL, 
+                  _ localAssetURL: URL,
+                  _ statusHandler: @escaping (_ message: String) -> (), 
+                                _ completionHandler: @escaping (_ fileURL: URL) -> (), 
+                                    _ errorHandler: @escaping (_ message: String) -> ()) {
+                    
+  DispatchQueue.main.async {
+    statusHandler("Fetching file...");
+  }
+
+  self.creativeDownloadTask = URLSession.shared.downloadTask(with: remoteURL) {
+    (fileURL, response, error) in
+      guard let fileURL = fileURL else {
+        DispatchQueue.main.async {
+          errorHandler("Unable to fetch file from remote URL: \(remoteURL)")
+        }
+        return
+      }
+    try? FileManager.default.moveItem(at: fileURL, to: localAssetURL)
+
+    DispatchQueue.main.async {
+      completionHandler(fileURL)
+    }
+  }
+
+  self.creativeDownloadTask?.resume()
+}
+```

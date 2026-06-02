@@ -1,0 +1,181 @@
+---
+title: Cookbook test (wip)
+description: Submitting a Product Import Batch and Retrieving the Report
+hidden: true
+---
+
+## Purpose
+
+Use the official **Product Importer Retail Media Preview API** to submit a batch of product data and retrieve the corresponding processing report using the operation token.
+
+***
+
+## Workflow
+
+<table>
+  <thead>
+    <tr>
+      <th>Step</th>
+      <th>Action</th>
+      <th>Endpoint</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Submit an import batch</td>
+      <td><code>POST /preview/retail-media/catalog-products/batch</code></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Save the <code>operationToken</code> received in the response</td>
+      <td>From the first call's response.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Retrieve the import report using the <code>operationToken</code></td>
+      <td><code>GET /preview/retail-media/catalog-products/batch/report/&#123;operation-token&#125;</code></td>
+    </tr>
+  </tbody>
+</table>
+
+You can look at examples from the following recipes:
+
+<Card title="Get an operationToken (Product Importer API)" icon="book-open" href="https://developers.criteo.com/v2025-preview/recipes/get-an-operationtoken-product-importer-api">
+  Recipe
+</Card>
+
+<Card title="Get Report Status using the operationToken (Product Importer API)" icon="book-open" href="https://developers.criteo.com/v2025-preview/recipes/get-report-status-using-the-operationtoken-product-importer-api">
+  Recipe
+</Card>
+
+<br />
+
+***
+
+## Step 1: Submit the Product Import Batch
+
+**Endpoint:**
+
+```text
+POST /preview/retail-media/catalog/products/batch
+```
+
+**Headers:**
+
+- `Authorization: Bearer {ACCESS_TOKEN}`
+- `Content-Type: application/json`
+
+**Request Body Example:**
+
+```json
+{
+  "requests": [
+    {
+      "retailerId": "retailer-example-id",
+      "marketplaceId": "marketplace-example-id",
+      "products": [
+        {
+          "sku": "SKU-12345",
+          "attributes": {
+            "title": "Elegant Velvet Chair",
+            "description": "A luxurious navy blue velvet chair.",
+            "price": 159.99
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+***
+
+## Step 2: Retrieve the `operationToken`
+
+**Success Response:**
+
+```json
+{
+  "operationToken": "abc123-operation-token"
+}
+```
+
+<Info>
+  Save the `operationToken` to check the status and results of the import.
+</Info>
+
+***
+
+## Step 3: Retrieve the Import Report
+
+**Endpoint:**
+
+```text
+GET /preview/retail-media/catalog/products/batch/report/{operation-token}
+```
+
+**Example:**
+
+```text
+GET /preview/retail-media/catalog/products/batch/report/abc123-operation-token
+```
+
+**Success Response Example:**
+
+```json
+{
+  "status": "validated",
+  "successfulCount": 1,
+  "failedCount": 0,
+  "errors": []
+}
+```
+
+<Info>
+  This response includes the processing status and a detailed report of any validation or transformation errors.
+</Info>
+
+***
+
+## Operation Status Reference
+
+<table>
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Description</th>
+      <th>Developer Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>accepted</code></td>
+      <td>The batch has been accepted and queued for processing.</td>
+      <td>Begin polling with the operation token.</td>
+    </tr>
+    <tr>
+      <td><code>validated</code></td>
+      <td>The batch was processed successfully with no validation errors.</td>
+      <td>No further action needed.</td>
+    </tr>
+    <tr>
+      <td><code>validated&#95;with&#95;errors</code></td>
+      <td>The batch was processed successfully with some validation errors.</td>
+      <td>No further action needed.</td>
+    </tr>
+    <tr>
+      <td><code>failed</code></td>
+      <td>The batch failed due to transformation or schema validation issues.</td>
+      <td>Check <code>errors</code> in the report and adjust data accordingly.</td>
+    </tr>
+  </tbody>
+</table>
+
+> 👍 
+>
+> The report should be **available a few minutes after submitting the product batches**. In the meantime, if you request the report, the response status will be `In progress` until the report is ready.
+
+<Warning>
+  When a report is marked as `validated`, `validated_with_errors`, or `failed,` it becomes available for download and remains accessible **for only 4 days**. You can call the `batch-report/{operation-token}` endpoint to retrieve it. No notification is sent or required.
+</Warning>

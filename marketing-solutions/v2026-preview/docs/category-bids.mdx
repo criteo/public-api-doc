@@ -1,9 +1,6 @@
 ---
-title: "Category Bids"
+title: Category Bids
 ---
-
-1. Preview Endpoints
-2. [Campaigns](/marketing-solutions/v2026-preview/docs/campaigns)
 
 ## **Introduction**
 
@@ -12,57 +9,53 @@ In addition to ad-set-level bid targets, Criteo permits bid customization for ea
 For example, you may wish to set higher bids for particular brands or product lines.
 
 <Warning>
-  ### Requirements
+  **Requirements**
 
   * Categories used for bidding must be added as the `category 1`, `category 2`, or `category 3` field when configuring the import of your [product catalog](https://help.criteo.com/kb/guide/en/set-up-your-product-catalog-x21HrwcuTy/Steps/775589).
   * Category-level bidding must also be explicitly enabled for **one** of the categories above by your Criteo account team.
-  * Ad set must be set with CPC or CPM as cost controller (more details on cost controller [here](doc:ad-set#ad-set-attributes#ad-set-bidding)). If your ad set uses another cost controller, you must refer to the [Display Multipliers](doc:display-multipliers) solution.
+  * Ad set must be set with CPC or CPM as cost controller (more details on cost controller [here](/marketing-solutions/v2026-preview/docs/ad-set#ad-set-attributes#ad-set-bidding)). If your ad set uses another cost controller, you must refer to the [Display Multipliers](/marketing-solutions/v2026-preview/docs/display-multipliers) solution.
 </Warning>
 
- 
+   
 
 ## **Get Category Bids**
 
 The category bids associated with a specific Ad Set can be retrieved via a `GET` request to the `/ad-sets` endpoint, with the Ad Set ID as a URL parameter and `/category-bids` specified.
 
- 
+   
 
-![](/images/marketing-solutions/v2026-preview/docs/8a6bfd9-get.png)
-
-```
+```text
 https://api.criteo.com/preview/marketing-solutions/ad-sets/{ad-set-id}/category-bids
 ```
 
 The API will return an array of categories associated with the ad set:
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data":[
-        {
-            "type": "AdSetCategoryBid",
-            "id": "1234567|432|1",
-            "attributes": {
-                "categoryName": "Shoes",
-                "bidAmount": 1.3
-            }
-        },
-        {
-            "type": "AdSetCategoryBid",
-            "id": "1234567|432|2",
-            "attributes": {
-                "categoryName": "Socks",
-                "bidAmount": 1.3
-            }
-        }
-      ],
-      "errors": [ ]
-  }
-  ```
-</CodeGroup>
+```json Sample Response
+{
+    "data":[
+      {
+          "type": "AdSetCategoryBid",
+          "id": "1234567|432|1",
+          "attributes": {
+              "categoryName": "Shoes",
+              "bidAmount": 1.3
+          }
+      },
+      {
+          "type": "AdSetCategoryBid",
+          "id": "1234567|432|2",
+          "attributes": {
+              "categoryName": "Socks",
+              "bidAmount": 1.3
+          }
+      }
+    ],
+    "errors": [ ]
+}
+```
 
 <Info>
-  ### ID
+  **ID**
 
   The Id is composite of the Ad Set Id, a Criteo category ID and a Category level (1, 2 or 3). In the above example, the id of the category `shoes` is composed of:
 
@@ -72,12 +65,12 @@ The API will return an array of categories associated with the ad set:
 </Info>
 
 <Info>
-  ### Default Bid
+  **Default Bid**
 
   All categories enabled will be shown in the results. If a specific bid is not set for an available category, it will display the bid amount configured at the ad set level.
 </Info>
 
- 
+   
 
 ## **Update Category Bids**
 
@@ -85,98 +78,104 @@ You can update the bid amount of one or more categories of an Ad Set by making a
 
 For example, the following call would update the bid values for the category `Shoes` and `Socks` on the previous GET sample:
 
- 
+   
 
-![](/images/marketing-solutions/v2026-preview/docs/04a928f-patch.png)
+<CodeGroup>
 
-```
+```text Text
 https://api.criteo.com/preview/marketing-solutions/ad-sets/{ad-set-id}/category-bids
 ```
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "AdSetCategoryBid",
-              "id": "1234567|432|1",
-              "attributes": { 
-                  "bidAmount": 2.0
-              }
-          }, 
-          {
-              "type": "AdSetCategoryBid",
-              "id": "1234567|432|2",
-              "attributes": {
-                  "bidAmount": 1.1
-              }
-          }
-      ]
-  }
-  ```
+```json Sample Request Body
+{
+    "data": [
+        {
+            "type": "AdSetCategoryBid",
+            "id": "1234567|432|1",
+            "attributes": { 
+                "bidAmount": 2.0
+            }
+        }, 
+        {
+            "type": "AdSetCategoryBid",
+            "id": "1234567|432|2",
+            "attributes": {
+                "bidAmount": 1.1
+            }
+        }
+    ]
+}
+```
 </CodeGroup>
 
- 
+   
 
 The API will return an array of Ad Sets that have been updated successfully in the response `data`. These will contain only two parameters, `type` and `id`.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "AdSetCategoryBid",
-              "id": "1234567|432|1"
-          },
-          {
-              "type": "AdSetCategoryBid",
-              "id": "1234567|432|2"
-          }
-      ],
-      "errors": [],
-      "warnings": []
-  }
-  ```
-</CodeGroup>
+```json Sample Response - Success
+{
+    "data": [
+        {
+            "type": "AdSetCategoryBid",
+            "id": "1234567|432|1"
+        },
+        {
+            "type": "AdSetCategoryBid",
+            "id": "1234567|432|2"
+        }
+    ],
+    "errors": [],
+    "warnings": []
+}
+```
 
 <Info>
-  ### Reset Category Bid
+  **Reset Category Bid**
 
   Setting the bid amount of a category to the same bid amount at the ad set level will reset the category bid behavior for that category. Thus, this update will make any subsequent changes on the ad set bid apply to that category bid.
 </Info>
 
-<Warning>
-  ### Updating Multiple Category Bids
+<Danger>
+  **Updating Multiple Category Bids**
 
-  This endpoint allows you to update several category bids within a single call. Thus it\`s important to understand the [partial success behavior](doc:partial-success-for-bulk-operations).
-</Warning>
+  This endpoint allows you to update several category bids within a single call. Thus it\`s important to understand the [partial success behavior](/marketing-solutions/v2025.07/docs/partial-success-for-bulk-operations).
+</Danger>
 
- 
+   
 
 ## **Validation Errors**
 
-In addition to [general API errors](doc:api-error-types), you may encounter validation errors when retrieving or updating a category bid.
+In addition to [general API errors](/marketing-solutions/v2025.07/docs/api-error-types), you may encounter validation errors when retrieving or updating a category bid.
 
 Below is a list of error codes for category bid validation and a more detailed description of their meaning.
 
-**`campaign--category-bid-get-check--invalid-bidding-config`** Category bid is only available on ad set with CPC-based or CPM-based cost controllers. If your ad set uses other cost controller, you must refer to the [Display Multipliers](doc:display-multipliers).    
+**`campaign--category-bid-get-check--invalid-bidding-config`**\
+Category bid is only available on ad set with CPC-based or CPM-based cost controllers. If your ad set uses other cost controller, you must refer to the [Display Multipliers](/marketing-solutions/v2026-preview/docs/display-multipliers).\
+ \
+   
 
-**`campaign--category-bid-update-check--category-not-enabled`** The category targeted by the category bid is not enabled.    
+**`campaign--category-bid-update-check--category-not-enabled`**\
+The category targeted by the category bid is not enabled.\
+ \
+ 
 
-**`campaign--category-bid-update-check--ad-set-not-enabled`** The ad set status is invalid, and the change is not allowed (e.g., the ad set is archived).    
+**`campaign--category-bid-update-check--ad-set-not-enabled`**\
+The ad set status is invalid, and the change is not allowed (e.g., the ad set is archived).\
+ \
+ 
 
-**`campaign--category-bid-update-check--invalid-bid-amount`** The bid amount provided is not in the range of accepted values.    
+**`campaign--category-bid-update-check--invalid-bid-amount`**\
+The bid amount provided is not in the range of accepted values.\
+ \
+ 
 
-**`campaign--category-bid-update-check--cannot-update-same-category-bid-amount-multiple-times`** It is not possible to update the same category bid amount multiple times in the same request.    
+**`campaign--category-bid-update-check--cannot-update-same-category-bid-amount-multiple-times`**\
+It is not possible to update the same category bid amount multiple times in the same request.\
+ \
+ 
 
 ## **Upcoming Category Bid functionality**
 
-A special reset endpoint will be introduced in future releases. This endpoint will allow resetting category bids for all the enabled categories associated with an Ad Set. This means that the bid for all categories will be set to the default bid amount of the ad set.
+A special reset endpoint will be introduced in future releases. This endpoint will allow resetting category bids for all the enabled categories associated with an Ad Set. This means that the bid for all categories will be set to the default bid amount of the ad set. 
 
 As a reminder, in order to enable category bidding functionality, you may have to issue a request to your account strategist. If the feature is turned off and on during the Ad Set/ Account lifetime the category bids are not reset automatically. Therefore, if you don't plan to use the category bid feature anymore it's a good idea to manually reset category-level bids to those of an ad set, before asking your account strategist to disable the feature.
-
-***
-
-[Display Multipliers](/marketing-solutions/v2026-preview/docs/display-multipliers)
-
-[Ad Set-Level Targeting](/marketing-solutions/v2026-preview/docs/ad-set-level-targeting)

@@ -1,0 +1,414 @@
+---
+title: Account Level Report
+hidden: true
+---
+
+## Introduction
+
+This endpoint enables Retail Media DSP partners to request flexible reporting at the **account** level. This expands on existing Line Item and Campaign report capabilities by allowing reporting across one or more Account IDs, up to five at a time.
+
+The endpoint supports asynchronous report generation and provides access to the same set of [metrics and dimensions ](/retail-media/docs/metrics-and-dimensions#/).
+
+<Info>
+  You can find the list of DSP endpoints available for the `stable` version here: [Demand Side Analytics Endpoints](/retail-media/update/docs/demand-side-analytics-get-started#/).
+</Info>
+
+<Info>
+  **Filter Parity**
+  This endpoint supports the same filters as the Campaign and Line Item endpoints, with one key difference: it introduces the`accountIds` attribute, allowing up to **5 account IDs per request** for account-level reporting.  It also only supports date ranges of up to **31 days at a time.**
+</Info>
+
+***
+
+## Endpoint
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/preview/retail-media/reports/accounts</code></td>
+      <td>Request flexible reporting at the account level</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  **Reporting Asynchronous Workflow**
+
+  * First, create a request for the account report with the desired attributes.
+  * This generates a `reportId` representing the report.
+  * Next, use the `reportId` to poll the **report status endpoint** until one is successfully computed (available [in Stable](/retail-media/update/docs/analytics#/)).
+  * Finally, download the report using the **report output endpoint** (available [in Stable](/retail-media/update/docs/analytics#/)).
+  * Report outputs are cached for at least 1 hour before expiration. Exact expiration is indicated by the `expiresAt` field in the /status response.
+</Info>
+
+***
+
+## Report Request Attributes
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>accountIds</code>&#42;</td>
+      <td>string</td>
+      <td>Account ID(s) of the desired report<br />Examples:<br /><code>accountIds: "12345"</code><br /><code>accountIds: ["12345", "67890"]</code><br />Accepted values: single or list of string/int64 (max 5 IDs per call)<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>aggregationLevel</code></td>
+      <td>enum</td>
+      <td>Accepted values: <code>campaign</code>, <code>lineItem</code></td>
+    </tr>
+    <tr>
+      <td><code>reportType</code></td>
+      <td>enum</td>
+      <td>Report types are pre-packaged reports that allow the specification of the report breakdown. See Report Types for more details about each of them.<br /><ul><li>&#95;Note&#95;&#42;: when <code>metrics</code> and <code>dimensions</code> are used, the <code>reportType</code> is ignored.</li></ul><br />Accepted values: refer to <a href="https://developers.criteo.com/retail-media/docs/report-types#/">Report Types</a> page for a complete list of available values<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>dimensions</code></td>
+      <td>list``</td>
+      <td>Dimension attributes desired for metrics breakdown for the custom report of the campaign(s) / line item(s).<br /><ul><li>&#95;Note&#95;: when <code>metrics</code> and <code>dimensions</code> are used, the <code>reportType</code> is automatically ignored</li></ul><br />Accepted values: refer to Metrics and Dimensions page for a complete list of available values<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>metrics</code></td>
+      <td>list``</td>
+      <td>Quantitative metrics desired in the custom report of the campaign(s) / line item(s).<br /><ul><li>&#95;Note&#95;&#42;:</li><li>when <code>metrics</code> and <code>dimensions</code> are used, the <code>reportType</code> is automatically ignored</li><li>when including <code>winRate</code> metric, it is required to either define <code>campaignType</code> as <code>sponsoredProducts</code> or include <code>campaignTypeName</code> in the list of dimensions</li></ul><br />Accepted values: refer to Metrics and Dimensions page for a complete list of available values<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>startDate</code>&#42;</td>
+      <td>date</td>
+      <td>Start date to report (inclusive)<br />Accepted values: <code>YYYY-MM-DD</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>endDate</code>&#42;</td>
+      <td>date</td>
+      <td>End date to report (inclusive)<br />Accepted values: <code>YYYY-MM-DD</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>campaignType</code></td>
+      <td>enum</td>
+      <td><a href="/retail-media/v2025.07/docs/campaign">Campaign</a> type<br />Accepted values: <code>sponsoredProducts</code>, <code>onSiteDisplays</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>timeZone</code></td>
+      <td>string</td>
+      <td>Time zone to consider in the report<br />Accepted values: <a href="https://www.iana.org/time-zones">IANA (TZ database)</a> time zones (example: <code>America/New&#95;York</code>, <code>Europe/Paris</code>, <code>Asia/Tokyo</code>, <code>UTC</code>)<br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>clickAttributionWindow</code></td>
+      <td>enum</td>
+      <td>The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if <code>viewAttributionWindow</code> is one of the accepted values.<br />The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click.<br />Defaults to campaign settings if omitted; must be specified if <code>viewAttributionWindow</code> is one of the accepted values.<br />Accepted values: <code>none</code>, <code>7D</code>, <code>14D</code>, <code>30D</code><br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>viewAttributionWindow</code></td>
+      <td>enum</td>
+      <td>The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to <code>clickAttributionWindow</code>; must be specified if <code>clickAttributionWindow</code> is one of the accepted values.<br />The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression.<br />Defaults to campaign settings if omitted; must be less than or equal to <code>clickAttributionWindow</code>; must be specified if <code>clickAttributionWindow</code> is one of the accepted values.<br />Accepted values: <code>none</code>, <code>1D</code>, <code>7D</code>, <code>14D</code>, <code>30D</code><br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>salesChannel</code></td>
+      <td>enum</td>
+      <td>Filter on specific sales channel: online or offline<br />Accepted values: <code>online</code>, <code>offline</code><br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>format</code></td>
+      <td>enum</td>
+      <td>Format of the report data returned<br />Accepted values: <code>json</code>, <code>json-compact</code>, <code>json-newline</code>, <code>csv</code><br />Default: <code>json</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>searchTermTypes</code></td>
+      <td>string</td>
+      <td>The match type used to associate a search term and keywords entered for the campaign.<br />Accepted values:<br /><code>Entered</code>: the search term matches exactly what was entered manually by the Commerce Max user<br /><code>Searched</code>: the search term matches what a shopper searched on the retailer’s website.<br /><code>Null</code>: All other cases, typically corresponding to automatically matched keywords.</td>
+    </tr>
+    <tr>
+      <td><code>searchTermTargeting</code></td>
+      <td>string</td>
+      <td>Indicates how the keyword was targeted — either manually by the user or automatically by the platform.<br /><code>Manual targeting</code>: The search term matches a keyword entered in Commerce Max or a variation created via stemming.<br /><code>Automatic targeting</code>: The search term was added by the automated keyword tool.</td>
+    </tr>
+    <tr>
+      <td><code>targetedKeywordType</code></td>
+      <td>string</td>
+      <td>Specifies the conquesting strategy used with the keyword.<br /><code>Conquesting</code>: Targets competitors' branded keywords.<br /><code>Branded</code>: Targets the advertiser’s own branded keywords.<br /><code>Generic</code>: Targets neutral or non-branded keywords.<br /><code>Unknown</code>: Used for keyword/product pairs without a defined conquesting type (e.g. before conquesting was implemented).</td>
+    </tr>
+    <tr>
+      <td><code>mediaType</code></td>
+      <td>string</td>
+      <td>The type of creative asset used in the ad, such as Display or Video.</td>
+    </tr>
+  </tbody>
+</table>
+
+_(*) Required_
+
+<Info>
+  **Field Definitions**
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Create an Account Level Report
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/reports/accounts
+```
+
+### Sample request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.criteo.com/preview/retail-media/reports/accounts \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "AsyncAccountsReportRequest",
+      "attributes": {
+        "accountIds": ["12345", "67890"],
+        "reportType": "summary",
+        "aggregationLevel": "campaign",
+        "searchTermTypes": ["entered"],
+        "searchTermTargetings": ["automatic"],
+        "targetedKeywordTypes": ["generic"],
+        "campaignType": "all",
+        "salesChannel": "all",
+        "mediaType": "all",
+        "format": "json-compact",
+        "clickAttributionWindow": "none",
+        "viewAttributionWindow": "none",
+        "dimensions": ["date", "accountId"],
+        "metrics": ["impressions"],
+        "startDate": "2025-10-10",
+        "endDate": "2025-10-10",
+        "timezone": "UTC"
+      }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/preview/retail-media/reports/accounts"
+headers = {
+    "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+    "Content-Type": "application/json"
+}
+
+payload = {
+    "data": {
+        "type": "AsyncAccountsReportRequest",
+        "attributes": {
+            "accountIds": ["12345", "67890"],
+            "reportType": "summary",
+            "searchTermTypes": ["entered"],
+            "searchTermTargetings": ["automatic"],
+            "targetedKeywordTypes": ["generic"],
+            "campaignType": "all",
+            "salesChannel": "all",
+            "mediaType": "all",
+            "format": "json-compact",
+            "clickAttributionWindow": "none",
+            "viewAttributionWindow": "none",
+            "dimensions": ["date", "accountId"],
+            "metrics": ["impressions"],
+            "startDate": "2025-10-10",
+            "endDate": "2025-10-10",
+            "timezone": "UTC"
+        }
+    }
+}
+
+response = requests.post(url, headers=headers, json=payload)
+
+print("Status Code:", response.status_code)
+print("Response Body:", response.json())
+
+```
+
+```java Java
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+
+public class CriteoAccountReport {
+
+    public static void main(String[] args) {
+        try {
+            URL url = new URL("https://api.criteo.com/preview/retail-media/reports/accounts");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization", "Bearer YOUR_ACCESS_TOKEN");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            String jsonInputString = """
+                {
+                  "data": {
+                    "type": "AsyncAccountsReportRequest",
+                    "attributes": {
+                      "accountIds": ["12345", "67890"],
+                      "reportType": "summary",
+                      "searchTermTypes": ["entered"],
+                      "searchTermTargetings": ["automatic"],
+                      "targetedKeywordTypes": ["generic"],
+                      "campaignType": "all",
+                      "salesChannel": "all",
+                      "mediaType": "all",
+                      "format": "json-compact",
+                      "clickAttributionWindow": "none",
+                      "viewAttributionWindow": "none",
+                      "dimensions": ["date", "accountId"],
+                      "metrics": ["impressions"],
+                      "startDate": "2025-10-10",
+                      "endDate": "2025-10-10",
+                      "timezone": "UTC"
+                    }
+                  }
+                }
+                """;
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+            // Optionally read the response body here with InputStream if needed
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+```
+
+```php PHP
+<?php
+
+$accessToken = 'YOUR_ACCESS_TOKEN'; // Replace with your token
+$apiUrl = 'https://api.criteo.com/preview/retail-media/reports/accounts';
+
+$data = [
+    "data" => [
+        "type" => "AsyncAccountsReportRequest",
+        "attributes" => [
+            "accountIds" => ["12345", "67890"],
+            "reportType" => "summary",
+            "searchTermTypes" => ["entered"],
+            "searchTermTargetings" => ["automatic"],
+            "targetedKeywordTypes" => ["generic"],
+            "campaignType" => "all",
+            "salesChannel" => "all",
+            "mediaType" => "all",
+            "format" => "json-compact",
+            "clickAttributionWindow" => "none",
+            "viewAttributionWindow" => "none",
+            "dimensions" => ["date", "accountId"],
+            "metrics" => ["impressions"],
+            "startDate" => "2025-10-10",
+            "endDate" => "2025-10-10",
+            "timezone" => "UTC"
+        ]
+    ]
+];
+
+$ch = curl_init($apiUrl);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Authorization: Bearer ' . $accessToken,
+    'Content-Type: application/json'
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+if (curl_errno($ch)) {
+    echo 'Curl error: ' . curl_error($ch);
+} else {
+    echo "HTTP Code: $httpCode\n";
+    echo "Response:\n$response";
+}
+
+curl_close($ch);
+
+```
+</CodeGroup>
+
+### Sample response
+
+```json
+{
+  "data": {
+    "type": "RetailMediaReportStatus",
+    "id": "f5a2cd3d-1e83-41b1-98b1-abcde1234567",
+    "attributes": {
+      "status": "pending",
+      "rowCount": null,
+      "fileSizeBytes": null,
+      "md5Checksum": null,
+      "createdAt": null,
+      "expiresAt": null,
+      "message": null
+    }
+  }
+}
+```
+
+***
+
+## Responses
+
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:large&#95;blue&#95;circle: <code>200</code></td>
+      <td>Call executed with success<br /><ul><li>&#95;Report Type has been ignored&#95;&#42; - Report Type has been ignored since Dimensions and Metrics has been provided. Please remove them if you want to use one of the templates.</li></ul><br />When generating a report type using the <code>metrics</code> and <code>dimensions</code> filters for multi dimension reporting, a warning message will be presented in the <code>200</code> to inform that <code>reportType</code> is ignored. This is because multi dimension takes priority in this scenario.</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle: <code>400</code></td>
+      <td>Common Validation Errors<br /><ul><li><strong> 0 cannot be more than 100 days from 1 </strong> - Using a date range with more than 100 days apart</li><li><strong> 0 invalid</strong> - calling an unsupported <code>report type</code> will throw a 400 error</li><li><strong> 0 must be a valid timezone</strong> - using a time zone value that is not listed in the list tz database time zones</li><li><strong>format invalid</strong> - using an unsupported file format</li></ul></td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<code>400</code></td>
+      <td>Validation Error<br />In the API, win rate metric will be available to sponsored product campaigns only. When using this metric, please specify <code>campaignTypeName</code> in the list of dimensions to obtain a value<br /><strong>"title": " 0  metric is only supported for Sponsored Products campaigns.", </strong><br /><strong>"detail": "Please provide either the 0  in dimensions or filter on  1  using the  2  filter."</strong></td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle: <code>410</code></td>
+      <td>Expired or Lost Report Error<br />The report is expired, lost, or failed to create. Re-create the report through a new request.</td>
+    </tr>
+  </tbody>
+</table>
+## What's next
+
+* [Metrics & Dimensions](/retail-media/v2026-preview/docs/metrics-dimensions)

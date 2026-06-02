@@ -1,0 +1,231 @@
+---
+title: Access Flows
+hidden: true
+---
+
+<Info>
+  Visit the [Get Started with MCP](/retail-media/v2026-preview/docs/criteos-model-context-protocol-mcp) page for more context.  
+  Please reach out to Criteo to get access before proceeding.
+</Info>
+
+## Which Method Should You Choose?
+
+Criteo MCP supports multiple authentication methods depending on your client and setup.
+
+* Use **OAuth (Pre-Registered Client Flow)** if your client supports it (e.g. VS Code, Claude).
+* Use **API Key** for simple or broad compatibility across clients.  
+  Please reach to your Criteo representative to request an API key.
+* Use **Authorization Header / Basic Auth** for custom integrations or backend control.
+* Use **Custom Headers** for development and testing scenarios.
+
+Choose the method that best matches your client capabilities.
+
+***
+
+## Pre-Registered Client Flow (OAuth 2.0 Discovery)
+
+The Criteo MCP Server implements **the standard MCP OAuth discovery flow for pre-registered clients**.  
+This is the recommended method for MCP clients that support the OAuth specification (like VS Code).
+
+<Warning>
+  You need an **Authorization Code application with PKCE** enabled.  
+  Dynamic Client Registration (DCR) is not supported yet.
+</Warning>
+
+<Warning>
+  Each client will ask you to register a different set of **Redirect URIs** in your application.
+</Warning>
+
+<Info>
+  **How It Works**
+
+  1. Your MCP client connects to the Criteo MCP server
+  2. The server requires authentication
+  3. The client discovers the OAuth endpoints automatically
+  4. You authenticate with your Criteo credentials
+  5. The client uses the token for subsequent requests
+</Info>
+
+### Using with VS Code
+
+VS Code supports MCP server authorization via the [Streamable HTTP transport](https://code.visualstudio.com/api/extension-guides/ai/mcp#authorization).
+
+To connect to the Criteo MCP server, add the following to your VS Code MCP settings (`mcp.json`):
+
+```json
+{
+  "servers": {
+    "criteo/prod": {
+      "type": "http",
+      "url": "https://mcp.criteo.com/mcp"
+    }
+  }
+}
+```
+
+When you first use the Criteo MCP server in VS Code:
+
+1. VS Code will detect that authentication is required
+2. VS Code will ask you to register two Redirect URIs on your application (in the Partners Portal)
+3. Enter your `client_id` and `client_secret`
+4. You'll be redirected to the Consent Portal
+5. After successful authentication, VS Code stores your session securely
+6. The MCP tools become available in agent mode
+
+<Info>
+  **Tip**: You can manage your MCP servers in VS Code using the **MCP: Open User Configuration** command from the Command Palette.
+</Info>
+
+***
+
+### Using with Claude
+
+Register both [https://claude.ai/api/mcp/auth_callback](https://claude.ai/api/mcp/auth_callback) and [https://claude.com/api/mcp/auth_callback](https://claude.com/api/mcp/auth_callback) as Redirect URIs on your auth code app.
+
+<Info>
+  Find more information on this page (Claude's documentation): [Build custom connectors via remote MCP servers](https://support.claude.com/en/articles/11503834-build-custom-connectors-via-remote-mcp-servers)
+</Info>
+
+Go to [https://claude.ai/settings/connectors](https://claude.ai/settings/connectors)  (or Settings > Connectors on Desktop), then Add custom connector and fill the form as following. Note that you can only use the prod server since Claude does not have access to our internal network.
+
+![081fff268100c03a9a51b1baab23096deb862c18d2ec445f3a1d47124314d763 Untitled](https://files.readme.io/081fff268100c03a9a51b1baab23096deb862c18d2ec445f3a1d47124314d763-Untitled.png)
+
+Then, click **Connect**. You’ll be redirected to the Consent Portal for the consent process.
+
+![9bfda4b051db882496625e2af7eb7e21844544a70dd223f8ab01230c6e5f384b banner claude](https://files.readme.io/9bfda4b051db882496625e2af7eb7e21844544a70dd223f8ab01230c6e5f384b-banner-claude.png)
+
+***
+
+### Other MCP Clients
+
+The process should be similar. Register the required Redirect URIs and provide your `client_id` and `client_secret` to the client.
+
+For clients which do not support this flow (e.g. no way to provide `client_id`/`client_secret`) or custom integrations, use one of the alternative authentication methods below.
+
+***
+
+## API Keys
+
+<Info>
+  Please reach out to your Criteo representative to request an **API key.**
+</Info>
+
+Use a pre-configured API key for simplified authentication.  
+
+This method provides the best support across all MCP clients.
+
+### How to use
+
+#### Option 1: As part of the URL
+
+* Include the `api-key` query parameter in your request URL
+* Example: [https://mcp.criteo.com/mcp?api-key=your-api-key](https://mcp.criteo.com/mcp?api-key=your-api-key)
+
+#### Option 2: As an API Key header (e.g., for Langdock)
+
+* Use the URL [https://mcp.criteo.com/mcp](https://mcp.criteo.com/mcp)
+* Set the API Key on the header `x-api-key` in the client settings
+* Example: `x-api-key: your-api-key`
+
+### When to use:
+
+* For clients that don't support the Pre-Registered Client Flow or header-based authentication
+* When you don't want to share credentials directly (e.g., production applications for external testing, like G-Star on Marketing Solutions)
+* For simplified integrations where you don't want to manage OAuth2 tokens
+
+***
+
+## Authorization Header
+
+Pass your credentials using the standard HTTP Authorization header. The server supports two formats:
+
+### Bearer Token
+
+Use a pre-obtained OAuth2 access token directly. This is the standard approach when you manage your own token lifecycle.
+
+#### How to use
+
+* Include the `Authorization` header with a Bearer prefix
+* Example: `Authorization: Bearer <your_access_token>`
+
+#### When to use
+
+* When you already have a valid access token from Criteo's OAuth2 flow
+* Best for clients that manage their own token lifecycle
+
+***
+
+## Basic Authentication
+
+Use HTTP Basic Authentication with your client credentials.
+
+The server will exchange these for an access token automatically.
+
+### How to Use
+
+* Include the Authorization header with a Basic prefix
+* The value should be a `Base64-encoded` string of your credentials
+
+### Formats
+
+* **Client Credentials**: `Base64(client_id:client_secret)`
+* **Authorization Code**: `Base64(client_id:client_secret:refresh_token)`
+* Example:
+
+```text
+Authorization: Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=
+```
+
+### When to Use
+
+* Standard OAuth2 client credentials flow
+* Compatible with most HTTP clients and tools
+
+***
+
+## Custom Headers (Legacy / Compatibility)
+
+Custom headers can be used to pass credentials when required by specific clients or setups. This approach is primarily developer-oriented and supported by a limited number of MCP-compatible clients (e.g., VS Code with manual configuration).
+
+<Warning>
+  Custom headers are supported for compatibility with existing integrations but are not the recommended authentication method. Use the standard <code>Authorization: Basic</code> header when possible.
+</Warning>
+
+### Supported Headers
+
+<table>
+  <thead>
+    <tr>
+      <th>Header</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>X-CRITEO-CLIENT-ID</code></td>
+      <td>Yes</td>
+      <td>Your Criteo API client ID</td>
+    </tr>
+    <tr>
+      <td><code>X-CRITEO-CLIENT-SECRET</code></td>
+      <td>Yes</td>
+      <td>Your Criteo API client secret</td>
+    </tr>
+    <tr>
+      <td><code>X-CRITEO-REFRESH-TOKEN</code></td>
+      <td>Yes (if Authorization Code flow)</td>
+      <td>Your refresh token</td>
+    </tr>
+  </tbody>
+</table>
+
+### When to Use
+
+* When your MCP client does not support standard Authorization headers
+* For development or testing scenarios requiring manual configuration
+* When maintaining compatibility with existing integrations
+## What's next
+
+* [Example Workflows](/retail-media/v2026-preview/docs/example-workflows)
+* [MCP Troubleshooting](/retail-media/v2026-preview/docs/mcp-troubleshooting)

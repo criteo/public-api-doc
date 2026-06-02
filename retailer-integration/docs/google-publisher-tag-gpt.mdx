@@ -1,0 +1,77 @@
+---
+title: Google Publisher Tag (GPT)
+hidden: true
+---
+
+***
+
+# Introduction
+
+The publisher (retailer) will most likely already have Google Publisher Tag created and embedded in their website. 
+
+This section is a brief introduction to how GPTs are created and how they may need to be modified.
+
+***
+
+# GPT Creation
+
+GPTs are typically created by running through the “Tags” wizards for an Ad unit.  Recall that a GPT is just a “physical” manifestation of the logical Ad Unit concept.
+
+![Screenshot of GPT creation entry point in Google Ad Manager](https://files.readme.io/5fc0f65b7126cb7baa2854578b8991391202a913867f9442011ccd56cba268e9-image.png)
+
+Completing the wizard will result in some HTML snippets that can be embedded in the publisher’s site:
+
+![Screenshot of the final step](https://files.readme.io/335ac86a8a82314c92ab4580505d4e915649f04d89963065bf71ab080bfb0cf4-image.png)
+
+***
+
+# GPT Modification
+
+In order to populate the Macros, the Google Publisher Tag will need to be modified.  The `.setTargeting` invocations in the example below show an example with hard-coded values.  In practice, the `rvid` and `kwd` values, which were mapped to the `retailer-visitor-id` and `context` query parameters for Delivery in the Creative tag, would be populated by request-level variables.
+
+```javascript
+googletag.cmd.push(function() {  
+    googletag.defineSlot('/2729856/BEN_TEST', [300, 600], 'div-gpt-ad-1718994066072-0').addService(googletag.pubads())  
+    .setTargeting("pa", "viewBasket_API_desktop")  
+    .setTargeting("pl", "viewBasket_API_desktop-InGrid")  
+    .setTargeting("rvid","12345")  
+    .setTargeting("kwd","pompeii3")  
+    googletag.pubads().enableSingleRequest();
+```
+
+The example above demonstrates the modification of a GPT that was auto-generated from the Ad Unit.  Because the GPT is implemented as a JavaScript library, it is also possible for the Retailer to have a more advanced configuration for their GPTs.  
+
+***
+
+## How to know what the request-level variables are?
+
+The retailer is likely already passing them to GAM via their existing tag.  
+
+To find them, examine the request made to GAM:
+
+1. Reload the retailer’s page with Chrome Developer Tools open.
+2. Filter by “gam” in the Network tab
+3. On the “Payload” tab of this request, find the `prev_scp` and/or `cust_params` query string parameters.
+
+In the following screenshot was taken from [https://www.bestbuy.com](https://www.bestbuy.com):
+
+![Screenshot of the Chrome developer tool open on the Best Buy homepage](https://files.readme.io/fa4965ffae2671aabf4ef44a85deb7f55ae3b1b5094f6755a283946ceacd6ecf-image.png)
+
+Here we see in `cust_params`: **pid=cat00000**\&s1=BestBuyDesktopWeb\&s2=best\_buy\&Environment=prod\&mcid=54350131840992133224562141092167264556&**vtID=35c63ac4-8556-11ef-8173-0affc77ec141**
+
+And after navigating to [https://www.bestbuy.com/site/home-audio-systems/speakers/abcat0205000.c?id=abcat0205000](https://www.bestbuy.com/site/home-audio-systems/speakers/abcat0205000.c?id=abcat0205000) by browsing categories, we see this:
+
+![Screenshot of the Chrome Developer tool open on a specific Best Buy URL](https://files.readme.io/9812eea9ad57d9e35f9d544ef54dd73f8531bdc90727fe52e880ee94ca877340-image.png)
+
+And we see in`cust_params`: 
+
+**pid=abcat0205000**\&s1=BestBuyDesktopWeb\&s2=audio\&s3=home\_audio\&s4=speakers\&Environment=prod&**vtID=35c63ac4-8556-11ef-8173-0affc77ec141**\&viewport=xs\&pagetype=cat\&fr=false\&adt=veryLow\&alc=veryLow\&dlm=veryLow\&drg=veryLow\&hat=veryLow\&off=veryLow\&vio=veryLow
+
+We might infer that `vtID` is where we’d find the `retailer-visitor-id` and `pid` might be the context in the RM Delivery call. The Retailer can then confirm for us.
+
+<Note>
+  ### For a more advanced troubleshooting guide for GAM display ads, you can also visit [this page](https://www.monetizemore.com/blog/google-ad-manager-advanced-troubleshooting-guide-for-display-ads/).
+</Note>
+## What's next
+
+* [Macros & mapping](/retailer-integration/docs/macros-mapping)

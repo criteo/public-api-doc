@@ -1,6 +1,12 @@
 ---
-title: "Overview"
+title: Ad Server API Calls
+description: Use Criteo's ad server to get all information needed to render and track
+  ads
 ---
+
+<Frame caption="Ad server API calls integration process">
+  <img src="https://files.readme.io/b1ea67be73d76aad519ef3197136e3457a18134437d18c4dcfe2c21319ceebde-API_Integration_Workflow_-_Step_2_-_API_Calls.png" alt="Ad server API calls integration process" />
+</Frame>
 
 # Where to Make API Calls
 
@@ -18,32 +24,62 @@ There is also a special "page type" called **add-to-cart**. In practice, this is
 Each page type is linked to valid values of the `event-type` parameter in the API call. More details can be found at [API Parameters](/retailer-integration/docs/api-parameters-1).
 
 <Info>
-  **General ad server requirement**
+  **General Ad Server Requirements**
 
-  You can find the general ad server requirements [here](https://developers.criteo.com/retailer-integration/docs/integration-process#general-ad-server-requirements).
+  You can find the general ad server requirements [here](/retailer-integration/docs/integration-process#general-ad-server-requirements).
 </Info>
 
 ***
 
-# Recommended API Call Practices
+## Recommended API Call Practices
 
-* **Make ad calls on every page load**: Ideally, make API calls on every page load to ensure comprehensive data collection and ad delivery.
+### Make Ad Calls on Every Page Load
 
-* **Prioritization guidelines**: If making calls on every page load is not possible, follow this prioritization:
+Whenever possible, implement API calls on every page load to ensure comprehensive data collection, accurate attribution, and optimal ad delivery.
 
-  1. **Search pages**: Essential for building the keyword model and typically the best performing page type. **This is a mandatory page type.**
+<Info>
+  This documentation does not distinguish between `mandatory` and `recommended` events. Each event contributes differently to performance, attribution, and data completeness.
+</Info>
 
-  2. **Transaction pages**: Crucial for tracking attribution. **This is a mandatory page type.**
+<Warning>
+  While some events are described below as **recommended**, many of them are critical for correct performance, attribution, and model accuracy. Not implementing these events may lead to:
 
-  3. **Product detail pages**: Important for building the keyword model and updating product prices and availability. If you are relying solely on the product data sent by the API to show your ads, without real-time product data checks, this page type **should be considered mandatory**. Implement calls here even if no ads are displayed.
+  * degraded campaign performance
+  * incomplete attribution
+  * incorrect product recommendations
+</Warning>
 
-  4. **Category pages**: Generally the second most performant page type. **This is highly recommended.**
+### Understanding the Value of Each Page Type
 
-  5. **Homepage**: Often has the most impressions, useful for campaigns with post-view attribution. This is recommended.
+If calling the API on all page types is not feasible, the descriptions below explain the role of each page type and the impact of not implementing it.
 
-  6. **Checkout pages**: Used to decide recommended products based on cart contents. This is recommended.
+#### Search pages
 
-* **Add-to-cart events**: Particularly useful if your ecommerce platform allows users to add products to their cart without needing to open the product detail page.
+Capture strong intent signals based on user-entered keywords. Search pages significantly contribute to building and optimizing the keyword model for Sponsored Products. Even if you do not plan to show ads on search pages, integrating them (along with PDP and Add-to-cart events) is recommended.
+
+#### Category pages
+
+Provide mid-funnel browsing signals and help Criteo understand product discovery behavior across your catalog. When used together with Search pages, Category integrations give the algorithm a fuller view of the user journey, even if ads are not displayed on these pages.
+
+#### Add-to-cart events
+
+Essential when your e-commerce platform allows users to add products directly to the cart without first visiting the product detail page. These events supply strong purchase-intent signals, improve the keyword model, and allow you to build audiences based on cart activity.
+
+#### Product detail pages
+
+Provide detailed product-level engagement signals and enable real-time updates on product availability and pricing. Without this event, there is a risk of outdated product information appearing in ad responses, including out-of-stock products. Implement this event even if ads are not displayed on product detail pages.
+
+#### Transaction pages
+
+Enable accurate attribution and are required for a functioning integration. Missing transaction events will prevent conversion tracking and significantly impact optimization and reporting.
+
+#### Homepage
+
+Often has the highest traffic volume and can support campaigns relying on broad audience reach and post-view attribution.
+
+#### Checkout pages
+
+Provide visibility into cart contents and help improve product recommendation logic for users nearing purchase.
 
 ***
 
@@ -54,18 +90,13 @@ Criteo’s Retail Media ad delivery system offers **three distinct endpoints**, 
 ## Endpoint Structure
 
 1. **Host**: `d.[region].criteo.com`
-
    * Supported regions:
-
      * **EMEA**: `eu`
      * **AMERICAS**: `us`
      * **APAC**: `as`
-
 2. **Path**: `/delivery/retailmedia`
-
 3. **Scheme**: Always `https`
-
-4. **Query Parameters**: Described in \[API Parameters]\(doc:api-parameters-1
+4. **Query Parameters**: Described in [API Parameters](doc:api-parameters-1
 
 ***
 
@@ -84,13 +115,12 @@ Criteo’s Retail Media ad delivery system offers **three distinct endpoints**, 
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-What’s Next
+<Danger>
+  **SEND FEEDBACK CUSTOM COMPONENT**
+</Danger>
+## What's next
 
 * [API responses](/retailer-integration/docs/api-responses)
 * [API parameters](/retailer-integration/docs/api-parameters-1)

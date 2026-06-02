@@ -1,0 +1,364 @@
+---
+title: OAuth App implementation
+hidden: true
+---
+
+## Introduction
+
+The Criteo API allows you to build custom apps that help the world's advertisers grow their businesses.
+
+In order for your app to function, your users will have to delegate permissions for one or more of the Criteo advertisers that they oversee.
+
+To do this, you will need to direct the user to a unique consent delegation page using a standard OAuth integration (Authorization Code Grant Type). Below we describe how to implement this flow.
+
+These guides assume you have created a developer account, are part of an organization. Instructions for getting started can be found [here](/marketing-solutions/docs/onboarding-checklist).
+
+## Creating an Authorization code app
+
+Once you have logged in to the Criteo Partners Portal, create a new App  by clicking on "+"  in the My apps section.
+
+![1278](https://files.readme.io/285ba4d-52f9f11-app-card.PNG "52f9f11-app-card.PNG")
+
+This will open a modal where you can select type of application. To create an OAuth app use the "Authorization code" app.
+
+![1792](https://files.readme.io/c497078-Capture_decran_2022-01-19_a_16.27.20.png "Capture d’écran 2022-01-19 à 16.27.20.png")
+
+Define the name, description and image of your app. This will create your App page. 
+
+![1440](https://files.readme.io/8f935e1-Modale_App_creation_Copy_1.png "Modale App creation Copy (1).png")
+
+In your App page you will be able to define the scope of your application and the OAuth parameters. Please see this [page](/marketing-solutions/docs/onboarding-checklist#3-define-your-app-scope) to see more details on how to define your app scope.
+
+![197](https://files.readme.io/03e2204-image2021-4-19_11-40-46.png "image2021-4-19_11-40-46.png")
+
+## Set up your OAuth parameters
+
+Once you have defined the scope of your application, you will be able to setup what you need for the OAuth workflow
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameters</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>client&#95;id</code></td>
+      <td>Your public key accessible in app credentials section.<br />You can add up to 5 pairs of credentials. Can be added and managed also once the App has been activated.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;secret</code></td>
+      <td>Your secret key, accessible only once when creating a pair of client&#92;&#95;id and client&#92;&#95;secret in credentials section.<br />You can add up to 5 pairs of credentials. Can be added and managed also once the App has been activated.</td>
+    </tr>
+    <tr>
+      <td><code>redirect&#95;uri</code></td>
+      <td>The URL to redirect the user to after consent delegation. Https protocol required.<br />You can add up to 30 redirect URIs. Can be added and managed also once the App has been activated.</td>
+    </tr>
+  </tbody>
+</table>
+
+You can now publish the app, and start an authorization code workflow.
+
+## Consent URL creation
+
+Once you have defined the parameters of your App you can start implementing your authorization code flow.
+
+To request access to a user to access their data, you will create a Consent link (to be sent to the user or implemented through a button in your platform that will redirect the user to the link) with the following structure and parameters:
+
+```text http Consent URL Example
+https://consent.criteo.com/request
+?response_type=code
+&client_id=6e75a
+&redirect_uri=https%3A%2F%2Fyourwebsite.com%2Fauth%2Fredirect
+&state=4lr4e
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameters</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>response&#95;type=code</code></td>
+      <td>Indicates that an authorization code is expected as outcome.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;id</code></td>
+      <td>Your public key accessible in app credentials section.</td>
+    </tr>
+    <tr>
+      <td><code>redirect&#95;uri</code></td>
+      <td>The URL to redirect the user to after consent delegation. Https protocol required. Defined in the redirect URI section in Developer Dashboard.</td>
+    </tr>
+    <tr>
+      <td><code>state</code></td>
+      <td>A string that you can provide and that will be returned as-is in the final redirection (usually used to prevent Cross-Site Request Forgery attacks).</td>
+    </tr>
+  </tbody>
+</table>
+
+The Consent link will direct your user to Criteo Consent page:
+
+![1878](https://files.readme.io/9fa7ca3-image2021-4-19_12-11-58.png "image2021-4-19_12-11-58.png")
+
+They can choose what advertisers from their portfolio they want to give access to.
+
+They approve the request by clicking on "Approve".
+
+A consent request is displayed to a user in all cases except in the following:
+
+* The client\_id does not match any published API app.
+* The redirect\_uri is not authorized (e.g not accessible from public network)
+* An unexpected error occurred in our backend.
+
+In any of the cases above an error message will be displayed.
+
+## Redirection and access code
+
+Once the user has completed the Consent Delegation flow, we redirect your user to the following URL:
+
+```text http Redirect URL
+https://yourwebsite.com/auth/redirect
+?code=eyJ.abc.def
+&state=4lr4e
+```
+
+This URL is forged with the authorized redirect\_uri and the following query parameters:
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>code</code></td>
+      <td>An authorization code valid for 30 seconds, usable only once.</td>
+    </tr>
+    <tr>
+      <td><code>state</code></td>
+      <td>The state parameter that you originally provided (returned as-is).</td>
+    </tr>
+  </tbody>
+</table>
+
+If the consent request is denied, we redirect to the same redirect-uri but with an 'error' query parameter instead of a 'code'.
+
+## Exchanging access code for access token
+
+Now that you have an authorization code, you can trade it for an access token with the following request:
+
+```text http Access token request
+POST https://api.criteo.com/oauth2/token
+ 
+grant_type=authorization_code
+&code=eyJ.abc.def
+&redirect_uri=https://yourwebsite.com/auth/redirect
+&client_id=6e75a
+&client_secret=j7MfAp
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>grant&#95;type=authorization&#95;code</code></td>
+      <td>Indicates that you are providing an authorization code.</td>
+    </tr>
+    <tr>
+      <td><code>code</code></td>
+      <td>Authorization code returned during redirection.</td>
+    </tr>
+    <tr>
+      <td><code>redirect&#95;uri</code></td>
+      <td>Must match the redirect&#92;&#95;uri used for the authorization request.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;id</code></td>
+      <td>Your public key accessible in app credentials section.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;secret</code></td>
+      <td>Your secret key, accessible only once when creating a pair of client&#92;&#95;id and client&#92;&#95;secret in credentials section.</td>
+    </tr>
+  </tbody>
+</table>
+
+The response from Criteo API will be the following:
+
+```json Access token response
+{
+  "access_token": "eyJ.fiZfef.dls",
+  "refresh_token": "eyJ.ela4a9e.afd",
+  "token_type": "Bearer",
+  "expires_in": 900
+}
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>access&#95;token</code></td>
+      <td>A short-lived (valid for 900 seconds) access token&#92;&#42;</td>
+    </tr>
+    <tr>
+      <td><code>refresh&#95;token</code></td>
+      <td>A long-lived refresh token (that expires after 6 months) that can be used to renew the access token (see next section).</td>
+    </tr>
+    <tr>
+      <td><code>token&#95;type=Bearer</code></td>
+      <td>Type of token.</td>
+    </tr>
+    <tr>
+      <td><code>expires&#95;in</code></td>
+      <td>Lifetime of the token in seconds.</td>
+    </tr>
+  </tbody>
+</table>
+
+<Warning>
+  **Note about token lifetime**
+
+  The refresh token will be revoked if the user that provided consent to an account changes the role or leaves the organization. Such an account needs to be re-authorized by launching the new consent flow and having the new administrator accept the consent.
+</Warning>
+
+## Using refresh token
+
+When an access token is close to expiration, you can get a new one using a refresh token via the following request:
+
+```text http Refreshaccess token
+POST https://api.criteo.com/oauth2/token
+ 
+grant_type=refresh_token
+&refresh_token=eyJ.ela4a9e.afd
+&client_id=6e75a
+&client_secret=j7MfAp
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>grant&#95;type=refresh&#95;token</code></td>
+      <td>Indicates that you are providing a refresh token.</td>
+    </tr>
+    <tr>
+      <td><code>refresh&#95;token</code></td>
+      <td>Refresh token shared when requesting an access token.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;id</code></td>
+      <td>Your public key accessible in app credentials section.</td>
+    </tr>
+    <tr>
+      <td><code>client&#95;secret</code></td>
+      <td>Your secret key, accessible only once when creating a pair of client&#92;&#95;id and client&#92;&#95;secret in credentials section.</td>
+    </tr>
+  </tbody>
+</table>
+
+The response will be the same as when issuing an access token
+
+## Demo
+
+Below you can find a code for a demo application in NodeJS that uses Express JS framework.
+
+<CodeGroup>
+
+```javascript index.js
+var express = require('express');
+var passport = require('passport');
+var OAuth2Strategy = require('passport-oauth2').Strategy;
+var app = express();
+var port = 3000;
+
+// Passport setup
+passport.use(new OAuth2Strategy({
+    clientID: 'CLIENT_ID', // Enter your client_id here
+    clientSecret: 'CLIENT_SECRET', // Enter your client_secret here
+    authorizationURL: 'https://consent.criteo.com/request',
+    callbackURL: `http://localhost:${port}/criteo-auth/callback`,
+    tokenURL: 'https://api.criteo.com/oauth2/token',
+    state: 'togorot'
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    cb(null, { accessToken, refreshToken });
+  }
+));
+app.use(passport.initialize());
+
+// Route declarations
+app.get('/', function(req, res) {
+  res.send('<a href="/criteo-auth">Link my Criteo account!</a>');
+});
+
+app.get('/criteo-auth', passport.authenticate('oauth2'));
+
+app.get('/criteo-auth/callback',
+  passport.authenticate('oauth2', { session: false }),
+  function(req, res) {
+    res.send(`<div>Authentication successful!</div><div>Access token:</div><textarea>${req.user.accessToken}</textarea><div>Refresh token:</div><textarea>${req.user.refreshToken}</textarea>`);
+  }
+);
+
+console.log(`OAuth test app started on http://localhost:${port}`);
+app.listen(port);
+```
+
+```text markdown package.json
+{
+  "name": "oauth-node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "passport": "^0.4.1",
+    "passport-oauth2": "^1.6.0"
+  }
+}
+```
+</CodeGroup>
+
+ How to run the demo?
+
+1. Run `npm install`
+2. Connect to the developer portal and create an app according to the instructions above
+3. Create an "Authorization code" app.
+4. Generate app credentials and enter the client\_id and client\_secret in index.js.
+5. Register "http\://localhost:3000/criteo-auth/callback" as the redirect URI.
+6. Run `npm run start`
+7. Open [http://localhost:3000](http://localhost:3000)
+
+## FAQ
+
+**What happens if my client\_id and client\_secret are compromised?**\
+You will need to delete the set of credentials in the App page and create a new one. You will need to request access again to your users.

@@ -1,0 +1,108 @@
+---
+title: Build a preview for a custom format
+hidden: true
+---
+
+The Retail Media Platform allows users to preview a creative, but the preview is not automatically generated for creatives that use a custom template.\
+The goal is to simplify the implementation of the preview and give the retailer control over any necessary creative changes. We allow the retailer to provide a preview of the format to Criteo for integration into the Retail Media Platform.
+
+<br />
+
+The process for setting this up is as follows:
+
+**1-** **Criteo and the retailer** work together to define the data the retailer needs to receive in the ad delivery response in order to render the format.\
+Rendering API keys for the values used in the ad are provided to the retailer.
+
+Skip this phase if the format is already developed.
+
+**2-** **The retailer** develops the preview
+
+* It should be a code dedicated to the format
+  * A different code per environment is required if the creative looks different on desktop, mobile or app.
+  * If the creative looks the same in different environments, one code is sufficient for those environments.
+* Dynamic parameters (received in the API call with the rendering key and  used to render the format) should be surrounded by %% html/css code. (e.g. %myparamater%%)
+* Retailers should avoid integrating their internal resources with the code to prevent problems with cross-domain requests.
+
+<br />
+
+**3-** **Criteo** integrates the retailer's code as a preview of the corresponding custom format in the Retail Media Platform by matching the parameters provided by the retailer to the user form in the creative preview.
+
+<br />
+
+***
+
+<br />
+
+Example of a sample code 
+
+```html html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style type="text/css">
+        body {margin:0px;padding:0px;}
+        #tile {
+            width: 250px; 
+            height: 475px;
+            position: relative;
+            border-style: solid;
+            border-width: 1px;
+            border-color:%%border_color%%;
+            border-radius: 0px 0px 20px 0px;
+            word-break: break-all;
+        }
+        #image {
+            width: 100%;
+            height: auto;
+        }
+        #title {
+            text-align: center;
+            margin: 10px 0px 10px 0px;
+            color: rgb(5, 5, 75);
+            font-size: 22px;
+            line-height: 26px;
+        }
+        #description {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 10px;
+        }
+        #cta {
+            display: block;
+            margin: auto;
+            padding: 10px 40px;
+            border-style: solid;
+            border-width: 1px;
+            border-radius: 3px;
+            cursor: pointer;
+            color:%%button_text_color%%;
+            background-color:%%button_color%%;
+        }
+    </style>
+</head>
+<body>
+    <div id="tile">
+        <div id="promo"></div>
+        <div>
+            <img id="image" alt="%%alt_text%%" src="%%background_image%%"></img>
+            <div id="title">%%title%%</div>
+            <div id="description">%%description%%</div>
+            <div>
+                <a href="%%redirect_url%%" target="_blank">
+                    <button type="button" id="cta">%%button_text%%</button>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+<br />
+
+And the render in Commerce Max
+
+![d14a1436fc7e4e657668018b90b25a73cdf70e13a9552e79256db8c7957d4ed4 Capture_dcran_2024 10 23_124747](https://files.readme.io/d14a1436fc7e4e657668018b90b25a73cdf70e13a9552e79256db8c7957d4ed4-Capture_dcran_2024-10-23_124747.png)

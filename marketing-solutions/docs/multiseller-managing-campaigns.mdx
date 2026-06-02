@@ -1,0 +1,275 @@
+---
+title: Managing Campaigns
+---
+
+<Info>
+  An MPO-Campaign is a course of action to advertise the products of your sellers.
+</Info>
+
+## Adding Campaigns
+
+Campaigns are not added with the API. Instead, they are created, started and stopped by your Technical Solution engineer.
+
+***
+
+## Managing Seller-Campaigns
+
+A Seller-Campaign contains all the information relative to the advertisement for the products of a Seller in a Campaign. In particular, it contains information about bid and status:
+
+**`bid`**  
+Bid specified for this Seller in this Campaign
+
+**`suspendedSince`**  
+Date and time since we stopped delivering ads for this Seller in this Campaign.
+
+**`suspensionReasons`**  
+List of reasons why the campaign is suspended (possible values are: `NoMoreBudget`, `ManuallyStopped`, `NoBudgetDefined`, `NoCpcDefined`, `RemovedFromCatalog`)
+
+Every Seller-Campaign is identified by:
+
+**`sellerId`**  
+`SellerId` of the seller associated to this Seller-Campaign
+
+**`campaignId`**  
+`CampaignId` of the MPO-campaign associated to this Seller-Campaign
+
+***
+
+## Adding Seller-Campaigns
+
+Seller-Campaigns get automatically created for every Campaign and every Seller in your feed.
+
+* New Seller-Campaigns are created inactive by default (`suspendedSince` flag is set to the moment of creation) 
+
+***
+
+## Getting Seller-Campaigns
+
+To see what Seller-Campaigns are available, can make the following query:
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/seller-campaigns
+```
+
+**Sample response**
+
+```json JSON
+[{
+    "id": "1.10001",
+    "suspendedSince": "2018-07-30T18:00:13.333",
+    "suspensionReasons": ["NoMoreBudget"],
+    "sellerId": "1",
+    "campaignId": 10001,
+    "bid": null
+},{
+    "id": "2.10001",
+    "suspendedSince": "2018-09-03T09:00:23.8",
+    "suspensionReasons": ["ManuallyStopped"],
+    "sellerId": "2",
+    "campaignId": 10001,
+    "bid": null
+},{
+    "id": "3.10001",
+    "suspendedSince": "2018-09-03T09:00:23.8",
+    "suspensionReasons": ["NoCpcDefined"], 
+    "sellerId": "3",
+    "campaignId": 10001,
+    "bid": null
+}]
+```
+
+***
+
+## Get Specific Seller-campaign
+
+You can also fetch the details of a single Seller-campaign using the following request:
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}
+```
+
+**Sample response**
+
+```json
+{
+  "id": "543210.123456",
+  "sellerId": "543210",
+  "campaignId": 123456,
+  "bid": 1.55,
+  "suspendedSince": "2018-07-30T15:15:24.813",
+  "suspensionReasons": [
+    "NoMoreBudget"
+  ]
+}
+```
+
+An active seller campaign meets these conditions:
+
+* The `suspendedSince` field is `null`.
+* The `bid` value is greater than zero.
+* The bid currency matches the `bidCurrency` of the related campaign.
+
+Additionally, an active seller campaign must have an active total budget (capped or uncapped). It may also have an active daily budget to further restrict spending.
+
+<Info>
+  **Suspension reasons**
+
+  * `ManuallyStopped`: The campaign has been manually paused, independent of other suspension causes.
+  * `NoBudgetDefined`: No valid budget is linked to the campaign.
+  * `NoCpcDefined`: No cost-per-click (CPC) has been set for the campaign.
+  * `NoMoreBudget`: The current budget of the campaign has been fully used.
+  * `RemovedFromCatalog`: All products in the campaign have been removed from the catalog.
+  * `NotYetStarted`: The campaign is newly created and has not yet been processed.
+</Info>
+
+***
+
+## Get a Collection of Budgets for Selected Seller-Campaign
+
+The following endpoint retrieves a list of budgets for the specified seller campaign, applying any optional filters provided.
+
+If no filters are set, it returns all accessible budgets except those with an `endDate` in the past.  
+When multiple filters are applied, only budgets meeting all criteria are included.
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}/budgets
+```
+
+**Sample response**
+
+```json
+[
+  {
+    "id": "6907877",
+    "sellerId": "10624700",
+    "campaignIds": [
+      225662
+    ],
+    "budgetType": "Daily",
+    "amount": 12.0000,
+    "startDate": "2021-02-25",
+    "endDate": "Never",
+    "spend": null,
+    "status": "Current",
+    "isSuspended": false
+  }
+]
+```
+
+You can apply the following query parameters to the endpoint to specify filters:
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Definition</th>
+      <th>Type</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>sellerCampaignId</code></td>
+      <td>Filters budgets belonging to the specified seller campaign.</td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>endAfterDate</code></td>
+      <td>Returns budgets ending after the specified date (<code>yyyy-MM-DD</code>). Defaults to only active (not ended) budgets if omitted.</td>
+      <td><code>string</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>startBeforeDate</code></td>
+      <td>Returns budgets starting on or before the specified date (<code>yyyy-MM-DD</code>).</td>
+      <td><code>string</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>status</code></td>
+      <td>Filters budgets by their status. Possible values: <strong>Archived</strong>, <strong>Current</strong>, <strong>Scheduled</strong>.</td>
+      <td><code>string</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>Filters budgets by the specified budget type.</td>
+      <td><code>string</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>withBalance</code></td>
+      <td>Returns only budgets with a positive balance.</td>
+      <td><code>boolean</code></td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td><code>withSpend</code></td>
+      <td>Returns budgets with a positive spend amount.</td>
+      <td><code>boolean</code></td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+## Starting Seller-Campaigns
+
+In order to start delivering ads for a Seller in a Campaign, the Seller-Campaign needs to:
+
+* be part of a running Campaign,
+* have a bid (see "[Setting the Bid for a given Seller-Campaign](/marketing-solutions/docs/managing-campaigns#setting-the-bids-of-seller-campaigns)" section),
+* have an active budget (see "[Managing Budgets](/marketing-solutions/docs/managing-budgets)" section),
+
+When a Seller-Campaign becomes inactive, the `suspendedSince` flag is null.
+
+***
+
+## Stopping Seller-Campaigns
+
+In order to stop delivering ads for a Seller in a Campaign, you can do one of the following actions:
+
+* set the bid of the Seller-Campaign to null (see "[Setting the Bid for a given Seller-Campaign](/marketing-solutions/docs/managing-campaigns#setting-the-bids-of-seller-campaigns)" section),
+* suspend the current budget (see "[Suspend a Budget](/marketing-solutions/docs/managing-budgets#suspending-budgets)" section),
+* remove products of this Seller from the feed (if you have several MPO-Campaigns, this will also stop the Seller in the other MPO-Campaigns).
+
+When a Seller-Campaign becomes inactive, the `suspendedSince` flag is set to the current date.
+
+***
+
+## Setting the Bids of Seller-Campaigns
+
+In order to have a Sellers active in the campaign, you have to specify the bids that will be used for these Sellers in the given Campaign.
+
+<Badge color="purple" size="sm" shape="pill">PATCH</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/seller-campaigns
+```
+
+**Sample response**
+
+```json JSON
+[{
+    "id": "1.10001",
+    "bid": 0.3
+},{
+    "id": "2.10001",
+    "bid": 0.6
+},{
+    "id": "3.10001",
+    "bid": 0.5
+}]
+```
+
+<Warning>
+  Note that the ID is defined by `{sellerId}.{campaignId}` (e.g 1.10001 for seller ID 1 and campaign 10001).
+</Warning>

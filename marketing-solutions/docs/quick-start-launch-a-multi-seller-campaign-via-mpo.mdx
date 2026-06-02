@@ -1,0 +1,332 @@
+---
+title: Quick Start – Launch a Multi-Seller Campaign via MPO
+---
+
+## What you’ll accomplish
+
+In this guide, you will:
+
+* Take a set of existing marketplace sellers and activate them in an MPO Multi-Seller campaign.
+* Create seller-campaigns that link each seller to the shared campaign.
+* Set per-seller campaign bids (CPC) to control delivery.
+* Verify that the campaign is live by checking Multi-Seller statistics.
+
+This flow assumes you are using MPO in **Multi-Seller** mode (shared campaign for many sellers). If you need one dedicated campaign per seller, use the **Single-Seller Quick Start** instead.
+
+## Who this recipe is for
+
+This recipe is intended for:
+
+* Marketplace integrators and technical leads wiring MPO into their own tools.
+* Developers who want a concrete, end-to-end example of enabling Multi-Seller via API.
+* Teams onboarding many long-tail or small-budget sellers into a shared MPO campaign.
+
+## Prerequisites
+
+Before starting, make sure all of the following are true.
+
+### Feature enablement & account setup
+
+* Your marketplace is onboarded to **Marketplace Performance Outcomes (MPO)**.
+* MPO in **Multi-Seller** mode is enabled for your partner / advertiser by Criteo (at the partner level).
+
+Work with your Criteo contact to confirm that:
+
+* **Marketplace Performance Outcomes (MPO)** is active for your partner, and
+* At least one **Multi-Seller MPO campaign** is configured for your advertiser, including:
+  * Optimization goal and bidding strategy.
+  * Targeting and creatives.
+
+### API access & permissions
+
+* Your application is onboarded to **Criteo Marketing Solutions**.
+* You can obtain an **OAuth2 access token**.
+* For Multi-Seller usage, the application has at least:
+  * **Campaign – Manage** permission on the relevant advertiser.
+
+Refer to the general **Onboarding Checklist** on the Developer Portal for full scope and token setup.
+
+### Catalog & sellers
+
+* Your product catalog is integrated and includes **seller information** (for example a `seller_id` or equivalent field on products).
+* On the Criteo side, this seller field is **mapped and activated for MPO** so that:
+  * Sellers can be ingested from the catalog, and
+  * Exposed via the Sellers endpoints:
+
+```text http
+
+GET /marketplace-performance-outcomes/sellers
+```
+
+* Sellers have already been ingested by MPO and exposed via the Sellers endpoint:
+
+```text http
+GET /marketplace-performance-outcomes/sellers
+```
+
+You should be able to list sellers and see `sellerId` values for the merchants you want to activate.
+
+## Step 1 – Discover sellers and confirm they’re available
+
+First, retrieve the list of sellers available to your MPO advertiser and confirm the sellers you want to activate in Multi-Seller are present.
+
+### 1.1 List sellers
+
+**Endpoint**
+
+```text http
+GET /marketplace-performance-outcomes/sellers
+```
+
+You can filter by `sellerName`, which typically corresponds to the seller identifier from your product data (for example, the `seller_id` you send in the catalog), or by advertiser if needed.
+
+### Example – filter by sellerName
+
+```text http
+
+GET  https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/sellers?
+sellerName=YourSellerName
+Authorization: Bearer <ACCESS_TOKEN>
+Accept: application/json
+```
+
+### Sample response (simplified)
+
+```text json
+[
+{
+"id": "42171358",
+"sellerName": "YourSellerName"
+}
+]
+```
+
+* `id` is the `sellerId` you will use in the rest of the flow.
+* `sellerName` typically corresponds to the seller identifier coming from your product data (for example the `seller_id` or merchant ID you send in the catalog), so you can match MPO `sellerId` back to your own seller records.
+
+Repeat this for each seller you plan to include in the Multi-Seller campaign and store the mapping between your internal seller identifier and MPO `sellerId`.
+
+## Step 2 – Link sellers to your Multi-Seller campaign (create seller-campaigns)
+
+A seller-campaign represents the relationship between:
+
+* A seller (`sellerId`), and
+* A Multi-Seller campaign (`campaignId`),
+
+including the bid and status for that seller in that campaign.
+
+In most setups:
+
+* The Multi-Seller campaign already exists (configured by Criteo).
+* Your job is to create or confirm the seller-campaigns for the sellers you want active.
+
+### 2.1 Get the campaign ID
+
+Your Criteo contact will provide the Multi-Seller `campaignId` to use with MPO.  
+Keep this value as `campaignId` in the following examples.
+
+### 2.2 Create a seller-campaign for a seller
+
+You can create seller-campaigns for a seller via:
+
+```text http
+
+POST  https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/sellers/{sellerId}/seller-campaigns
+Authorization: Bearer <ACCESS_TOKEN>
+Content-Type: application/json
+Accept: application/json
+```
+
+### Example request
+
+```text json
+{
+"campaignId": 123456,
+"bid": 1.20
+}
+```
+
+<br />
+
+* `campaignId` – the ID of your Multi-Seller MPO campaign.
+* `bid` – initial CPC bid for this seller in the campaign (in the campaign’s currency).
+
+### Example response (simplified)
+
+```text json
+{
+"id": "42171358.123456",
+"sellerId": "42171358",
+"campaignId": 123456,
+"bid": 1.20,
+"suspendedSince": null,
+"suspensionReasons": []
+}
+```
+
+<br />
+
+* `id` is the `sellerCampaignId` (often a composite of seller and campaign).
+* A seller-campaign is active when:
+  * `bid` is positive, and
+  * `suspendedSince` is `null` (no active suspension reason).
+
+If your account already has seller-campaigns for a given seller and campaign, you can skip creation and move directly to updating bids (next step).
+
+## Step 3 – Set or adjust bids for each seller-campaign
+
+Once the seller-campaign exists, you can update the CPC bid to control how aggressively that seller participates in the Multi-Seller campaign.
+
+### 3.1 Retrieve the seller-campaign (optional)
+
+To confirm current configuration:
+
+```text http
+
+GET  https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}
+Authorization: Bearer <ACCESS_TOKEN>
+Accept: application/json
+```
+
+**Sample response:**
+
+```text json
+
+{
+"id": "42171358.123456",
+"sellerId": "42171358",
+"campaignId": 123456,
+"bid": 1.20,
+"suspendedSince": null,
+"suspensionReasons": []
+}
+```
+
+### 3.2 Update the bid
+
+To change the bid (for example, from `1.20` to `1.55`):
+
+```text http
+PATCH  https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}
+Authorization: Bearer <ACCESS_TOKEN>
+Content-Type: application/json
+Accept: application/json
+```
+
+**Request body**
+
+```text json
+{
+"bid": 1.55
+}
+```
+
+**Guidelines:**
+
+* **Positive bid** → seller-campaign can be active (subject to budgets and other constraints).
+* **Bid = 0** → effectively pauses this seller in the campaign (no delivery for this seller).
+
+You can repeat this per seller-campaign to:
+
+* Boost high-value sellers.
+* Reduce exposure for low-performing sellers.
+* Pause a seller temporarily by setting `bid` to `0`.
+
+## Step 4 – Ensure budgets are in place
+
+Multi-Seller campaigns require sufficient budget to deliver for all active sellers.
+
+There are two budget surfaces in MPO:
+
+1. **Campaign-level or advertiser-level budgets**
+   * Usually managed with your Criteo team or via generic Marketing Solutions budget APIs.
+   * Ensure at least one active budget is configured for the MPO campaign.
+
+2. **Seller-campaign budgets** (optional, for finer control)
+   * Accessible via:
+   * ```Text http
+
+     GET /marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}/budgets
+     GET /marketplace-performance-outcomes/budgets
+     POST /marketplace-performance-outcomes/budgets
+     ```
+     * These can be used to set per-seller caps or schedule specific time windows.
+     For a first Multi-Seller launch, it is often enough that:
+     * The parent campaign budget is in place.
+     * Your seller-campaign bids are positive.
+     Work with your Criteo contact to decide whether you also need per-seller budgets at launch.
+     ## Step 5 – Verify delivery with statistics
+     Once:
+     * Sellers are correctly ingested,
+     * Seller-campaigns exist with positive bids,
+     * Budgets are active,
+     you can verify delivery via the **Standard Reporting API**.
+     ### 5.1 Check campaign-level stats
+
+```text http
+GET  https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/campaigns?campaignId=123456&startDate=2026-03-01&endDate=2026-03-01
+Authorization: Bearer <ACCESS_TOKEN>
+Accept: application/json
+```
+
+**Typical response (simplified):**
+
+```text json
+{
+"columns": [
+"campaignId",
+"day",
+"impressions",
+"clicks",
+"cost",
+"saleUnits",
+"revenue",
+"cr",
+"cpo",
+"cos",
+"roas"
+],
+"data": [
+[
+"123456",
+"2026-03-01",
+3969032,
+13410,
+1111.295,
+985,
+190758099,
+0.073,
+1.128,
+0.0,
+171653.88
+]
+],
+"rows": 1
+}
+```
+
+### 5.2 Check per-seller performance
+
+Use seller or seller-campaign stats to confirm each seller is delivering:
+
+```text http
+GET  https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/sellers?campaignId=123456&startDate=2026-03-01&endDate=2026-03-01
+Authorization: Bearer <ACCESS_TOKEN>
+Accept: application/json
+```
+
+Or, for the most granular view:
+
+```text http
+GET  https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/seller-campaigns?campaignId=123456&sellerId=42171358&startDate=2026-03-01&endDate=2026-03-01
+Authorization: Bearer <ACCESS_TOKEN>
+Accept: application/json
+```
+
+These endpoints return impressions, clicks, cost, and conversion metrics that you can surface in your own BI tools or seller portal.
+
+<br />
+
+<br />
+
+<br />

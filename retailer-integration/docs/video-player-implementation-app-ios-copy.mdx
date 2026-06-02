@@ -1,0 +1,221 @@
+---
+title: 'Video player implementation (App: iOS) (new version-WIP)'
+description: This document provides implementation guidance for Onsite Video Ads in
+  iOS Apps.
+hidden: true
+---
+
+<Warning>
+  ****Hidden page****
+
+  This page is currently hidden in Criteo's documentation. This means it won't appear in the navigation menu and is only accessible with the link. To return to this page in the future, please make sure to bookmark it.
+</Warning>
+
+<Info>
+  ****Commerce Video for Apps is in Beta****
+
+  The documentation and features are likely to change, and the product might contain bugs. Please report any issues and check back for updates.
+</Info>
+
+***
+
+# Introduction
+
+This page introduces a **ready-to-integrate video ad renderer** that handles VAST parsing, video playback, and OM SDK integration for viewability and verification, helping retailers easily render, track, and measure in-app onsite video ad placements with minimal code.
+
+<Warning>
+  ****Version Requirements****
+
+  For iOS, the minimum version supported is **15.0**.
+</Warning>
+
+***
+
+## Integrate into your own project
+
+1. Add the Criteo sample folders to your app target:
+
+   1. Download/clone the GitHub repo [here](https://github.com/criteo/video-ad-player-ios).
+   2. Drag these folders (from `OM-Demo/`) into your Xcode project (copy items if needed, check your app target):
+
+      * `CriteoPlayer + Wrapper/`
+      * `Managers/`
+      * `Utilities/`
+2. Use the wrapper where you need an ad.
+
+   Pick one of the patterns in this guide and adapt the snippet:
+
+   * **Single Video**: Small placement with one ad on screen.
+   * **UIKit feed**: Scrolling feeds require preloading and visibility‑driven playback.
+   * **SwiftUI feed**: SwiftUI app using a shared wrapper and a minimal UIKit bridge.
+
+***
+
+# Instructions for Integrating OM SDK into the iOS Sample App
+
+## Step 1. Register & Namespace
+
+**Why**: Generates a unique, namespaced OM SDK so measurement is attributed to your organization.
+
+1. Go to [IAB Tech Lab Tools Portal](https://tools.iabtechlab.com/login) and sign up with your work email.
+2. After login, confirm a `Namespace` was auto-created from your email domain.
+
+***
+
+## Step 2. Build & Download (iOS)
+
+**Why**: Produces your organization’s OM SDK artifacts (framework + JS) required at runtime.
+
+1. Open [tools.iabtechlab.com/omsdk](https://tools.iabtechlab.com/omsdk).
+2. Make sure your `Namespace` exists, then click `Build iOS`.
+3. After 10–15 minutes, confirm the latest build and download it.
+4. Inside the package you’ll find:
+
+   * `OMSDK_&lt;Namespace&gt;.xcframework` (dynamic)
+   * `OMSDK-Static_&lt;Namespace&gt;.xcframework` (static)
+   * `omsdk-v1.js`
+   * Demo project (reference only)
+5. Download the [Criteo Sample Project](https://gitlab.crto.in/l.cicone/vast-omid-player-demo-ios) for testing.
+
+> Note: Use these same steps when integrating into your own project.
+
+***
+
+## Step 3. Add the Dynamic XCFramework (Embed & Sign)
+
+**Why**: The dynamic framework must be embedded so it’s available at runtime.
+
+1. In Xcode, drag `OMSDK_&lt;Namespace&gt;.xcframework` to the iOS project.
+2. Go to **Target ▸ General ▸ Frameworks, Libraries, and Embedded Content**:
+
+   * Set framework to `Embed & Sign`.
+
+<Frame caption="Ensure the framework is listed and set to “Embed &amp; Sign”">
+  <img src="https://files.readme.io/92f25f1eac93ccb31bed0dcdefb68df1005fd597793f7e31377bef6aef4148c6-image.png" alt="Ensure the framework is listed and set to “Embed &amp; Sign”" />
+</Frame>
+
+3. Go to **Target ▸ Build Phases ▸ Link Binary With Libraries**:
+
+* Ensure `OMSDK_&lt;Namespace&gt;.xcframework` is linked.
+
+![008ecdc497099bdd598adf8029f7c343394607cbfbf643dc8d9d780580380d0e image](https://files.readme.io/008ecdc497099bdd598adf8029f7c343394607cbfbf643dc8d9d780580380d0e-image.png)
+
+***
+
+## Step 4. Add the OMID JS Library
+
+**Why**: The OMID service script is required by the native session to initialize measurement.
+
+1. In `OMSDK/Service`, find `omsdk-v1.js`. Add it to your app bundle in a directory of your choice (e.g., `Resources/OMID/`). You can load its content using:
+
+```text swift
+let omidServiceUrl = Bundle.main.url(forResource: "omsdk-v1", withExtension: "js")!
+```
+
+2. In the File Inspector, ensure `Target Membership` (panel) is enabled for your app target.
+
+![ead7bf9334fe2e67fd25ab25dcf68cee0c153fda9835142038ecdadc05a9d2b7 image](https://files.readme.io/ead7bf9334fe2e67fd25ab25dcf68cee0c153fda9835142038ecdadc05a9d2b7-image.png)
+
+***
+
+## Step 5. Update the OMID Session Interactor
+
+**Why**: Point the sample to your OM SDK and set partner metadata so events are attributed correctly.
+Inside Managers/`OMIDSessionInteractor.swift`, make the following changes:
+
+* Import module: replace `OMSDK_Criteo` with `OMSDK_&lt;Namespace&gt;`.
+* Types: replace every `OMIDCriteo` type with `OMID&lt;Namespace&gt;`.
+* Update the `partnerName` value to your organization name.
+
+***
+
+## Step 6. Activate OM SDK
+
+**Why**: OMID must be active before any ad session is created. Otherwise, session creation will fail.
+
+Call activation once, on app launch (in `AppDelegate`):
+
+```text swift
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+        CriteoLogger.info("🚀 OM-Demo starting up")
+
+        // Activate the OMID SDK at earliest convenience
+        OMIDSessionInteractor.activateOMSDK()
+
+        // Prefetch the OMID JS Library
+        // The hosted javascript should be periodically (automatically) updated to the latest version on the hosting server
+        // This step might not be needed if the consumed Ads are WebView based with server side OMID injection
+        OMIDSessionInteractor.prefetchOMIDSDK()
+
+        CriteoLogger.info("✅ App initialization complete", category: .general)
+
+        return true
+    }
+
+    // ...
+}
+```
+
+Congratulations! You are now ready to use Criteo’s video implementation with OMID.
+
+***
+
+# Integration Key Concepts and Code Snippets
+
+Short, descriptive snippets that explain behavior over boilerplate.
+
+## What you integrated
+
+* `CriteoVideoAdWrapper` (public API): Orchestrates VAST parsing, asset download, OMID-compliant measurement, beacon tracking, and video player lifecycle management.
+* `CriteoVideoPlayer` (internal): managed by the wrapper.
+* Managers (internal): `NetworkManager`, `VastManager`, `CreativeDownloader`, `OMIDSessionInteractor`, `BeaconManager`, `ClosedCaptionsManager`.
+
+## Single Video (UIKit)
+
+**Code Example:**
+`/OM-Demo/Examples Final/CriteoAdSingleVideoController_Sample.swift`
+
+**Pattern**
+
+* Create the wrapper early; optionally enable logs,
+* Begin playback on `onVideoLoaded`,
+* On exit, call `pauseAndDetach` and clear callbacks.
+
+```text swift
+private var videoAd: CriteoVideoAdWrapper?
+
+override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    let config = CriteoVideoAdConfiguration(autoLoad: true, startsMuted: true)
+    
+    let videoAd = CriteoVideoAdWrapper(
+        vastURL: "https://raw.githubusercontent.com/criteo/interview-ios/refs/heads/main/server/sample_vast_app.xml",
+        configuration: config
+    )
+
+    self.videoAd = videoAd
+
+    videoAd.enableLogs = [.ui, .omid, .vast, .video, .network, .beacon]
+    
+    videoAd.onVideoLoaded = { [weak self] in
+        self?.videoAd?.resumePlayback()
+    }
+    
+    // Do any additional setup after loading the view.
+    view.addSubview(videoAd)
+
+    videoAd.translatesAutoresizingMaskIntoConstraints = false
+
+    NSLayoutConstraint.activate([
+        videoAd.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+        videoAd.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        videoAd.widthAnchor.constraint(equalToConstant: 350),
+        videoAd.heightAnchor.constraint(equalToConstant: 197)
+    ])
+}
+```
+
+<br />

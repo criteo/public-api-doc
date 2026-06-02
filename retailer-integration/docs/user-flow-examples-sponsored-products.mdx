@@ -1,0 +1,141 @@
+---
+title: Sponsored Products
+description: This page features the user flow example for integrating Sponsored Products
+hidden: true
+---
+
+# Introduction
+
+This guide provides a complete example of a user flow for Sponsored Products, outlining each step of the process and specifying all required beacon events to be triggered at the appropriate moments.
+
+<Info>
+  For a comprehensive overview of the Retail Media integration flow, please visit [this page](/retailer-integration/docs/overview#integration-flow). For detailed information about the Sponsored Products format type, you can refer to the [Sponsored Products Documentation.](/retailer-integration/docs/sponsored-products)
+</Info>
+
+<Warning>
+  **Universal Beacons**
+
+  We strongly recommend using Universal Beacons for any new integrations (the video below showcases standard beacons). Please refer to [this page](/retailer-integration/docs/universal-beacons) for more details on Universal Beacons and how to transition from standard beacons.
+</Warning>
+
+***
+
+# User flow example
+
+[Embedded content](https://www.youtube.com/watch?v=mt-ct0PF-4Q)
+
+***
+
+# Homepage
+
+## Step 1. The page load
+
+When a page featuring a Criteo ad loads, the first thing to do is send an ad call to Criteo. This is a request for us to send back the ads that will be displayed.
+
+Once the ad response arrives, it’s time to fire the`onLoad` beacons. These are the key tracking signals sent for both the SKU and placement levels, ensuring everything is properly logged.
+
+To make this easier, make sure to watch the video above, it walks you through this step visually and shows exactly how it all works together.
+
+<Info>
+  For more details about how ad calls work, you can refer to this page on [API ad calls](/retailer-integration/docs/api-calls) and [this one about the parameter details](/retailer-integration/docs/api-parameters-1). If you’d like a closer look at beacons, you can also visit [this page about beacon types](/retailer-integration/docs/beacon-types).
+</Info>
+
+***
+
+## Step 2. The Sponsored Products placement appears in the viewport
+
+When the Sponsored Products placement enters the user’s viewport, it’s time to fire the `onView` beacons. These beacons should be triggered at both the format level and the SKU level for the products currently visible in the viewport.
+
+To ensure everything meets the viewability criteria, make sure at least 50% of the ad format is visible in the viewport for at least one second. This step is essential for accurate tracking and reporting.
+
+***
+
+## Step 3. The user scrolls through the placement, revealing more products
+
+As the user interacts with the placement and scrolls through the products, it’s time to fire the `onView` beacons again. Be sure to trigger these at the SKU level for any new products that appear in the viewport, and ensure that each `onView` beacon is only fired once, even if the product leaves and re-enters the viewport.
+
+Watching the video can be especially helpful here—it illustrates exactly how to handle beacon triggers during user interactions with the placement!
+
+***
+
+## Step 4. The user clicks on a product
+
+When a user clicks on a Sponsored Product, it’s time to fire the `onClick` beacon at the SKU level. This beacon captures the interaction and ensures accurate tracking and billing. Afterward, redirect the user to the product detail page for a smooth browsing experience.
+
+***
+
+# Product detail page
+
+## Step 5. The user lands on the product detail page
+
+When a user visits a product detail page (PDP), an ad call must always be fired, even if there are no Criteo ad formats present on the page. This ensures tracking continuity, improvement to Criteo's keyword model, and accurate attribution.
+
+<Info>
+  Learn more about how to implement this in the [product details page documentation](/retailer-integration/docs/product-details-page).
+</Info>
+
+***
+
+## Step 6. The user clicks on the category link to explore similar products
+
+If the user navigates to a category page with Criteo ad formats, simply follow the same steps outlined earlier. This includes firing the appropriate beacons (`onLoad`, `onView`, `onClick`, etc.) based on the ad activity and user interactions on that page.
+
+Watching the video can help clarify how these steps tie together across different page types.
+
+***
+
+# Search/Browse page
+
+## Step 7. The user adds one of the sponsored products to their basket
+
+When a user adds a Sponsored Product to their basket directly from the product tile, it’s important to fire the `OnBasketChangeBeacon` for that specific SKU. This ensures the action is tracked accurately for reporting and attribution.
+
+***
+
+## Step 8. The user adds one of the sponsored products to their wishlist
+
+When a user adds a Sponsored Product to their wishlist, make sure to fire the `OnWishlistBeacon` for the specific SKU. This ensures the action is properly tracked for reporting and analytics.
+
+***
+
+## Step 9. The user clicks on the basket icon to move forward with their purchase
+
+This leads to the basket page (see next step).
+
+***
+
+# Basket page
+
+## Step 10. The user proceeds with the purchase
+
+On the basket page, send an ad call to Criteo to fetch recommended products tailored to the cart contents. This step ensures personalized recommendations that enhance the user experience. If no Criteo ad formats are present on the basket page, this step can be skipped.
+
+<Info>
+  Learn more about how to implement this in [the basket page documentation](/retailer-integration/docs/cart-page).
+</Info>
+
+***
+
+# **Order confirmation page**
+
+## Step 11. User’s purchase is successful
+
+When the user completes their purchase, it’s important to send the `trackTransaction` API call to Criteo.
+
+This API call must be sent for every organic sale event to ensure accurate tracking and proper attribution. This step is mandatory and plays a vital role in reporting on campaign performance.
+
+<Info>
+  Learn more about how to implement this in [the order confirmation page documentation](/retailer-integration/docs/order-confirmation-page).
+</Info>
+
+***
+
+And there you have it—a complete walkthrough of the Sponsored Products user flow! By following these steps and ensuring the proper beacons and ad calls are fired, you’ll enable accurate tracking, seamless user experiences, and insightful campaign reporting. For further guidance, don’t forget to revisit the video or explore the linked documentation.
+## What's next
+
+* [API calls](/retailer-integration/docs/api-calls)
+* [API parameters](/retailer-integration/docs/api-parameters-1)
+* [Beacon types](/retailer-integration/docs/beacon-types)
+* [Product details page](/retailer-integration/docs/product-details-page)
+* [Basket page](/retailer-integration/docs/cart-page)
+* [Order confirmation page](/retailer-integration/docs/order-confirmation-page)

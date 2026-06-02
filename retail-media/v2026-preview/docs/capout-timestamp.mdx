@@ -1,0 +1,220 @@
+---
+title: Capout Timestamp
+---
+
+## Introduction
+
+This endpoint provides programmatic access to the budget exhaustion history (“Budget Hit” events) of line items over the past 3 days.
+
+This feature mirrors functionality already available in the CMax and CYield UI, enabling partners to retrieve precise timestamps indicating when a line item’s budget was fully consumed on a given day.
+
+This insight is particularly valuable for diagnosing pacing issues, identifying over-delivery patterns, or validating campaign strategy effectiveness.
+
+<Warning>
+  This content is available in preview only.
+</Warning>
+
+***
+
+## Endpoints
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/line-items/cap-out-history</code></td>
+      <td>Retrieves the historical records of when line items reached their budget cap (<code>Budget Hit</code>) status within the last 3 days.</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+## Attributes table
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>lineItemIds</code></td>
+      <td><code>list</code></td>
+      <td>List of auction line item IDs, generated internally by Criteo. Up to 50 line items can be accepted per request.<br />Acceptable values: list of strings/int64<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>budgetTypes</code></td>
+      <td><code>list</code></td>
+      <td>This allows for the user to describe the way in which they want to receive capout data for the requested line item(s).<br />Accepted values: list of possible budget types below (case-insensitive) or empty list<br /><code>Total</code>: for the total capout for the life of the line item<br /><code>Hourly</code>: for the capout of display line items. This is not eligible for Sponsored Products.<br /><code>Daily</code>: for the capout of Sponsored Products line items. The most recent 3 days when the line item capped out will be presented in the response.<br /><code>Monthly</code>: for the capout of Sponsored Products line items. The most recent 3 months when the line item capped out will be presented in the response.<br />Writeable? N / Nullable? N</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  **Field Definitions**
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+<Warning>
+  **`budgetTypes` behavior** This endpoint supports multiple `budgetTypes` in a single request (e.g., "daily", "lifetime"). For each requested type, if eligible cap-out data exists, it will be returned in the response. If no data is available for a given budget type or line item within the 3-day window, the response will simply exclude that entry, resulting in a partial or empty result.
+</Warning>
+
+***
+
+## Retrieve Capout History Timestamp
+
+This endpoint provides programmatic access to the budget exhaustion history (“Budget Hit” events) of line items over the past 3 days.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/line-items/cap-out-history
+```
+
+<Warning>
+  **Authorization Required** To access this endpoint, the requesting API application must be granted the `campaign.manage` scope.
+</Warning>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST "https://api.criteo.com/preview/retail-media/accounts/625702934721171442/line-items/cap-out-history" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{
+            "data": {
+                "type": "LineItemCapoutHistory",
+                "attributes": {
+                    "lineItemIds": ["12345"],
+                    "budgetTypes": ["Daily"]
+                }
+            }
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/preview/retail-media/accounts/625702934721171442/line-items/cap-out-history"
+
+payload = json.dumps({
+    "data": {
+        "type": "LineItemCapoutHistory",
+        "attributes": {
+            "lineItemIds": ["12345"],
+            "budgetTypes": ["Daily"]
+        }
+    }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.post(url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, 
+    "{\"data\":{\"type\":\"LineItemCapoutHistory\",\"attributes\":{\"lineItemIds\":[\"12345\"],\"budgetTypes\":[\"Daily\"]}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/line-items/cap-out-history")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/line-items/cap-out-history');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{"data":{"type":"LineItemCapoutHistory","attributes":{"lineItemIds":["12345"],"budgetTypes":["Daily"]}}}');
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "LineItemBudgetCapOutHistoryResponse",
+        "attributes": {
+            "lineItemBudgetCapOutHistories": [
+                {
+                    "lineItemId": "12345",
+                    "capoutTimes": {
+                        "Daily": [
+                            "2025-06-13T17:28:13+00:00",
+                            "2025-06-12T17:52:24+00:00",
+                            "2025-06-11T15:49:44+00:00"
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+<br />

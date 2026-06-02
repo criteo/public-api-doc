@@ -1,12 +1,10 @@
 ---
-title: "Overview"
+title: Troubleshooting Guide
 ---
-
-1. API troubleshooting
 
 ## Introduction
 
-This guide covers basic checks to identify the source of errors, common issue types, and data latency/discrepancy considerations. If the issue cannot be resolved after these steps, please see our [Escalation Guidelines](https://developers.criteo.com/retail-media/docs/escalation-guidelines).
+This guide covers basic checks to identify the source of errors, common issue types, and data latency/discrepancy considerations. If the issue cannot be resolved after these steps, please see our [Escalation Guidelines](/retail-media/docs/escalation-guidelines).
 
 ***
 
@@ -24,30 +22,39 @@ Requests failing at the origin or blocked by the firewall configurations are sur
 
 Here are the Criteo subnetworks to be whitelisted by region:
 
-| EMEA                                                                        | APAC                                                                | Americas                                      |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------- |
-| 178.250.0.0/21 185.235.84.0/22 91.212.98.0/24 91.199.242.0/242a02:2638::/32 | 74.119.116.0/22 199.204.168.0/22 177.73.128.0/212620: 100:a000::/44 | 116.213.20.0/22 182.161.72.0/222406:2600::/32 |
+<table>
+  <thead>
+    <tr>
+      <th>EMEA</th>
+      <th>APAC</th>
+      <th>Americas</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>178.250.0.0/21<br />185.235.84.0/22<br />91.212.98.0/24<br />91.199.242.0/24<br />2a02:2638::/32</td>
+      <td>74.119.116.0/22<br />199.204.168.0/22<br />177.73.128.0/21<br />2620: 100:a000::/44</td>
+      <td>116.213.20.0/22<br />182.161.72.0/22<br />2406:2600::/32</td>
+    </tr>
+  </tbody>
+</table>
 
-<Check>
-  ### Tip
-
-  For best results, our recommendation is to **whitelist the ranges for all DCs** even if your server is located only in one of the regions.
-</Check>
+> 👍 Tip
+>
+> For best results, our recommendation is to **whitelist the ranges for all DCs** even if your server is located only in one of the regions.
 
 In some cases, connectivity issues can arise when persistent `HTTP/2` connection's termination command is either not issued properly by the server, or not correctly processed by the client. Typically, this results in a time-out from the endpoint. In such cases, turning off the `keep-alive` property of a connection may help.
 
 Here is an example for Python:
 
-<CodeGroup>
-  ```bash bash
-  s=requests.session(), 
-  s.keep_alive = False; 
-  ....
-  /// add a parameter into requests: 
-  headers={'Connection':'close'}, req=requests(url, headers)
-  ...
-  ```
-</CodeGroup>
+```python
+s=requests.session(), 
+s.keep_alive = False; 
+....
+/// add a parameter into requests: 
+headers={'Connection':'close'}, req=requests(url, headers)
+...
+```
 
 ***
 
@@ -67,7 +74,7 @@ Transient issues can be resolved by properly implemented retry mechanisms, such 
 
 Usually, if the advertiser hasn't given a consent to your app, you will get an error in `4xx` range.
 
-In order to perform a quick check whether an advertiser has given consent to the app, you can query the `[/retail-media/accounts](https://developers.criteo.com/retail-media/docs/accounts-endpoints)` and see if it returns the advertiser ID that you expected.
+In order to perform a quick check whether an advertiser has given consent to the app, you can query the `[/retail-media/accounts](/retail-media/docs/accounts-endpoints)` and see if it returns the advertiser ID that you expected.
 
 ***
 
@@ -79,31 +86,29 @@ If you are using variables or path parameters with your request, this would requ
 
 To get more details on the next steps, you can turn on `verbose output` of your application.
 
-Here is how to turn the debug mode on for the Python3 *requests* library:
+Here is how to turn the debug mode on for the Python3 _requests_ library:
 
-<CodeGroup>
-  ```bash bash
-  import requests
-  import logging
+```python
+import requests
+import logging
 
-  # Enabling debugging at http.client level (requests->urllib3->http.client)
-  # you will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
-  # the only thing missing will be the response.body which is not logged.
-  try: # for Python 3
-      from http.client import HTTPConnection
-  except ImportError:
-      from httplib import HTTPConnection
-  HTTPConnection.debuglevel = 1
+# Enabling debugging at http.client level (requests->urllib3->http.client)
+# you will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
+# the only thing missing will be the response.body which is not logged.
+try: # for Python 3
+    from http.client import HTTPConnection
+except ImportError:
+    from httplib import HTTPConnection
+HTTPConnection.debuglevel = 1
 
-  logging.basicConfig() # you need to initialize logging, otherwise you will not see anything from requests
-  logging.getLogger().setLevel(logging.DEBUG)
-  requests_log = logging.getLogger("urllib3")
-  requests_log.setLevel(logging.DEBUG)
-  requests_log.propagate = True
+logging.basicConfig() # you need to initialize logging, otherwise you will not see anything from requests
+logging.getLogger().setLevel(logging.DEBUG)
+requests_log = logging.getLogger("urllib3")
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
 
-  requests.get('https://httpbin.org/headers')
-  ```
-</CodeGroup>
+requests.get('https://httpbin.org/headers')
+```
 
 See the next section to understand which additional information is helpful when submitting an investigation request to Criteo.
 
@@ -139,7 +144,7 @@ Data latency can also be mistaken for causing issues. Some metrics may have seve
   * **Onsite activity data** is typically available within **6–8 hours** of the event.
   * **Offsite activity data** is typically available within **24 hours** of the event.
   * **Initial attribution data** is available within **7–9 hours** of the sale.
-  * **Final attribution data** is processed and posted within **74 hours** after the sale.
+  * **Final attribution data** is processed and posted within **74 hours** after the sale.  
   * Please note that potential minor updates can occur up to **120 hours** before finalization
 </Info>
 
@@ -167,7 +172,7 @@ Aligning the timezones and the date ranges in the API request body and the platf
 
 ### Attribution scope
 
-The naming pattern provided on [the metrics page](https://developers.criteo.com/retail-media/docs/metrics-and-dimensions) will help you understand how you're comparing the data in different systems. Ask yourself:
+The naming pattern provided on [the metrics page](/retail-media/docs/metrics-and-dimensions) will help you understand how you're comparing the data in different systems. Ask yourself:
 
 * `[Devices]`: Am I comparing cross-device sales or same-device sales?
 * `[AttributionModel]`: Am I comparing custom attribution sales or default attribution sales?
@@ -186,10 +191,7 @@ Due to the specifics of the billing mechanism, the cost data for the day immedia
 ### Compliance
 
 In some cases, the metrics could be updated several days after a click occurs. For example, this can happen after removing IVT (invalid traffic).
-
-***
-
-What’s Next
+## What's next
 
 * [Escalation Guidelines](/retail-media/v2025.10/docs/escalation-guidelines)
 * [API Error Codes](/retail-media/v2025.10/docs/api-error-codes)

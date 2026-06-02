@@ -1,0 +1,153 @@
+---
+title: Macros & mapping
+hidden: true
+---
+
+***
+
+# Criteo Standalone JS tag
+
+A new third party creative will be created in GAM that embodies the call to Criteo Delivery. The body of the creative is a `<script/>` tag whose source is a call to the `delivery/v1/rmgam` endpoint. 
+
+Some of the parameters of this call will be hard-coded as they are specific to the Retailer, while others may be mapped from parameters supplied from GPT. 
+
+The Criteo Standalone JS Tag follows this structure: 
+
+```javascript
+<script async src="https://d.us.criteo.com/delivery/v1/rmgam?criteo-partner-id=ASK_CRITEO&retailer-visitor-id=%%PATTERN:TO_BE_REPLACED%%&page-id=%%PATTERN:TO_BE_REPLACED%%&placement-id=%%PATTERN: TO_BE_REPLACED%%&context=%%PATTERN:TO_BE_REPLACED%%&cb=%%CACHEBUSTER%%></script>
+```
+
+<Info>
+  Please contact your Criteo Technical Account Manager to ensure the above Criteo JS Standalone tag is correctly configured.
+</Info>
+
+***
+
+## Example
+
+Let’s assume GPT is configured with the following targeting: (this step should be already implemented)(see [this page](https://developers.google.com/publisher-tag/guides/key-value-targeting) for more assistance).
+
+```javascript
+.setTargeting("rvid","TUoQPO58Wkr1dIYn234Eao")        // RETAILER VISITOR ID = TUoQPO58Wkr1dIYn234Eao 
+
+.setTargeting("kwd","laptop")                         // KEYWORD = laptop 
+
+.setTargeting("pa","viewSearchResult_API_desktop")    // PAGE ID = viewSearchResult_API_desktop 
+
+.setTargeting("pl","InGrid")                          // PLACEMENT ID = InGrid
+```
+
+This targeting can be easily seen by using the Chrome inspector tool via the “Network tab” and looking at 2 payload parameters. To identify those 2 potential parameters in the GAM call, you can look for: `cust_params` (page level) and/or `prev_scp` (slot level). 
+
+Those 2 parameters will carry all the relevant parameters that the Criteo Standalone tag needs. 
+
+Both `cust_params` (page level) and/or `prev_scp` (slot level) are going to be passed to the GAM AdServer and any information inside will be accessible via a macro.
+
+Those parameters should be used to replace all the part in the Criteo Standalone JS Tag in red:` TO_BE_REPLACED`. 
+
+Here is a concrete example to map the macros inside the Criteo Standalone tag from the parameters supplied by GPT: 
+
+```javascript
+<script async src="https://d.us.criteo.com/delivery/v1/rmgam?criteo-partner-id=1234567&retailer-visitor-id=%%PATTERN:rvid%%&page-id=%%PATTERN:pa%%&placement-id=%%PATTERN:pl%%&context=%%PATTERN:kwd%%&cb=%%CACHEBUSTER%%></script>
+```
+
+In this example, parameters to the RM Delivery request are populated as follows: 
+
+* The `criteo-partner-id` is hard-coded to be 1234567. This value is unique to each Retailer and is provided by Criteo. 
+* The `retailer-visitor-id` is being populated by a macro: `%%PATTERN:rvid%%` 
+* The `context` is being populated by a macro: `%%PATTERN:kwd%% `
+* The `page-id` is being populated by a macro: `%%PATTERN:pa%% `
+* The `placement-id` is being populated by a macro: `%%PATTERN:pl%% `
+* `&cb=%%CACHEBUSTER%%` is just a macro that expands to a random number to prevent caching
+
+After GAM substitution, the Criteo Standalone tag will look like the following: 
+
+```javascript
+<script async src="https://d.us.criteo.com/delivery/v1/rmgam?criteo-partner-id=1234567&retailer-visitor-id=TUoQPO58Wkr1dIYn234Eao&page-id=viewSearchResult_API_desktop&placement-id=InGrid&context=laptop&cb=8564439949494></script>
+```
+
+<Info>
+  Note that `criteo-partner-id`, `page-id`, and `placement-id` are supply-side concepts that are specific to the inventory where this creative will serve and will be provided by Criteo, while `retailer-visitor-id` and `context` are request-specific concepts.
+</Info>
+
+`criteo-partner-id` can be hard-coded because this creative will only ever serve on a specific retailer but using Macros for `page-id` and `placement-id` allows the creative to serve on multiple ad units. 
+
+We could also allocate one creative per page or ad unit and hard-code those values in the creative, omitting their macros. We would still need the macros for `retailer-visitor-id` and context because they vary by request. 
+
+<Note>
+  ### How these `%%PATTERN%%` macros are replaced is covered in [the GPT Modification section](https://support.google.com/admanager/answer/2376981?hl=en\&sjid=7302525207740625640-NC) (Ad manager Google support).
+</Note>
+
+***
+
+## Query parameters
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Type</th>
+      <th>Example(s)</th>
+      <th>Description</th>
+      <th>Required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>criteo-partner-id</code></td>
+      <td><strong>int</strong></td>
+      <td><code>1234567</code></td>
+      <td>The key that corresponds with your specific partner ID within Criteo</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>retailer-visitor-id</code></td>
+      <td><strong>string</strong></td>
+      <td><code>TUoQPO58Wkr1dIYn234Eao</code></td>
+      <td>A unique UserID that is persistent across sessions on the same device.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>page-id</code></td>
+      <td><strong>string</strong></td>
+      <td><code>viewCategoryApiDesktop</code></td>
+      <td>The page name as exposed in the Criteo configuration. Please reach out to your Technical Account Manager to set up if needed.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>placement-id</code></td>
+      <td><strong>string</strong></td>
+      <td><code>InGrid</code></td>
+      <td>The placement name as exposed in the Criteo configuration. Please reach out to your Technical Account Manager to set up if needed.</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><code>context</code></td>
+      <td><strong>string</strong></td>
+      <td><code>quick dry shorts, Grocery &amp; Beverages&gt;Beverages&gt;Soda, 1000068949</code></td>
+      <td>Contextual data that can be any of: A keyword, A category, A SKU ID. Delivery will use the page type to determine how to use this context data to look up ads.</td>
+      <td>Required for all page types except <code>homepage</code></td>
+    </tr>
+    <tr>
+      <td><code>gdpr</code></td>
+      <td><strong>string</strong></td>
+      <td><code>1, 2</code></td>
+      <td>Indicates if GDPR applies to this user. (1: yes, the user is in Europe and GDPR applies; 2: no, the user is outside Europe).</td>
+      <td>Yes, if using TCFv2 standard</td>
+    </tr>
+    <tr>
+      <td><code>gdpr&#95;consent</code></td>
+      <td><strong>string</strong></td>
+      <td><code>CAGgAagBEADEAIQAfoB   AwCEAFXALqAYEAwgBtA   EegJiAXmAyQAA.IGSQJwA   BAALAAeEAE6ALgAY4A0A   B-gEDAIQIA2gCPQEvAJiA   T-AZAZI</code></td>
+      <td>The encoded TCFv2 consent string.</td>
+      <td>Yes, if using TCFv2 standard</td>
+    </tr>
+    <tr>
+      <td><code>block</code></td>
+      <td><strong>bit</strong></td>
+      <td><code>1, 0</code></td>
+      <td>Value '1' is for opt-out users. (Value '0' can also be passed for opt-in users.)</td>
+      <td>No, only when the user is opt-out and not using the TCFv2 standard</td>
+    </tr>
+  </tbody>
+</table>

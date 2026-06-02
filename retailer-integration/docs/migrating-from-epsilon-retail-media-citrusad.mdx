@@ -1,0 +1,603 @@
+---
+title: Migrating from Epsilon Retail Media (CitrusAd)
+hidden: true
+---
+
+# Migration Summary
+
+* Same flow end-to-end: **request ads → show them → track → report sales**.
+* Main shift: **placement-based requests (CitrusAd)** → **page/context-based requests (Criteo)**.
+* Catalog work: **remap product IDs + required fields** to Criteo’s feed rules.
+* Rendering: **render by placement returned in the response**, not by what you requested.
+* Measurement: **tracking endpoints (CitrusAd)** → **beacons in the response (Criteo)**.
+* Sales: **send a `trackTransaction` on confirmation** with **all order items**.
+* Reuse: **your pages/placements and taxonomy mostly carry over**; update the wiring + mappings.
+* Retailer effort: **integration plumbing**; platform handles **ad selection + attribution**.
+
+***
+
+# Module Migration Index
+
+* [Catalog](#catalog)
+* [Ad Request](#ad-request)
+* [Ad Response / Rendering](#ad-response--rendering)
+* [Ad Tracking](#tracking)
+* [Sales Tracking](#sales-tracking)
+
+***
+
+## Catalog
+
+**What CitrusAd does today**
+
+CitrusAd expects you to create/sync a catalog and products where each product is identified by `gtin`, enriched with `filters`, and includes `tags` such as `imageurl:` and `name:`. Inventory can be provided (or omitted, defaulting to 1), and products are synced into a specific `catalogId`.
+
+**What Criteo's Retail Media expects**
+
+Criteo expects a product feed with mandatory fields (e.g., `id`, `title`, `description`, `link`, `image_link`, `price`, `availability`, and others) that **must match the identifiers you will later send in API requests**. Product IDs must be stable, unique, and consistent to preserve attribution and reporting.
+
+**What changes for you as a retailer**
+
+<table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>CitrusAd</th>
+      <th>Criteo's Retail Media</th>
+      <th>Retailer impact</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Primary product identifier</td>
+      <td><code>gtin</code> (max 50 chars)</td>
+      <td><code>id</code> (must match API requests; stable/consistent)</td>
+      <td>Define/confirm the canonical SKU key to use as Criteo <code>id</code> and ensure it aligns with what your pages can send in requests</td>
+      <td>Criteo explicitly warns ID changes break attribution/reporting; CitrusAd also uses <code>gtin</code> as product code</td>
+    </tr>
+    <tr>
+      <td>Product metadata shape</td>
+      <td><code>tags</code> contains <code>imageurl:</code> and <code>name:</code></td>
+      <td>Separate mandatory fields like <code>title</code>, <code>description</code>, <code>image&#95;link</code>, <code>link</code></td>
+      <td>Split CitrusAd tag payload into Criteo feed fields (title, image URL, PDP URL, etc.)</td>
+      <td>Direct 1:1 mapping is not explicit; you must map from what you already have in your catalog</td>
+    </tr>
+    <tr>
+      <td>Category/taxonomy</td>
+      <td><code>filters</code> contains category strings (and other dimensions)</td>
+      <td>Feed includes <code>product&#95;type</code> / <code>product&#95;type&#95;key</code> (required)</td>
+      <td>Map your category taxonomy into Criteo product type fields as required</td>
+      <td>Exact taxonomy rules beyond “required fields” are “Not explicitly documented in the provided guides”</td>
+    </tr>
+    <tr>
+      <td>Availability / inventory</td>
+      <td><code>inventory</code> required but can be omitted to default to 1</td>
+      <td><code>availability</code> required; <code>price</code> required; (inventory field not described here)</td>
+      <td>Replace “inventory-driven serving control” with Criteo-required availability field population and keep it accurate</td>
+      <td>Inventory semantics vs availability are not explicitly equated in the guides</td>
+    </tr>
+    <tr>
+      <td>Filter facets</td>
+      <td><code>filters</code> supports multiple dimensions (category, brand, location, flags)</td>
+      <td>Feed supports filters and onsite filtering references</td>
+      <td>Ensure any onsite filters you need are provided in the feed in Criteo’s expected fields</td>
+      <td>Criteo references “filters in the product catalog” and applying them dynamically</td>
+    </tr>
+    <tr>
+      <td>Marketplace sellers</td>
+      <td><code>sellerId</code> optional</td>
+      <td><code>seller&#95;id</code> is referenced as a constraint (cannot match <code>id</code>)</td>
+      <td>If you use seller concepts, confirm unique/consistent seller IDs distinct from product IDs</td>
+      <td>Details depend on your marketplace needs</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  **Terminology mapping:**
+
+  * CitrusAd `gtin` → Criteo `id` (for request/response matching)
+  * CitrusAd `filters` → Criteo product classification/filter fields (exact mapping depends on your feed design).
+</Info>
+
+**Minimum viable implementation (retailer work)**
+
+* Choose the **single product identifier** you will use as Criteo `id` and ensure it is stable over time.
+* Map CitrusAd product data into Criteo mandatory feed fields (at minimum: `id`, `title`, `description`, `link`, `image_link`, `price`, `availability`, and required product classification fields).
+* Ensure your onsite pages can reference the same SKU IDs you send in the feed (so request parameters and transaction reporting match ingestion).
+* Populate product classification consistently (your category taxonomy → Criteo required product type fields).
+* Validate that availability/pricing fields match what shoppers see (avoid mismatch between feed and onsite).
+* If you support seller/marketplace, ensure product IDs and seller IDs are distinct and consistent.
+
+**Validation checklist**
+
+* [ ] Every product has a stable, unique identifier (Criteo `id`) and it matches what the site can send in requests.
+* [ ] Mandatory Criteo feed fields are present and non-empty (ingestion-blocking fields are populated).
+* [ ] Your taxonomy/category mapping is consistent across the whole feed (no mixed conventions).
+* [ ] PDP URLs and image URLs resolve correctly for a representative product set.
+* [ ] Availability and price values match what is shown to shoppers.
+* [ ] The same SKU IDs appear consistently across feed, ad responses, and sales tracking payloads.
+
+**Common pitfalls**
+
+* Using a different identifier in the feed than what your frontend/backend can send later (leads to missing matches and broken attribution).
+* Changing product IDs over time (explicitly called out as breaking attribution/reporting in Criteo docs).
+* Keeping CitrusAd-style `tags` without translating them into required Criteo fields (missing `title`, `image_link`, etc.).
+* Inconsistent category strings when mapping to required product classification fields (campaign setup and filtering become unreliable).
+
+**Pointers to the documentation**
+
+* CitrusAd: [Catalog products reference](https://developers.citrusad.com/integration/reference/catalog-products-reference)
+* CitrusAd: [Catalog & Products](https://developers.citrusad.com/integration/reference/catalog-products-2)
+* Criteo: [Feed & Product Data](/retailer-integration/docs/feed-product-data)
+* Criteo: [Product Feed Parameters](/retailer-integration/docs/product-feed-parameters)
+* Criteo: [Feed Best Practices](/retailer-integration/docs/feed-best-practices)
+
+***
+
+## Ad Request
+
+**What CitrusAd does today**
+
+CitrusAd ad generation requests are made to `/v1/ads/generate` and require `placement`, `catalogId`, and `maxNumberOfAds`, plus session attribution fields like `sessionId` (and `customerId` when available). Context is passed per placement (e.g., `searchTerm` for search, `productFilters` for category).
+
+**What Criteo's Retail Media expects**
+
+Criteo ad requests are GET calls to `/delivery/retailmedia` with global parameters (e.g., `criteo-partner-id`, `retailer-visitor-id`, `page-id`) and page/event-specific parameters. The request identifies a **page type via `page-id`** and returns placements configured for that page (placement selection is not requested the same way as CitrusAd’s `placement`).
+
+**What changes for you as a retailer**
+
+<table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>CitrusAd</th>
+      <th>Criteo's Retail Media</th>
+      <th>Retailer impact</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Request routing model</td>
+      <td>Explicit <code>placement</code> in body (<code>search</code>, <code>category</code>, etc.)</td>
+      <td><code>page-id</code> + event/page parameters; response contains placements</td>
+      <td>Rework request builder: send page context via <code>page-id</code> and page-specific params; stop treating ad calls as “one placement per request”</td>
+      <td>Criteo response includes “placements” array keyed by placement IDs</td>
+    </tr>
+    <tr>
+      <td>Transport + endpoint</td>
+      <td>POST <code>/v1/ads/generate</code> (JSON body)</td>
+      <td>GET <code>/delivery/retailmedia</code> (query parameters)</td>
+      <td>Update integration to build query-string requests and handle caching/edge constraints accordingly</td>
+      <td>Endpoint structure and parameters are documented in Criteo “API Calls” and “API Parameters”</td>
+    </tr>
+    <tr>
+      <td>Shopper identity</td>
+      <td><code>customerId</code> optional; <code>sessionId</code> required for attribution</td>
+      <td><code>retailer-visitor-id</code> required; <code>customer-id</code> required when logged-in</td>
+      <td>Implement/ensure generation and persistence of <code>retailer-visitor-id</code>; include <code>customer-id</code> conditionally when logged in</td>
+      <td>Requiredness differs materially; Criteo emphasizes persistence requirements</td>
+    </tr>
+    <tr>
+      <td>Search context</td>
+      <td><code>searchTerm</code></td>
+      <td>Not explicitly documented in the provided guides</td>
+      <td><strong>Inference:</strong> map search page context to the page-type-specific parameters in Criteo’s search page documentation</td>
+      <td><strong>Assumption:</strong> Criteo has a “Search” page type with its own parameters; confirm by locating the relevant page-type doc in the Criteo guide</td>
+    </tr>
+    <tr>
+      <td>Category context</td>
+      <td><code>productFilters</code> arrays with category strings</td>
+      <td>Not explicitly documented in the provided guides (outside feed/filtering references)</td>
+      <td><strong>Inference:</strong> map your category identifier(s) to the category-page parameters in Criteo page docs</td>
+      <td>Confirm by Criteo “Category page” documentation (page-type parameters)</td>
+    </tr>
+    <tr>
+      <td>Response detail control</td>
+      <td>Not described as a “verbosity” toggle</td>
+      <td><code>verbosity</code> parameter exists; affects product array detail</td>
+      <td>Decide whether to request minimum or full verbosity and ensure rendering/tracking logic supports the chosen level</td>
+      <td>Verbosity is explicitly documented in Criteo API Parameters + API Responses</td>
+    </tr>
+    <tr>
+      <td>Placement selection</td>
+      <td>Retailer chooses placement name (<code>placement</code>)</td>
+      <td>Criteo uses <code>page-id</code> and returns configured placements</td>
+      <td>Align your onsite placement configuration with Criteo-provided placement IDs and render by placement key</td>
+      <td>You must be able to render multiple placements returned for a page</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  **Terminology mapping:**
+
+  * CitrusAd `placement` → Criteo placement entries returned under `placements` for a given `page-id`.
+</Info>
+
+**When something is not explicitly documented in the provided guides (examples):**
+
+* “Search page parameters in Criteo” or “Category page parameters in Criteo” are **not explicitly documented in the provided excerpts above**.
+  * **Inference-based approach:** locate the relevant Criteo page-type documentation (e.g., “Search results page”, “Category page”) and build a mapping of required query parameters to your existing CitrusAd `searchTerm` / `productFilters`.
+  * **Assumptions:** Criteo provides page-type docs for key onsite pages; these define required query parameters for each page context.
+  * **What would confirm/deny:** the presence (or absence) of those page-type docs and parameter lists in the Criteo guide (e.g., headings like “Search Results Page”, “Category Page”, with a “Parameters” section).
+
+**Minimum viable implementation (retailer work)**
+
+* Implement Criteo request construction for `/delivery/retailmedia` including required global parameters.
+* Generate and persist a `retailer-visitor-id` and pass it on every request.
+* Pass `customer-id` only when the user is authenticated (leave empty otherwise).
+* Use the correct `page-id` values for each page type you integrate (as provided by Criteo).
+* For each page type, populate the required page-specific parameters (per Criteo page documentation).
+* Decide and standardize on a `verbosity` level and ensure your renderer supports it.
+* Update your ad-call abstraction to handle multiple placements in one response.
+
+**Validation checklist**
+
+* [ ] Requests include `criteo-partner-id`, `retailer-visitor-id`, and `page-id` as required.
+* [ ] Logged-in sessions include `customer-id`; logged-out sessions do not.
+* [ ] Each page type sends the correct page-specific parameters (per Criteo docs).
+* [ ] Response handling supports multiple placements returned for a single page request.
+* [ ] You can switch `verbosity` safely without breaking rendering/tracking.
+* [ ] SKU identifiers used in requests/transactions match the feed’s product IDs.
+
+**Common pitfalls**
+
+* Treating Criteo calls like CitrusAd calls (one “placement” per request) and ignoring placement keys returned in the response (ads “disappear” because nothing renders).
+* Missing or non-persistent `retailer-visitor-id` (degraded attribution; inconsistent behavior across sessions).
+* Sending `customer-id` incorrectly (e.g., always empty even when logged in).
+* Using the wrong `page-id` for a page type (placements not returned, or wrong formats returned).
+* Not aligning SKU IDs across feed ↔ requests ↔ transactions (breaks matching and reporting).
+
+**Pointers to the documentation**
+
+* CitrusAd: [Generate product and banner ads](https://developers.citrusad.com/integration/reference/generate)
+* CitrusAd: [Requesting product ads](https://developers.citrusad.com/integration/reference/requesting-product-ads-1)
+* Criteo: [API Calls](/retailer-integration/docs/api-calls)
+* Criteo: [API Parameters](/retailer-integration/docs/api-parameters-1)
+* Criteo: [Ad Request Best Practices](/retailer-integration/docs/ad-request-best-practices) _(as titled in the guide export)_
+
+***
+
+## Ad Response / Rendering
+
+**What CitrusAd does today**
+
+CitrusAd returns an `ads` array from `/v1/ads/generate`, where each ad includes fields such as `id`, `gtin`, `position`, and optional objects like `discount` and `metadata`. The retailer renders the sponsored products/creatives into the requested placement and uses returned identifiers for downstream tracking.
+
+**What Criteo's Retail Media expects**
+
+Criteo returns a JSON response containing `placements`, each containing formats (e.g., sponsored products) and associated products, plus beacon URLs used for tracking. Retailers must render by placement and format, and wire the returned beacons as required for tracking and measurement.
+
+**What changes for you as a retailer**
+
+<table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>CitrusAd</th>
+      <th>Criteo's Retail Media</th>
+      <th>Retailer impact</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Response top-level structure</td>
+      <td><code>ads: [...]</code> (flat list)</td>
+      <td><code>placements: [...]</code> containing placement keys → formats → products</td>
+      <td>Refactor response parsing to iterate placements first, then render per placement key</td>
+      <td>Criteo explicitly describes placements + list of products + beacon URLs</td>
+    </tr>
+    <tr>
+      <td>Product identity in response</td>
+      <td><code>gtin</code> and <code>id</code> fields appear in ad objects</td>
+      <td>Product entries include <code>ProductId</code> and <code>ParentSKU</code> (in examples)</td>
+      <td>Map response product IDs back to your catalog/PDP routing and ensure they align with your feed</td>
+      <td>Criteo response example shows <code>ProductId</code>/<code>ParentSKU</code>; your feed ID must match request/transaction IDs</td>
+    </tr>
+    <tr>
+      <td>Tracking coupling</td>
+      <td>Separate tracking endpoints (CitrusAd resource URLs)</td>
+      <td>Beacons embedded in response (e.g., <code>OnLoadBeacon</code>, <code>OnViewBeacon</code>)</td>
+      <td>Update renderer to fire beacons tied to render/view/click lifecycle</td>
+      <td>Criteo API Responses reference beacons and point to Beacon URLs documentation</td>
+    </tr>
+    <tr>
+      <td>“Minimum vs full verbosity”</td>
+      <td>Not explicitly documented in CitrusAd</td>
+      <td>Criteo supports minimum vs full verbosity for product arrays</td>
+      <td>Decide verbosity level and adjust rendering/data dependencies accordingly</td>
+      <td>Criteo explicitly documents “Product Array Verbosity Levels”</td>
+    </tr>
+    <tr>
+      <td>Display formats</td>
+      <td>CitrusAd supports product ads and banner formats; details vary by endpoint/format docs</td>
+      <td>Criteo response may include extra rendering assets for display formats; refer to format pages</td>
+      <td>Ensure your rendering layer can handle each enabled format and asset references</td>
+      <td>Criteo directs retailers to “format overview” and format pages for rendering details</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  **Terminology mapping:**
+
+  * CitrusAd `ads[]` → Criteo `placements[]` (render by placement key)
+  * CitrusAd `gtin` in response → Criteo product identifiers in response (must align with feed/request identifiers).
+</Info>
+
+**Verbosity (Criteo) — what changes and trade-offs**
+
+* **Minimum verbosity** (documented by Criteo) contains core product identifiers and beacons.
+* **Full verbosity** (documented by Criteo) provides additional product fields.
+* **Retailer impact:** choose the lowest verbosity that still provides the data you need at render time; otherwise, you must source missing merchandising data from your own catalog/PDP services.
+* **Trade-off:** full verbosity can simplify rendering (more data in response) but may increase payload size.
+
+**Example** _(illustrative shape only)_:
+
+```json
+{
+  "status": "OK",
+  "placements": [
+    {
+      "<placement-key>": [
+        {
+          "format": "sponsored_products",
+          "products": [
+            { "ProductId": "14567", "ParentSKU": "14567P", "OnLoadBeacon": "<url>", "OnViewBeacon": "<url>" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Minimum viable implementation (retailer work)**
+
+* Parse the Criteo response by `placements` and render each placement key to the correct UI slot.
+* For sponsored products, map returned product IDs to your product cards (title/image/price may come from your own catalog if not present).
+* Implement beacon firing tied to lifecycle events (render/load vs view vs click), using only URLs returned by Criteo.
+* Choose a `verbosity` level and ensure your renderer either uses returned fields or fetches missing fields from your own systems.
+* For any enabled display format, follow the format-specific rendering requirements (assets, click behavior, etc.).
+* Ensure you can handle “no fill” cases gracefully (empty placements or suppressed products).
+
+**Validation checklist**
+
+* [ ] Response parsing correctly enumerates all placements and formats returned.
+* [ ] Each placement key maps to a real UI location (nothing is “dropped”).
+* [ ] Product IDs in the response can be resolved to real products in your catalog.
+* [ ] Minimum verbosity rendering works end-to-end (or full verbosity is explicitly chosen).
+* [ ] Beacons are fired at the correct lifecycle moments and only from returned URLs.
+* [ ] Empty/no-ad responses render gracefully without layout breaks.
+
+**Common pitfalls**
+
+* Treating the response as a flat list (CitrusAd-style) and ignoring placement keys (ads never show).
+* Depending on response fields that aren’t guaranteed at your chosen verbosity (missing title/image/price at render time).
+* Rendering products but not wiring beacons (impressions/views not counted; reporting gaps).
+* Mis-mapping placement keys to UI slots (ads appear in the wrong place or not at all).
+* Assuming the platform will provide all merchandising fields (often you must use your own catalog at render time).
+
+**Pointers to the documentation**
+
+* CitrusAd: [Generate product and banner ads](https://developers.citrusad.com/integration/reference/generate)
+* Criteo: [API Responses](/retailer-integration/docs/api-responses)
+* Criteo: [Legacy & Universal Beacons](/retailer-integration/docs/legacy-universal-beacons)
+* Criteo: [Ad formats overview](/retailer-integration/docs/format-overview)
+
+***
+
+## Tracking
+
+**What CitrusAd does today**
+
+CitrusAd tracking is reported by the retailer calling CitrusAd “resource” endpoints: impressions go to `/v1/resource/first-i/AD_ID` and clicks go to `/v1/resource/second-c/AD_ID`, using the `adId` returned in the ad response. Calls must be executed within the app or website (backend-to-backend style is emphasized for environments like mobile apps).
+
+**What Criteo's Retail Media expects**
+
+Criteo tracking is driven by beacon URLs included in the ad response, and the docs describe both legacy and standard/universal beacon approaches. Retailers must fire the appropriate beacons (e.g., load/view/click-related) as specified, using the URLs provided in responses.
+
+**What changes for you as a retailer**
+
+<table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>CitrusAd</th>
+      <th>Criteo's Retail Media</th>
+      <th>Retailer impact</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Tracking mechanism</td>
+      <td>Retailer calls fixed endpoints with <code>AD&#95;ID</code></td>
+      <td>Retailer fires beacon URLs returned in response</td>
+      <td>Replace hardcoded tracking endpoint calls with response-driven beacon firing</td>
+      <td>CitrusAd explicitly provides <code>/resource/.../AD&#95;ID</code>; Criteo embeds beacon URLs</td>
+    </tr>
+    <tr>
+      <td>Required identifiers</td>
+      <td><code>adId</code> is required to report impression/click</td>
+      <td>Not explicitly listed here as a single “adId”; uses beacon URLs and product/placement context</td>
+      <td>Update tracking to store and fire the correct beacons per placement/product and lifecycle</td>
+      <td>Criteo tracking is described via beacons; exact identifier requirements vary by beacon type</td>
+    </tr>
+    <tr>
+      <td>Event types</td>
+      <td>Impression + click endpoints</td>
+      <td>Load/view/click beaconing concepts; legacy vs universal differences</td>
+      <td>Implement the correct event lifecycle mapping (render/load vs view vs click) per Criteo beacon model</td>
+      <td>Misfiring events leads to undercounting or misattribution</td>
+    </tr>
+    <tr>
+      <td>Performance considerations</td>
+      <td>One request per impression/click event</td>
+      <td>Universal beacons reduce requests vs legacy per-product</td>
+      <td>Prefer standard/universal beacons where applicable and implement as recommended</td>
+      <td>Criteo explicitly recommends universal beacons for new integrations</td>
+    </tr>
+    <tr>
+      <td>Debugging symptoms</td>
+      <td>Missing calls → missing reporting</td>
+      <td>Missing/misfired beacons → missing measurement and optimization gaps</td>
+      <td>Add internal logging/telemetry around beacon firing for troubleshooting</td>
+      <td>Operational monitoring is out of scope, but minimal instrumentation is often necessary</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  **Terminology mapping:**
+
+  * CitrusAd “impression endpoint call” → Criteo “OnLoad/OnView beacon firing” (exact beacon naming depends on the response fields you receive).
+</Info>
+
+**Minimum viable implementation (retailer work)**
+
+* For CitrusAd parity: map your existing “impression” and “click” triggers to Criteo’s beacon-based lifecycle triggers.
+* Store beacon URLs returned in the response alongside the rendered placement/product so you can fire them later.
+* Fire the “load/render” beacon when the ad is rendered, and fire the “view” beacon when viewability conditions are met (as you define per your implementation and Criteo guidance).
+* Fire click-related tracking using the mechanism described in Criteo’s beacon docs (using returned URLs, not constructed ones).
+* Ensure tracking fires on both desktop and mobile implementations consistently.
+* If you previously did backend-to-backend tracking for mobile limitations, ensure your architecture can still call beacon URLs reliably.
+
+**Validation checklist**
+
+* [ ] Every rendered placement/product has its corresponding beacon URLs stored and available at runtime.
+* [ ] Load/render beacons fire exactly once per render event (no double-counting).
+* [ ] View beacons fire only when viewability criteria are met (and are not missed).
+* [ ] Click tracking fires on all click entry points (product tile, CTA, brand zone, etc., depending on format).
+* [ ] Removing tracking (intentionally) causes measurable drops (sanity test that tracking is actually connected).
+* [ ] Tracking works across device types and page templates consistently.
+
+**Common pitfalls**
+
+* Continuing to call CitrusAd-style fixed endpoints instead of firing Criteo-provided beacon URLs (nothing gets counted).
+* Firing beacons too early (on response receipt instead of render) or too late (after navigation), causing under/over-counting.
+* Losing beacon URLs when the page re-renders (SPA behavior) and missing events.
+* Mixing legacy vs universal beacon logic (unexpected request volume or missing optimization signals).
+* Not correlating which placement/product a beacon belonged to (hard to debug missing reporting).
+
+**Pointers to the documentation**
+
+* CitrusAd: [Reporting Impressions and Clicks](https://developers.citrusad.com/integration/reference/reporting-impressions-clicks)
+* Criteo: [API Responses](/retailer-integration/docs/api-responses)
+* Criteo: [Legacy & Universal Beacons](/retailer-integration/docs/legacy-universal-beacons)
+
+***
+
+## Sales Tracking
+
+**What CitrusAd does today**
+
+CitrusAd sales tracking is reported by posting orders to `/v1/orders`, where each order can include `customerId`, `sessionId`, `id` (order ID), `orderItems` (with fields like `gtin`, `quantity`, pricing/discount fields), and ad linkage fields such as `adIds` and per-item `adId`. This ties purchases back to ads for attribution.
+
+**What Criteo's Retail Media expects**
+
+Criteo sales tracking is sent as an order confirmation event using `event-type=trackTransaction` with a dedicated `page-id` for that event type, and it requires `transaction-id`, `item`, `price`, and `quantity`. Criteo explicitly requires including **all items in the order, regardless of whether they are sponsored or not**.
+
+**What changes for you as a retailer**
+
+<table>
+  <thead>
+    <tr>
+      <th>Area</th>
+      <th>CitrusAd</th>
+      <th>Criteo's Retail Media</th>
+      <th>Retailer impact</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Sales reporting endpoint</td>
+      <td>POST <code>/v1/orders</code> with JSON <code>orders[]</code></td>
+      <td>GET <code>/delivery/retailmedia</code> with <code>event-type=trackTransaction</code></td>
+      <td>Implement a new transaction-reporting call pattern using query parameters instead of posting JSON orders</td>
+      <td>Criteo uses the same delivery endpoint for transaction tracking per “Order Confirmation Page”</td>
+    </tr>
+    <tr>
+      <td>Order identity</td>
+      <td><code>id</code> (order ID) in each order object</td>
+      <td><code>transaction-id</code> required</td>
+      <td>Map your order ID to <code>transaction-id</code> for Criteo</td>
+      <td>Straightforward field rename/mapping</td>
+    </tr>
+    <tr>
+      <td>Line items</td>
+      <td><code>orderItems[]</code> with <code>gtin</code>, <code>quantity</code>, and price/discount fields</td>
+      <td>Pipe-separated <code>item</code>, <code>price</code>, <code>quantity</code> lists (unit prices)</td>
+      <td>Build pipe-separated lists aligned by index across item/price/quantity and ensure IDs match the feed</td>
+      <td>Requires careful ordering and URL encoding</td>
+    </tr>
+    <tr>
+      <td>Sponsored vs organic requirement</td>
+      <td>Not explicitly stated in the provided CitrusAd order docs excerpt</td>
+      <td>Explicitly: include all items, sponsored or not</td>
+      <td>Ensure you always include the full basket/order contents in the Criteo transaction call</td>
+      <td>This is explicitly documented in Criteo “Order Confirmation Page”</td>
+    </tr>
+    <tr>
+      <td>Discounts</td>
+      <td>CitrusAd includes fields like <code>citrusDiscountAmount</code> and <code>totalOrderItemPriceAfterDiscounts</code></td>
+      <td>Criteo instructs how to report discounts by adjusting <code>unit&#95;price</code> (average price)</td>
+      <td>Implement discount logic so <code>price</code> reflects unit price after discount methodology described by Criteo</td>
+      <td>Requires correct calculation to reconcile totals</td>
+    </tr>
+    <tr>
+      <td>Currency</td>
+      <td>Present as part of order object? (not explicit in the snippet)</td>
+      <td><code>currency</code> required only if multiple currencies are allowed</td>
+      <td>Add <code>currency</code> when applicable (multi-currency setups)</td>
+      <td>Conditional requirement is explicit in Criteo docs</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  **Terminology mapping:**
+
+  * CitrusAd order `id` → Criteo `transaction-id`
+  * CitrusAd `orderItems[].gtin` → Criteo `item` (must match feed parameter ID)
+    *CitrusAd “ad-linked fields” → Criteo transaction attribution handled via `trackTransaction` event + identifiers
+</Info>
+
+**Minimum viable implementation (retailer work)**
+
+* Implement the order confirmation page transaction call using `event-type=trackTransaction` and the correct `page-id` format for your region/environment.
+* Always include the complete order contents in `item`, `price`, and `quantity` lists (not just sponsored items).
+* Ensure `item` values match the product identifier used in your Criteo feed.
+* Send `transaction-id` as your unique order ID.
+* If you support promotions/discounts, calculate and report `price` as unit prices consistent with Criteo’s discount guidance.
+* Add `currency` when you support multiple currencies; otherwise rely on default behavior.
+
+**Validation checklist**
+
+* [ ] `event-type=trackTransaction` is sent only on the order confirmation page (post-purchase).
+* [ ] `transaction-id` matches your internal order ID and is unique per purchase.
+* [ ] `item`, `price`, and `quantity` lists have the same length and aligned ordering.
+* [ ] `item` identifiers match the feed’s product IDs exactly.
+* [ ] All order items are included (sponsored + organic).
+* [ ] Discounted orders reconcile: sum(price × quantity) matches expected totals based on Criteo’s unit price guidance.
+* [ ] Multi-currency setups include `currency`; single-currency setups behave as expected without it.
+
+**Common pitfalls**
+
+* Reporting only sponsored items (explicitly called out as incorrect for Criteo; causes revenue under-reporting and attribution gaps).
+* Misaligned pipe-separated lists (items/prices/quantities shifted → wrong revenue attribution per SKU).
+* Sending total line price instead of unit price (Criteo multiplies `price` by `quantity`).
+* Using product IDs in transactions that don’t match the feed (transactions can’t be reconciled to products).
+
+**Pointers to the documentation**
+
+* CitrusAd: [Report an order](https://developers.citrusad.com/integration/reference/report-an-order)
+* CitrusAd: [Order reference](https://developers.citrusad.com/integration/reference/order-reference)
+* Criteo: [Order Confirmation Page](/retailer-integration/docs/order-confirmation-page)
+* Criteo: [API Parameters](/retailer-integration/docs/api-parameters-1)
+* Criteo: [Order Cancellations/Modifications](/retailer-integration/docs/order-confirmation-page#order-cancellationsmodifications)

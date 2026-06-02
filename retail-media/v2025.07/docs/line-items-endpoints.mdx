@@ -1,307 +1,401 @@
 ---
-title: "Line Items Endpoints"
+title: Line Items Endpoints
 ---
 
-1. Guides for Retail Media API
-2. [Line Items](/retail-media/v2025.07/docs/line-items)
-
-<Info>
+<Note>
   ### Getting Started
 
   1. A line item holds promoted products to advertise on a single retailer.
   2. Line items include basic settings such as start and end dates, optional budget controls, and the associated retailer where ads are served.
   3. Budgets can also be managed at the campaign level.
-  4. Several [reports](doc:demand-side-analytics-get-started) are available to track line item performance.
+  4. Several [reports](/retail-media/v2025.07/docs/demand-side-analytics-get-started) are available to track line item performance.
   5. Campaigns are limited to 10,000 non-archived line items.
   6. Line items are automatically archived 90 days after their end date.
-</Info>
+</Note>
+
+<br />
 
 ## **Endpoints**
 
-| Method  | Endpoint                           | Description                                                 |
-| ------- | ---------------------------------- | ----------------------------------------------------------- |
-| **GET** | `/accounts/{accountId}/line-items` | Retrieve all line items associated with a specific account. |
-| **GET** | `/line-items/{lineItemId}`         | Retrieve details of a specific line item.                   |
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/line-items</code></td>
+      <td>Retrieve all line items associated with a specific account.</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/line-items/&#123;lineItemId&#125;</code></td>
+      <td>Retrieve details of a specific line item.</td>
+    </tr>
+  </tbody>
+</table>
+
+<br />
 
 ## **Line Item Attributes**
 
-| Attribute          | Data Type | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | string    | Line item ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                   |
-| `name`             | string    | Line item name, must be unique within a campaignAccepted values: up to 255-chars string Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                        |
-| `campaignId`       | string    | [Campaign](doc:campaign) ID, in which the respective line item belongsAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                         |
-| `type`             | enum      | [Campaign](doc:campaign) typeAccepted values: `auction`, `preferred` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                           |
-| `targetRetailerId` | string    | [Retailer](doc:retailers) ID, in which the respective line item serves ad onAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                   |
-| `startDate`        | date      | Start date of the line item, in the [Account](doc:account) timezone; used to schedule its activation and start serving ads. To understand the conditions that will cause a status to change, check out [Campaign & Line Item Status](doc:campaign-lineitem-status)Accepted values: `yyyy-mm-dd` Writeable? Y / Nullable? N                                                                                                                                                                |
-| `endDate`          | date      | End date of the line item, in the [Account](doc:account) timezone; serves ads indefinitely if omitted or set to `null`. A timestamp can be included as well if the line item is desired to end at a certain time of dayAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Default: if `null` or absent, balance will be available indefinitely Writeable? Y / Nullable? Y                                              |
-| `budget`           | decimal   | Line item lifetime spend cap, uncapped if omitted or set to `null`Accepted values: `budget` ≥ 0.0 Default: `0.0` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                               |
-| `budgetSpent`      | decimal   | Budget amount the line item has already spentAccepted values: `budgetSpent` ≥ 0.0 Default: `0.0` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                               |
-| `budgetRemaining`  | decimal   | Budget amount the line item has remaining until cap is hit; `null` if budget is uncappedAccepted values: 0 ≤ `budgetRemaining` ≤ `budget` Default: `0.0` Writeable? N / Nullable? Y                                                                                                                                                                                                                                                                                                       |
-| `status`           | enum      | Line item status; can only be updated by a user to `active` or `paused`; all other values are applied automatically depending on financials, flight dates, or missing attributes required for line item to serve. To understand the conditions that will cause a status to change, check out [Campaign & Line Item Status](doc:campaign-lineitem-status)Accepted values: `active`, `paused`, `scheduled`, `ended`, `budgetHit`, `noFunds`, `draft`, `archived` Writeable? Y / Nullable? N |
-| `createdAt`        | timestamp | Timestamp of line item creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                     |
-| `updatedAt`        | timestamp | Timestamp of last line item update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Default: same as `createdAt` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                     |
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>string</td>
+      <td>Line item ID, generated internally by Criteo<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>name</code></td>
+      <td>string</td>
+      <td>Line item name, must be unique within a campaign<br />Accepted values: up to 255-chars string<br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>campaignId</code></td>
+      <td>string</td>
+      <td><a href="/retail-media/v2025.07/docs/campaign">Campaign</a> ID, in which the respective line item belongs<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>enum</td>
+      <td><a href="/retail-media/v2025.07/docs/campaign">Campaign</a> type<br />Accepted values: <code>auction</code>, <code>preferred</code><br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>targetRetailerId</code></td>
+      <td>string</td>
+      <td><a href="/retail-media/v2025.07/docs/retailers">Retailer</a> ID, in which the respective line item serves ad on<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>startDate</code></td>
+      <td>date</td>
+      <td>Start date of the line item, in the <a href="/retail-media/v2025.07/docs/account">Account</a> timezone; used to schedule its activation and start serving ads.<br />To understand the conditions that will cause a status to change, check out <a href="/retail-media/v2025.07/docs/campaign-lineitem-status">Campaign &amp; Line Item Status</a><br />Accepted values: <code>yyyy-mm-dd</code><br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>endDate</code></td>
+      <td>date</td>
+      <td>End date of the line item, in the <a href="/retail-media/v2025.07/docs/account">Account</a> timezone; serves ads indefinitely if omitted or set to <code>null</code>.<br />A timestamp can be included as well if the line item is desired to end at a certain time of day<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss±hh:mm</code> (in <a href="https://www.iso.org/iso-8601-date-and-time-format.html">ISO-8601</a> )<br />Default: if <code>null</code> or absent, balance will be available indefinitely<br />Writeable? Y / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>budget</code></td>
+      <td>decimal</td>
+      <td>Line item lifetime spend cap, uncapped if omitted or set to <code>null</code><br />Accepted values: <code>budget</code> ≥ 0.0<br />Default: <code>0.0</code><br />Writeable? Y / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>budgetSpent</code></td>
+      <td>decimal</td>
+      <td>Budget amount the line item has already spent<br />Accepted values: <code>budgetSpent</code> ≥ 0.0<br />Default: <code>0.0</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>budgetRemaining</code></td>
+      <td>decimal</td>
+      <td>Budget amount the line item has remaining until cap is hit; <code>null</code> if budget is uncapped<br />Accepted values: 0 ≤ <code>budgetRemaining</code> ≤ <code>budget</code><br />Default: <code>0.0</code><br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>status</code></td>
+      <td>enum</td>
+      <td>Line item status; can only be updated by a user to <code>active</code> or <code>paused</code>; all other values are applied automatically depending on financials, flight dates, or missing attributes required for line item to serve.<br />To understand the conditions that will cause a status to change, check out <a href="/retail-media/v2025.07/docs/campaign-lineitem-status">Campaign &amp; Line Item Status</a><br />Accepted values: <code>active</code>, <code>paused</code>, <code>scheduled</code>, <code>ended</code>, <code>budgetHit</code>, <code>noFunds</code>, <code>draft</code>, <code>archived</code><br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>createdAt</code></td>
+      <td>timestamp</td>
+      <td>Timestamp of line item creation, in UTC<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss±hh:mm</code>(in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a>)<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>updatedAt</code></td>
+      <td>timestamp</td>
+      <td>Timestamp of last line item update, in UTC<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss±hh:mm</code>(in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a>)<br />Default: same as <code>createdAt</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+  </tbody>
+</table>
+
+<br />
 
 ## **Get all Line Items**
 
-This endpoint lists all line items in the specified campaign.
+This endpoint lists all line items in the specified campaign. 
 
-Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively - see [API Response](#/pagination)
+Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively. See [API Response](/retail-media/v2025.07/docs/api-response#pagination).
 
-![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/accounts/{accountId}/line-items?pageIndex={pageIndex}&pageSize={pageSize}
 ```
 
-**Sample Request**
+**Sample Request** 
 
 <CodeGroup>
-  ```bash bash
-  curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/123456/line-items?pageIndex=0&pageSize=25" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
-  ```
 
-  ```bash bash
-  import requests
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/123456/line-items?pageIndex=0&pageSize=25" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
 
-  url = "https://api.criteo.com/{version}/retail-media/accounts/4/line-items?pageIndex=0&pageSize=25"
+```python Python
+import requests
 
-  payload={}
-  headers = {
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+url = "https://api.criteo.com/{version}/retail-media/accounts/4/line-items?pageIndex=0&pageSize=25"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/4/line-items?pageIndex=0&pageSize=25")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/4/line-items?pageIndex=0&pageSize=25');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-
-  response = requests.request("GET", url, headers=headers, data=payload)
-
-  print(response.text)
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-  MediaType mediaType = MediaType.parse("text/plain");
-
-  RequestBody body = RequestBody.create(mediaType, "");
-
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/accounts/4/line-items?pageIndex=0&pageSize=25")
-    .method("GET", body)
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/4/line-items?pageIndex=0&pageSize=25');
-  $request->setMethod(HTTP_Request2::METHOD_GET);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-
-  $request->setHeader(array(
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
-    }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
+}
 
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
-  }
-  ```
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "RetailMediaLineItem",
-              "id": "9979917896105882144",
-              "attributes": {
-                  "campaignId": "8343086999167541140",
-                  "name": "Line Item 123",
-                  "targetRetailerId": "3239117063738827231",
-                  "startDate": "2020-04-06",
-                  "endDate": null,
-                  "budget": null,
-                  "budgetSpent": 2383.87,
-                  "budgetRemaining": null,
-                  "status": "active",
-                  "createdAt": "2020-04-06T17:29:11+00:00",
-                  "updatedAt": "2020-04-06T17:29:11+00:00"
-              }
-          },
-          // ...
-          {
-              "type": "RetailMediaLineItem",
-              "id": "6854840188706902009",
-              "attributes": {
-                  "campaignId": "8343086999167541140",
-                  "name": "Line Item 789",
-                  "targetRetailerId": "18159942378514859684",
-                  "startDate": "2020-04-08",
-                  "endDate": null,
-                  "budget": 8000.00,
-                  "budgetSpent": 1921.23,
-                  "budgetRemaining": 6078.77,
-                  "status": "paused",
-                  "createdAt": "2020-04-06T23:42:47+00:00",
-                  "updatedAt": "2020-06-03T03:01:52+00:00"       
-              }
-          }
-      ],
-      "metadata": {
-          "totalItemsAcrossAllPages": 105,
-          "currentPageSize": 25,
-          "currentPageIndex": 0,
-          "totalPages": 5,
-          "nextPage": "https://api.criteo.com/{version}/retail-media/accounts/123456/line-items?pageIndex=1&pageSize=25",
-          "previousPage": null
-      }
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaLineItem",
+            "id": "9979917896105882144",
+            "attributes": {
+                "campaignId": "8343086999167541140",
+                "name": "Line Item 123",
+                "targetRetailerId": "3239117063738827231",
+                "startDate": "2020-04-06",
+                "endDate": null,
+                "budget": null,
+                "budgetSpent": 2383.87,
+                "budgetRemaining": null,
+                "status": "active",
+                "createdAt": "2020-04-06T17:29:11+00:00",
+                "updatedAt": "2020-04-06T17:29:11+00:00"
+            }
+        },
+        // ...
+        {
+            "type": "RetailMediaLineItem",
+            "id": "6854840188706902009",
+            "attributes": {
+                "campaignId": "8343086999167541140",
+                "name": "Line Item 789",
+                "targetRetailerId": "18159942378514859684",
+                "startDate": "2020-04-08",
+                "endDate": null,
+                "budget": 8000.00,
+                "budgetSpent": 1921.23,
+                "budgetRemaining": 6078.77,
+                "status": "paused",
+                "createdAt": "2020-04-06T23:42:47+00:00",
+                "updatedAt": "2020-06-03T03:01:52+00:00"       
+            }
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 105,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 5,
+        "nextPage": "https://api.criteo.com/{version}/retail-media/accounts/123456/line-items?pageIndex=1&pageSize=25",
+        "previousPage": null
+    }
+}
+```
+
+<br />
 
 ## **Get a specific Line Item**
 
 This endpoint retrieves details for a specified line item by its ID
 
-![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X GET "https://api.criteo.com/{version}/retail-media/line-items/2465695028166499188" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
-  ```
 
-  ```bash bash
-  import requests
+```bash cURL
+curl -L -X GET "https://api.criteo.com/{version}/retail-media/line-items/2465695028166499188" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
 
-  url = "https://api.criteo.com/{version}/retail-media/line-items/2465695028166499188"
+```python Python
+import requests
 
-  payload={}
-  headers = {
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+url = "https://api.criteo.com/{version}/retail-media/line-items/2465695028166499188"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/line-items/2465695028166499188")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/2465695028166499188');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-
-  response = requests.request("GET", url, headers=headers, data=payload)
-
-  print(response.text)
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-  MediaType mediaType = MediaType.parse("text/plain");
-
-  RequestBody body = RequestBody.create(mediaType, "");
-
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/line-items/2465695028166499188")
-    .method("GET", body)
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/2465695028166499188');
-  $request->setMethod(HTTP_Request2::METHOD_GET);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-
-  $request->setHeader(array(
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
-    }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
+}
 
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
-  }
-  ```
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": { 
-          "type": "RetailMediaLineItem",
-          "id": "2465695028166499188",
-          "attributes": {
-              "campaignId": "8343086999167541140",
-              "name": "My New Line Item",
-              "targetRetailerId": "18159942378514859684",
-              "startDate": "2020-04-06",
-              "endDate": null,
-              "budget": null,
-              "budgetSpent": 0.00,
-              "budgetRemaining": null,
-              "status": "draft",
-              "createdAt": "2020-04-06T06:11:23+00:00",
-              "updatedAt": "2020-04-06T06:11:23+00:00"
-          }
-      }
-  ```
-</CodeGroup>
+```json
+{
+    "data": { 
+        "type": "RetailMediaLineItem",
+        "id": "2465695028166499188",
+        "attributes": {
+            "campaignId": "8343086999167541140",
+            "name": "My New Line Item",
+            "targetRetailerId": "18159942378514859684",
+            "startDate": "2020-04-06",
+            "endDate": null,
+            "budget": null,
+            "budgetSpent": 0.00,
+            "budgetRemaining": null,
+            "status": "draft",
+            "createdAt": "2020-04-06T06:11:23+00:00",
+            "updatedAt": "2020-04-06T06:11:23+00:00"
+        }
+    }
+```
+
+<br />
 
 ## **Responses**
 
-| Response | Description                                                                                                                                                   |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🟢`200`  | Call completed successfully. The specified line item details are returned.                                                                                    |
-| 🔴`403`  | API user is not authorized to make requests for the account ID. To request authorization, follow the[authorization request](doc:authorization-requests)steps. |
-| 🔴`404`  | Line item ID not found. Ensure the`lineItemId`is correct and exists.                                                                                          |
-
-***
-
-[Line Items](/retail-media/v2025.07/docs/line-items)
-
-[Promoted Products](/retail-media/v2025.07/docs/promoted-products)
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:green&#95;circle:<br /><code>200</code></td>
+      <td>Call completed successfully. The specified line item details are returned.</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>403</code></td>
+      <td>API user is not authorized to make requests for the account ID. To request authorization, follow the<br /><a href="/retail-media/v2025.07/docs/authorization-requests">authorization request</a><br />steps.</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>404</code></td>
+      <td>Line item ID not found. Ensure the<br /><code>lineItemId</code><br />is correct and exists.</td>
+    </tr>
+  </tbody>
+</table>

@@ -1,0 +1,362 @@
+---
+title: Campaigns- Concept Guide
+---
+
+## Introduction
+
+Multi-Seller campaigns are the original Marketplace Performance Outcomes (MPO) model. They allow many marketplace sellers to share a single campaign configuration and participate in a pooled optimisation strategy.
+
+### Key characteristics
+
+* A single campaign serves many sellers.
+* Targeting, optimisation goal, and bidding strategy are shared.
+* Budget is primarily managed at the campaign level for each active seller.
+
+You control:
+
+* Which sellers participate.
+* How aggressively they bid.
+* How much budget each seller can consume.
+
+### What you can do with the MPO API
+
+* Discover and manage marketplace sellers.
+* Link sellers to Multi-Seller campaigns.
+* Control participation via CPC bids and budgets.
+* Monitor performance at campaign and seller level.
+
+### Audience
+
+* Marketplace integrators.
+* Technical leads / architects.
+* Developers needing a conceptual understanding before API implementation.
+
+## Core Entities and Identifiers
+
+### Overview
+
+<table>
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Advertiser</td>
+      <td>Marketplace business entity</td>
+    </tr>
+    <tr>
+      <td>Campaign (<code>&#123;&#123;campaignId&#125;&#125;</code>)</td>
+      <td>Shared campaign configuration</td>
+    </tr>
+    <tr>
+      <td>Seller (<code>&#123;&#123;sellerId&#125;&#125;</code>)</td>
+      <td>Marketplace merchant</td>
+    </tr>
+    <tr>
+      <td>Seller-Campaign (<code>&#123;&#123;sellerCampaignId&#125;&#125;</code>)</td>
+      <td>Seller participation in a campaign</td>
+    </tr>
+    <tr>
+      <td>Budgets</td>
+      <td>Campaign-level and seller-level spend controls</td>
+    </tr>
+  </tbody>
+</table>
+
+### Advertiser
+
+* Represents your marketplace in Criteo.
+* Hosts one or more MPO campaigns.
+* Retrieved via Marketing Solutions APIs.
+
+### Multi-Seller Campaign (`{{campaignId}}`)
+
+Shared campaign across multiple sellers, configured by Criteo (not via MPO API).
+
+Defines:
+
+* Optimisation goal (traffic, conversions, revenue).
+* Bidding strategy (typically CPC).
+* Targeting and audiences.
+* Creative formats and placements.
+
+Does:
+
+* Spend campaign-level budgets.
+* Serve ads with products from multiple sellers.
+
+Does **not**:
+
+* Represent a single seller.
+* Store seller-specific bids or budgets.
+
+### Seller (`{{sellerId}}` / `{{sellerName}}`)
+
+* Represents a merchant in your marketplace.
+
+`sellerName`:
+
+* Comes from your catalog (e.g. `seller_id`).
+* Case-sensitive.
+
+`sellerId`:
+
+* Internal MPO identifier.
+* Retrieve via:
+
+```text http
+GET /marketplace-performance-outcomes/sellers?sellerName={{yourSellerIdentifier}}
+```
+
+<Info>
+  Use consistent `sellerName` values to avoid duplicate sellers.
+</Info>
+
+### Seller-Campaign (`{{sellerCampaignId}}`)
+
+Represents the relationship between a seller and a campaign.
+
+* Links: (`{{sellerId}}`, `{{campaignId}}`)
+* Automatically created by MPO (one per seller per MPO campaign); you then configure its CPC bid via the MPO API.
+
+Defines:
+
+* CPC bid
+* Participation state
+
+Initially, a seller-campaign may be suspended (for example, `NoBudgetDefined`) until you set bids and budgets.
+
+**Example ID:**
+
+```text
+SELLER_123.CAMPAIGN_456
+```
+
+## Budgets
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Campaign-level</td>
+      <td>Shared across all sellers</td>
+    </tr>
+    <tr>
+      <td>Seller-level</td>
+      <td>Optional per seller-campaign</td>
+    </tr>
+  </tbody>
+</table>
+
+### Campaign-Level Budgets
+
+* Managed via Criteo or general APIs.
+* Global cap for campaign spend.
+* Should be set high enough to cover (or be higher than) the sum of active seller-level budgets; otherwise you may see under-delivery even when per-seller budgets remain.
+
+### Seller-Level Budgets
+
+* Managed via MPO API:
+
+```text http
+POST /marketplace-performance-outcomes/budgets
+GET  /marketplace-performance-outcomes/budgets
+```
+
+Use cases:
+
+* Cap seller spend.
+* Schedule campaigns.
+* Apply different strategies per seller.
+
+## Access and Enablement
+
+### Requirements
+
+* MPO enabled for your advertiser.
+* At least one Multi-Seller campaign exists.
+* API permissions configured with **Manage Campaign** permissions.
+
+### Potential issues
+
+* Authorization errors.
+* Validation errors.
+
+## Campaign Setup Flow
+
+1. **Request setup**  
+   Provide:
+   * Advertiser details.
+   * Business goals.
+   * Seller distribution.
+
+2. **Criteo configuration**
+   * Campaign structure.
+   * Targeting and creatives.
+   * MPO features.
+
+3. **Receive configuration**
+   * `campaignId`.
+   * Constraints (budgets, CPC ranges, geos).
+
+## Prerequisites
+
+Ensure you have:
+
+* Product catalog with a seller field.
+* OAuth2 authentication.
+* Required API scopes.
+
+Endpoints:
+
+```text
+/marketplace-performance-outcomes/sellers
+/marketplace-performance-outcomes/seller-campaigns
+/marketplace-performance-outcomes/budgets
+/marketplace-performance-outcomes/stats/...
+```
+
+## Budget Management
+
+### Overview
+
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Campaign Budget</td>
+      <td>Total available spend</td>
+    </tr>
+    <tr>
+      <td>CPC Bids</td>
+      <td>Seller competitiveness</td>
+    </tr>
+    <tr>
+      <td>Seller Budgets</td>
+      <td>Optional caps per seller</td>
+    </tr>
+  </tbody>
+</table>
+
+### Campaign Budgets
+
+* Global spend limit.
+* Must be large enough to support sellers.
+
+### Seller-Campaign Bids (CPC)
+
+* Higher CPC > more exposure.
+* Lower CPC > reduced spend.
+* `IsSuspended = true/false` controls participation alongside CPC.
+
+### Seller-Level Budgets
+
+* Cap or schedule seller spend.
+* Associated with a seller-campaign.
+
+**Behaviour:**
+
+* May reset daily.
+* May have start/end dates.
+* Can stop delivery when exhausted.
+
+## Product & Creative Behavior
+
+* Shared dynamic ads across sellers.
+* Products from multiple sellers can appear together.
+
+Key points:
+
+* No per-seller `productSet` (Single-Seller only).
+* Products are only eligible when the seller is active (positive CPC and available budget). Campaign targeting (geo, device, audiences) still applies on top, but is not the main factor determining basic product eligibility.
+
+## Typical Workflows
+
+### 1. Onboard Sellers
+
+**Steps:**
+
+1. Confirm ingestion:
+
+```text http
+GET /marketplace-performance-outcomes/sellers?sellerName={{seller}}
+```
+
+2. Confirm campaign:
+   * Valid `campaignId`.
+   * Budget configured.
+3. Create seller-campaign.
+4. Set CPC.
+5. Add seller budgets (optional).
+
+### 2. Adjust Spend per Seller
+
+* Retrieve current setup.
+* Choose control method:
+  * **CPC** → performance tuning.
+  * **Budget** → hard cap.
+
+**Actions:**
+
+* Increase CPC → scale.
+* Decrease CPC → reduce.
+
+### 3. Suspend / Resume Seller
+
+**Suspend:**
+
+* `IsSuspended = true` on the relevant budget and/or
+* Budget inactive.
+
+**Resume:**
+
+* `IsSuspended = false` on the associated budget.
+* Ensure budgets are active.
+
+### 4. Monitor & Troubleshoot
+
+**Common checks**
+
+<table>
+  <thead>
+    <tr>
+      <th>Issue</th>
+      <th>Check</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>No delivery</td>
+      <td>Seller exists, CPC &gt; 0, budgets active</td>
+    </tr>
+    <tr>
+      <td>Low delivery</td>
+      <td>CPC too low, budget limited</td>
+    </tr>
+    <tr>
+      <td>Under-spend</td>
+      <td>Campaign budget too small</td>
+    </tr>
+    <tr>
+      <td>Over-spend</td>
+      <td>Budget configuration / reset behaviour</td>
+    </tr>
+  </tbody>
+</table>
+
+### Application permissions
+
+For **multi-seller MPO** integrations, your application needs at least the **Campaign – Manage** permission on the relevant advertiser accounts.

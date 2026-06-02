@@ -1,0 +1,734 @@
+---
+title: Page Intelligence
+hidden: true
+---
+
+This guide introduces the `Page Intelligence` endpoint, its request and response objects, and the expected integration behavior for retailers using holistic optimization across organic and sponsored products.
+
+## Business Context
+
+`Page Intelligence` helps retailers optimize search and category pages holistically by evaluating organic and sponsored products together instead of managing them through separate decisioning flows.
+
+It uses the same Sponsored Products campaigns and reporting, while adding a unified scoring and policy layer so retailers can control how sponsored SKUs appear across placements without compromising relevance or shopper experience.
+
+<Warning>
+  Page Intelligence does not replace Sponsored Products.
+
+  It uses the same Sponsored Products campaigns and reporting, but offers an additional way to orchestrate where and how sponsored SKUs appear across placements on your page.
+
+  You can enable it on selected search and category pages while keeping your existing Sponsored Products integration elsewhere.
+</Warning>
+
+## Endpoint Behavior
+
+`Page Intelligence` helps retailers maximize page-level value by balancing organic and sponsored products across placements using a unified scoring and policy layer.
+
+The endpoint lets you:
+
+* Send page context and organic candidates for placements that require holistic optimization.
+* Receive multiple optimized placements, each with its own ranked list of products.
+* Implement both product-level and placement-level beacons for measurement and model training.
+
+The updated contract is designed to support multiple placements and align more closely with existing delivery behavior across placement types.
+
+## Prerequisites
+
+* The retailer is already integrated with Criteo Retail Media Delivery.
+* `Page Intelligence` configuration and policy settings are set up with your Criteo team.
+* You can send a stable `retailerVisitorId` and relevant page context.
+
+## Recommendations
+
+* Do not re-rank the products returned in each placement.
+* Implement both product-level and placement-level beacons from the response.
+* Include `organicSkus` for requests that use holistic optimization.
+
+## Endpoint Overview
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>POST</code></td>
+      <td><code>https://api.criteo.com/v1/partners/&#123;partnerId&#125;/optimize</code></td>
+      <td>Optimize one or more placements across organic and sponsored products using a unified scoring and policy layer.</td>
+    </tr>
+  </tbody>
+</table>
+
+## Request Body
+
+### Top-level request object
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>pageId</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>ID of the page that this ad call is for.</td>
+    </tr>
+    <tr>
+      <td><code>pageAdContext</code></td>
+      <td><code>OptimizeAdContext</code></td>
+      <td>No</td>
+      <td>Page context for the ad request. Contains composable properties that inform ad selection algorithms based on page content and context.</td>
+    </tr>
+    <tr>
+      <td><code>retailerVisitorId</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Unique, unauthenticated user ID persisted across sessions on the same device. Can be a string ID or SHA256-hashed email.</td>
+    </tr>
+    <tr>
+      <td><code>customerId</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Unique ID of the authenticated user for the current session.</td>
+    </tr>
+    <tr>
+      <td><code>regionId</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Store ID selected by the user when browsing the retailer site.</td>
+    </tr>
+  </tbody>
+</table>
+
+### `OptimizeAdContext`
+
+The `pageAdContext` object uses a flat, composable structure. Each property can be included or omitted depending on the content and context needed for each ad request.
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>keywords</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Keyword search string entered by the user.</td>
+    </tr>
+    <tr>
+      <td><code>category</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Category or taxonomy text of the page the user is browsing.</td>
+    </tr>
+    <tr>
+      <td><code>organicSkus</code></td>
+      <td><code>array&lt;OrganicSku&gt;</code></td>
+      <td>No&#42;</td>
+      <td>Organic SKUs returned by a search query or category in rank order. Up to 1000 values. Required for ad calls that utilize HPO.</td>
+    </tr>
+    <tr>
+      <td><code>filters</code></td>
+      <td><code>array&lt;RequestFilter&gt;</code></td>
+      <td>No</td>
+      <td>Filters applied by the shopper on the result set. Up to 10 filters.</td>
+    </tr>
+    <tr>
+      <td><code>pageNumber</code></td>
+      <td><code>integer</code></td>
+      <td>No</td>
+      <td>Page number for paginated results or dynamically loaded result folds.</td>
+    </tr>
+    <tr>
+      <td><code>productId</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>SKU ID corresponding to the product on a product detail page.</td>
+    </tr>
+    <tr>
+      <td><code>price</code></td>
+      <td><code>float</code></td>
+      <td>No</td>
+      <td>Current price of the product added to the basket, including discount if any.</td>
+    </tr>
+    <tr>
+      <td><code>availability</code></td>
+      <td><code>boolean</code></td>
+      <td>No</td>
+      <td>Whether the product is in stock.</td>
+    </tr>
+  </tbody>
+</table>
+
+* Required for requests that use holistic optimization.
+
+### `OrganicSku`
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>skuId</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>ID of the organic SKU.</td>
+    </tr>
+    <tr>
+      <td><code>isDisplayedOnCurrentPage</code></td>
+      <td><code>boolean</code></td>
+      <td>Yes</td>
+      <td>If <code>true</code>, indicates that the SKU was displayed on the current page of results.</td>
+    </tr>
+    <tr>
+      <td><code>score</code></td>
+      <td><code>float</code></td>
+      <td>No</td>
+      <td>Quality or relevancy score assigned by the retailer to this SKU.</td>
+    </tr>
+  </tbody>
+</table>
+
+### `RequestFilter`
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>name</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>Name of the filter.</td>
+    </tr>
+    <tr>
+      <td><code>operator</code></td>
+      <td><code>OperatorEnum</code></td>
+      <td>Yes</td>
+      <td>Filter operator.</td>
+    </tr>
+    <tr>
+      <td><code>value</code></td>
+      <td><code>array&lt;string&gt;</code></td>
+      <td>Yes</td>
+      <td>Values the operator applies to. Up to 10 values.</td>
+    </tr>
+  </tbody>
+</table>
+
+`In` and `NotIn` support multiple values. The other operators support a single value.
+
+### `OperatorEnum`
+
+<table>
+  <thead>
+    <tr>
+      <th>Value</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Equal</code></td>
+      <td>Equal to.</td>
+    </tr>
+    <tr>
+      <td><code>GreaterThan</code></td>
+      <td>Greater than.</td>
+    </tr>
+    <tr>
+      <td><code>LessThan</code></td>
+      <td>Less than.</td>
+    </tr>
+    <tr>
+      <td><code>GreaterThanOrEqual</code></td>
+      <td>Greater than or equal to.</td>
+    </tr>
+    <tr>
+      <td><code>LessThanOrEqual</code></td>
+      <td>Less than or equal to.</td>
+    </tr>
+    <tr>
+      <td><code>In</code></td>
+      <td>Membership in a list.</td>
+    </tr>
+    <tr>
+      <td><code>NotEqual</code></td>
+      <td>Not equal to.</td>
+    </tr>
+    <tr>
+      <td><code>NotIn</code></td>
+      <td>Not in the membership list.</td>
+    </tr>
+  </tbody>
+</table>
+
+## Sample Request
+
+```json
+{
+  "pageId": "hpo_searchPage_desktop",
+  "pageAdContext": {
+    "keywords": "windows",
+    "filters": [
+      {
+        "name": "color",
+        "operator": "Equal",
+        "value": ["blue"]
+      }
+    ],
+    "pageNumber": 1,
+    "organicSkus": [
+      {
+        "skuId": "5454644",
+        "isDisplayedOnCurrentPage": true,
+        "score": 0.98
+      },
+      {
+        "skuId": "1005000",
+        "isDisplayedOnCurrentPage": true,
+        "score": 0.97
+      }
+    ]
+  },
+  "customerId": "567242992384",
+  "regionId": "us-east"
+}
+```
+
+## Response Body
+
+The response supports **multiple placements** in a single response. Each placement has its own `format`, `products`, and placement-level beacons. The response uses a resource-style envelope with `data.type` and `data.attributes`.
+
+### Response overview
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>data</code></td>
+      <td><code>OptimizeData</code></td>
+      <td>Yes</td>
+      <td>Response data payload.</td>
+    </tr>
+    <tr>
+      <td><code>warnings</code></td>
+      <td><code>array</code></td>
+      <td>No</td>
+      <td>Warnings about this specific request.</td>
+    </tr>
+    <tr>
+      <td><code>errors</code></td>
+      <td><code>array</code></td>
+      <td>No</td>
+      <td>Errors that happened while handling this request.</td>
+    </tr>
+  </tbody>
+</table>
+
+The `data` object includes a `type` field set to `"OptimizeData"` and an `attributes` object containing the actual response payload.
+
+### `OptimizeData`
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>pageUid</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>Unique ID of this optimize response, used for debugging purposes.</td>
+    </tr>
+    <tr>
+      <td><code>placements</code></td>
+      <td><code>dictionary&lt;string, OptimizePlacement&gt;</code></td>
+      <td>Yes</td>
+      <td>List of placements returned in the response. The key is the placement name.</td>
+    </tr>
+  </tbody>
+</table>
+
+### `OptimizePlacement`
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>placementId</code></td>
+      <td><code>string</code></td>
+      <td>Example response</td>
+      <td>Placement identifier shown in the current contract example response.</td>
+    </tr>
+    <tr>
+      <td><code>format</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>Ad format of the placement.</td>
+    </tr>
+    <tr>
+      <td><code>products</code></td>
+      <td><code>array&lt;OptimizeProduct&gt;</code></td>
+      <td>Yes</td>
+      <td>List of products to include in the placement. Can include both ads and organic product results.</td>
+    </tr>
+    <tr>
+      <td><code>beacons</code></td>
+      <td><code>OptimizePlacementBeacons</code></td>
+      <td>Yes</td>
+      <td>Placement-level tracking beacons.</td>
+    </tr>
+    <tr>
+      <td><code>vastTagUrl</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>VAST tag URL for video ad formats.</td>
+    </tr>
+    <tr>
+      <td><code>vastTagXml</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>VAST tag XML for video ad formats.</td>
+    </tr>
+  </tbody>
+</table>
+
+### `OptimizeProduct`
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>listingType</code></td>
+      <td><code>ListingType</code></td>
+      <td>Yes</td>
+      <td>Type of product, such as organic or sponsored.</td>
+    </tr>
+    <tr>
+      <td><code>skuId</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>SKU ID of the product.</td>
+    </tr>
+    <tr>
+      <td><code>parentSkuId</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>Parent SKU ID. If the product does not have a parent, its own ID is used.</td>
+    </tr>
+    <tr>
+      <td><code>productName</code></td>
+      <td><code>string</code></td>
+      <td>Example response</td>
+      <td>Product name shown in the current contract example response.</td>
+    </tr>
+    <tr>
+      <td><code>productPageUrl</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>URL for the product detail page.</td>
+    </tr>
+    <tr>
+      <td><code>productImageUrl</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>URL for the product image.</td>
+    </tr>
+    <tr>
+      <td><code>rating</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Product rating.</td>
+    </tr>
+    <tr>
+      <td><code>price</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>Current price in the retailer's currency.</td>
+    </tr>
+    <tr>
+      <td><code>comparePrice</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Original price before discount, if any.</td>
+    </tr>
+    <tr>
+      <td><code>renderingAttributes</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>Retailer-provided JSON-serialized dictionary of additional rendering properties.</td>
+    </tr>
+    <tr>
+      <td><code>beacons</code></td>
+      <td><code>OptimizeProductBeacons</code></td>
+      <td>Yes</td>
+      <td>Product-level tracking beacons for this product.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Placement-level beacons
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>onLoadBeacon</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>URL to call when the placement is loaded.</td>
+    </tr>
+    <tr>
+      <td><code>onViewBeacon</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>URL to call when the placement is viewed according to IAB guidelines.</td>
+    </tr>
+    <tr>
+      <td><code>onClickBeacon</code></td>
+      <td><code>string</code></td>
+      <td>No</td>
+      <td>URL to call when the placement is clicked.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Product-level beacons
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>onViewBeacon</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>URL to call when the product is viewed according to IAB guidelines.</td>
+    </tr>
+    <tr>
+      <td><code>onClickBeacon</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>URL to call when the product is clicked.</td>
+    </tr>
+    <tr>
+      <td><code>onBasketChangeBeacon</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>URL to call when the product is added to the basket.</td>
+    </tr>
+    <tr>
+      <td><code>onWishlistBeacon</code></td>
+      <td><code>string</code></td>
+      <td>Yes</td>
+      <td>URL to call when the product is added to a wishlist.</td>
+    </tr>
+  </tbody>
+</table>
+
+## Sample Response
+
+```json
+{
+  "data": {
+    "type": "OptimizeData",
+    "attributes": {
+      "pageUid": "ef47a7cc-a703-4775-8032-24145a6a0c0a",
+      "placements": {
+        "viewSearchResult_API_desktop-Carousel": {
+          "placementId": "viewSearchResult_API_desktop-Carousel",
+          "format": "sponsored_products",
+          "products": [
+            {
+              "listingType": "Sponsored",
+              "skuId": "6887924",
+              "parentSkuId": "6887924",
+              "productName": "Example product",
+              "productPageUrl": "https://www.example.com/product/6887924",
+              "productImageUrl": "https://www.example.com/images/6887924.jpg",
+              "rating": "4.0000",
+              "price": "10.00",
+              "comparePrice": "44.49",
+              "renderingAttributes": "{\"brand\":\"example\"}",
+              "beacons": {
+                "onViewBeacon": "//b.example/rm?...",
+                "onClickBeacon": "//b.example/rm?...",
+                "onBasketChangeBeacon": "//b.example/rm?...",
+                "onWishlistBeacon": "//b.example/rm?..."
+              }
+            }
+          ],
+          "beacons": {
+            "onLoadBeacon": "//b.example/rm?...",
+            "onViewBeacon": "//b.example/rm?...",
+            "onClickBeacon": "//b.example/rm?..."
+          }
+        },
+        "viewSearchResult_API_desktop-InGrid": {
+          "placementId": "viewSearchResult_API_desktop-InGrid",
+          "format": "page_intelligence",
+          "products": [
+            {
+              "listingType": "Sponsored",
+              "skuId": "6887100",
+              "parentSkuId": "6887100",
+              "productName": "Example sponsored product",
+              "productPageUrl": "https://www.example.com/product/6887100",
+              "productImageUrl": "https://www.example.com/images/6887100.jpg",
+              "rating": "4.0000",
+              "price": "10.00",
+              "comparePrice": "44.49",
+              "renderingAttributes": "{\"brand\":\"example\"}",
+              "beacons": {
+                "onViewBeacon": "//b.example/rm?...",
+                "onClickBeacon": "//b.example/rm?...",
+                "onBasketChangeBeacon": "",
+                "onWishlistBeacon": ""
+              }
+            },
+            {
+              "listingType": "Organic",
+              "skuId": "5454644",
+              "parentSkuId": null,
+              "productName": null,
+              "productPageUrl": "https://www.example.com/product/5454644",
+              "productImageUrl": "https://www.example.com/images/5454644.jpg",
+              "rating": "2.5000",
+              "price": "48.99",
+              "comparePrice": "48.99",
+              "renderingAttributes": "{\"brand\":\"example\"}",
+              "beacons": {
+                "onViewBeacon": "",
+                "onClickBeacon": "//b.example/rm?...",
+                "onBasketChangeBeacon": "//b.example/rm?...",
+                "onWishlistBeacon": "//b.example/rm?..."
+              }
+            }
+          ],
+          "beacons": {
+            "onLoadBeacon": null,
+            "onViewBeacon": null,
+            "onClickBeacon": null
+          }
+        }
+      }
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+## Integration Notes
+
+* Use this endpoint on pages where you want Criteo to optimize across organic and sponsored products together.
+* Include the relevant page context and `organicSkus` in `pageAdContext` for holistic optimization scenarios.
+* Render each placement exactly as returned.
+* Implement all beacons returned in the response.
+
+## Response Codes
+
+<table>
+  <thead>
+    <tr>
+      <th>Response code</th>
+      <th>Title</th>
+      <th>Detail</th>
+      <th>Troubleshooting</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>200</code></td>
+      <td><code>OK</code></td>
+      <td>Request succeeded and returned one or more placements, each with a ranked products list.</td>
+      <td>Render each placement as-is, use <code>listingType</code> for labeling, and implement both product-level and placement-level beacons correctly.</td>
+    </tr>
+    <tr>
+      <td><code>400</code></td>
+      <td><code>Bad Request</code></td>
+      <td>Request body is invalid, for example because required fields are missing or the filter structure is invalid.</td>
+      <td>Verify that required attributes are present and that the request structure is valid.</td>
+    </tr>
+    <tr>
+      <td><code>401</code></td>
+      <td><code>Unauthorized</code></td>
+      <td>Authentication failed or token is missing or invalid.</td>
+      <td>Check API credentials and authorization header.</td>
+    </tr>
+    <tr>
+      <td><code>5xx</code></td>
+      <td><code>Server error</code></td>
+      <td>Internal error while processing the request.</td>
+      <td>Retry with backoff. If the issue persists, contact your Criteo representative with <code>pageUid</code> and timeframe.</td>
+    </tr>
+  </tbody>
+</table>
+
+<br />

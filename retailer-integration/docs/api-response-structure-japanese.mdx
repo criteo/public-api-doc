@@ -1,0 +1,164 @@
+---
+title: API レスポンス構造
+description: This is a translated version of the Commerce Onsite Video documentation
+hidden: true
+---
+
+## レスポンス要素
+
+APIレスポンスの構造は全てのフォーマットにおいて共通です。詳細については以下をご覧ください。
+
+### `Status`
+
+タイプ：`string`
+
+値：`OK`（レスポンス成功の場合）またはエラータイプ。
+
+エラーが発生した場合、該当するエラーメッセージのリストを含む配列がレスポンスに追加されます（例：`Missing required parameter x`）。
+
+***
+
+### `Placements`
+
+タイプ：`array of placement objects`
+
+各広告掲載枠名は、`viewCategory_API_desktop-Video` のようにキーとして使用されます。
+
+各キーの値は広告の配列を示します。 各広告には以下のプロパティがあります。
+
+* **`format`**：返される形式を示します。
+
+* **`products`**：広告フォーマットに含まれる SKU のリストと、各 SKU に関する追加のメタデータ（画像、製品 URL、親 SKU ID など）<br/>
+
+* **`products_order`**：以下のような SKU の在庫状況に応じて、リアルタイムの代替製品が許可されます。<br/>
+
+  * **`products`**：製品 ID の配列。 Criteo によって返される商品の順序は、SKU が入手不可能または在庫切れでない限り、サイトに表示される SKU の順序と一致する必要があります。<br/>
+  * **`isMandatory`**: true の場合、この商品が利用できないときは広告ユニット全体を**表示しないでください。**。 false の場合、広告は表示できますが、ボタン/製品タイルはユニットから削除する必要があります。
+
+***
+
+### `Rendering`
+
+* **`rendering`**：画像アセット、色、カスタムラベルなど、広告をレンダリングするときに使用するフォーマット固有のプロパティ。
+
+<Warning>
+  レンダリングセクション内のパラメータを**動画フォーマットのレンダリングに使用しないでください**。 詳細については、[下の表](/retailer-integration/docs/api-response-structure#rendering-fields-japanese)を参照してください。
+
+  弊社は、将来必要に応じてこれらの値を削除する権利を保有します。
+</Warning>
+
+<Info>
+  **動画のフォーマット**
+
+  レンダリング機能の詳細については、[フォーマットの仕様](/retailer-integration/docs/format-overview-japanese)（広告レンダリングセクション）を参照してください。 このセクションには、[Commerce Video Spotlight の仕様](/retailer-integration/docs/commerce-video-spotlight-japanese)も記載されています。
+</Info>
+
+下記の `TagVideoVAST ` フィールドを参照してください。
+
+***
+
+### `TAGVideoVAST`
+
+* **`TagVideoVAST`** または **`XmlVideoVAST`：**
+  * **`TagVideoVAST`** *（デフォルト）* **：** VAST をサポートするビデオ プレーヤー経由で VAST XML を読み込むための URL。
+  * **`XmlVideoVAST`** *（小売業者が VAST 定義を取得するために追加の API 呼び出しを行わない場合）*：VAST 標準をサポートするビデオ プレーヤーを提供するための VAST XML。
+
+* **`OnViewBeacon`、`OnLoadBeacon`、`OnClickBeacon` など**：特定のアクションが発生したときに Criteo にトリガー/送信されるビーコン。 詳細については、セクションを参照してください。
+
+***
+
+## 例
+
+![API レスポンス構造](https://files.readme.io/6da8237-image.png)
+
+<br />
+
+### 商品のビーコン
+
+```json
+{
+  "OnViewBeacon": "//b.us5.us.criteo.com/rm?rm_e=s8ly6TMLiDfPTKFfXm_9jzkwZuAATAS9FwGwUZ5NvnDY6LnNvBC-8AFQtntlkS50apl_jVhQvRg0-u3hWpur4RF0HikgBSOlggUUkzoK6gg9E7yC-eas9rFlwoxTuvObWpo4Yv0uedvzqBKRk-BQgcCsPHzIURbtCi_Uf5InvFyWoUkbah_XRajDvrj7oLrV-RjcYeixGYTcBoi89hqLhak5FB7_2zPWNAZMVPUCw23MNX4t0OC70fDyIL68g7RUGtBtrVvbMkMafb30uMp_L1WlmSeGHdM-EP6aUYjKRS0VBwwZkaVStkauo1XrT5-dwiyB8zm2AlAVk0AwGMNdmFlCBac-MQWycvgjgOWm-p7cGLVi5Fq3gIrUGVI5Jqq&ev=4",
+  "OnClickBeacon": "//b.us5.us.criteo.com/rm?rm_e=MrPLtLUJfBxGX1zJk2imKaKpINZcbhVh4D9KELEKwSgdZe8-YiW50o4eQvi4SQGyvk-qeuvO1GZCJkmhfpBHJYoxcNaFwMFqtBLjax-lgCevbaCxmjOQjxqFgBXAG0CAvZx4klriBNrRrVXKIk2NI8-jpplFURhS_hDuGcMgUICraKi4wi7x958r0VNKA7iE6f-N2yyQWLlILI4yNFgqZPp_0sP-b2ks72ZdxeiJQbDko0FVMJYPClVooJPRXBWJjOvph2OOrZyh0tY4LwGp6D2p8W_rD_5HN94RR5Cewl8ojB6WFjoq_PAaJGPptLjEUV9kx-EUMFhve6vGfAlHeJ7P-ILh44mp8nOKyIsoLSIwR9HYhghChXJ4M-3EVAs&ev=4",
+  "OnBasketChangeBeacon": "//b.us5.us.criteo.com/rm?rm_e=mlh4P3Tin3uct-JUxYugi37w__lZ0FOoCZ06TrhlXtQKc2faGpFFiK6g4zKwyFmd2NwXBMhVZGVtFK5T9e9KvdteZRrqZxcVW08Y9i8ecjt9m1DbEQunU8uMblAIF8yZ3bqjt71Niurwrzm-iiF-B2av8zEd0lj-Lt5AGeX1dgyP3jJdO-5Ddmw6-H5L9JTAksWT8QWbKoVwOQtwYU8r2M4yzpCGGvcvvwu6QdoC_GCfazwEsIRt446HA0AVqOwss26id8ZDjTSrwbOjSVMu5JS92mGU_3wR3Fyb2w5M8AJcLUlIXTD8oaLc9CFyAQQrbkurtKsHFPfNWRyuZOxnZr0FgSgRvHIi55eP-yr5usr4of31iaYPQvKrdTbGiEX&ev=4",
+  "OnWishlistBeacon": "//b.us5.us.criteo.com/rm?rm_e=F--9mZ6kqtpHdJjjowDoZJixm4BjF12sLm6qFd0fCcnunZ1oT-owxZowTezzt4Je3Q7MQiLTAyZNVlB7v-feDJHnczt4q-f43SEE67RxRFL-PWGl4jCW7F7CKBZ5WNMxBmU0eC4d88xec7diCgp-Ifhgs-Qp135jF8-BrQ7kVj9RlRan2QTtLKxCXTytdydHRhwaAsdCyOA-VStX4ZNRI297WGRTXfRepsCLAr6E5DTDdoccag4lx5v_LSUNO82i0D11y5O3xqs1QSKCIANY802UBDPdV89lEqbofgL1Gp7CYd0OSxM_545fzsFVA2RWG4ufFDIF71aXrbKhZuRencstNQ8xMWH0KMKACEk7DQWE9WObogGMEaoSf8t664O&ev=4"
+}
+```
+
+***
+
+### 広告掲載枠/フォーマットのビーコン
+
+広告掲載枠とフォーマットのビーコンは通常、`TagVideoVAST` のすぐ下にあります。
+
+```json
+{
+  "OnLoadBeacon": "//b.us5.us.criteo.com/rm?rm_e=OvODs4ECUFFfQHTXDM5FiIOKZruyseTgpUr_Xt4DVTUPBoNNtG8VsH3Jo21jPK_hMV6-9I89Az0ZP2H8yslVjFaeW_HqR0Tee4gUCZ-aJMGxpkz2bjGguRcAv-jd9ocPs2HOgk24DtDHJ_D4MJJ1b0I2bILdRCp2AyfGmrj1acfyvMqngJeS4eWiDOYOkNTaYmd0uIo3bAcGObFt4DALVQE-AJXUhBjo3lyY6Kcn7n6xS1bAkK_kqT6sBtSk2KRmX_dPNKucLowpkgsRwpr-XgfcmV1VVvkCH8uXbmYbEPTQVE103_4r7zHgvpZaiU8qbROlMwCHVqvx-aY1tNuDKa0uwoqyCm6JHC2yTo06XfnqZhJphbc50hjGbPZHa24ZAdMq7bBr3G9YpxycnMQ_B-7zyNFQeSNH_M_pYAgIvo6eXjgAYA376LoJostZTGhmEEKUvgrY-7hbU_ezG5D2_BCA7Yh2xkDQHmERLd4FgWyUxcSlkksvUmIlpd1S5-b&ev=4",
+  "OnViewBeacon": "//b.us5.us.criteo.com/rm?rm_e=qjke4FNkDL1z46EuOhojBxciTQ6Xp09cJDentgGUVT0kah-rPIHg9DUOFugsUOiCrUvFnJtuj5yYXehZp5-Ryvzf5WLl9gmin_wz4ekX7Fu_ePZKpnpNgyBBR-1Jjuqzdvkq6aIktA4r5HGzyyPF9TQDrrhYgmldAW8QYjfTk6WiI7jlZmUZnIvVah3HJi4I6QzTCTTwRXBJrFNYgJKgt2M419DkJA1UyGsnCmld5E-q4Ms3znTBEIF4fgVj6ExNAM1O_HgmgcKrDYCpo9ZVkd037dHoDiYiZVfmymlSIcubD73ZB_sBl20rsUxIujMsbLt3jliMFEthtJ8oZ3mL5Ax2HwOA2Qm58M0InNlmQf88ulFpw_IWYI6iklgleE3GrvqHb-eNj7Fg77qvKRYrHmE1gLF66WVjyactaWqP0RsIpqcAGlrjHTI7I_lQxE6&ev=4",
+  "OnClickBeacon": "//b.us5.us.criteo.com/rm?rm_e=xt13W_TJWbSrXdNa2RG3qhZiHotcnySWD0gLaHC_PbIZyrh_V_zxUVBnIP66uaFp58Y8R0Q6ALpYjkAac-2iecIRrcEVriwqPrGkjbDFHjBsGPD4q0JTEH1mZrp2oMndYCXQEOQjAzDIBR4e52DU-koOXViZcXi9_S-bLmQA_PFop4u0ilGtfJ2AJeCOtwyNnluCwE3INkF1AEN4HqMnOgtiHcm00o9DojZemXKd_B-4bRl3eRmFR_s0jVRjwbAYHegtP7WKujHi5iRiBYogpOpVhMCkg3DciZZpza9IcBxsQVgEonlADyJYzUtvEzMZpzBE1_x6NyjUPECJUSHrxvzSI7UKgPwSukP5sCvSxY6AFqTIXXHCXKjJKFH2uQwsvi0VtHobEv_c13tm3QaIg&ev=4",
+  "OnFileClickBeacon": "//b.us5.us.criteo.com/rm?rm_e=3wgFCc5lMY0fItQj4jiSm37070kK2zoFJlbFRWEZd3CB9_0DjnEp1Iq7Q1xG5mTffdi1SAarVTiAILArYOPRbbyiJ3eB_t4Y29BWqAhUbIrP6nAFT0W2DxVbOdlRLFYoISPpbV-EhVsA-oh9kXPKSk53p7w1MZAm9LS45SVZ_tZQh7-SPz2MLF4hoJGteus6hkWyfsVbgTym2gpu7JobVmaFLGrc8CyymYkfH5Xf1JKiGeNa2ZPsQtZxpnt1Dzl4Bm_BAfKYjQZnOCyWt6peHIN-azNeYwe34M9H85x1SWn5y_PKpIQZYiB_1YvdBac2VSrkBqO6SO1OgB2NiveM923Ew4Npm2rgUYUZ5bjvgL3KufQJK4FucRbvjAxEQJS&ev=4",
+  "OnBundleBasketChangeBeacon": "//b.us5.us.criteo.com/rm?rm_e=FSx1IlEiuPZ8UZ6-SLMpMc_icIPoxT57Ozjvievjn-9la70L5yC5VtSagxSUpBlat4BEQLu8hrqXDcNY8kUTLylv7fdvT2B7x-NkYCfYEGZZj1lJdRLhQxckVsgIk-PyjILwpnwEODcV1wvMmXnFH5ttrA5iSp847tgW-2fvZxS1w7YX30tbLYvAmZTvJxPnOXKPcmwnJz3BJ6d8CMLgdVoJN67AtgRKTpkb1s0eYk-ANM_gv7cgtEME2142W8vlv6-NayvCwGvw_CtH-OWVZoEJ52TJMMbj3Aa6jPHBRgw9P-LVsFWY3f_kxauVNl7mHTAyVvajrcPeYl7_8ygq6hFtqm9IBryXB8iMctEXDronoGT-VHfrAqet9nVvPYMyATWjm-X21M88YLAGoaDuQ&ev=4"
+}
+```
+
+***
+
+## フィールドのレンダリング
+
+以下は、API レスポンス内のレンダリングフィールドの例です。
+
+```json
+{
+  "rendering": {
+    "background_video": "{\n  \"url\": \"https://static.criteo.net/design/dt/commerce_max/retailer_06/d97eb13b8e3d496eaddef7b4c998d286_video.mp4\",\n  \"width\": 720,\n  \"height\": 1280,\n  \"duration\": \"00:00:06\"\n}",
+    "video_caption_file": "https://static.criteo.net/video/onsite_cc/laptop_vertical.vtt",
+    "video_alt_text": "Laptop",
+    "border_color": "#712329",
+    "video_optional_redirect_url": "https://www.retailer.com/shop/search-results.html?q=laptop",
+    "video_optional_redirect_url_app": "",
+    "video_media_files": "[\"background_video\"]"
+  }
+}
+```
+
+以下は、ページ内のフォーマットのレンダリングに関する API レスポンスフィールドの説明です。
+
+<Warning>
+  これらのフィールドは、動画フォーマットに応じて変更される可能性があります。
+</Warning>
+
+<table>
+  <thead>
+    <tr>
+      <th>フィールド</th>
+      <th>説明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>video&#95;background</code>（このフィールド内のすべての情報を含む）</td>
+      <td>このフィールドは弊社専用となっておりますので、<strong>ご使用はお控えください。</strong> すべての動画関連情報、アセット、トラッキングは、VAST XML からのみ使用する必要があります。</td>
+    </tr>
+    <tr>
+      <td><code>video&#95;caption&#95;file</code></td>
+      <td>動画字幕ファイル（WebVTT）</td>
+    </tr>
+    <tr>
+      <td><code>video&#95;optional&#95;redirect&#95;url</code> <code>video&#95;optional&#95;redirect&#95;url&#95;app</code></td>
+      <td>これらのフィールドは弊社専用となっておりますので、<strong>ご使用はお控えください。</strong> ユーザーがビデオプレーヤーをクリックした場合にランディングページへ転送するオプションのリダイレクトリンクは、VAST 定義で使用できます（ <code>&lt;ClickThrough&gt;</code> ノードなど）。 VAST でサポートするリダイレクトリンクは1つのみであるため、Criteo は広告をリクエストしているページに基づいて適切な URL を自動的に返します。</td>
+    </tr>
+    <tr>
+      <td><code>alternative&#95;text / background&#95;video&#95;alt&#95;text</code>（または同等の名前）</td>
+      <td><a href="https://www.w3.org/WAI/standards-guidelines/wcag/">WCAG</a>準拠のために alt&#92;&#95;text div 属性に表示するテキスト。</td>
+    </tr>
+    <tr>
+      <td><code>video&#95;media&#95;files</code> <code>video&#95;firework&#95;id</code> <code>video&#95;caption&#95;file</code> <code>video&#95;captions</code></td>
+      <td>これらのフィールドは弊社専用となっておりますので、<strong>ご使用はお控えください。</strong></td>
+    </tr>
+  </tbody>
+</table>
+## What's next
+
+* [Video Player Specification (Japanese)](/retailer-integration/docs/video-player-specification-japanese)
+* [Tracking Ad-related Activity (Japanese)](/retailer-integration/docs/tracking-ad-related-activity-japanese)
+* [Video Player implementation (App:Android)(Japanese)](/retailer-integration/docs/video-player-implementation-appandroid-japanese)
+* [Video Player Implementation (App: iOS)(Japanese)](/retailer-integration/docs/video-player-implementation-app-ios-japanese)

@@ -1,0 +1,794 @@
+---
+title: 'Video Player Implementation (App: Android)'
+description: This document provides implementation guidance for integrating Onsite
+  Video ads into native Android apps.
+---
+
+<Info>
+  **Onsite Video for Apps is in Beta**  
+  The documentation is subject to change. Please report any issues and check back for updates.
+</Info>
+
+***
+
+# Introduction
+
+This document provides implementation guidance for Onsite Video ads in native Android applications.
+
+It introduces a ready-to-integrate video ad wrapper that handles VAST parsing, video playback, and Open Measurement SDK compatibility for viewability and verification, helping retailers easily render, track,
+and measure in-app Onsite Video ad placements with minimal code.
+
+![20d45d766839e24e27cb2a16feafd598598192abbc99a44cc2f6205d1f2a39c6 image android](https://files.readme.io/20d45d766839e24e27cb2a16feafd598598192abbc99a44cc2f6205d1f2a39c6-image-android.png)
+
+![bd38bb138444fbc30f9f7e75de64ec25fe3cb51a6425623e4b2d2d65d4e4cbcf image](https://files.readme.io/bd38bb138444fbc30f9f7e75de64ec25fe3cb51a6425623e4b2d2d65d4e4cbcf-image.tiff)
+
+<Warning>
+  **Version requirements**  
+  Android SDK 24+ (Android 7.0 Nougat)
+</Warning>
+
+***
+
+# Integration Steps
+
+## 1. Add the Criteo Sample Folders to Your App Target
+
+Add the Criteo sample folders to your app target. You can download/clone **[the GitHub repo here](https://github.com/criteo/video-ad-player-android)**.
+
+In **Android Studio**, drag the following sample source folders from:
+
+```text
+/android-sample/src/main/java/com/iab/omid/sampleapp/
+```
+
+Into your project:
+
+* `player/`: (CriteoVideoAdWrapper + CriteoVideoPlayer)
+* `manager/`: (NetworkManager, VastManager, BeaconManager,
+  CreativeDownloader, OMID interactors)
+* `util/`: (CriteoLogger)
+
+***
+
+## 2. Use the Wrapper Where You Need an Ad
+
+Pick one of the patterns in this guide and adapt the snippet:
+
+* **[Single Video (Fragment)](/retailer-integration/docs/video-player-implementation-app-android#single-video-fragment)**: Small placement with one ad on screen.
+* **[Feed (RecyclerView)](/retailer-integration/docs/video-player-implementation-app-android#feed-recyclerview)**: Scrolling feeds require preloading and visibility-driven playback.
+
+***
+
+# Instructions for Integrating Open Measurement SDK (OMID)
+
+## Step 1: Register & Namespace
+
+<Info>
+  **Why**: This generates a unique, Namespaced Open Measurement SDK (OMID) so measurement is attributed to your organization.
+</Info>
+
+* Sign up at: [https://tools.iabtechlab.com/login](https://tools.iabtechlab.com/login)
+* After login, confirm that a **Namespace** exists for your email domain.
+
+***
+
+## Step 2: Build & Download (Android)
+
+<Info>
+  **Why**: This produces your organization's signed OMID artifacts (AAR + JS) required at runtime.
+</Info>
+
+1. Go to: [https://tools.iabtechlab.com/omsdk](https://tools.iabtechlab.com/omsdk)
+
+2. Select your **Namespace**, then click **Build Android**.
+
+3. When it finishes (after ~10-15 minutes), go to the Android tab, confirm the latest build by its timestamp (it should be close to the current time), and download the artifacts. Inside the package, you'll find:
+
+   * `omsdk-android-{'version'}-{'namespace'}.aar`
+   * `omsdk-v1.js`
+   * Demo project (reference only)
+
+***
+
+## Step 3: Add the OMID Android Archive (AAR) Library
+
+<Info>
+  **Why**: The AAR must be added to your project's dependencies so the OMID classes are available at compile time and runtime.
+</Info>
+
+* Place the `omsdk-android-<version>-<namespace>.aar` file into your module's `libs/` directory.
+* In your module's `build.gradle`, ensure the `libs/` directory is included as a flat file repository:
+
+```text gradle Gradle
+dependencies {
+    implementation fileTree(include: ['*.aar'], dir: 'libs/')
+}
+```
+
+* Sync Gradle and verify the build succeeds.
+
+***
+
+## Step 4: Add the OMID JS Library
+
+<Info>
+  **Why**: The OMID service script is required by the native session to initialize measurement.
+</Info>
+
+* Place `omsdk-v1.js` in your module's `res/raw/` directory (e.g., `src/main/res/raw/omsdk_v1.js`).
+* Verify the file appears under `res/raw/` in your Android Studio project view.
+
+***
+
+## Step 5: Update the OMID Session Interactor
+
+<Info>
+  **Why**: Point the sample to your OM SDK and set partner metadata so events are attributed correctly.
+  In `manager/omid/OMIDSessionInteractor.kt`, make the changes described below.
+</Info>
+
+* Import package: replace `com.iab.omid.library.criteo` with `com.iab.omid.library.(retailer-namespace)`.
+* Types: replace every `OMIDCriteo...` type prefix with `OMID(retailer-namespace)...`
+* Update the `PARTNER_NAME` build config field in `build.gradle` to your organization's partner name.
+
+***
+
+## Step 6: Activate OMID
+
+<Info>
+  **Why**: OMID must be activated before any `AdSession` is created; otherwise, session creation will fail.
+</Info>
+
+Call activation once in your `Application` subclass:
+
+```text kotlin
+class AdApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        OMIDSessionInteractorFactory.activateOMSDK(this)
+    }
+}
+```
+
+Ensure this Application subclass is referenced by your application so it runs at app startup.
+
+Declare in `AndroidManifest.xml`:
+
+```xml
+<application
+    android:name=".AdApplication">
+```
+
+<Check>
+  **Congratulations!**  
+  You are now ready to use Criteo's Android video implementation with the OMID.
+</Check>
+
+***
+
+# Integration Key Concepts and Code Snippets
+
+You will find in this section short, descriptive snippets that explain behavior over boilerplate.
+
+## What You Integrated
+
+* `CriteoVideoAdWrapper` (public API): Orchestrates VAST parsing, asset download, OMID-compliant measurement, beacon tracking, and video player lifecycle management.
+* `CriteoVideoPlayer` (internal): managed by the wrapper; uses ExoPlayer (Media3) under the hood.
+* `Managers` (internal):
+  * `NetworkManager`
+  * `VastManager`
+  * `CreativeDownloader`
+  * `OMIDSessionInteractor`
+  * `BeaconManager`
+
+***
+
+## Single Video (Fragment)
+
+Code Example: `src/main/java/com/iab/omid/sampleapp/BasicVideoPlayerFragment.kt`
+
+Pattern:
+
+* Create the wrapper early; optionally enable logs.
+* Resume playback in `onResume`, pause in `onPause`.
+* On destroy, `release()` the wrapper to free all resources.
+
+```text kotlin
+class BasicVideoPlayerFragment : Fragment() {
+
+    private var videoAdWrapper: CriteoVideoAdWrapper? = null
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupVideoAd()
+    }
+
+    private fun setupVideoAd() {
+        // 1. Configure the video ad wrapper
+        val config = CriteoVideoAdConfiguration(
+            autoLoad = true,
+            startsMuted = true
+        )
+
+        val vastUrl = arguments?.getString("vast_url") ?: VAST_DEMO_URL_SINGLE_MEDIA
+
+        // 2. Create the wrapper using the factory method
+        videoAdWrapper = CriteoVideoAdWrapper.fromUrl(
+            context = requireContext(),
+            vastURL = vastUrl,
+            configuration = config
+        ).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // 3. Enable all log categories for debugging
+        videoAdWrapper?.enableLogs = setOf(
+            CriteoVideoAdLogCategory.VAST,
+            CriteoVideoAdLogCategory.NETWORK,
+            CriteoVideoAdLogCategory.VIDEO,
+            CriteoVideoAdLogCategory.BEACON,
+            CriteoVideoAdLogCategory.OMID,
+            CriteoVideoAdLogCategory.UI
+        )
+
+        // 4. Set up optional callbacks
+        videoAdWrapper?.onVideoLoaded = {
+            Log.d(TAG, "Video loaded successfully and ready to play")
+        }
+
+        videoAdWrapper?.onVideoStarted = {
+            Log.d(TAG, "Video playback started")
+        }
+
+        videoAdWrapper?.onVideoPaused = {
+            Log.d(TAG, "Video playback paused")
+        }
+
+        videoAdWrapper?.onVideoTapped = {
+            Log.d(TAG, "User tapped on video")
+        }
+
+        videoAdWrapper?.onVideoError = { error ->
+            Log.e(TAG, "Video error: ${error.message}", error)
+        }
+
+        // 5. Add the wrapper to the layout
+        view?.findViewById&lt;FrameLayout&gt;(R.id.videoAdContainer)?.addView(videoAdWrapper)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        videoAdWrapper?.play()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        videoAdWrapper?.pause()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        videoAdWrapper?.release()
+        videoAdWrapper = null
+    }
+
+    companion object {
+        private const val TAG = "BasicVideoPlayerFragment"
+    }
+}
+```
+
+<Info>
+  **What happens under the hood**
+  The wrapper fetches and parses the VAST, downloads the chosen media, starts the OMID session,   and, on play, fires impression and quartiles beacons as playback progresses. The Android video player behavior aligns with [our Video Player Specifications](/retailer-integration/docs/video-player-specifications).
+</Info>
+
+***
+
+## Feed (`RecyclerView`)
+
+### Code Example
+
+Fragment: `src/main/java/com/iab/omid/sampleapp/FeedVideoPlayerFragment.kt`
+
+### Pattern
+
+* Set up a `RecyclerView` with a scroll listener for visibility-based auto-play/pause.
+* On cell ≥50% visible: `play()` (autoplays unless user previously paused).
+* On cell below 50% visible: `pause()` (state is preserved — position/mute).
+* On Fragment destroy: `release()` all wrappers to clean up resources.
+
+```text kotlin
+class FeedVideoPlayerFragment : Fragment() {
+
+    private var recyclerView: RecyclerView? = null
+    private var adapter: FeedAdapter? = null
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView(view)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Initial visibility check after layout
+        view?.post { checkVideoVisibility() }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        adapter?.pauseAllVideos()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        adapter?.cleanupVideos()
+        recyclerView = null
+        adapter = null
+    }
+
+    private fun setupRecyclerView(view: View) {
+        adapter = FeedAdapter()
+
+        recyclerView = view.findViewById(R.id.feedRecyclerView)
+        recyclerView?.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@FeedVideoPlayerFragment.adapter
+
+            // Add scroll listener to handle visibility-based auto-play/pause
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    checkVideoVisibility()
+                }
+
+                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                    super.onScrollStateChanged(recyclerView, newState)
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        checkVideoVisibility()
+                    }
+                }
+            })
+        }
+    }
+
+    /**
+     * Checks visibility of the video ad item and plays/pauses
+     * based on 50% visibility threshold.
+     */
+    private fun checkVideoVisibility() {
+        val layoutManager = recyclerView?.layoutManager as? LinearLayoutManager ?: return
+        val firstVisible = layoutManager.findFirstVisibleItemPosition()
+        val lastVisible = layoutManager.findLastVisibleItemPosition()
+
+        for (i in firstVisible..lastVisible) {
+            val viewHolder = recyclerView?.findViewHolderForAdapterPosition(i) ?: continue
+            if (viewHolder is FeedAdapter.VideoAdViewHolder) {
+                val visibilityPercentage = calculateVisibilityPercentage(viewHolder.itemView)
+                viewHolder.onVisibilityChanged(visibilityPercentage >= 50)
+            }
+        }
+    }
+}
+```
+
+The `VideoAdViewHolder` manages play/pause based on visibility:
+
+```text kotlin
+inner class VideoAdViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private val videoContainer: FrameLayout = itemView.findViewById(R.id.videoAdContainer)
+
+    private var videoAdWrapper: CriteoVideoAdWrapper? = null
+    private var isVideoVisible = false
+
+    fun bind(item: FeedItem.VideoAd) {
+        // Check if we already have a player for this URL in the adapter cache
+        var player = videoAdWrappers[item.vastUrl]
+        if (player == null) {
+            player = CriteoVideoAdWrapper.fromUrl(
+                context = itemView.context,
+                vastURL = item.vastUrl,
+                configuration = CriteoVideoAdConfiguration(autoLoad = false, startsMuted = true)
+            )
+
+            // Configure listeners
+            player.enableLogs = setOf(CriteoVideoAdLogCategory.VIDEO, CriteoVideoAdLogCategory.OMID)
+            player.onVideoLoaded = { Log.d(TAG, "Video ad loaded") }
+            player.onVideoStarted = { Log.d(TAG, "Video ad started") }
+            player.onVideoPaused = { Log.d(TAG, "Video ad paused") }
+
+            videoAdWrappers[item.vastUrl] = player
+        }
+
+        videoAdWrapper = player
+
+        // Attach to view hierarchy
+        val parent = player.parent
+        if (parent != videoContainer) {
+            if (parent is ViewGroup) parent.removeView(player)
+            videoContainer.addView(player)
+        }
+    }
+
+    fun onVisibilityChanged(isVisible: Boolean) {
+        if (isVideoVisible == isVisible) return
+        isVideoVisible = isVisible
+
+        if (isVisible) videoAdWrapper?.play() else videoAdWrapper?.pause()
+    }
+}
+```
+
+Cleanup on adapter destruction:
+
+```text kotlin
+fun pauseAllVideos() {
+    videoAdWrappers.values.forEach { it.pause() }
+}
+
+fun cleanupVideos() {
+    videoAdWrappers.values.forEach { it.release() }
+    videoAdWrappers.clear()
+}
+```
+
+***
+
+### Loading from local XML (instead of URL)
+
+* Use `CriteoVideoAdWrapper.fromXml()` factory method instead of `fromUrl()`.
+* Or use the `VASTSource.Xml` sealed interface variant with `loadVideoAd()`.
+
+```text kotlin
+// Using factory method
+val videoAd = CriteoVideoAdWrapper.fromXml(
+    context = this,
+    vastXML = "&lt;VAST version=\"3.0\"&gt;...&lt;/VAST&gt;"
+)
+parentView.addView(videoAd)
+
+// Or using loadVideoAd with VASTSource
+val videoAd = CriteoVideoAdWrapper(context)
+videoAd.loadVideoAd(VASTSource.Xml("&lt;VAST version=\"3.0\"&gt;...&lt;/VAST&gt;"))
+```
+
+***
+
+# Wrapper API – Quick Reference
+
+Below are the entry points you'll typically call from your app.
+
+## Lifecycle
+
+* `loadVideoAd`(source: VASTSource): Start loading from a URL or raw XML source.
+* `play()`: Resume or start video playback.
+* `pause()`: Pause video playback and preserve state (position/mute).
+* `release()`: Release all resources (call in `onDestroyView` or `onDestroy`). The wrapper cannot be reused after this call.
+* `retry()`: Retry loading after an error.
+
+***
+
+## UX
+
+* `toggleMute()`: Enable or disable video player's mute state.
+* `seekTo(timeMs: Long)`: Seek to a specific playback position in milliseconds.
+
+***
+
+## Callbacks
+
+* `onVideoLoaded`: Fired when assets are downloaded and the ad is ready to play.
+* `onVideoStarted`: Fired when playback actually begins (after play/resume is effective).
+* `onVideoPaused`: Fired when playback pauses.
+* `onVideoTapped`: Fired when the user taps the video view (used for click-through).
+* `onVideoError`: Fired when loading or playback fails; provides the underlying Throwable.
+* `onPlaybackProgress`: Periodic updates with currentMs and durationMs (milliseconds) during playback.
+
+***
+
+## Configuration
+
+* `CriteoVideoAdConfiguration`: Property description and default values. All parameters will have default values unless otherwise specified on init.
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+      <th>Default value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>autoLoad</code></td>
+      <td>Whether to automatically load VAST/assets on init.</td>
+      <td><code>true</code></td>
+    </tr>
+    <tr>
+      <td><code>startsMuted</code></td>
+      <td>Initial mute state for the first play.</td>
+      <td><code>true</code></td>
+    </tr>
+    <tr>
+      <td><code>backgroundColor</code></td>
+      <td>Wrapper view background color.</td>
+      <td><code>Color.WHITE</code></td>
+    </tr>
+    <tr>
+      <td><code>loadingBackgroundColor</code></td>
+      <td>Loading overlay background color.</td>
+      <td><code>#F2F2F7</code></td>
+    </tr>
+    <tr>
+      <td><code>loadingIndicatorColor</code></td>
+      <td>ProgressBar indicator color while loading.</td>
+      <td><code>#AEAEB2</code></td>
+    </tr>
+    <tr>
+      <td><code>loadingText</code></td>
+      <td>Loading message text.</td>
+      <td>"Loading video ad..."</td>
+    </tr>
+    <tr>
+      <td><code>loadingTextColor</code></td>
+      <td>Loading text color.</td>
+      <td><code>#AEAEB2</code></td>
+    </tr>
+    <tr>
+      <td><code>errorBackgroundColor</code></td>
+      <td>Error overlay background color.</td>
+      <td><code>#F2F2F7</code></td>
+    </tr>
+    <tr>
+      <td><code>errorTextColor</code></td>
+      <td>Error text color.</td>
+      <td><code>Color.RED</code></td>
+    </tr>
+    <tr>
+      <td><code>retryButtonText</code></td>
+      <td>Retry button label text.</td>
+      <td><code>"Retry"</code></td>
+    </tr>
+    <tr>
+      <td><code>retryButtonColor</code></td>
+      <td>Retry button text color.</td>
+      <td><code>#007AFF</code></td>
+    </tr>
+    <tr>
+      <td><code>retryButtonBackgroundColor</code></td>
+      <td>Retry button background color.</td>
+      <td><code>#E5E5EA</code></td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+## Properties
+
+* `isPlaying`: Boolean — Whether the video is currently playing.
+* `isMuted`: Boolean — Whether the video is currently muted.
+* `currentPositionMs: Long` — Current playback position in milliseconds.
+* `state: CriteoVideoAdState` — Current wrapper state (`NotLoaded`, `Loading`, `Ready`, `Error`).
+
+***
+
+## Sizing, UX, Performance
+
+* Supports arbitrary video aspect ratios. Size the container `FrameLayout` to fit your layout. The wrapper selects the best media file based on aspect ratio from the VAST `MediaFiles`.
+* The wrapper automatically pauses on `onDetachedFromWindow()` (RecyclerView friendly). Call `release()` explicitly when the wrapper is no longer needed.
+* User pause prevents auto-resume until explicitly played again. For our comprehensive video player specifications, see [this page](/retailer-integration/docs/video-player-specifications).
+
+***
+
+## Technical Details (Internal): Managers & Flow
+
+A quick tour of what happens under the hood. You should not need to call these directly. `CriteoVideoAdWrapper` orchestrates them for you.
+
+#### `NetworkManager` (VAST fetch & parse)
+
+<Info>
+  **Why it matters**: Downloads the VAST XML and transforms it into a structured `VastAd`.
+</Info>
+
+```text kotlin
+// Wrapper calls this under the hood
+val result: Result&lt;VastAd&gt; = networkManager.fetchAndParseVast(url)
+```
+
+***
+
+#### `VastManager` (VAST structure & URLs)
+
+<Info>
+  **Why it matters**: Extracts media URL, verification script URL, click-through, and tracking events.
+</Info>
+
+```text kotlin
+// Example fields typically extracted from VastAd
+ad.videoUrl                 // Creative video URL
+ad.verificationScriptUrl    // OMID verification script
+ad.vendorKey                // Vendor identifier for verification
+ad.trackingEvents           // start / quartiles / complete / pause / resume
+```
+
+***
+
+#### `CreativeDownloader` (asset fetch & caching)
+
+<Info>
+  **Why it matters**: Downloads the video (and its closed captions) once and stores them as local temp files for smooth playback.
+</Info>
+
+```text kotlin
+val localFile: Result&lt;File&gt; = creativeDownloader.fetchCreative(remoteUrl)
+```
+
+***
+
+#### `OMIDSessionInteractor` (measurement)
+
+<Info>
+  **Why it matters**: Starts/stops OMID session, registers friendly obstructions, and emits measurement events.
+</Info>
+
+```text kotlin
+// Created with vendorKey + verificationScriptURL + parameters from VAST
+val omid = OMIDSessionInteractorFactory.create(
+    context, adView, vendorKey, verificationScriptURL, verificationParameters
+)
+omid.startSession()
+omid.fireImpression()
+omid.fireStart(durationMs, volume)
+```
+
+Note: When OMID is not available, a stub (`OMIDSessionInteractorStub`) is automatically used via the `OMIDSessionInteractorFactory`. It logs all calls but does not emit any OMID beacons.
+
+***
+
+#### `BeaconManager` (URL tracking beacons)
+
+<Info>
+  **Why it matters**: Fires video tracking beacons for events related to impressions, quartiles, clicks, and user actions. Includes retry logic with exponential backoff.
+</Info>
+
+```text kotlin
+beaconManager.fireBeacon(url = url, type = "firstQuartile")
+beaconManager.fireImpressionBeacons(ad = vastAd)
+beaconManager.fireClickTrackingBeacons(ad = vastAd)
+```
+
+***
+
+#### `CriteoVideoPlayer` (UI & ExoPlayer)
+
+<Info>
+  **Why it matters**: Presents controls (play/pause, mute, closed captions), loads the cached asset via ExoPlayer (Media3), and relays events back to the wrapper.
+</Info>
+
+```text kotlin
+player.setVastAd(vastAd)
+player.load(
+    videoUri = videoUri,
+    subtitleUri = subtitleUri,
+    playWhenReady = true,
+    startsMuted = true
+)
+player.seekTo(positionMs)
+```
+
+***
+
+#### `CriteoLogger` (structured diagnostics)
+
+<Info>
+  **Why it matters**: Centralized logging by category (VAST, NETWORK, VIDEO, BEACON, OMID, UI), you can enable logs globally or per wrapper instance.
+</Info>
+
+```text kotlin
+// Enable specific categories for a single wrapper instance
+videoAd.enableLogs = setOf(
+    CriteoVideoAdLogCategory.NETWORK,
+    CriteoVideoAdLogCategory.BEACON
+)
+
+// Or set enabled categories globally via CriteoLogger
+CriteoLogger.setEnabledCategories(CriteoLogger.Category.VIDEO, CriteoLogger.Category.NETWORK)
+
+// Enable all logging categories
+CriteoLogger.enableAllCategories()
+
+// Set minimum log level
+CriteoLogger.minimumLevel = CriteoLogger.Level.DEBUG   // development
+CriteoLogger.minimumLevel = CriteoLogger.Level.WARNING // production
+```
+
+***
+
+# Troubleshoot
+
+This section covers common problems you might encounter in your integration.
+
+## Build & Linking
+
+* Symptom: `[Build error] Unresolved reference: Omid` or missing OMID classes
+* Likely cause: The OMID AAR isn't added to your module's libs/ directory, or the `build.gradle` dependency on `fileTree` is missing.
+* Fix: Review Steps 2 & 3 from the Instruction section above. Ensure the `.aar` file is in `libs/`, and `build.gradle` includes implementation `fileTree(include: ['*.aar'], dir: 'libs/')`. Re-sync Gradle.
+
+***
+
+## OMID Activation
+
+### Runtime error
+
+* Symptom: `[Runtime error] OMID is not active` (logged by `OMIDSessionInteractor`)
+* Likely cause: OMID is not activated before creating an OMID ad session. If `Omid.activate(context)` is not called or fails, all subsequent OMID session steps will fail.
+* Fix:
+  * Review Step 4 from the Instruction section above — ensure `omsdk_v1.js` is in `res/raw/`.
+  * Review Step 6 from the Instruction section above — Call `OMIDSessionInteractorFactory.activateOMSDK(this)` once in your `Application.onCreate()`.
+
+***
+
+### Unable to initialize OMID `Partner` object
+
+* Likely cause: Partner initialization failed — Invalid partner metadata (empty name/version) or wrong package import.
+* Fix: Review Step 5. Make sure to use your namespaced import (`com.iab.omid.library.<retailer-namespace>`), a valid `PARTNER_NAME` build config field, and a non-empty `VERSION_NAME`. For the name parameter, use the unique partner name assigned to your organization at the time of integration.
+
+***
+
+### Unable to parse Verification Script URL
+
+* Likely cause: VAST `verificationScriptUrl` is invalid.
+* Fix: Verify the ad response/vendor config. The VAST `verificationScriptUrl` must be a valid http(s) URL.
+
+***
+
+## VAST / Assets
+
+#### `CriteoVideoAdError.InvalidURL` or `CriteoVideoAdError.VastParsingFailed`
+
+* Likely cause: Bad VAST URL, network issue, or malformed XML.
+* Fix:
+  * Check network reachability, and the VAST URL returns valid XML over HTTPS.
+  * Use the same XML locally via `CriteoVideoAdWrapper.fromXml()` to isolate network vs. parsing errors.
+
+***
+
+#### `CriteoVideoAdError.InvalidURL`("No valid media file URLs found in VAST")
+
+* Likely cause: VAST lacks an Android-playable media file (e.g., no MP4 `MediaFile` entries).
+* Fix: Ensure the VAST `MediaFiles` section includes creatives with Android-compatible media (MP4 with H.264 codec recommended).
+
+***
+
+#### `CriteoVideoAdError.AssetDownloadFailed`
+
+* Likely cause: Media or caption URL unreachable / not HTTPS / blocked by [Android's Network Security Configuration.](https://developer.android.com/privacy-and-security/security-config)
+* Fix: Check network connectivity. Verify the URL is reachable over `https://` If you need to allow cleartext HTTP for testing, configure `network_security_config.xml` accordingly.
+
+***
+
+## Playback
+
+### Player Failed to Load or No Playback
+
+* Likely cause: Unsupported codec/container, non-HTTPS URL, or network security block.
+* Fix: Check that the media uses an [Android-supported format ](https://developer.android.com/media/platform/supported-formats)(MP4 with H.264/AAC recommended). Confirm the media URL is over HTTPS, and not blocked by the [Network Security Configuration](https://developer.android.com/privacy-and-security/security-config).
+
+***
+
+## Click-through
+
+### Click‑through Does Not Open Destination
+
+* Likely cause: Invalid/missing scheme, no app to handle the Intent, or non-HTTPS redirect chain.
+* Fix: Ensure the click-through URL has a valid scheme (`https://`). Verify your `AndroidManifest.xml` includes a `queries` block for https and http intents so the system can resolve the browser activity.
+## What's next
+
+* [Video player specifications](/retailer-integration/docs/video-player-specifications)
+* [Tracking ad-related activity](/retailer-integration/docs/tracking-ad-related-activity)

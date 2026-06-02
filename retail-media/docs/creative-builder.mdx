@@ -1,0 +1,1444 @@
+---
+title: Creative Builder
+hidden: true
+---
+
+<Note>
+  ### Getting Started
+
+  The creative builder will enable to construction of new creatives through the API. In this document, you will find details regarding the different sections of a creative template variable. A creative comprises five [template variable values](/retail-media/docs/creative-builder#template-variable-value), which is a required array used in the **POST** or **PUT** calls when building a new creative. Any existing [template variable](/retail-media/docs/creative-builder#template-variable) can be found under `sections` of the **GET** Retailer Template endpoint.
+</Note>
+
+ 
+
+## **Endpoints**
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/&#123;retailer-id&#125;/templates</code></td>
+      <td>Get a list of available creative templates for a specified retailer</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/&#123;account-id&#125;/creatives</code></td>
+      <td>Create a new account creative</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/&#123;account-id&#125;/creatives/&#123;creative-id&#125;</code></td>
+      <td>Get account creative by creative id</td>
+    </tr>
+    <tr>
+      <td><strong>PUT</strong></td>
+      <td><code>/&#123;account-id&#125;/creatives/&#123;creative-id&#125;</code></td>
+      <td>Update an existing creative</td>
+    </tr>
+  </tbody>
+</table>
+
+ 
+
+## **Creative Attributes**
+
+#### `id` Required
+
+- **Data Type:** string
+- **Value:**int64
+- **Is Nullable?**No
+
+**Description:** Id for the entity
+
+#### `type` Required
+
+- **Data Type:** string
+- **Value:** -
+- **Is Nullable?** No
+
+**Description:** Canonical type name of the entity. These types correspond to the different values that can be set to a particular `TemplateVariableValue`
+
+#### `creativeFormat` Required
+
+- **Data Type:** enum , string
+- **Value:**
+- `Unknown`,
+- `FlagShip`,
+- `Showcase`,
+- `SponsoredProducts`,
+- `Butterfly`,
+- `BundleBoost`,
+- `IAB`,
+- `CUSTOM`,
+- `DisplayPanel` ,
+- `DigitalShelfTalker`
+- **Is Nullable?** No
+
+**Description:** Creative template available to use for template creation
+
+#### `name` Required
+
+- **Data Type:** string
+- **Value:** -
+- **Is Nullable?** false
+
+**Description:**The name of the template
+
+#### `retailerId` Required
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** No
+
+**Description:** The retailer associated to the template
+
+#### `skuCollectionMin` Required
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** No
+
+**Description:** Min number of collections to configure in the ad
+
+#### `skuCollectionMax` Required
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** Yes
+
+**Description:** Max number of collections that can be configured in the ad
+
+#### `skuPerCollectionMin` Required
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** No
+
+**Description:** Min number of SKUs to be configured in the ad for each collection
+
+#### `skuPerCollectionMax` Required
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** Yes
+
+**Description:** Max number of SKUs to be configured in the ad for each collection
+
+#### `displayableSkusMax` Required
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** Yes
+
+**Description:** Max number of SKUs that can serve at once for this ad
+
+#### `allCollectionsMandatory` Required
+
+- **Data Type:** Boolean
+- **Value:** `true`,`false`
+- **Is Nullable?** No
+
+**Description:** If set to true, the ad will only serve if a SKU from each collection is available
+
+#### `createdAt` Required
+
+- **Data Type:** String
+- **Value:** date-time
+- **Is Nullable?** No
+
+**Description:** The time at which the template was created
+
+#### `updatedAt` Required
+
+- **Data Type:** string
+- **Value:** date-time
+- **Is Nullable?** No
+
+**Description:** The time at which the template was updated
+
+#### `creativeFormatType`
+
+- **Data Type:** Integer
+- **Value:** -
+- **Is Nullable?** No
+
+**Description:** Type of creative format
+
+#### `associatedLineItemsId`
+
+- **Data Type:** string
+- **Value:** int64
+- **Is Nullable?** No
+
+**Description:** Line item ids that is associated with the creative
+
+## Environments Variable
+
+Provides the list of environments details suitable for the ad, like page type and display environment
+
+#### `environments:pageType` Required
+
+- **Data Type:** enum | strings
+- **Accepted Value:**
+- `Unknown`,
+- `Search`,
+- `Home`,
+- `Browse`,
+- `Checkout`,
+- `Category`,
+- `ProductDetail`,
+- `Confirmation`,
+- `Merchandising`,
+- `Deals`,
+- `Favorites`,
+- `SearchBar`,
+- `CategoryMenu`
+- **Is Nullable?** No
+
+**Description:** Page type where the creative is suitable to deliver
+
+#### `environments:environments` Required
+
+- **Data Type:** Array of enum | strings
+- **Accepted Value:**
+- `Web`,
+- `Mobile`,
+- `App`,
+- `Lockout`,
+- `Mixed`,
+- `iOS`,
+- `Android`
+- **Is Nullable?** No
+
+**Description:** List of environments per `pageType` where the creative is suitable to deliver
+
+## Template Variable
+
+Provides the template settings details, such as the type of variables available in each template. 
+
+#### `templateVariable.id` Required
+
+- **Data Type:** string
+- **Value:**
+- **Is Nullable?** No
+
+**Description:** The id of the template variable
+
+#### `templateVariable.required` Required
+
+- **Data Type:** boolean
+- **Value:** `true`, `false`
+- **Is Nullable?** No
+
+**Description:**Presents if the template variable is a required field
+
+#### `templateVariable.type` Required
+
+- **Data Type:** enum | strings
+- **Accepted Value:**
+- `Text`,
+- `Choice`,
+- `Color`,
+- `Files`,
+- `Hyperlink`
+- **Is Nullable?** No
+
+**Description:** The type variable of the template settings. The variable type will determine which `ChoiceVariableSpecification` that can be used
+
+## Template Variable | ChoiceVariableSpecification
+
+This field wraps an array of strings that should contain the ***choices*** provided by the corresponding *ChoiceVariableSpecification*. Choice variables are optional, and they are equivalent to a set of drop-down choices one would select in the RMP UI. 
+
+#### `choiceVariableSpecification.options.ChoiceOption.dependentVariables` Required
+
+- **Data Type:** String
+- **Value:**
+- **Is Nullable?** No
+
+**Description:** Template variables unblocked when the option is chosen
+
+#### `choiceVariableSpecification.options.ChoiceOption.id` Required
+
+- **Data Type:** string
+- **Value:**-
+- **Is Nullable?** No
+
+**Description:** The id of the option
+
+#### `choiceVariableSpecification.maxSelected`
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** Yes
+
+**Description:** The maximum number of selectable options
+
+#### `choiceVariableSpecification.minSelected`
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** Yes
+
+**Description:** The minimum number of selectable options
+
+## Template Variable | textVariableSpecification
+
+Variables in the `texVariableSpecification` specifies the max number of characters
+
+#### `textVariableSpecification.maxChars`
+
+- **Data Type:** Integer
+- **Value:**-
+- **Is Nullable?** yes
+
+**Description:** The maximum amount of characters accepted for the text
+
+## Template Variable | filesVariablesSpecification
+
+Present if the variable is set to one or more asset ids.  The fields here specify the acceptable file extensions of the assets and the min and max numbers that can be provided.
+
+#### `filesVariablesSpecification.extensions` Required
+
+- **Data Type:** enum - string
+- **Value:**
+- `unknown`,
+- `jpeg`,
+- `png`,
+- `gif`,
+- `pdf`
+- **Is Nullable?** No
+
+**Description:** The accepted file extensions
+
+#### `filesVariablesSpecification.maxBytes` Required
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** Yes
+
+**Description:** The maximum amount of bytes per file
+
+#### `filesVariablesSpecification.minFiles` Required
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** Yes
+
+**Description:** The minimum amount of files requires
+
+#### `filesVariablesSpecification.maxFile`
+
+- **Data Type:** Integer
+- **Value:** int32
+- **Is Nullable?** Yes
+
+**Description:** The maximum amount of files required
+
+## Template Variable Value
+
+Provided when creating ([POST](/retail-media/docs/creative-builder#create-creative)) or updating ([PUT](/retail-media/docs/creative-builder#update-creatives)) a creative.
+
+#### `templateVariableValue.id` Required
+
+- **Data Type:** String
+- **Value:** -
+- **Is Nullable?** No
+
+**Description:** The id of the template variable the value is applied to. The id is equivalent to the template field name one would see in RMP. This variable in the POST/PUT calls informs which template fields to be modified.
+
+#### `templateVariableValue.textVariableValue.text` Required
+
+- **Data Type:** String
+- **Value:** -
+- **Is Nullable?** No
+
+**Description:** The displayed text
+
+#### `templateVariableValue.choiceVariableValue.chosenOptions` Required
+
+- **Data Type:** String
+- **Value:** -
+- **Is Nullable?** No
+
+**Description:** The chosen options
+
+#### `templateVariableValue.colorVariableValue.color` Required
+
+- **Data Type:** String
+- **Value:**-
+- **Is Nullable?** False
+
+**Description:** The displayed color (HEX format)
+
+#### `templateVariableValue.filesVariableValue.assetIds` Required
+
+- **Data Type:** String
+- **Value:** min. length: 1
+- **Is Nullable?** No
+
+**Description:** The assets representing the images to be displayed
+
+#### `templateVariableValue.hyperlinkVariableValue.url` Required
+
+- **Data Type:** String
+- **Value:** -
+- **Is Nullable?** No
+
+**Description:** The url to redirect to
+
+## **Get Retailer Templates**
+
+Get a list of available creative templates for a specific retailer 
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/retailers/{retailer-id}/templates
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/retailers/299/templates' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/retailers/299/templates"
+
+payload={}
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/retailers/299/templates")
+  .method("GET", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/retailers/299/templates');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json JSON
+{
+    "data": [
+        {
+            "attributes": {
+                "creativeFormat": "CUSTOM",
+                "name": "Overrides Test Template",
+                "retailerId": 299,
+                "skuCollectionMin": 1,
+                "skuCollectionMax": 20,
+                "skuPerCollectionMin": 1,
+                "skuPerCollectionMax": null,
+                "displayableSkusMax": 5,
+                "allCollectionsMandatory": false,
+                "createdAt": "0001-01-01T00:00:00+00:00",
+                "updatedAt": "0001-01-01T00:00:00+00:00",
+                "sections": [
+                    {
+                        "title": "Background Images",
+                        "description": null,
+                        "templateVariables": [
+                            {
+                                "id": "desktop_background_image",
+                                "required": false,
+                                "type": "Files",
+                                "filesVariablesSpecification": {
+                                    "extensions": [
+                                        "Jpeg",
+                                        "Gif",
+                                        "Png"
+                                    ],
+                                    "minFiles": 0
+                                }
+                            },
+                            {
+                                "id": "border_color",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "button_color",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "selected_button_color",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "button_text_color",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "selected_button_text_color",
+                                "required": false,
+                                "type": "Color"
+                            }
+                        ]
+                    },
+                    {
+                        "title": "Redirection URL",
+                        "description": null,
+                        "templateVariables": [
+                            {
+                                "id": "optional_footer_type",
+                                "required": false,
+                                "type": "Choice",
+                                "choiceVariableSpecification": {
+                                    "options": [
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "Open a file"
+                                        },
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "Legal Text"
+                                        },
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "Open a link"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "optional_footer_redirect_target",
+                                "required": false,
+                                "type": "Choice",
+                                "choiceVariableSpecification": {
+                                    "options": [
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "On current page"
+                                        },
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "On new page"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "optional_footer_text_color",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "optional_footer_background_color",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "optional_footer_type_2",
+                                "required": false,
+                                "type": "Choice",
+                                "choiceVariableSpecification": {
+                                    "options": [
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "Open a file"
+                                        },
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "Legal Text"
+                                        },
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "Open a link"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "optional_footer_redirect_target_2",
+                                "required": false,
+                                "type": "Choice",
+                                "choiceVariableSpecification": {
+                                    "options": [
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "On current page"
+                                        },
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "On new page"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "optional_footer_text_color_2",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "optional_footer_background_color_2",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "redirect_target",
+                                "required": false,
+                                "type": "Choice",
+                                "choiceVariableSpecification": {
+                                    "options": [
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "On current page"
+                                        },
+                                        {
+                                            "dependentVariables": [],
+                                            "id": "On new page"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "footer_text_color",
+                                "required": false,
+                                "type": "Color"
+                            },
+                            {
+                                "id": "footer_background_color",
+                                "required": false,
+                                "type": "Color"
+                            }
+                        ]
+                    }
+                ],
+                "id": "52"
+            },
+            "id": "52",
+            "type": "Template"
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+## **Create Creative**
+
+* The create creative endpoint will generate a new creative for an account id. The endpoint request body consists of an array called `templateVariableValues` which will be used to specify the template variables that will be modified during the creative generation. 
+
+* The template variables that can be modified are dependent on each creative template. This information is provided in the [GET | Retailer Templates](/retail-media/docs/creative-builder#get-retailer-templates) response, under the `templateVariables` array. 
+
+* Multiple template variables can be specified in each call. See the sample response for an example of how to set up the endpoint. 
+
+ 
+
+<Warning>
+  **Creative Asset Upload API**
+
+  The Create Creative endpoint will require an `assetId`. Before generating a new creative ID, upload new creative assets files using the [Creative Asset Upload endpoint](/retail-media/docs/creative-asset-upload) to obtain the `assetId`.
+</Warning>
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/accounts/{account-id}/creatives
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/5/creatives' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-H 'Content-Type: application/json' \
+--data-raw '{
+    "name": " Demo API CreativeV5",
+    "brandId": 118301,
+    "retailerId": 299,
+    "templateId": 51,
+    "templateVariableValues": [
+        {
+            "id": "cta_text",
+            "textVariableValue": {
+                "text": "Call To Action Text"
+            }
+        },
+        {
+            "id": "optional_footer_type",
+            "choiceVariableValue": {
+                "chosenOptions": [
+                    "Open a file"
+                ]
+            }
+        },
+        {
+            "id": "optional_footer_redirect_target",
+            "choiceVariableValue": {
+                "chosenOptions": [
+                    "On current page"
+                ]
+            }
+        },
+        {
+            "id": "button_text_color",
+            "colorVariableValue": {
+                "color": "#4C88a5"
+            }
+        },
+        {
+            "id": "footer_background_color",
+            "colorVariableValue": {
+                "color": "#2133CD"
+            }
+        },
+        {
+            "id": "desktop_background_image",
+            "filesVariableValue": {
+                "assetIds": [
+                    "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+                ]
+            }
+        },
+        {
+            "id": "optional_redirect_url",
+            "hyperlinkVariableValue": {
+                "url": "https://www.criteo.com"
+            }
+        }
+    ]
+}'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/5/creatives"
+
+payload = json.dumps({
+  "name": " Demo API CreativeV9",
+  "brandId": 118301,
+  "retailerId": 299,
+  "templateId": 51,
+  "templateVariableValues": [
+    {
+      "id": "cta_text",
+      "textVariableValue": {
+        "text": "Call To Action Text"
+      }
+    },
+    {
+      "id": "optional_footer_type",
+      "choiceVariableValue": {
+        "chosenOptions": [
+          "Open a file"
+        ]
+      }
+    },
+    {
+      "id": "optional_footer_redirect_target",
+      "choiceVariableValue": {
+        "chosenOptions": [
+          "On current page"
+        ]
+      }
+    },
+    {
+      "id": "button_text_color",
+      "colorVariableValue": {
+        "color": "#4C88a5"
+      }
+    },
+    {
+      "id": "footer_background_color",
+      "colorVariableValue": {
+        "color": "#2133CD"
+      }
+    },
+    {
+      "id": "desktop_background_image",
+      "filesVariableValue": {
+        "assetIds": [
+          "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+        ]
+      }
+    },
+    {
+      "id": "optional_redirect_url",
+      "hyperlinkVariableValue": {
+        "url": "https://www.criteo.com"
+      }
+    }
+  ]
+})
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+  'Content-Type': 'application/json'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\r\n    \"name\": \" Demo API CreativeV9\",\r\n    \"brandId\": 118301,\r\n    \"retailerId\": 299,\r\n    \"templateId\": 51,\r\n    \"templateVariableValues\": [\r\n        {\r\n            \"id\": \"cta_text\",\r\n            \"textVariableValue\": {\r\n                \"text\": \"Call To Action Text\"\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"optional_footer_type\",\r\n            \"choiceVariableValue\": {\r\n                \"chosenOptions\": [\r\n                    \"Open a file\"\r\n                ]\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"optional_footer_redirect_target\",\r\n            \"choiceVariableValue\": {\r\n                \"chosenOptions\": [\r\n                    \"On current page\"\r\n                ]\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"button_text_color\",\r\n            \"colorVariableValue\": {\r\n                \"color\": \"#4C88a5\"\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"footer_background_color\",\r\n            \"colorVariableValue\": {\r\n                \"color\": \"#2133CD\"\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"desktop_background_image\",\r\n            \"filesVariableValue\": {\r\n                \"assetIds\": [\r\n                    \"000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470\"\r\n                ]\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"optional_redirect_url\",\r\n            \"hyperlinkVariableValue\": {\r\n                \"url\": \"https://www.criteo.com\"\r\n            }\r\n        }\r\n    ]\r\n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/5/creatives")
+  .method("POST", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .addHeader("Content-Type", "application/json")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/5/creatives');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+  'Content-Type' => 'application/json'
+));
+$request->setBody('{
+\n    "name": " Demo API CreativeV9",
+\n    "brandId": 118301,
+\n    "retailerId": 299,
+\n    "templateId": 51,
+\n    "templateVariableValues": [
+\n        {
+\n            "id": "cta_text",
+\n            "textVariableValue": {
+\n                "text": "Call To Action Text"
+\n            }
+\n        },
+\n        {
+\n            "id": "optional_footer_type",
+\n            "choiceVariableValue": {
+\n                "chosenOptions": [
+\n                    "Open a file"
+\n                ]
+\n            }
+\n        },
+\n        {
+\n            "id": "optional_footer_redirect_target",
+\n            "choiceVariableValue": {
+\n                "chosenOptions": [
+\n                    "On current page"
+\n                ]
+\n            }
+\n        },
+\n        {
+\n            "id": "button_text_color",
+\n            "colorVariableValue": {
+\n                "color": "#4C88a5"
+\n            }
+\n        },
+\n        {
+\n            "id": "footer_background_color",
+\n            "colorVariableValue": {
+\n                "color": "#2133CD"
+\n            }
+\n        },
+\n        {
+\n            "id": "desktop_background_image",
+\n            "filesVariableValue": {
+\n                "assetIds": [
+\n                    "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+\n                ]
+\n            }
+\n        },
+\n        {
+\n            "id": "optional_redirect_url",
+\n            "hyperlinkVariableValue": {
+\n                "url": "https://www.criteo.com"
+\n            }
+\n        }
+\n    ]
+\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": " Demo API CreativeV5",
+            "status": "Ready",
+            "brandId": 118301,
+            "retailerId": 299,
+            "associatedLineItemIds": [],
+            "updatedAt": "2022-10-05T16:25:15.1327786+00:00",
+            "creativeFormatType": 0,
+            "environments": [
+                {
+                    "pageType": "Category",
+                    "environments": [
+                        "Web"
+                    ]
+                }
+            ],
+            "templateVariableValues": [
+                {
+                    "id": "desktop_background_image",
+                    "filesVariableValue": {
+                        "assetIds": [
+                            "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+                        ]
+                    }
+                },
+                {
+                    "id": "optional_redirect_url",
+                    "hyperlinkVariableValue": {
+                        "url": "https://www.criteo.com"
+                    }
+                }
+            ],
+            "id": "365534915380219904"
+        },
+        "id": "365534915380219904",
+        "type": "Creative"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+## **Get Creatives**
+
+Get account creative by creative id
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/accounts/{account-id}/creatives/{creative-id}
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/accounts/5/creatives/365342206324719616' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/5/creatives/365622472262426624"
+
+payload={}
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/5/creatives/365622472262426624")
+  .method("GET", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/5/creatives/365622472262426624');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": " Demo API Creative",
+            "status": "Ready",
+            "brandId": 118301,
+            "retailerId": 299,
+            "associatedLineItemIds": [],
+            "updatedAt": "2022-10-05T03:39:29.7085127+00:00",
+            "creativeFormatType": 0,
+            "environments": [
+                {
+                    "pageType": "Category",
+                    "environments": [
+                        "Web"
+                    ]
+                }
+            ],
+            "templateVariableValues": [
+                {
+                    "id": "desktop_background_image",
+                    "filesVariableValue": {
+                        "assetIds": [
+                            "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+                        ]
+                    }
+                },
+                {
+                    "id": "button_text_color",
+                    "colorVariableValue": {
+                        "color": "#4C88a5"
+                    }
+                },
+                {
+                    "id": "optional_footer_type",
+                    "choiceVariableValue": {
+                        "chosenOptions": [
+                            "Open a file"
+                        ]
+                    }
+                },
+                {
+                    "id": "optional_footer_redirect_target",
+                    "choiceVariableValue": {
+                        "chosenOptions": [
+                            "On current page"
+                        ]
+                    }
+                },
+                {
+                    "id": "footer_background_color",
+                    "colorVariableValue": {
+                        "color": "#2133CD"
+                    }
+                }
+            ],
+            "id": "365342206324719616"
+        },
+        "id": "365342206324719616",
+        "type": "Creative"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+## **Update Creatives**
+
+The endpoint will allow for updating existing creatives. The API endpoint request body uses the same `templateVariableValues` model as the one used in the [POST | Create Creative](/retail-media/docs/creative-builder#create-creative) call, but this time allows for updating any of the existing template variable fields. 
+
+<Warning>
+  **Changes to the Creative ID when Updating Creatives**
+
+  When generating a new creative, the initial id is known as a "parentId," of the creative. Every new update made to that creative creates a new "childId" which is a copy of the previous creative containing new updates. This means that the `creativeId` will change whenever a new update is made to the creative.
+
+  To ensure that your line item is using the correct `creativeId`, your application will need to call the latest `creativeId` from the [Get Creatives endpoint  ](/retail-media/docs/creative-builder#get-creatives) before associating a new creative to the line item.
+</Warning>
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/accounts/{account-id}/creatives/{creative-id}
+```
+
+**Sample Request**\
+ In this example, updates are made to change the `brandId`, `optional_footer_type`, `button_text_color`, `footer_background_color` 
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X PUT 'https://api.criteo.com/{version}/retail-media/accounts/5/creatives/365534915380219904' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-H 'Content-Type: application/json' \
+--data-raw '{
+    "name": " Demo API CreativeV5_Updated",
+    "brandId": 2000030397,
+    "retailerId": 299,
+    "templateId": 51,
+    "templateVariableValues": [
+        {
+            "id": "cta_text",
+            "textVariableValue": {
+                "text": "Call To Action Text"
+            }
+        },
+        {
+            "id": "optional_footer_type",
+            "choiceVariableValue": {
+                "chosenOptions": [
+                    "Legal Text"
+                ]
+            }
+        },
+        {
+            "id": "optional_footer_redirect_target",
+            "choiceVariableValue": {
+                "chosenOptions": [
+                    "On current page"
+                ]
+            }
+        },
+        {
+            "id": "button_text_color",
+            "colorVariableValue": {
+                "color": "#fe5000"
+            }
+        },
+        {
+            "id": "footer_background_color",
+            "colorVariableValue": {
+                "color": "#fe5000"
+            }
+        },
+        {
+            "id": "desktop_background_image",
+            "filesVariableValue": {
+                "assetIds": [
+                    "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+                ]
+            }
+        },
+        {
+            "id": "optional_redirect_url",
+            "hyperlinkVariableValue": {
+                "url": "https://www.criteo.com"
+            }
+        }
+    ]
+}'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/5/creatives/365597911370309632"
+
+payload = json.dumps({
+  "name": " Demo API CreativeV8_UPDATED_VERSION_2",
+  "brandId": 118301,
+  "retailerId": 299,
+  "templateId": 51,
+  "templateVariableValues": [
+    {
+      "id": "cta_text",
+      "textVariableValue": {
+        "text": "Call To Action Text"
+      }
+    },
+    {
+      "id": "optional_footer_type",
+      "choiceVariableValue": {
+        "chosenOptions": [
+          "Open a file"
+        ]
+      }
+    },
+    {
+      "id": "optional_footer_redirect_target",
+      "choiceVariableValue": {
+        "chosenOptions": [
+          "On current page"
+        ]
+      }
+    },
+    {
+      "id": "button_text_color",
+      "colorVariableValue": {
+        "color": "#4C88a5"
+      }
+    },
+    {
+      "id": "footer_background_color",
+      "colorVariableValue": {
+        "color": "#2133CD"
+      }
+    },
+    {
+      "id": "desktop_background_image",
+      "filesVariableValue": {
+        "assetIds": [
+          "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+        ]
+      }
+    },
+    {
+      "id": "optional_redirect_url",
+      "hyperlinkVariableValue": {
+        "url": "https://www.criteo.com"
+      }
+    }
+  ]
+})
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+  'Content-Type': 'application/json'
+}
+
+response = requests.request("PUT", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\r\n    \"name\": \" Demo API CreativeV8_UPDATED_VERSION_2\",\r\n    \"brandId\": 118301,\r\n    \"retailerId\": 299,\r\n    \"templateId\": 51,\r\n    \"templateVariableValues\": [\r\n        {\r\n            \"id\": \"cta_text\",\r\n            \"textVariableValue\": {\r\n                \"text\": \"Call To Action Text\"\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"optional_footer_type\",\r\n            \"choiceVariableValue\": {\r\n                \"chosenOptions\": [\r\n                    \"Open a file\"\r\n                ]\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"optional_footer_redirect_target\",\r\n            \"choiceVariableValue\": {\r\n                \"chosenOptions\": [\r\n                    \"On current page\"\r\n                ]\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"button_text_color\",\r\n            \"colorVariableValue\": {\r\n                \"color\": \"#4C88a5\"\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"footer_background_color\",\r\n            \"colorVariableValue\": {\r\n                \"color\": \"#2133CD\"\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"desktop_background_image\",\r\n            \"filesVariableValue\": {\r\n                \"assetIds\": [\r\n                    \"000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470\"\r\n                ]\r\n            }\r\n        },\r\n        {\r\n            \"id\": \"optional_redirect_url\",\r\n            \"hyperlinkVariableValue\": {\r\n                \"url\": \"https://www.criteo.com\"\r\n            }\r\n        }\r\n    ]\r\n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/5/creatives/365597911370309632")
+  .method("PUT", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .addHeader("Content-Type", "application/json")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/5/creatives/365597911370309632');
+$request->setMethod(HTTP_Request2::METHOD_PUT);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+  'Content-Type' => 'application/json'
+));
+$request->setBody('{
+\n    "name": " Demo API CreativeV8_UPDATED_VERSION_2",
+\n    "brandId": 118301,
+\n    "retailerId": 299,
+\n    "templateId": 51,
+\n    "templateVariableValues": [
+\n        {
+\n            "id": "cta_text",
+\n            "textVariableValue": {
+\n                "text": "Call To Action Text"
+\n            }
+\n        },
+\n        {
+\n            "id": "optional_footer_type",
+\n            "choiceVariableValue": {
+\n                "chosenOptions": [
+\n                    "Open a file"
+\n                ]
+\n            }
+\n        },
+\n        {
+\n            "id": "optional_footer_redirect_target",
+\n            "choiceVariableValue": {
+\n                "chosenOptions": [
+\n                    "On current page"
+\n                ]
+\n            }
+\n        },
+\n        {
+\n            "id": "button_text_color",
+\n            "colorVariableValue": {
+\n                "color": "#4C88a5"
+\n            }
+\n        },
+\n        {
+\n            "id": "footer_background_color",
+\n            "colorVariableValue": {
+\n                "color": "#2133CD"
+\n            }
+\n        },
+\n        {
+\n            "id": "desktop_background_image",
+\n            "filesVariableValue": {
+\n                "assetIds": [
+\n                    "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+\n                ]
+\n            }
+\n        },
+\n        {
+\n            "id": "optional_redirect_url",
+\n            "hyperlinkVariableValue": {
+\n                "url": "https://www.criteo.com"
+\n            }
+\n        }
+\n    ]
+\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": " Demo API CreativeV5_Updated",
+            "status": "Ready",
+            "brandId": 2000030397,
+            "retailerId": 299,
+            "associatedLineItemIds": [],
+            "updatedAt": "2022-10-05T16:32:54.290397+00:00",
+            "creativeFormatType": 0,
+            "environments": [
+                {
+                    "pageType": "Category",
+                    "environments": [
+                        "Web"
+                    ]
+                }
+            ],
+            "templateVariableValues": [
+                {
+                    "id": "desktop_background_image",
+                    "filesVariableValue": {
+                        "assetIds": [
+                            "000b34dae90dfe5831e95600dc02ed5f3b4d9f52c4955a804eb26bbe9c29f470"
+                        ]
+                    }
+                },
+                {
+                    "id": "optional_redirect_url",
+                    "hyperlinkVariableValue": {
+                        "url": "https://www.criteo.com"
+                    }
+                }
+            ],
+            "id": "365534915380219904"
+        },
+        "id": "365534915380219904",
+        "type": "Creative"
+    },
+    "warnings": [],
+    "errors": []
+}
+```

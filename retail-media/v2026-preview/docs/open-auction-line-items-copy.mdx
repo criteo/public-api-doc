@@ -1,0 +1,836 @@
+---
+title: Open Auction Line Items (COPY)
+hidden: true
+---
+
+<Note>
+  ### A FEW THINGS TO KNOW
+
+  Learn more about how open auction line items work with our API [**here**](/retail-media/v2026-preview/docs/onsite-sponsored-products)!
+</Note>
+
+ 
+
+## **Endpoints**
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/campaigns/&#123;campaignId&#125;/auction-line-items</code></td>
+      <td>Get all Open Auction Line items from a specific Campaign</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/campaigns/&#123;campaignId&#125;/auction-line-items</code></td>
+      <td>Creates an Open Auction Line item</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/auction-line-items/&#123;lineItemId&#125;</code></td>
+      <td>Get a specific Open Auction Line item</td>
+    </tr>
+    <tr>
+      <td><strong>PUT</strong></td>
+      <td><code>/auction-line-items/&#123;lineItemId&#125;</code></td>
+      <td>Updates a specific Open Auction Line item</td>
+    </tr>
+  </tbody>
+</table>
+
+<Info>
+  **INFO**
+
+  * Create operations using the `POST` method except every **Required (R)** field; omitting **Optional (O)** fields will set those fields to **Default** values
+  * Update operations using the `PUT` method expect every **Write (W)** field; omitting these fields is equivalent to setting them to `null`, if possible
+</Info>
+
+  
+
+## **Line Item Attributes**
+
+#### `id` Required
+
+- **Data Type:** string
+
+**Description:** Line Item ID
+- **Accepted Value:** int64
+- **Default Values:** None
+- **Write?** No
+- **Nullable?** No
+
+#### `campaignId` Required
+
+- **Data Type:** string
+
+**Description:** Campaign ID
+- **Accepted Value:** int64
+- **Default Value:** None
+- **Write?** No
+- **Nullable?** No
+
+#### `name` Required
+
+- **Data Type:** string
+
+**Description:** Line item name; must be unique within a [campaign](/retail-media/docs/campaigns)
+- **Accepted Value:** 255 char limit
+- **Default Value:** None
+- **Write?** Yes
+- **Nullable?** No
+
+#### `targetRetailerId` Required
+
+- **Data Type:** string
+
+**Description:** ID of the [retailer](/retail-media/docs/retailers) the line item serves on
+- **Accepted Value:** int64
+- **Default Value:** None
+- **Write?** No
+- **Nullable?** No
+
+#### `startDate` Required
+
+- **Data Type:** date
+
+**Description:** Line item start date in the [account](/retail-media/docs/accounts) `timeZone`
+- **Accepted Value:** YYYY-MM-DD
+- **Default Value:** None
+- **Write?** Yes
+- **Nullable?** No
+
+#### `endDate` Optional
+
+- **Data Type:** date
+
+**Description:** Line item end date in the [account](/retail-media/docs/accounts) `timeZone`; serves indefinitely if omitted or set to `null`
+- **Accepted Value:** YYYY-MM-DD
+- **Default Value:** `null`
+- **Write?** Yes
+- **Nullable?** Yes
+
+#### `budget` Optional
+
+- **Data Type:** number
+
+**Description:** Line item lifetime spend cap; uncapped if omitted or set to `null`
+- **Accepted Value:** at least 0
+- **Default Value:** `null`
+- **Write?** Yes
+- **Nullable?** Yes
+
+#### `budgetSpent` Optional
+
+- **Data Type:** number
+
+**Description:** Amount the line item has already spent
+- **Accepted Value:** at least 0
+- **Default Value:** `0.0`
+- **Write?** No
+- **Nullable?** No
+
+#### `budgetRemaining` Optional
+
+- **Data Type:** number
+
+**Description:** Amount the line item has remaining until cap is hit; `null` if budget is uncapped
+- **Accepted Value:** between 0 and budget
+- **Default Value:** `null`
+- **Write?** No
+- **Nullable?** Yes
+
+#### `monthlyPacing` Optional
+
+- **Data Type:** number
+
+**Description:** Amount the line item can spend per calendar month in the [account](/retail-media/docs/accounts) `timeZone`; resets each calendar month; uncapped if omitted or set to null
+- **Accepted Value:** at least 0
+- **Default Value:** `null`
+- **Write?** Yes
+- **Nullable?** Yes
+
+#### `dailyPacing` Optional
+
+- **Data Type:** number
+
+**Description:** Amount the line item can spend per day in the [account](/retail-media/docs/accounts) timeZone; resets each day; overwritten by a calculation if `isAutoDailyPacing` is configured; uncapped if omitted or set to null
+- **Accepted Value:** at least 0
+- **Default Value:** `null`
+- **Write?** Yes
+- **Nullable?** Yes
+
+#### `isAutoDailyPacing` Required
+
+- **Data Type:** boolean
+
+**Description:** To activate, either line item `endDate` and budget, or `monthlyPace`, must be specified; overwrites `dailyPacing` with a calculation if not set prior
+- **Accepted Value:** `true`, `false`
+- **Default Value:** `false`
+- **Write?** Yes
+- **Nullable?** No
+
+#### `bidStrategy` Optional
+
+- **Data Type:** enum
+
+**Description:** Bid algorithm optimizing for sales conversions, sales revenue, or clicks
+- **Accepted Value:** `conversion`, `revenue`, `clicks`
+- **Default Value:** `conversion`
+- **Write?** Yes
+- **Nullable?** No
+
+#### `targetBid` Required
+
+- **Data Type:** number
+
+**Description:** If optimizing for `conversion` or revenue, a target average amount to bid because each bid is modulated up or down by our optimization algorithm; bids stay constant if optimizing for `clicks`; must meet `minBid` for line item to serve; `minBid` depends on selected products and is retrieved through the [catalog](/retail-media/docs/catalogs); input excludes platform fees
+- **Accepted Value:** at least the greatest value of minBid across all products on the line item
+- **Default Value:** `0.3`
+- **Write?** Yes
+- **Nullable?** No
+
+#### `maxBid` Optional
+
+- **Data Type:** number
+
+**Description:** If optimizing for `conversion` or `revenue`, the maximum amount allowed to bid for each bid; respected regardless of `targetBid`; must meet `minBid` for line item to serve; `minBid` depends on selected products and is retrieved through the [catalog](/retail-media/docs/catalogs); bidding is uncapped if omitted or set to `null`; does not apply if optimizing for `clicks`; input excludes platform fees
+- **Accepted Value:** at least 0.01
+- **Default Value:** `null`
+- **Write?** Yes
+- **Nullable?** Yes
+
+#### `status`
+
+- **Data Type:** enum
+
+**Description:** Line item status; can only be updated by a user to `active` or `paused`; all other values are applied automatically depending on flight dates, financials, or missing attributes required for line item to serve. To understand the conditions that will cause a status to change, check out our [status page](/retail-media/docs/status).
+- **Accepted Value:** `active`, `paused`, `scheduled`, `ended`, `budgetHit`, `noFunds`, `draft`, `archived`
+- **Default Value:** `None`
+- **Write?** No
+- **Nullable?** No
+
+#### `createdAt`
+
+- **Data Type:** timestamp
+
+**Description:** Timestamp in UTC of line item creation
+- **Accepted Value:** ISO-8601
+- **Default Value:** `None`
+- **Write?** No
+- **Nullable?** No
+
+#### `updatedAt`
+
+- **Data Type:** timestamp
+
+**Description:** Timestamp in UTC of last line item update
+- **Accepted Value:** ISO-8601
+- **Default Value:** `None`
+- **Write?** No
+- **Nullable?** No
+
+## **Create an Open Auction Line Item**
+
+This endpoint creates a new open auction line item in the specified campaign.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/campaigns/{campaignId}/auction-line-items
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.criteo.com/preview/retail-media/campaigns/8343086999167541140/auction-line-items" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaLineItem",
+                "attributes": {
+                    "name": "My New Line Item",
+                    "targetRetailerId": "18159942378514859684"
+                }
+            }
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/preview/retail-media/campaigns/76216196459831296/auction-line-items"
+
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaCreateCampaign",
+    "attributes": {
+      "name": "API Campaign",
+      "startDate": "2022-09-16",
+      "targetRetailerId": "299",
+      "endDate": "2022-09-16",
+      "status": "draft",
+      "budget": "10",
+      "targetBid": "0.3",
+      "maxBid": "0.10",
+      "monthlyPacing": "50",
+      "isAutoDailyPacing": False,
+      "bidStrategy": "conversion"
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n    \"type\": \"RetailMediaCreateCampaign\",\n    \"attributes\": {\n      \"name\": \"API Campaign\",\n      \"startDate\": \"2022-09-16\",\n      \"targetRetailerId\": \"299\",\n      \"endDate\": \"2022-09-16\",\n      \"status\": \"draft\",\n      \"budget\": \"10\",\n      \"targetBid\": \"0.3\",\n      \"maxBid\": \"0.10\",\n      \"monthlyPacing\": \"50\",\n      \"isAutoDailyPacing\": false,\n      \"bidStrategy\": \"conversion\"\n    }\n  }\n}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/campaigns/76216196459831296/auction-line-items")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/campaigns/76216196459831296/auction-line-items');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{\n  "data": {\n    "type": "RetailMediaCreateCampaign",\n    "attributes": {\n      "name": "API Campaign",\n      "startDate": "2022-09-16",\n      "targetRetailerId": "299",\n      "endDate": "2022-09-16",\n      "status": "draft",\n      "budget": "10",\n      "targetBid": "0.3",\n      "maxBid": "0.10",\n      "monthlyPacing": "50",\n      "isAutoDailyPacing": false,\n      "bidStrategy": "conversion"\n    }\n  }\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": { 
+        "type": "RetailMediaLineItem",
+        "id": "2465695028166499188",
+        "attributes": {
+            "campaignId": "8343086999167541140",
+            "name": "My New Line Item",
+            "targetRetailerId": "18159942378514859684",
+            "startDate": "2020-04-06",
+            "endDate": null,
+            "budget": null,
+            "budgetSpent": 0.00,
+            "budgetRemaining": null,
+            "monthlyPacing": null,
+            "dailyPacing": null,
+            "isAutoDailyPacing": false,
+            "bidStrategy": "conversion",
+            "targetBid": 0.30,
+            "maxBid": null,
+            "status": "draft",
+            "createdAt": "2020-04-06T06:11:23+00:00",
+            "updatedAt": "2020-04-06T06:11:23+00:00"
+        }
+    }
+}
+```
+
+## **Get All Open Auction Line Items**
+
+This endpoint lists all open auction line items in the specified campaign.  Results are paginated
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/campaigns/{campaignId}/auction-line-items
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/preview/retail-media/campaigns/8343086999167541140/auction-line-items" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/preview/retail-media/campaigns/76216196459831296/auction-line-items"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/campaigns/76216196459831296/auction-line-items")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>g")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/campaigns/76216196459831296/auction-line-items');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaLineItem",
+            "id": "9979917896105882144",
+            "attributes": {
+                "campaignId": "8343086999167541140",
+                "name": "Line Item 123",
+                "targetRetailerId": "3239117063738827231",
+                "startDate": "2020-04-06",
+                "endDate": null,
+                "budget": null,
+                "budgetSpent": 2383.87,
+                "budgetRemaining": null,
+                "monthlyPacing": null,
+                "dailyPacing": null,
+                "isAutoDailyPacing": false,
+                "bidStrategy": "conversion",
+                "targetBid": 1.50,
+                "maxBid": 2.50,
+                "status": "active",
+                "createdAt": "2020-04-06T17:29:11+00:00",
+                "updatedAt": "2020-04-06T17:29:11+00:00"
+            }
+        },
+ 
+        // ...
+ 
+        {
+            "type": "RetailMediaLineItem",
+            "id": "6854840188706902009",
+            "attributes": {
+                "campaignId": "8343086999167541140",
+                "name": "Line Item 789",
+                "targetRetailerId": "18159942378514859684",
+                "startDate": "2020-04-08",
+                "endDate": null,
+                "budget": 8000.00,
+                "budgetSpent": 1921.23,
+                "budgetRemaining": 6078.77,
+                "monthlyPacing": 1000.00,
+                "dailyPacing": 33.33,
+                "isAutoDailyPacing": true,
+                "bidStrategy": "conversion",
+                "targetBid": 0.75,
+                "maxBid": 1.25,
+                "status": "paused",
+                "createdAt": "2020-04-06T23:42:47+00:00",
+                "updatedAt": "2020-06-03T03:01:52+00:00"       
+            }
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 105,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 5,
+        "nextPage": "https://api.criteo.com/preview/retail-media/campaigns/8343086999167541140/line-items?pageIndex=1&pageSize=25",
+        "previousPage": null
+    }
+}
+```
+
+## **Get a Specific Open Auction Line Item**
+
+This endpoint retrieves the specified open auction line item
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/auction-line-items/{lineItemId}
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/preview/retail-media/auction-line-items/2465695028166499188" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+  MediaType mediaType = MediaType.parse("text/plain");
+
+  RequestBody body = RequestBody.create(mediaType, "");
+
+  Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/auction-line-items/358669652976373760")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+  Response response = client.newCall(request).execute();
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/auction-line-items/358669652976373760")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/auction-line-items/358669652976373760');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": { 
+        "type": "RetailMediaLineItem",
+        "id": "2465695028166499188",
+        "attributes": {
+            "campaignId": "8343086999167541140",
+            "name": "My New Line Item",
+            "targetRetailerId": "18159942378514859684",
+            "startDate": "2020-04-06",
+            "endDate": null,
+            "budget": null,
+            "budgetSpent": 0.00,
+            "budgetRemaining": null,
+            "monthlyPacing": null,
+            "dailyPacing": null,
+            "isAutoDailyPacing": false,
+            "bidStrategy": "conversion",
+            "targetBid": 0.30,
+            "maxBid": null,
+            "status": "draft",
+            "createdAt": "2020-04-06T06:11:23+00:00",
+            "updatedAt": "2020-04-06T06:11:23+00:00"
+        }
+    }
+}
+```
+
+## **Update a Specific Open Auction Line Item**
+
+This endpoint updates the specified open auction line item.  In this example, we enable auto daily pacing by setting a monthly pace simultaneously.  Note that with auto daily pacing enabled, daily pacing is automatically calculated and overwrites its previous value, if any.  Also, note the draft state of the line item because products to be promoted have not yet been added.
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/auction-line-items/{lineItemId}
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X PUT "https://api.criteo.com/preview/retail-media/auction-line-items/2465695028166499188" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaLineItem",
+                "id": "2465695028166499188",
+                "attributes": {
+                    "name": "My New Line Item",
+                    "startDate": "2020-04-06",
+                    "endDate": null,
+                    "budget": null,
+                    "monthlyPacing": 30.00,
+                    "dailyPacing": null,
+                    "isAutoDailyPacing": true,
+                    "bidStrategy": "conversion",
+                    "targetBid": 0.30,
+                    "maxBid": null,
+                    "status": "active"
+                }
+            }
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/preview/retail-media/auction-line-items/358669652976373760"
+
+payload = json.dumps({
+  "data": {
+    "id": "358669652976373760",
+    "type": "RetailMediaCampaignUpdate",
+    "attributes": {
+      "name": "API Campaign Updated new name",
+      "startDate": "2022-09-16",
+      "targetRetailerId": "299",
+      "endDate": "2022-09-18",
+      "status": "draft",
+      "budget": "35",
+      "targetBid": "0.3",
+      "maxBid": "0.10",
+      "monthlyPacing": "50",
+      "isAutoDailyPacing": True,
+      "bidStrategy": "conversion"
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("PUT", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n    \"id\": \"358669652976373760\",\n    \"type\": \"RetailMediaCampaignUpdate\",\n    \"attributes\": {\n      \"name\": \"API Campaign Updated\",\n      \"startDate\": \"2022-09-16\",\n      \"targetRetailerId\": \"299\",\n      \"endDate\": \"2022-09-18\",\n      \"status\": \"active\",\n      \"budget\": \"15\",\n      \"targetBid\": \"0.3\",\n      \"maxBid\": \"0.10\",\n      \"monthlyPacing\": \"50\",\n      \"isAutoDailyPacing\": true,\n      \"bidStrategy\": \"conversion\"\n    }\n  }\n}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/auction-line-items/358669652976373760")
+  .method("PUT", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/auction-line-items/358669652976373760');
+$request->setMethod(HTTP_Request2::METHOD_PUT);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{\n  "data": {\n    "id": "358669652976373760",\n    "type": "RetailMediaCampaignUpdate",\n    "attributes": {\n      "name": "API Campaign Updated",\n      "startDate": "2022-09-16",\n      "targetRetailerId": "299",\n      "endDate": "2022-09-18",\n      "status": "active",\n      "budget": "15",\n      "targetBid": "0.3",\n      "maxBid": "0.10",\n      "monthlyPacing": "50",\n      "isAutoDailyPacing": true,\n      "bidStrategy": "conversion"\n    }\n  }\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```bash
+{
+    "data": { 
+        "type": "RetailMediaLineItem",
+        "id": "2465695028166499188",
+        "attributes": {
+            "campaignId": "8343086999167541140",
+            "name": "My New Line Item",
+            "targetRetailerId": "18159942378514859684",
+            "startDate": "2020-04-06",
+            "endDate": null,
+            "budget": null,
+            "budgetSpent": 0.00,
+            "budgetRemaining": null,
+            "monthlyPacing": 3000.00,
+            "dailyPacing": 120.00,
+            "isAutoDailyPacing": true,
+            "bidStrategy": "conversion",
+            "targetBid": 0.30,
+            "maxBid": null,
+            "status": "draft",
+            "createdAt": "2020-04-06T06:11:23+00:00",
+            "updatedAt": "2020-04-06T06:17:48+00:00"
+        }
+    }
+}
+```
+
+## **Responses**
+
+<table>
+  <thead>
+    <tr>
+      <th>Responses</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:large&#95;blue&#95;circle: <code>200</code></td>
+      <td>Call completed with success</td>
+    </tr>
+    <tr>
+      <td>:large&#95;blue&#95;circle: <code>201</code></td>
+      <td>Line item created with success</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle: <code>400</code></td>
+      <td>Bad request leading to a validation error<br />&#42;Common validation errors&#42;<br /><ul><li>Invalid is auto daily pacing - Cannot turn on IsAutoDailyPacing and add a DailyPacing value. Only one of the two options can be used</li></ul></td>
+    </tr>
+  </tbody>
+</table>

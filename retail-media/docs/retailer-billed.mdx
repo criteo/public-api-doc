@@ -1,0 +1,869 @@
+---
+title: Retailer Billed
+---
+
+## Introduction
+
+<Info>
+  **Commerce Max Retailer Billed** introduces a buying model in which campaign budgets are funded by the retailer rather than the advertiser.
+</Info>
+
+This guide covers the API changes required for third-party buying platforms to create and manage retailer-billed Sponsored Products campaigns end-to-end.
+
+### Business Context
+
+Prior to this release, the Retail Media API did not expose retailer scoping on balances, campaigns, or line items. Retailer-billed buying requires platforms to associate balances, campaigns, and line items to the same retailer — the API now enforces these constraints explicitly.
+
+### Prerequisites
+
+* API version `2026-01` or later is required to see retailer-billed balances. On prior versions, retailer-billed balances are hidden by default to prevent integration surprises during rollout.
+* Platforms must use the supply account ID when querying balances if they wish to discover retailer-billed balances.
+
+### Key Concepts
+
+* **Retailer-billed balance** — a budget object funded by the retailer, scoped to a specific `RetailerId`. Cannot be created via API; must be retrieved via `GET /balances`.
+* **`RetailerId`** — the identifier of the retailer that funds the balance and scopes the campaign. Must be consistent across balance → campaign → line item.
+* **`budgetModel`** — a new field on the retailer search response indicating which budget models (e.g., `retailerBilled`, `capped`, `uncapped`) are supported at a given retailer.
+
+<Warning>
+  **Backward compatibility for balance endpoints:**
+
+  * The `poNumber` field on balance responses is **removed** in `2026-01` and replaced by two separate fields: `retailerPoNumber` and `criteoPoNumber`. This is a breaking change for consumers of `GET /balances` on prior versions who rely on `poNumber`.
+  * All other new fields (`retailerId`, `privateMarketBillingType`) are additive. Retailer-billed balances are hidden by default on prior API versions.
+</Warning>
+
+***
+
+## Endpoints Overview
+
+<Info>
+  All endpoints changes related to Retailer Billed are also documented in the following pages:
+
+  * [Balances Endpoint Guide](/retail-media/docs/balances-endpoints)
+  * [Campaigns Endpoint Guide](/retail-media/docs/campaigns-endpoints)
+  * [Auction Line Items Endpoint Guide](/retail-media/docs/onsite-sponsored-products-line-items)
+  * [Retailer Search Endpoint Guide](/retail-media/docs/retailer-search)
+</Info>
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/retail-media/balances/&#123;balanceId&#125;</code></td>
+      <td>Get a single balance. Now includes <code>retailerId</code>, <code>retailerPoNumber</code>, <code>criteoPoNumber</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/retail-media/accounts/&#123;accountId&#125;/balances</code></td>
+      <td>List balances. Now includes retailer fields. Retailer-billed balances hidden on prior versions.</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/retail-media/balances/&#123;balanceId&#125;/history</code></td>
+      <td>Get balance change history. Now includes <code>retailerPoNumber</code>, <code>criteoPoNumber</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/retail-media/balances/&#123;balanceId&#125;/campaigns/append</code></td>
+      <td>Add campaigns to a balance. Validates retailer consistency.</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/retail-media/balances/&#123;balanceId&#125;/campaigns/delete</code></td>
+      <td>Remove campaigns from a balance. Returns error for retailer-billed balances.</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/retail-media/accounts/&#123;accountId&#125;/campaigns</code></td>
+      <td>Create a campaign. Now accepts and validates <code>retailerId</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/retail-media/campaigns</code></td>
+      <td>List campaigns. Now returns <code>retailerId</code>; supports filtering by retailer.</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/retail-media/campaigns/&#123;campaignId&#125;</code></td>
+      <td>Get a campaign. Now returns <code>retailerId</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/retail-media/campaigns/&#123;campaignId&#125;/auction-line-items</code></td>
+      <td>Create a line item. Enforces <code>targetRetailerId</code> matches campaign retailer.</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/retail-media/accounts/&#123;accountId&#125;/retailers/search</code></td>
+      <td>Search retailers. Now returns <code>budgetModel</code> in <code>campaignAvailabilities</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+## Attributes
+
+### New and Changed Fields on Balances
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Mutable</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>retailerId</code></td>
+      <td><code>string?</code></td>
+      <td>init</td>
+      <td>Retailer this balance is scoped to.<br />Present only on retailer-billed balances.<br />&#95;Nullable?&#95; Y (null for non-retailer-billed)</td>
+    </tr>
+    <tr>
+      <td><code>retailerPoNumber</code></td>
+      <td><code>string?</code></td>
+      <td>always</td>
+      <td>Retailer purchase order number. <strong>Replaces</strong> the removed <code>poNumber</code> field.<br />&#95;Nullable?&#95; Y</td>
+    </tr>
+    <tr>
+      <td><code>criteoPoNumber</code></td>
+      <td><code>string?</code></td>
+      <td>always</td>
+      <td>Criteo purchase order number.<br /><strong>Replaces</strong> the removed <code>poNumber</code> field.<br />&#95;Nullable?&#95; Y</td>
+    </tr>
+    <tr>
+      <td><code>privateMarketBillingType</code></td>
+      <td><code>enum</code></td>
+      <td>init</td>
+      <td>Billing type for Private Market. Values: <code>NotApplicable</code>, <code>BillByRetailer</code>, <code>BillByCriteo</code>, <code>Unknown</code></td>
+    </tr>
+    <tr>
+      <td>~~<code>poNumber</code>~~</td>
+      <td>~~string~~</td>
+      <td>—</td>
+      <td><strong>Removed</strong> in <code>2026-01</code>. Replaced by <code>retailerPoNumber</code> and <code>criteoPoNumber</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+### New Field on Campaigns
+
+A new field `RetailerId` has been added to the following endpoints:
+
+* `/accounts/{accountId}/campaigns`
+* `/campaigns/{campaignId}`
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>RetailerId</code></td>
+      <td><code>string</code></td>
+      <td>The retailer this campaign is associated with.<br />Required when using a retailer-billed balance.<br /><strong>Writeable?</strong> Y (at create)<br /><strong>Nullable?</strong> Y (for non-retailer-billed campaigns)</td>
+    </tr>
+  </tbody>
+</table>
+
+### New Fields on Retailer Search
+
+The new fields are added to the following endpoint:
+
+* `/accounts/{accountId}/retailers/search`
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>budgetModel</code></td>
+      <td><code>string</code></td>
+      <td>Budget model(s) supported for the given <code>buyType</code> / <code>campaignType</code> combination at this retailer.<br />Values: <code>capped</code>, <code>uncapped</code>, <code>retailerBilled</code>.<br /><strong>Writeable?</strong> N<br /><strong>Nullable?</strong> N</td>
+    </tr>
+  </tbody>
+</table>
+
+### New Error Codes
+
+<table>
+  <thead>
+    <tr>
+      <th>Error code</th>
+      <th>Endpoint</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>RetailerBilledBalanceImmutable</code></td>
+      <td><code>DELETE /balances/&#123;balanceId&#125;/campaigns</code></td>
+      <td>Cannot remove a retailer-billed balance from a campaign.</td>
+    </tr>
+    <tr>
+      <td><code>RetailerMismatchWithBalance</code></td>
+      <td><code>POST /accounts/&#123;accountId&#125;/campaigns</code></td>
+      <td>Campaign <code>RetailerId</code> does not match the balance's <code>RetailerId</code>.</td>
+    </tr>
+    <tr>
+      <td><code>RetailerMismatchWithCampaign</code></td>
+      <td><code>POST /campaigns/&#123;campaignId&#125;/auction-line-items</code></td>
+      <td>Line item <code>targetRetailerId</code> does not match the campaign's <code>RetailerId</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+# Endpoint Changes
+
+## Get List of Balances for an Account
+
+This endpoint returns a paginated list of balances for an account.
+
+On API version `2026-01` and later, retailer-billed balances are included and `retailerId`, `retailerPoNumber`, and `criteoPoNumber` are returned. The old `poNumber` field is removed.
+
+<Info>
+  **Query parameters**
+
+  * `offset` (int, default 0),
+  * `limit` (int, default 25, max 500),
+  * `limitToId` (List\<string>)
+</Info>
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/2026-01/retail-media/accounts/{accountId}/balances
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/2026-01/retail-media/accounts/625702934721171442/balances' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import http.client
+conn = http.client.HTTPSConnection("api.criteo.com")
+headers = {'Accept': 'application/json', 'Authorization': 'Bearer &lt;TOKEN&gt;'}
+conn.request("GET", "/2026-01/retail-media/accounts/625702934721171442/balances", headers=headers)
+res = conn.getresponse()
+print(res.read().decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder().build();
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/2026-01/retail-media/accounts/625702934721171442/balances")
+  .method("GET", null)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/2026-01/retail-media/accounts/625702934721171442/balances');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setHeader(array('Accept' => 'application/json', 'Authorization' => 'Bearer &lt;TOKEN&gt;'));
+echo $request->send()->getBody();
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+  "meta": { "count": 2, "offset": 0, "limit": 25 },
+  "data": [
+    {
+      "id": "814283465675018240",
+      "type": "Balance",
+      "attributes": {
+        "name": "Retailer Billed Q2 Budget",
+        "retailerId": "1298",
+        "retailerPoNumber": "A-5678",
+        "criteoPoNumber": null,
+        "memo": "Q2 retailer-billed campaign",
+        "deposited": 2000.00,
+        "spent": 0.00,
+        "remaining": 2000.00,
+        "startDate": "2026-07-01",
+        "endDate": "2026-12-31",
+        "status": "active",
+        "balanceType": "capped",
+        "spendType": "Onsite",
+        "privateMarketBillingType": "billByRetailer",
+        "createdAt": "2026-02-24T23:51:46+00:00",
+        "updatedAt": "2026-02-24T23:51:48+00:00"
+      }
+    },
+    {
+      "id": "814313002113232896",
+      "type": "Balance",
+      "attributes": {
+        "name": "Standard Advertiser Balance",
+        "retailerId": null,
+        "retailerPoNumber": null,
+        "criteoPoNumber": "A-1234",
+        "deposited": 2000.00,
+        "spent": 0.00,
+        "remaining": 2000.00,
+        "startDate": "2026-07-01",
+        "endDate": "2026-12-31",
+        "status": "active",
+        "balanceType": "capped",
+        "spendType": "Onsite",
+        "privateMarketBillingType": "billByCriteo",
+        "createdAt": "2026-02-25T01:49:08+00:00",
+        "updatedAt": "2026-02-25T01:49:10+00:00"
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Add Campaigns to a Balance
+
+This endpoint adds one or more campaigns to a balance. It validates that campaigns are retailer-native when the balance is retailer-billed.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/2026-01/retail-media/balances/{balanceId}/campaigns/append
+```
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/balances/814886589256347648/campaigns/append' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "attributes": {
+      "ids": ["718038552188952576", "234105251251242423"]
+    },
+    "type": "AppendCampaignsRequest"
+  }
+}'
+```
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "attributes": {
+      "ids": ["718038552188952576", "234105251251242423"]
+    },
+    "type": "BalanceCampaigns"
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+**Sample Response — Error (non-retailer-native campaign)**
+
+```json
+{
+  "errors": [
+    {
+      "message": "Only retailer-sold campaigns are allowed to be mapped to a retailer-billed balance.",
+      "status": 400
+    }
+  ]
+}
+```
+
+***
+
+## Remove Campaign(s) from a Balance
+
+This endpoint removes one or more campaigns from a balance.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/2026-01/retail-media/balances/{balanceId}/campaigns/delete
+```
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/balances/814886589256347648/campaigns/delete' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "attributes": {
+      "ids": ["234105251251242423"]
+    },
+    "type": "DeleteCampaignsRequest"
+  }
+}'
+```
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "attributes": {
+      "ids": ["718038552188952576"]
+    },
+    "type": "BalanceCampaigns"
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Create New Campaigns
+
+This endpoint creates a new campaign.
+
+<Warning>
+  For retailer-billed campaigns, `retailerId` is required and must match the `retailerId` on the drawable balance.
+</Warning>
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/2026-01/retail-media/accounts/{accountId}/campaigns
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/accounts/625702934721171442/campaigns' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "Campaign",
+    "attributes": {
+      "name": "Retailer Billed Campaign Q2",
+      "startDate": "2026-07-01T00:00:00+00:00",
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "None",
+      "retailerId": "1298",
+      "drawableBalanceIds": ["814886589256347648"]
+    }
+  }
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "type": "Campaign",
+    "attributes": {
+      "name": "Retailer Billed Campaign Q2",
+      "startDate": "2026-07-01T00:00:00+00:00",
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "None",
+      "retailerId": "1298",
+      "drawableBalanceIds": ["814886589256347648"]
+    }
+  }
+})
+headers = {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer &lt;TOKEN&gt;'}
+conn.request("POST", "/2026-01/retail-media/accounts/625702934721171442/campaigns", payload, headers)
+print(conn.getresponse().read().decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder().build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"Campaign\",\"attributes\":{\"name\":\"Retailer Billed Campaign Q2\",\"startDate\":\"2026-07-01T00:00:00+00:00\",\"clickAttributionWindow\":\"30D\",\"viewAttributionWindow\":\"None\",\"retailerId\":\"1298\",\"drawableBalanceIds\":[\"814886589256347648\"]}}}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/2026-01/retail-media/accounts/625702934721171442/campaigns")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/2026-01/retail-media/accounts/625702934721171442/campaigns');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setHeader(array('Content-Type' => 'application/json', 'Accept' => 'application/json', 'Authorization' => 'Bearer &lt;TOKEN&gt;'));
+$request->setBody('{"data":{"type":"Campaign","attributes":{"name":"Retailer Billed Campaign Q2","startDate":"2026-07-01T00:00:00+00:00","clickAttributionWindow":"30D","viewAttributionWindow":"None","retailerId":"1298","drawableBalanceIds":["814886589256347648"]}}}');
+echo $request->send()->getBody();
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "id": "718038552188952576",
+    "type": "Campaign",
+    "attributes": {
+      "name": "Retailer Billed Campaign Q2",
+      "accountId": "625702934721171442",
+      "type": "auction",
+      "status": "inactive",
+      "retailerId": "1298",
+      "drawableBalanceIds": ["814886589256347648"],
+      "budget": null,
+      "budgetSpent": 0.0,
+      "budgetRemaining": null,
+      "startDate": "2026-07-01T00:00:00+00:00",
+      "endDate": null,
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "None",
+      "createdAt": "2026-05-08T00:00:00+00:00",
+      "updatedAt": "2026-05-08T00:00:00+00:00"
+    }
+  }
+}
+```
+
+***
+
+## Get Campaigns by Account ID and Campaign ID
+
+Both endpoints now return `retailerId` in the campaign attributes.
+
+The list endpoint supports filtering by `retailerId`.
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/2026-01/retail-media/accounts/{accountId}/campaigns?pageIndex=0&pageSize=25
+```
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/2026-01/retail-media/campaigns/{campaignId}
+```
+
+**Sample Request — Get a Single Campaign**
+
+```bash
+curl -L -X GET 'https://api.criteo.com/2026-01/retail-media/campaigns/718038552188952576' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "id": "718038552188952576",
+    "type": "Campaign",
+    "attributes": {
+      "name": "Retailer Billed Campaign Q2",
+      "accountId": "625702934721171442",
+      "type": "auction",
+      "status": "active",
+      "retailerId": "1298",
+      "drawableBalanceIds": ["814886589256347648"],
+      "budget": null,
+      "budgetSpent": 1250.00,
+      "budgetRemaining": null,
+      "startDate": "2026-07-01T00:00:00+00:00",
+      "endDate": null,
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "None",
+      "createdAt": "2026-05-08T00:00:00+00:00",
+      "updatedAt": "2026-07-01T00:00:00+00:00"
+    }
+  }
+}
+```
+
+***
+
+## Create an Auction Line Item
+
+Creates an auction line item.
+
+For retailer-billed campaigns, `targetRetailerId` is required and must match the campaign's `retailerId`. Only one retailer is allowed per retailer-billed campaign.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/2026-01/retail-media/campaigns/{campaignId}/auction-line-items
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/campaigns/718038552188952576/auction-line-items' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "SponsoredProductsLineItem",
+    "attributes": {
+      "name": "Retailer Billed Line Item",
+      "targetRetailerId": "1298",
+      "startDate": "2026-07-01",
+      "bidStrategy": "automated",
+      "optimizationStrategy": "conversion",
+      "keywordStrategy": "genericAndBranded"
+    }
+  }
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "type": "SponsoredProductsLineItem",
+    "attributes": {
+      "name": "Retailer Billed Line Item",
+      "targetRetailerId": "1298",
+      "startDate": "2026-07-01",
+      "bidStrategy": "automated",
+      "optimizationStrategy": "conversion",
+      "keywordStrategy": "genericAndBranded"
+    }
+  }
+})
+headers = {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer &lt;TOKEN&gt;'}
+conn.request("POST", "/2026-01/retail-media/campaigns/718038552188952576/auction-line-items", payload, headers)
+print(conn.getresponse().read().decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder().build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"SponsoredProductsLineItem\",\"attributes\":{\"name\":\"Retailer Billed Line Item\",\"targetRetailerId\":\"1298\",\"startDate\":\"2026-07-01\",\"bidStrategy\":\"automated\",\"optimizationStrategy\":\"conversion\",\"keywordStrategy\":\"genericAndBranded\"}}}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/2026-01/retail-media/campaigns/718038552188952576/auction-line-items")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/2026-01/retail-media/campaigns/718038552188952576/auction-line-items');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setHeader(array('Content-Type' => 'application/json', 'Accept' => 'application/json', 'Authorization' => 'Bearer &lt;TOKEN&gt;'));
+$request->setBody('{"data":{"type":"SponsoredProductsLineItem","attributes":{"name":"Retailer Billed Line Item","targetRetailerId":"1298","startDate":"2026-07-01","bidStrategy":"automated","optimizationStrategy":"conversion","keywordStrategy":"genericAndBranded"}}}');
+echo $request->send()->getBody();
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "id": "234105251251242423",
+    "type": "SponsoredProductsLineItem",
+    "attributes": {
+      "name": "Retailer Billed Line Item",
+      "campaignId": "718038552188952576",
+      "targetRetailerId": "1298",
+      "startDate": "2026-07-01T00:00:00+00:00",
+      "endDate": null,
+      "status": "inactive",
+      "budget": null,
+      "budgetSpent": 0.0,
+      "budgetRemaining": null,
+      "targetBid": 0.3,
+      "maxBid": null,
+      "monthlyPacing": null,
+      "dailyPacing": null,
+      "isAutoDailyPacing": false,
+      "bidStrategy": "automated",
+      "optimizationStrategy": "conversion",
+      "keywordStrategy": "genericAndBranded",
+      "flightSchedule": null,
+      "createdAt": "2026-05-08T00:00:00+00:00",
+      "updatedAt": "2026-05-08T00:00:00+00:00"
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+**Sample Response — Error (retailer mismatch)**
+
+```json
+{
+  "errors": [
+    {
+      "message": "The line item targetRetailerId must match the campaign retailerId.",
+      "status": 400
+    }
+  ]
+}
+```
+
+***
+
+## Search Retailer for an Account
+
+This endpoint allows searching for available retailers for an account.
+
+The `campaignAvailabilities` object now includes `budgetModel`, allowing platforms to determine which budget models are supported at a given retailer before creating a campaign.
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/2026-01/retail-media/accounts/{accountId}/retailers/search
+```
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/accounts/625702934721171442/retailers/search' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{}'
+```
+
+**Sample Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "retailer-789",
+      "type": "Retailer",
+      "attributes": {
+        "name": "Example Retailer",
+        "campaignAvailabilities": [
+          {
+            "buyType": "auction",
+            "campaignType": "sponsoredProducts",
+            "isAvailable": true,
+            "budgetModel": "retailerBilled",
+            "validCombinations": [
+              {
+                "pageType": "search",
+                "pageEnvironmentType": "offsite"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+***
+
+# Responses
+
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Title</th>
+      <th>Detail</th>
+      <th>Troubleshooting</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>🟢 <code>200</code></td>
+      <td>Success</td>
+      <td></td>
+      <td>Request executed successfully.</td>
+    </tr>
+    <tr>
+      <td>🔴 <code>400</code></td>
+      <td>Retailer-billed balance mapping</td>
+      <td>"Only retailer-sold campaigns are allowed to be mapped to a retailer-billed balance."</td>
+      <td>Only campaigns scoped to the same retailer as the balance can be appended via <code>/campaigns/append</code>.</td>
+    </tr>
+    <tr>
+      <td>🔴 <code>400</code></td>
+      <td><code>RetailerMismatchWithBalance</code></td>
+      <td>Campaign <code>retailerId</code> does not match the balance <code>retailerId</code>.</td>
+      <td>Ensure the <code>retailerId</code> in campaign settings matches the <code>retailerId</code> on the balance you are associating.</td>
+    </tr>
+    <tr>
+      <td>🔴 <code>400</code></td>
+      <td><code>RetailerMismatchWithCampaign</code></td>
+      <td>Line item <code>targetRetailerId</code> does not match the campaign <code>retailerId</code>.</td>
+      <td>Ensure <code>targetRetailerId</code> on the line item matches the <code>retailerId</code> set on the parent campaign.</td>
+    </tr>
+    <tr>
+      <td>🔴 <code>400</code></td>
+      <td><code>Error deserializing request</code></td>
+      <td>A required field is missing or has an invalid value.</td>
+      <td>Review the request body against the attributes table above.</td>
+    </tr>
+    <tr>
+      <td>🔴 <code>403</code></td>
+      <td><code>Unauthorized</code></td>
+      <td></td>
+      <td>Verify your access token and that your account has access to the retailer in question.</td>
+    </tr>
+  </tbody>
+</table>

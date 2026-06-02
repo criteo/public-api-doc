@@ -1,11 +1,7 @@
 ---
-title: "Revenue Report"
+title: Revenue Report
+description: Supply Side Revenue Report (v2)
 ---
-
-1. Guides for Retail Media API
-2. [Supply Side Analytics (SSP)](/retail-media/v2025.10/docs/supply-side-reporting-ssp)
-
-Supply Side Revenue Report (v2)
 
 ## Introduction
 
@@ -13,11 +9,11 @@ The revenue report serves as a vital tool for supply account owners, such as ret
 
 This report delves into crucial aspects, including generated revenue, delivered impressions, clicks, average rates, and overall performance metrics. Through this API only, supply partners gain the ability to construct detailed reports by accessing several metrics and dimensions.
 
-<Info>
+<Note>
   ### Default settings
 
   When a retailer wants to view their default settings (as used in the user interface), we suggest constructing their API request or data call using the same default parameters that the UI uses. The specific default values used by the system are documented in [Criteo Help Center](https://help.retailmedia.criteo.com/kb/guide/en/supply-side-dashboard-kAQBtSzLkH/Steps/3155149).
-</Info>
+</Note>
 
 ***
 
@@ -25,296 +21,411 @@ This report delves into crucial aspects, including generated revenue, delivered 
 
 The report generation uses an **asynchronous endpoint** that is used to receive the report creation request (using a `POST` request). Then, using the report `id` generated, it's possible to check the report status and to download the output results using the following `GET` endpoint requests.
 
-| Verb     | Endpoint                     | Description                                |
-| -------- | ---------------------------- | ------------------------------------------ |
-| **POST** | `/reports/revenue`           | Request a retailer revenue report creation |
-| **GET**  | `/reports/{reportId}/status` | Get status of a specific report            |
-| **GET**  | `/reports/{reportId}/output` | Download output of a specific report       |
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/reports/revenue</code></td>
+      <td>Request a retailer revenue report creation</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/reports/&#123;reportId&#125;/status</code></td>
+      <td>Get status of a specific report</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/reports/&#123;reportId&#125;/output</code></td>
+      <td>Download output of a specific report</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
 ## Attributes
 
-| Attribute                  | Data Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| -------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                       | `string`       | Supply Account ID to pull results forNote: for apps with access to multiple supply accounts, it is also possible to use an `ids` array for multiple IDs, allowing to pull results across multiple accounts. e.g. `"ids":["supplyAccountId_1","supplyAccountId_2"]`Accepted values: `int64` Writable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `reportType`               | `enum`         | Report types are pre-packaged reports that allow the specification of the report breakdown. They enable reports to view revenue distribution by advertiser, brand, environment, page category, and page type. The metrics and dimensions in these report types are limited. Use the `metrics` and `dimensions` arrays to build your report for additional fields.*Note: when metrics and dimensions are used, the report type is ignored.*Accepted values: `advertiser`, `brand`, `environment`, `productCategory`, `pageType` Writable? N / Nullable? Y                                                                                                                                                                             |
-| `revenueType`              | `enum`         | The revenue type used to filter report results. If the revenue type filter is not specified, the report will return all existing revenue data for sponsored products and preferred deals within the specified timeframe.Accepted values: `auction`, `preferred` Writable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `soldBy`                   | `enum`         | The sales channel of indirect sold, direct sold, or private market. This is an optional filter that can be used to narrow down results.Accepted values: `directSold`, `indirectSold`, `privateMarket` Writable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `buyType`                  | `enum`         | The campaign buying strategy. This optional filter can be used to filter down resultsAccepted values: `auction`, `preferredDeals`, `sponsorship` Writable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `format`                   | `enum`         | The format type the report should return resultsAccepted values: `json`, `json-compact`, `json-newline`, `csv` Writable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `campaignType`             | `enum`         | The campaign type to filter resultsAccepted values: `all`, `sponsoredProducts`, `onSiteDisplays` Default: `all` Writable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `salesChannel`             | `enum`         | The sales channel where attributed sales originatedAccepted values: `all`, `online`, `offline` Default: `all` Writable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `advertiserTypes`          | `list<string>` | The advertiser type where campaigns originated fromAccepted values: `retailer`, `brand`, `seller` Writable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `clickAttributionWindow`   | `enum`         | The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click.Accepted values: `none`, `7D`, `14D`, `30D` Default: if omitted, defaults to [Campaign](doc:campaigns-endpoints) settings; must be specified if `viewAttributionWindow` is one of the accepted values Writable? N / Nullable? Y                                                                                                                                                                                                                                                                                    |
-| `viewAttributionWindow`    | `enum`         | The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression.Accepted values: `none`, `1D`, `7D`, `14D`, `30D` Default: if omitted, defaults to [Campaign](doc:campaigns-endpoints) settings; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values Writable? N / Nullable? Y                                                                                                                                                                                                           |
-| `dimensions`               | `list<enum>`   | An array of strings used to define which dimensions to see in the reportAccepted values: refer to [Metrics and Dimensions](doc:metrics-and-dimensions-ssp) for the complete list of supported dimensions Writable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `clickMatchLevel`          | `string`       | The attribution configuration modal allows users to retrieve data based on the specified product match for click events.The order of product match relationships from farthest to closest is `sameBrand` \< `sameCategory` \< `sameSku`. The`sameBrand` product match value is inclusive of `sameCategory` and `sameSku`attribution. The `sameCategory` value is inclusive of `sameSku` attribution. **Only one value should be used.***This is not a filter that excludes events. Rather, it calculates attribution using the provided SKU match level.*Accepted values: `sameSku`, `sameCategory`, `sameBrand`, `campaign` Default: if omitted, defaults to [Campaign](doc:campaigns-endpoints) settings Writable? N / Nullable? Y |
-| `viewMatchLevel`           | `string`       | The attribution configuration modal allows users to retrieve data based on the specified product match for view events.The order of product match relationships from farthest to closest is `sameBrand` \< `sameCategory` \< `sameSku`. The`sameBrand` product match value is inclusive of `sameCategory` and `sameSku`attribution. The `sameCategory` value is inclusive of `sameSku` attribution. **Only one value should be used.***This is not a filter that excludes events. Rather, it calculates attribution using the provided SKU match level.*Accepted values: `sameSku`, `sameCategory`, `sameBrand`, `campaign` Default: if omitted, defaults to [Campaign](doc:campaigns-endpoints) settings Writable? N / Nullable? Y  |
-| `skuRelations`(DEPRECATED) | `string`       | The attributed rule used to match an impression/click to a sale. The filter will narrow down results of the attributed rules set by the advertiser at the campaign level.Accepted Values: `sameSku`, `sameParentSku`, `sameCategory`, `sameBrand`, `sameSeller` Writable? N / Nullable? Y⚠️**Note**: This filter is **deprecated**. Please use `clickMatchLevel` and `viewMatchLevel` instead. However, the `skuRelations` dimension can still be used.                                                                                                                                                                                                                                                                              |
-| `metrics`                  | `list<enum>`   | An array of strings used to define which metrics to see in the report.Accepted values: refer to [Metrics and Dimensions](doc:metrics-and-dimensions-ssp) for the complete list of supported metrics Writable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `startDate`                | `timestamp`    | Start date of the report (inclusive)Accepted values: `yyyy-mm-ddThh:mm:ss`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) ) Writable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `endDate`                  | `timestamp`    | End date of the report (inclusive)Accepted values: `yyyy-mm-ddThh:mm:ss`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) ) Writable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `timezone`                 | `string`       | Time zone to consider in the metrics calculation,`startDate` and `endDate`Accepted values: [IANA (TZ database)](https://www.iana.org/time-zones) time zones (example: `America/New_York`, `Europe/Paris`, `Asia/Tokyo`, `UTC`) Default: `UTC` Writable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `accountIds`               | `string`       | Gives the ability for the user to filter by account IDs.*There are currently no limitations to the amount of IDs that can be added to the filter.*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `campaignIds`              | `string`       | Gives the ability for the user to filter by campaign IDs.*There are currently no limitations to the amount of IDs that can be added to the filter.*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `lineItemIds`              | `string`       | Gives the ability for the user to filter by line item IDs.*There are currently no limitations to the amount of IDs that can be added to the filter.*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `retailerIds`              | `string`       | Gives the ability for the user to filter their reporting by retailer ID(s).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td><code>string</code></td>
+      <td>Supply Account ID to pull results for<br />Note: for apps with access to multiple supply accounts, it is also possible to use an <code>ids</code> array for multiple IDs, allowing to pull results across multiple accounts. e.g.<br /><code>"ids":["supplyAccountId&#95;1","supplyAccountId&#95;2"]</code><br />Accepted values: <code>int64</code><br />Writable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>reportType</code></td>
+      <td><code>enum</code></td>
+      <td>Report types are pre-packaged reports that allow the specification of the report breakdown. They enable reports to view revenue distribution by advertiser, brand, environment, page category, and page type. The metrics and dimensions in these report types are limited.<br />Use the <code>metrics</code> and <code>dimensions</code> arrays to build your report for additional fields.<br />&#42;Note: when metrics and dimensions are used, the report type is ignored.&#42;<br />Accepted values: <code>advertiser</code>, <code>brand</code>, <code>environment</code>, <code>productCategory</code>, <code>pageType</code><br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>revenueType</code></td>
+      <td><code>enum</code></td>
+      <td>The revenue type used to filter report results.<br />If the revenue type filter is not specified, the report will return all existing revenue data for sponsored products and preferred deals within the specified timeframe.<br />Accepted values: <code>auction</code>, <code>preferred</code><br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>soldBy</code></td>
+      <td><code>enum</code></td>
+      <td>The sales channel of indirect sold, direct sold, or private market. This is an optional filter that can be used to narrow down results.<br />Accepted values: <code>directSold</code>, <code>indirectSold</code>, <code>privateMarket</code><br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>buyType</code></td>
+      <td><code>enum</code></td>
+      <td>The campaign buying strategy. This optional filter can be used to filter down results<br />Accepted values: <code>auction</code>, <code>preferredDeals</code>, <code>sponsorship</code><br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>format</code></td>
+      <td><code>enum</code></td>
+      <td>The format type the report should return results<br />Accepted values: <code>json</code>, <code>json-compact</code>, <code>json-newline</code>, <code>csv</code><br />Writable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>campaignType</code></td>
+      <td><code>enum</code></td>
+      <td>The campaign type to filter results<br />Accepted values: <code>all</code>, <code>sponsoredProducts</code>, <code>onSiteDisplays</code><br />Default: <code>all</code><br />Writable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>salesChannel</code></td>
+      <td><code>enum</code></td>
+      <td>The sales channel where attributed sales originated<br />Accepted values: <code>all</code>, <code>online</code>, <code>offline</code><br />Default: <code>all</code><br />Writable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>advertiserTypes</code></td>
+      <td><code>list</code></td>
+      <td>The advertiser type where campaigns originated from<br />Accepted values: <code>retailer</code>, <code>brand</code>, <code>seller</code><br />Writable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>clickAttributionWindow</code></td>
+      <td><code>enum</code></td>
+      <td>The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click.<br />Accepted values: <code>none</code>, <code>7D</code>, <code>14D</code>, <code>30D</code><br />Default: if omitted, defaults to <a href="/retail-media/v2025.10/docs/campaigns-endpoints">Campaign</a> settings; must be specified if <code>viewAttributionWindow</code> is one of the accepted values<br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>viewAttributionWindow</code></td>
+      <td><code>enum</code></td>
+      <td>The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression.<br />Accepted values: <code>none</code>, <code>1D</code>, <code>7D</code>, <code>14D</code>, <code>30D</code><br />Default: if omitted, defaults to <a href="/retail-media/v2025.10/docs/campaigns-endpoints">Campaign</a> settings; must be less than or equal to <code>clickAttributionWindow</code>; must be specified if <code>clickAttributionWindow</code> is one of the accepted values<br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>dimensions</code></td>
+      <td><code>list</code></td>
+      <td>An array of strings used to define which dimensions to see in the report<br />Accepted values: refer to <a href="/retail-media/v2025.10/docs/metrics-and-dimensions-ssp">Metrics and Dimensions</a> for the complete list of supported dimensions<br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>clickMatchLevel</code></td>
+      <td><code>string</code></td>
+      <td>The attribution configuration modal allows users to retrieve data based on the specified product match for click events.<br />The order of product match relationships from farthest to closest is <code>sameBrand</code> &#92;&lt; <code>sameCategory</code> &#92;&lt; <code>sameSku</code>. The<code>sameBrand</code> product match value is inclusive of <code>sameCategory</code> and <code>sameSku</code>attribution. The <code>sameCategory</code> value is inclusive of <code>sameSku</code> attribution. <strong>Only one value should be used.</strong><br />&#42;This is not a filter that excludes events. Rather, it calculates attribution using the provided SKU match level.&#42;<br />Accepted values: <code>sameSku</code>, <code>sameCategory</code>, <code>sameBrand</code>, <code>campaign</code><br />Default: if omitted, defaults to <a href="/retail-media/v2025.10/docs/campaigns-endpoints">Campaign</a> settings<br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>viewMatchLevel</code></td>
+      <td><code>string</code></td>
+      <td>The attribution configuration modal allows users to retrieve data based on the specified product match for view events.<br />The order of product match relationships from farthest to closest is <code>sameBrand</code> &#92;&lt; <code>sameCategory</code> &#92;&lt; <code>sameSku</code>. The<code>sameBrand</code> product match value is inclusive of <code>sameCategory</code> and <code>sameSku</code>attribution. The <code>sameCategory</code> value is inclusive of <code>sameSku</code> attribution. <strong>Only one value should be used.</strong><br />&#42;This is not a filter that excludes events. Rather, it calculates attribution using the provided SKU match level.&#42;<br />Accepted values: <code>sameSku</code>, <code>sameCategory</code>, <code>sameBrand</code>, <code>campaign</code><br />Default: if omitted, defaults to <a href="/retail-media/v2025.10/docs/campaigns-endpoints">Campaign</a> settings<br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>skuRelations</code><br />(DEPRECATED)</td>
+      <td><code>string</code></td>
+      <td>The attributed rule used to match an impression/click to a sale. The filter will narrow down results of the attributed rules set by the advertiser at the campaign level.<br />Accepted Values: <code>sameSku</code>, <code>sameParentSku</code>, <code>sameCategory</code>, <code>sameBrand</code>, <code>sameSeller</code><br />Writable? N / Nullable? Y<br />:warning:<strong>Note</strong>: This filter is <strong>deprecated</strong>. Please use <code>clickMatchLevel</code> and <code>viewMatchLevel</code> instead. However, the <code>skuRelations</code> dimension can still be used.</td>
+    </tr>
+    <tr>
+      <td><code>metrics</code></td>
+      <td><code>list</code></td>
+      <td>An array of strings used to define which metrics to see in the report.<br />Accepted values: refer to <a href="/retail-media/v2025.10/docs/metrics-and-dimensions-ssp">Metrics and Dimensions</a> for the complete list of supported metrics<br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>startDate</code></td>
+      <td><code>timestamp</code></td>
+      <td>Start date of the report (inclusive)<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss</code>(in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a> )<br />Writable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>endDate</code></td>
+      <td><code>timestamp</code></td>
+      <td>End date of the report (inclusive)<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss</code>(in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a> )<br />Writable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>timezone</code></td>
+      <td><code>string</code></td>
+      <td>Time zone to consider in the metrics calculation,<code>startDate</code> and <code>endDate</code><br />Accepted values: <a href="https://www.iana.org/time-zones">IANA (TZ database)</a> time zones (example: <code>America/New&#95;York</code>, <code>Europe/Paris</code>, <code>Asia/Tokyo</code>, <code>UTC</code>)<br />Default: <code>UTC</code><br />Writable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>accountIds</code></td>
+      <td><code>string</code></td>
+      <td>Gives the ability for the user to filter by account IDs.<br />&#42;There are currently no limitations to the amount of IDs that can be added to the filter.&#42;</td>
+    </tr>
+    <tr>
+      <td><code>campaignIds</code></td>
+      <td><code>string</code></td>
+      <td>Gives the ability for the user to filter by campaign IDs.<br />&#42;There are currently no limitations to the amount of IDs that can be added to the filter.&#42;</td>
+    </tr>
+    <tr>
+      <td><code>lineItemIds</code></td>
+      <td><code>string</code></td>
+      <td>Gives the ability for the user to filter by line item IDs.<br />&#42;There are currently no limitations to the amount of IDs that can be added to the filter.&#42;</td>
+    </tr>
+    <tr>
+      <td><code>retailerIds</code></td>
+      <td><code>string</code></td>
+      <td>Gives the ability for the user to filter their reporting by retailer ID(s).</td>
+    </tr>
+  </tbody>
+</table>
 
 <Info>
-  ### Metrics and Dimensions
+  **Metrics and Dimensions**
 
-  For a complete list of all supported metrics and dimension, check out the [Metrics and Dimensions](doc:metrics-and-dimensions-ssp)
+  For a complete list of all supported metrics and dimension, check out the [Metrics and Dimensions](/retail-media/v2025.10/docs/metrics-and-dimensions-ssp)
 </Info>
 
-<Check>
-  When utilizing the `clickMatchLevel` and `viewMatchLevel` fields, we recommend including the `attributionSettings`, `activityType`, and `skuRelation`. This will assist in gaining a clearer understanding of the click and view events, categorized by their attribution windows and SKU relationships.
-</Check>
+> 👍
+>
+> When utilizing the `clickMatchLevel` and `viewMatchLevel` fields, we recommend including the `attributionSettings`, `activityType`, and `skuRelation`. This will assist in gaining a clearer understanding of the click and view events, categorized by their attribution windows and SKU relationships.
 
 ***
 
 ## Generate Revenue Report
 
-![](/images/retail-media/v2025.10/docs/b0623eb-post.png)
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/reports/revenue
 ```
 
 ### Sample Request
 
-<CodeGroup>
-  ```bash bash
-  curl -L 'https://api.criteo.com/{version}/retail-media/reports/revenue' \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-  -d '{
-    "data": {
-          "type": "SSPRevenueReport",
-          "attributes": {
-            "id": "203209148566716416",
-            "revenueType": "auction",
-            "soldBy": "directSold",
-            "buyType": "auction",
-            "skuRelations": [
-              "sameSku"
-            ],
-            "format": "json",
-            "campaignType": "sponsoredProducts",
-            "salesChannel": "online",
-            "clickAttributionWindow": "7D",
-            "viewAttributionWindow": "1D",
-            "clickMatchLevel": "sameCategory",
-            "viewMatchLevel": "sameSKU",
-  					"dimensions": [
-                "date",
-                "hour",
-                "advertiserType",
-                "accountName",
-                "campaignName",
-                "activityType",
-                "advProductId",
-                "advProductName",
-                "placementName",
-                "taxonomy1Name",
-                "taxonomy2Name",
-                "taxonomy3Name"      
-            ],
-            "metrics": [
-                "numberOfCampaigns",
-                "numberOfSkus",
-                "clicks",
-                "units",
-                "ctr",
-                "cr",
-                "workingMedia",
-                "netRevenue"
-            ],
-            "startDate": "2024-04-10T21:14:53.816Z",
-            "endDate": "2024-04-10T21:14:53.816Z",
-            "timezone": "UTC"
-       	 }
-      }
+```bash curl
+curl -L 'https://api.criteo.com/{version}/retail-media/reports/revenue' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+        "type": "SSPRevenueReport",
+        "attributes": {
+          "id": "203209148566716416",
+          "revenueType": "auction",
+          "soldBy": "directSold",
+          "buyType": "auction",
+          "skuRelations": [
+            "sameSku"
+          ],
+          "format": "json",
+          "campaignType": "sponsoredProducts",
+          "salesChannel": "online",
+          "clickAttributionWindow": "7D",
+          "viewAttributionWindow": "1D",
+          "clickMatchLevel": "sameCategory",
+          "viewMatchLevel": "sameSKU",
+					"dimensions": [
+              "date",
+              "hour",
+              "advertiserType",
+              "accountName",
+              "campaignName",
+              "activityType",
+              "advProductId",
+              "advProductName",
+              "placementName",
+              "taxonomy1Name",
+              "taxonomy2Name",
+              "taxonomy3Name"      
+          ],
+          "metrics": [
+              "numberOfCampaigns",
+              "numberOfSkus",
+              "clicks",
+              "units",
+              "ctr",
+              "cr",
+              "workingMedia",
+              "netRevenue"
+          ],
+          "startDate": "2024-04-10T21:14:53.816Z",
+          "endDate": "2024-04-10T21:14:53.816Z",
+          "timezone": "UTC"
+     	 }
     }
-  }'
-  ```
-</CodeGroup>
+  }
+}'
+```
 
 ### Sample Response
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "RetailMediaReportStatus",
-          "id": "22fa642d-ab8a-463c-a2f6-fb174c2f72dd",
-          "attributes": {
-              "status": "pending",
-              "rowCount": null,
-              "fileSizeBytes": null,
-              "md5Checksum": null,
-              "createdAt": null,
-              "expiresAt": null,
-              "message": null
-          }
-      }
-  }
-  ```
-</CodeGroup>
+```json json
+{
+    "data": {
+        "type": "RetailMediaReportStatus",
+        "id": "22fa642d-ab8a-463c-a2f6-fb174c2f72dd",
+        "attributes": {
+            "status": "pending",
+            "rowCount": null,
+            "fileSizeBytes": null,
+            "md5Checksum": null,
+            "createdAt": null,
+            "expiresAt": null,
+            "message": null
+        }
+    }
+}
+```
 
 ***
 
 ## Get status of specific report
 
-![](/images/retail-media/v2025.10/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/reports/{reportId}/status
 ```
 
 ### Sample Request
 
-<CodeGroup>
-  ```bash bash
-  curl -L 'https://api.criteo.com/{version}/retail-media/reports/22fa642d-ab8a-463c-a2f6-fb174c2f72dd/status' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
-  ```
-</CodeGroup>
+```bash CURL
+curl -L 'https://api.criteo.com/{version}/retail-media/reports/22fa642d-ab8a-463c-a2f6-fb174c2f72dd/status' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
 
 ### Sample Response
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "RetailMediaReportStatus",
-          "id": "22fa642d-ab8a-463c-a2f6-fb174c2f72dd",
-          "attributes": {
-              "status": "success",
-              "rowCount": 2,
-              "fileSizeBytes": 341,
-              "md5Checksum": "f43cf2503a31a100f7b81db3c14d3fae",
-              "createdAt": "2023-07-10T16:00:32.000Z",
-              "expiresAt": "2023-07-17T16:00:32.000Z",
-              "message": null
-          }
-      }
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "type": "RetailMediaReportStatus",
+        "id": "22fa642d-ab8a-463c-a2f6-fb174c2f72dd",
+        "attributes": {
+            "status": "success",
+            "rowCount": 2,
+            "fileSizeBytes": 341,
+            "md5Checksum": "f43cf2503a31a100f7b81db3c14d3fae",
+            "createdAt": "2023-07-10T16:00:32.000Z",
+            "expiresAt": "2023-07-17T16:00:32.000Z",
+            "message": null
+        }
+    }
+}
+```
 
 ***
 
 ## Download Output of a Specific Report
 
-![](/images/retail-media/v2025.10/docs/8a6bfd9-get.png)
+<Badge color="green" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/reports/{reportId}/output
 ```
 
 ### Sample Request
 
-<CodeGroup>
-  ```bash bash
-  curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f426xx/output" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
-  ```
-</CodeGroup>
+```bash
+curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f426xx/output" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
 
 ### Sample Responses
 
 *Report broken down by advertiser by JSON format*
 
-<CodeGroup>
-  ```bash bash
-  [
-      {
-          "date": "2024-04-10",
-          "hour": 15,
-          "advertiserType":"seller",
-          "accountName": "Account A",
-          "campaignName": "CampaignABC",
-          "placementName": "viewSearchResult",
-          "activityType": "imp",
-          "advProductId": "14364409",
-          "advProductName": "360 Deluxe (PC/Mac) - 5 Devices",
-          "taxonomy1Name": "computers & tablets",
-          "taxonomy2Name": "software",
-          "taxonomy3Name": "antivirus, security & utility software",
-          "numberOfCampaigns": 1,
-          "numberOfSkus": 1,
-          "clicks": 0,
-          "units": 1,
-          "ctr": null,
-          "cr": null,
-          "workingMedia": 0,
-          "netRevenue": 0
-      },
-      {
-          "date": "2024-04-10",
-          "hour": 11,
-          "advertiserType":"brand",
-          "accountName": "Account A",
-          "campaignName": "CampaignXYZ",
-          "placementName": "viewSearchResult",
-          "activityType": "click",
-          "advProductId": "15325425",
-          "advProductName": "Mini On-Ear Bluetooth Kids Headphones - Pink",
-          "taxonomy1Name": "audio",
-          "taxonomy2Name": "headphones",
-          "taxonomy3Name": "over-ear headphones",
-          "numberOfCampaigns": 1,
-          "numberOfSkus": 1,
-          "clicks": 0,
-          "units": 1,
-          "ctr": null,
-          "cr": null,
-          "workingMedia": 0,
-          "netRevenue": 0
-      },
-      {
-          "date": "2024-04-10",
-          "hour": 10,
-          "advertiserType":"seller",
-          "accountName": "Account B",
-          "campaignName": "CampaignDEF",
-          "placementName": "viewItem_API",
-          "activityType": "imp",
-          "advProductId": "17701444",
-          "advProductName": "City Pro Electric Scooter",
-          "taxonomy1Name": "sports, recreation & transportation",
-          "taxonomy2Name": "electric transportation",
-          "taxonomy3Name": "electric scooters",
-          "numberOfCampaigns": 1,
-          "numberOfSkus": 1,
-          "clicks": 0,
-          "units": 1,
-          "ctr": null,
-          "cr": null,
-          "workingMedia": 0,
-          "netRevenue": 0
-      }
-  ]
-  ```
-</CodeGroup>
+```json
+[
+    {
+        "date": "2024-04-10",
+        "hour": 15,
+        "advertiserType":"seller",
+        "accountName": "Account A",
+        "campaignName": "CampaignABC",
+        "placementName": "viewSearchResult",
+        "activityType": "imp",
+        "advProductId": "14364409",
+        "advProductName": "360 Deluxe (PC/Mac) - 5 Devices",
+        "taxonomy1Name": "computers & tablets",
+        "taxonomy2Name": "software",
+        "taxonomy3Name": "antivirus, security & utility software",
+        "numberOfCampaigns": 1,
+        "numberOfSkus": 1,
+        "clicks": 0,
+        "units": 1,
+        "ctr": null,
+        "cr": null,
+        "workingMedia": 0,
+        "netRevenue": 0
+    },
+    {
+        "date": "2024-04-10",
+        "hour": 11,
+        "advertiserType":"brand",
+        "accountName": "Account A",
+        "campaignName": "CampaignXYZ",
+        "placementName": "viewSearchResult",
+        "activityType": "click",
+        "advProductId": "15325425",
+        "advProductName": "Mini On-Ear Bluetooth Kids Headphones - Pink",
+        "taxonomy1Name": "audio",
+        "taxonomy2Name": "headphones",
+        "taxonomy3Name": "over-ear headphones",
+        "numberOfCampaigns": 1,
+        "numberOfSkus": 1,
+        "clicks": 0,
+        "units": 1,
+        "ctr": null,
+        "cr": null,
+        "workingMedia": 0,
+        "netRevenue": 0
+    },
+    {
+        "date": "2024-04-10",
+        "hour": 10,
+        "advertiserType":"seller",
+        "accountName": "Account B",
+        "campaignName": "CampaignDEF",
+        "placementName": "viewItem_API",
+        "activityType": "imp",
+        "advProductId": "17701444",
+        "advProductName": "City Pro Electric Scooter",
+        "taxonomy1Name": "sports, recreation & transportation",
+        "taxonomy2Name": "electric transportation",
+        "taxonomy3Name": "electric scooters",
+        "numberOfCampaigns": 1,
+        "numberOfSkus": 1,
+        "clicks": 0,
+        "units": 1,
+        "ctr": null,
+        "cr": null,
+        "workingMedia": 0,
+        "netRevenue": 0
+    }
+]
+```
 
 ***
 
 ## Responses
 
-| Response | Description                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🔵 `200` | Call executed with success                                                                                                                                                                                                                                                                                                                                                                                      |
-| 🔴 `400` | Common Validation Errors:- **`endDate `cannot be more than 100 days from`startDate`** - Using a date range with more than 100 days apart
-- **`reportType`invalid** - calling an unsupported report type will throw a 400 error
-- **`timeZone`must be a valid timezone** - using a time zone value that is not listed in the list tz database time zones
-- **format invalid** - using an unsupported file format |
-
-***
-
-[Supply Side Analytics (SSP)](/retail-media/v2025.10/docs/supply-side-reporting-ssp)
-
-[Metrics and Dimensions (SSP)](/retail-media/v2025.10/docs/metrics-and-dimensions-ssp)
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:large&#95;blue&#95;circle: <code>200</code></td>
+      <td>Call executed with success</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle: <code>400</code></td>
+      <td>Common Validation Errors:<br /><ul><li><strong> 0 cannot be more than 100 days from 1 </strong> - Using a date range with more than 100 days apart</li><li><strong> 0 invalid</strong> - calling an unsupported report type will throw a 400 error</li><li><strong> 0 must be a valid timezone</strong> - using a time zone value that is not listed in the list tz database time zones</li><li><strong>format invalid</strong> - using an unsupported file format</li></ul></td>
+    </tr>
+  </tbody>
+</table>

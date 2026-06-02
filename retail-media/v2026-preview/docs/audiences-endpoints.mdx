@@ -1,15 +1,12 @@
 ---
-title: "Audiences Endpoints"
+title: Audiences Endpoints
 ---
-
-1. Guides for Retail Media API
-2. [Audiences](/retail-media/v2026-preview/docs/audiences)
 
 ## **Introduction**
 
 Audiences give the ability to advertisers to define subsets of retailer visitors to be targeted in their campaigns.
 
-Audiences are built of one or multiple audience segments that can be combined using logical [Algebra Nodes](https://developers.criteo.com/retail-media/docs/algebra-nodes) to define target campaigns' audiences.
+Audiences are built of one or multiple audience segments that can be combined using logical [Algebra Nodes](/retail-media/docs/algebra-nodes) to define target campaigns' audiences.
 
 <Warning>
   The corresponding App should have the "**Audiences Manage**" permission enabled for all endpoints on this page.
@@ -21,16 +18,14 @@ Audiences are built of one or multiple audience segments that can be combined us
   Audience updates are processed daily at 0h UTC and 12h UTC and can take around 5 hours to reflect on a live campaign. This is important for audiences that are frequently updated as changes should be ready for processing prior to these two times.
 </Warning>
 
-<Info>
-  The endpoints and functionalities covered in this **page refers to features available exclusively in Preview** for now, which doesn't mean that they are the only ones available for this domain/scope.
-
-  For more complete information about our API capabilities, check the Stable version in [Welcome to Criteo Retail Media API](https://developers.criteo.com/retail-media/docs/welcome-to-criteo)
-</Info>
+<Warning>
+  This content is available in preview only.
+</Warning>
 
 <Info>
   **Partial Approvals**
 
-  Bulk operations (`create`, `update`, `delete`) use a **partial approval model**. Even if some items in the request fail, the response will return `200 OK`. Any failed items will be listed in the `error` section of the response with [an error code and details](https://developers.criteo.com/retail-media/v2025-preview/docs/audiences-endpoints#errors).
+  Bulk operations (`create`, `update`, `delete`) use a **partial approval model**. Even if some items in the request fail, the response will return `200 OK`. Any failed items will be listed in the `error` section of the response with [an error code and details](/retail-media/v2025-preview/docs/audiences-endpoints#errors).
 
   Examples of possible error codes:
 
@@ -45,33 +40,103 @@ Audiences are built of one or multiple audience segments that can be combined us
 
 ## Endpoints
 
-| Verb      | Endpoint                                  | Description        |
-| --------- | ----------------------------------------- | ------------------ |
-| **POST**  | `/accounts/{account-id}/audiences/create` | Create audience(s) |
-| **PATCH** | `/accounts/{account-id}/audiences`        | Update audience(s) |
-| **POST**  | `/accounts/{account-id}/audiences/delete` | Delete audience(s) |
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/&#123;account-id&#125;/audiences/create</code></td>
+      <td>Create audience(s)</td>
+    </tr>
+    <tr>
+      <td><strong>PATCH</strong></td>
+      <td><code>/accounts/&#123;account-id&#125;/audiences</code></td>
+      <td>Update audience(s)</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/&#123;account-id&#125;/audiences/delete</code></td>
+      <td>Delete audience(s)</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
 ## Audience Attributes
 
-| Attribute      | Data Type   | Description                                                                                                                                                                                                                                                                              |
-| -------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`           | string      | Audience ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                   |
-| `name`\*       | string      | Audience name, arbitrary and changeable. Must be unique in the account level.Accepted values: up to 256 chars string Writeable? Y / Nullable? N                                                                                                                                          |
-| `description`  | string      | Audience description, arbitrary and changeable.Accepted values: up to 500 chars string Writeable? Y / Nullable? Y                                                                                                                                                                        |
-| `accountId`    | string      | [Account](https://developers.criteo.com/retail-media/docs/account) ID associated with the Audience, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                            |
-| `retailerId`\* | string      | [Retailer](https://developers.criteo.com/retail-media/docs/retailers) ID associated with the Audience, generated internally by Criteo. Once created, the associated retailer cannot be changedAccepted values: string of int64 Writeable? N / Nullable? N                                |
-| `algebra`\*    | object      | Algebra node with the definition of how the different audience segments are combined to create the audience, using logical operators `and`, `or` and `not`Accepted values: see [Algebra Nodes](https://developers.criteo.com/retail-media/docs/algebra-nodes) Writeable? Y / Nullable? N |
-| `channels`     | list\<enum> | Channels associated to the audienceAccepted values: `Onsite`, `Offsite` Writeable? N / Nullable? N                                                                                                                                                                                       |
-| `createdAt`    | timestamp   | Timestamp of Audience creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss.msZ` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Writeable? N / Nullable? N                                                                                                     |
-| `createdById`  | string      | User ID who created the Audience (`null` if created by a service)Accepted values: string Writeable? N / Nullable? Y                                                                                                                                                                      |
-| `updatedAt`    | timestamp   | Timestamp of last Audience update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss.msZ`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                                                    |
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Data Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>id</code></td>
+      <td>string</td>
+      <td>Audience ID, generated internally by Criteo<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>name</code>&#42;</td>
+      <td>string</td>
+      <td>Audience name, arbitrary and changeable. Must be unique in the account level.<br />Accepted values: up to 256 chars string<br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>description</code></td>
+      <td>string</td>
+      <td>Audience description, arbitrary and changeable.<br />Accepted values: up to 500 chars string<br />Writeable? Y / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>accountId</code></td>
+      <td>string</td>
+      <td>Account ID associated with the Audience, generated internally by Criteo<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>retailerId</code>&#42;</td>
+      <td>string</td>
+      <td>Retailer ID associated with the Audience, generated internally by Criteo. Once created, the associated retailer cannot be changed<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>algebra</code>&#42;</td>
+      <td>object</td>
+      <td>Algebra node with the definition of how the different audience segments are combined to create the audience, using logical operators <code>and</code>, <code>or</code> and <code>not</code><br />Accepted values: see Algebra Nodes<br />Writeable? Y / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>channels</code></td>
+      <td>list&#92;</td>
+      <td>Channels associated to the audience<br />Accepted values: <code>Onsite</code>, <code>Offsite</code><br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>createdAt</code></td>
+      <td>timestamp</td>
+      <td>Timestamp of Audience creation, in UTC<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss.msZ</code> (in ISO-8601 )<br />Writeable? N / Nullable? N</td>
+    </tr>
+    <tr>
+      <td><code>createdById</code></td>
+      <td>string</td>
+      <td>User ID who created the Audience (<code>null</code> if created by a service)<br />Accepted values: string<br />Writeable? N / Nullable? Y</td>
+    </tr>
+    <tr>
+      <td><code>updatedAt</code></td>
+      <td>timestamp</td>
+      <td>Timestamp of last Audience update, in UTC<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss.msZ</code>(in ISO-8601)<br />Writeable? N / Nullable? N</td>
+    </tr>
+  </tbody>
+</table>
 
-(\*) *Required for create operations*
+(*) _Required for create operations_
 
 <Info>
-  ### Field Definitions
+  **Field Definitions**
 
   * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
   * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
@@ -86,230 +151,229 @@ This endpoint allows the creation of one or multiple audiences in a single reque
 
 Each audience must contain the required attributes marked above and is built of one or multiple segments.
 
-![](/images/retail-media/v2026-preview/docs/b0623eb-post.png)
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences/create
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/create' \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-  -d '{
-    "data": [
-      {
-        "attributes": {
-          "name": "Audience made of CRM users list",
-          "description": "Simple audience made of a single segment of CRM list",
-          "retailerId": "1234",
-          "algebra": {
-            "audienceSegmentId": "735693505849913344"
-          }
-        }
-      },
-      {
-        "attributes": {
-          "name": "Audience of recent users from retailer not in CRM list",
-          "description": "Combination of segments from User Events but not in CRM list",
-          "retailerId": "4567",
-          "algebra": {
-            "and": [
-              {
-                "or": [
-                  {
-                    "audienceSegmentId": "738406687217913856" 
-                  },
-                  {
-                    "audienceSegmentId": "738406688413290496"
-                  }
-                ]
-              },
-              {
-                "not": { 
-                  "audienceSegmentId": "735693505849913344" 
-                }
-              }
-            ]
-          }
+
+```json JSON
+curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/create' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": [
+    {
+      "attributes": {
+        "name": "Audience made of CRM users list",
+        "description": "Simple audience made of a single segment of CRM list",
+        "retailerId": "1234",
+        "algebra": {
+          "audienceSegmentId": "735693505849913344"
         }
       }
-    ]
-  }'
-  ```
-
-  ```bash bash
-  import http.client
-  import json
-  conn = http.client.HTTPSConnection("api.criteo.com")
-  payload = json.dumps({
-    "data": [
-      {
-        "attributes": {
-          "name": "Audience made of CRM users list",
-          "description": "Simple audience made of a single segment of CRM list",
-          "retailerId": "1234",
-          "algebra": {
-            "audienceSegmentId": "735693505849913344"
-          }
-        }
-      },
-      {
-        "attributes": {
-          "name": "Audience of recent users from retailer not in CRM list",
-          "description": "Combination of segments from User Events but not in CRM list",
-          "retailerId": "4567",
-          "algebra": {
-            "and": [
-              {
-                "or": [
-                  {
-                    "audienceSegmentId": "738406687217913856" 
-                  },
-                  {
-                    "audienceSegmentId": "738406688413290496"
-                  }
-                ]
-              },
-              {
-                "not": { 
-                  "audienceSegmentId": "735693505849913344" 
+    },
+    {
+      "attributes": {
+        "name": "Audience of recent users from retailer not in CRM list",
+        "description": "Combination of segments from User Events but not in CRM list",
+        "retailerId": "4567",
+        "algebra": {
+          "and": [
+            {
+              "or": [
+                {
+                  "audienceSegmentId": "738406687217913856" 
+                },
+                {
+                  "audienceSegmentId": "738406688413290496"
                 }
+              ]
+            },
+            {
+              "not": { 
+                "audienceSegmentId": "735693505849913344" 
               }
-            ]
-          }
+            }
+          ]
         }
       }
-    ]
-  })
-  headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <TOKEN>'
-  }
-  conn.request("POST", "https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/create", payload, headers)
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-  MediaType mediaType = MediaType.parse("application/json");
-  RequestBody body = RequestBody.create(mediaType, '{"data":[{"attributes":{"name":"Audience made of CRM users list","description":"Simple audience made of a single segment of CRM list","retailerId":"1234","algebra":{"audienceSegmentId":"735693505849913344"}}},{"attributes":{"name":"Audience of recent users from retailer not in CRM list","description":"Combination of segments from User Events but not in CRM list","retailerId":"4567","algebra":{"and":[{"or":[{"audienceSegmentId":"738406687217913856"},{"audienceSegmentId":"738406688413290496"}]},{"not":{"audienceSegmentId":"735693505849913344"}}]}}}]}');
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/create")
-    .method("POST", body)
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <TOKEN>")
-    .build();
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/create');
-  $request->setMethod(HTTP_Request2::METHOD_POST);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Content-Type' => 'application/json',
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <TOKEN>'
-  ));
-  $request->setBody('{"data":[{"attributes":{"name":"Audience made of CRM users list","description":"Simple audience made of a single segment of CRM list","retailerId":"1234","algebra":{"audienceSegmentId":"735693505849913344"}}},{"attributes":{"name":"Audience of recent users from retailer not in CRM list","description":"Combination of segments from User Events but not in CRM list","retailerId":"4567","algebra":{"and":[{"or":[{"audienceSegmentId":"738406687217913856"},{"audienceSegmentId":"738406688413290496"}]},{"not":{"audienceSegmentId":"735693505849913344"}}]}}}]}');
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
     }
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
+  ]
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": [
+    {
+      "attributes": {
+        "name": "Audience made of CRM users list",
+        "description": "Simple audience made of a single segment of CRM list",
+        "retailerId": "1234",
+        "algebra": {
+          "audienceSegmentId": "735693505849913344"
+        }
+      }
+    },
+    {
+      "attributes": {
+        "name": "Audience of recent users from retailer not in CRM list",
+        "description": "Combination of segments from User Events but not in CRM list",
+        "retailerId": "4567",
+        "algebra": {
+          "and": [
+            {
+              "or": [
+                {
+                  "audienceSegmentId": "738406687217913856" 
+                },
+                {
+                  "audienceSegmentId": "738406688413290496"
+                }
+              ]
+            },
+            {
+              "not": { 
+                "audienceSegmentId": "735693505849913344" 
+              }
+            }
+          ]
+        }
+      }
     }
+  ]
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("POST", "https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/create", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, '{"data":[{"attributes":{"name":"Audience made of CRM users list","description":"Simple audience made of a single segment of CRM list","retailerId":"1234","algebra":{"audienceSegmentId":"735693505849913344"}}},{"attributes":{"name":"Audience of recent users from retailer not in CRM list","description":"Combination of segments from User Events but not in CRM list","retailerId":"4567","algebra":{"and":[{"or":[{"audienceSegmentId":"738406687217913856"},{"audienceSegmentId":"738406688413290496"}]},{"not":{"audienceSegmentId":"735693505849913344"}}]}}}]}');
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/create")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/create');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":[{"attributes":{"name":"Audience made of CRM users list","description":"Simple audience made of a single segment of CRM list","retailerId":"1234","algebra":{"audienceSegmentId":"735693505849913344"}}},{"attributes":{"name":"Audience of recent users from retailer not in CRM list","description":"Combination of segments from User Events but not in CRM list","retailerId":"4567","algebra":{"and":[{"or":[{"audienceSegmentId":"738406687217913856"},{"audienceSegmentId":"738406688413290496"}]},{"not":{"audienceSegmentId":"735693505849913344"}}]}}}]}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
-  ```
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "id": "740206991503921152",
-              "type": "RetailMediaAudience",
-              "attributes": {
-                  "accountId": "625702934721171442",
-                  "name": "Audience made of CRM users list",
-                  "description": "Simple audience made of a single segment of CRM list",
-                  "retailerId": "1234",
-                  "createdById": "514277",
-                  "createdAt": "2025-08-04T13:31:36.84Z",
-                  "updatedAt": "2025-08-04T13:31:36.84Z",
-                  "channels": [
-                      "Onsite",
-                      "Offsite"
-                  ],
-                  "algebra": {
-                      "audienceSegmentId": "735693505849913344"
-                  }
-              }
-          },
-          {
-              "id": "740200271713996800",
-              "type": "RetailMediaAudience",
-              "attributes": {
-                  "accountId": "625702934721171442",
-                  "name": "Audience of recent users from retailer not in CRM list",
-                  "description": "Combination of segments from User Events but not in CRM list",
-                  "retailerId": "4567",
-                  "createdById": "514277",
-                  "createdAt": "2025-08-04T13:31:36.84Z",
-                  "updatedAt": "2025-08-04T13:31:36.84Z",
-                  "channels": [
-                      "Offsite"
-                  ],
-                  "algebra": {
-                      "and": [
-                          {
-                              "or": [
-                                  {
-                                      "audienceSegmentId": "738406687217913856"
-                                  },
-                                  {
-                                      "audienceSegmentId": "738406688413290496"
-                                  }
-                              ]
-                          },
-                          {
-                              "not": {
-                                  "audienceSegmentId": "735693505849913344"
-                              }
-                          }
-                      ]
-                  }
-              }
-          }
-      ],
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": [
+        {
+            "id": "740206991503921152",
+            "type": "RetailMediaAudience",
+            "attributes": {
+                "accountId": "625702934721171442",
+                "name": "Audience made of CRM users list",
+                "description": "Simple audience made of a single segment of CRM list",
+                "retailerId": "1234",
+                "createdById": "514277",
+                "createdAt": "2025-08-04T13:31:36.84Z",
+                "updatedAt": "2025-08-04T13:31:36.84Z",
+                "channels": [
+                    "Onsite",
+                    "Offsite"
+                ],
+                "algebra": {
+                    "audienceSegmentId": "735693505849913344"
+                }
+            }
+        },
+        {
+            "id": "740200271713996800",
+            "type": "RetailMediaAudience",
+            "attributes": {
+                "accountId": "625702934721171442",
+                "name": "Audience of recent users from retailer not in CRM list",
+                "description": "Combination of segments from User Events but not in CRM list",
+                "retailerId": "4567",
+                "createdById": "514277",
+                "createdAt": "2025-08-04T13:31:36.84Z",
+                "updatedAt": "2025-08-04T13:31:36.84Z",
+                "channels": [
+                    "Offsite"
+                ],
+                "algebra": {
+                    "and": [
+                        {
+                            "or": [
+                                {
+                                    "audienceSegmentId": "738406687217913856"
+                                },
+                                {
+                                    "audienceSegmentId": "738406688413290496"
+                                }
+                            ]
+                        },
+                        {
+                            "not": {
+                                "audienceSegmentId": "735693505849913344"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
 
 ***
 
@@ -317,244 +381,243 @@ https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences/crea
 
 This endpoint allows the modification of one or multiple audiences in a single request.
 
-![](/images/retail-media/v2026-preview/docs/04a928f-patch.png)
+<Badge color="purple" size="sm" shape="pill">PATCH</Badge>
 
-```
+```text
 https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X PATCH 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences' \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-  -d '{
-    "data": [
-      {
-        "id": "740219868425748480",
-        "type": "RetailMediaAudience",
-        "attributes": {
-          "name": "Audience made of CRM users list (new name)",
-          "description": {
-            "value": "Simple audience made of a single segment of CRM list (new description)"
-          },
-          "algebra": {
-            "audienceSegmentId": "735693505849913344"
-          }
-        }
-      },
-      {
-        "id": "740200271713996800",
-        "type": "RetailMediaAudience",
-        "attributes": {
-          "name": "Audience of recent users from retailer not in CRM list (new name)",
-         "description": {
-            "value": "Combination of segments from User Events but not in CRM list (new description)"
-          },
-          "retailerId": "4567",
-          "algebra": {
-            "and": [
-              {
-                "or": [
-                  {
-                    "audienceSegmentId": "738406687217913856" 
-                  },
-                  {
-                    "audienceSegmentId": "738406688413290496"
-                  }
-                ]
-              },
-              {
-                "not": { 
-                  "audienceSegmentId": "735693505849913344" 
-                }
-              }
-            ]
-          }
+
+```json JSON
+curl -L -X PATCH 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": [
+    {
+      "id": "740219868425748480",
+      "type": "RetailMediaAudience",
+      "attributes": {
+        "name": "Audience made of CRM users list (new name)",
+        "description": {
+          "value": "Simple audience made of a single segment of CRM list (new description)"
+        },
+        "algebra": {
+          "audienceSegmentId": "735693505849913344"
         }
       }
-    ]
-  }'
-  ```
-
-  ```bash bash
-  import http.client
-  import json
-  conn = http.client.HTTPSConnection("api.criteo.com")
-  payload = json.dumps({
-    "data": [
-      {
-        "id": "740219868425748480",
-        "type": "RetailMediaAudience",
-        "attributes": {
-          "name": "Audience made of CRM users list (new name)",
-          "description": "Simple audience made of a single segment of CRM list (new description)",
-          "retailerId": "1234",
-          "algebra": {
-            "audienceSegmentId": "735693505849913344"
-          }
-        }
-      },
-      {
-        "id": "740200271713996800",
-        "type": "RetailMediaAudience",
-        "attributes": {
-          "name": "Audience of recent users from retailer not in CRM list (new name)",
-          "description": "Combination of segments from User Events but not in CRM list (new description)",
-          "retailerId": "4567",
-          "algebra": {
-            "and": [
-              {
-                "or": [
-                  {
-                    "audienceSegmentId": "738406687217913856" 
-                  },
-                  {
-                    "audienceSegmentId": "738406688413290496"
-                  }
-                ]
-              },
-              {
-                "not": { 
-                  "audienceSegmentId": "735693505849913344" 
+    },
+    {
+      "id": "740200271713996800",
+      "type": "RetailMediaAudience",
+      "attributes": {
+        "name": "Audience of recent users from retailer not in CRM list (new name)",
+       "description": {
+          "value": "Combination of segments from User Events but not in CRM list (new description)"
+        },
+        "retailerId": "4567",
+        "algebra": {
+          "and": [
+            {
+              "or": [
+                {
+                  "audienceSegmentId": "738406687217913856" 
+                },
+                {
+                  "audienceSegmentId": "738406688413290496"
                 }
+              ]
+            },
+            {
+              "not": { 
+                "audienceSegmentId": "735693505849913344" 
               }
-            ]
-          }
+            }
+          ]
         }
       }
-    ]
-  })
-  headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <TOKEN>'
-  }
-  conn.request("PATCH", "https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences", payload, headers)
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-  MediaType mediaType = MediaType.parse("application/json");
-  RequestBody body = RequestBody.create(mediaType, '{"data":[{"id":"740219868425748480","type":"RetailMediaAudience","attributes":{"name":"Audience made of CRM users list (new name)","description":"Simple audience made of a single segment of CRM list (new description)","retailerId":"1234","algebra":{"audienceSegmentId":"735693505849913344"}}},{"id":"740200271713996800","type":"RetailMediaAudience","attributes":{"name":"Audience of recent users from retailer not in CRM list (new name)","description":"Combination of segments from User Events but not in CRM list (new description)","retailerId":"4567","algebra":{"and":[{"or":[{"audienceSegmentId":"738406687217913856"},{"audienceSegmentId":"738406688413290496"}]},{"not":{"audienceSegmentId":"735693505849913344"}}]}}}]}');
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences")
-    .method("PATCH", body)
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <TOKEN>")
-    .build();
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences');
-  $request->setMethod(HTTP_Request2::METHOD_PATCH);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Content-Type' => 'application/json',
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <TOKEN>'
-  ));
-  $request->setBody('{"data":[{"id":"740219868425748480","type":"RetailMediaAudience","attributes":{"name":"Audience made of CRM users list (new name)","description":"Simple audience made of a single segment of CRM list (new description)","retailerId":"1234","algebra":{"audienceSegmentId":"735693505849913344"}}},{"id":"740200271713996800","type":"RetailMediaAudience","attributes":{"name":"Audience of recent users from retailer not in CRM list (new name)","description":"Combination of segments from User Events but not in CRM list (new description)","retailerId":"4567","algebra":{"and":[{"or":[{"audienceSegmentId":"738406687217913856"},{"audienceSegmentId":"738406688413290496"}]},{"not":{"audienceSegmentId":"735693505849913344"}}]}}}]}');
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
     }
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
+  ]
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": [
+    {
+      "id": "740219868425748480",
+      "type": "RetailMediaAudience",
+      "attributes": {
+        "name": "Audience made of CRM users list (new name)",
+        "description": "Simple audience made of a single segment of CRM list (new description)",
+        "retailerId": "1234",
+        "algebra": {
+          "audienceSegmentId": "735693505849913344"
+        }
+      }
+    },
+    {
+      "id": "740200271713996800",
+      "type": "RetailMediaAudience",
+      "attributes": {
+        "name": "Audience of recent users from retailer not in CRM list (new name)",
+        "description": "Combination of segments from User Events but not in CRM list (new description)",
+        "retailerId": "4567",
+        "algebra": {
+          "and": [
+            {
+              "or": [
+                {
+                  "audienceSegmentId": "738406687217913856" 
+                },
+                {
+                  "audienceSegmentId": "738406688413290496"
+                }
+              ]
+            },
+            {
+              "not": { 
+                "audienceSegmentId": "735693505849913344" 
+              }
+            }
+          ]
+        }
+      }
     }
+  ]
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("PATCH", "https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, '{"data":[{"id":"740219868425748480","type":"RetailMediaAudience","attributes":{"name":"Audience made of CRM users list (new name)","description":"Simple audience made of a single segment of CRM list (new description)","retailerId":"1234","algebra":{"audienceSegmentId":"735693505849913344"}}},{"id":"740200271713996800","type":"RetailMediaAudience","attributes":{"name":"Audience of recent users from retailer not in CRM list (new name)","description":"Combination of segments from User Events but not in CRM list (new description)","retailerId":"4567","algebra":{"and":[{"or":[{"audienceSegmentId":"738406687217913856"},{"audienceSegmentId":"738406688413290496"}]},{"not":{"audienceSegmentId":"735693505849913344"}}]}}}]}');
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences")
+  .method("PATCH", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences');
+$request->setMethod(HTTP_Request2::METHOD_PATCH);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":[{"id":"740219868425748480","type":"RetailMediaAudience","attributes":{"name":"Audience made of CRM users list (new name)","description":"Simple audience made of a single segment of CRM list (new description)","retailerId":"1234","algebra":{"audienceSegmentId":"735693505849913344"}}},{"id":"740200271713996800","type":"RetailMediaAudience","attributes":{"name":"Audience of recent users from retailer not in CRM list (new name)","description":"Combination of segments from User Events but not in CRM list (new description)","retailerId":"4567","algebra":{"and":[{"or":[{"audienceSegmentId":"738406687217913856"},{"audienceSegmentId":"738406688413290496"}]},{"not":{"audienceSegmentId":"735693505849913344"}}]}}}]}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
-  ```
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "id": "740219868425748480",
-              "type": "RetailMediaAudience",
-              "attributes": {
-                  "accountId": "625702934721171442",
-                  "name": "Audience made of CRM users list (new name)",
-                  "description": {
-        					  "value": "Simple audience made of a single segment of CRM list (new description)"
-     					 	  },
-                  "createdById": "514277",
-                  "createdAt": "2025-08-04T14:49:29.04Z",
-                  "updatedAt": "2025-08-04T14:54:20.38Z",
-                  "channels": [
-                      "Onsite",
-                      "Offsite"
-                  ],
-                  "algebra": {
-                      "audienceSegmentId": "735693505849913344"
-                  }
-              }
-          },
-          {
-              "id": "740200271713996800",
-              "type": "RetailMediaAudience",
-              "attributes": {
-                  "accountId": "625702934721171442",
-                  "name": "Audience of recent users from retailer not in CRM list (new name)",
-                  "description": {
-        					  "value": "Combination of segments from User Events but not in CRM list (new description)"
-     					 	  },
-                  "retailerId": "4567",
-                  "createdById": "514277",
-                  "createdAt": "2025-08-04T13:31:36.84Z",
-                  "updatedAt": "2025-08-04T14:54:20.38Z",
-                  "channels": [
-                      "Offsite"
-                  ],
-                  "algebra": {
-                      "and": [
-                          {
-                              "or": [
-                                  {
-                                      "audienceSegmentId": "738406687217913856"
-                                  },
-                                  {
-                                      "audienceSegmentId": "738406688413290496"
-                                  }
-                              ]
-                          },
-                          {
-                              "not": {
-                                  "audienceSegmentId": "735693505849913344"
-                              }
-                          }
-                      ]
-                  }
-              }
-          }
-      ],
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": [
+        {
+            "id": "740219868425748480",
+            "type": "RetailMediaAudience",
+            "attributes": {
+                "accountId": "625702934721171442",
+                "name": "Audience made of CRM users list (new name)",
+                "description": {
+      					  "value": "Simple audience made of a single segment of CRM list (new description)"
+   					 	  },
+                "createdById": "514277",
+                "createdAt": "2025-08-04T14:49:29.04Z",
+                "updatedAt": "2025-08-04T14:54:20.38Z",
+                "channels": [
+                    "Onsite",
+                    "Offsite"
+                ],
+                "algebra": {
+                    "audienceSegmentId": "735693505849913344"
+                }
+            }
+        },
+        {
+            "id": "740200271713996800",
+            "type": "RetailMediaAudience",
+            "attributes": {
+                "accountId": "625702934721171442",
+                "name": "Audience of recent users from retailer not in CRM list (new name)",
+                "description": {
+      					  "value": "Combination of segments from User Events but not in CRM list (new description)"
+   					 	  },
+                "retailerId": "4567",
+                "createdById": "514277",
+                "createdAt": "2025-08-04T13:31:36.84Z",
+                "updatedAt": "2025-08-04T14:54:20.38Z",
+                "channels": [
+                    "Offsite"
+                ],
+                "algebra": {
+                    "and": [
+                        {
+                            "or": [
+                                {
+                                    "audienceSegmentId": "738406687217913856"
+                                },
+                                {
+                                    "audienceSegmentId": "738406688413290496"
+                                }
+                            ]
+                        },
+                        {
+                            "not": {
+                                "audienceSegmentId": "735693505849913344"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
 
 ***
 
@@ -562,134 +625,153 @@ https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences
 
 This endpoint enables clients to delete one or multiple audiences in a single request.
 
-![](/images/retail-media/v2026-preview/docs/b0623eb-post.png)
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences/delete
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/delete' \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-  -d '{
-    "data": [
-      {
-        "id": "740197499249692672",
-        "type": "RetailMediaAudience",
-        "attributes": {}
-      }
-    ]
-  }'
-  ```
 
-  ```bash bash
-  import http.client
-  import json
-  conn = http.client.HTTPSConnection("api.criteo.com")
-  payload = json.dumps({
-    "data": [
-      {
-        "id": "740197499249692672",
-        "type": "RetailMediaAudience",
-        "attributes": {}
-      },
-      {
-        "id": "740206991503921152",
-        "type": "RetailMediaAudience",
-        "attributes": {}
-      }
-    ]
-  })
-  headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <TOKEN>'
-  }
-  conn.request("POST", "/preview/retail-media/accounts/625702934721171442/audiences/delete", payload, headers)
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-  MediaType mediaType = MediaType.parse("application/json");
-  RequestBody body = RequestBody.create(mediaType, '{"data":[{"id":"740197499249692672","type":"RetailMediaAudience","attributes":{}},{"id":"740206991503921152","type":"RetailMediaAudience","attributes":{}}],"warnings":[],"errors":[]}');
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/delete")
-    .method("POST", body)
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <TOKEN>")
-    .build();
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/delete');
-  $request->setMethod(HTTP_Request2::METHOD_POST);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Content-Type' => 'application/json',
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <TOKEN>'
-  ));
-  $request->setBody('{"data":[{"id":"740197499249692672","type":"RetailMediaAudience","attributes":{}},{"id":"740206991503921152","type":"RetailMediaAudience","attributes":{}}],"warnings":[],"errors":[]}');
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
+```json JSON
+curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/delete' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": [
+    {
+      "id": "740197499249692672",
+      "type": "RetailMediaAudience",
+      "attributes": {}
     }
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
+  ]
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": [
+    {
+      "id": "740197499249692672",
+      "type": "RetailMediaAudience",
+      "attributes": {}
+    },
+    {
+      "id": "740206991503921152",
+      "type": "RetailMediaAudience",
+      "attributes": {}
     }
+  ]
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("POST", "/preview/retail-media/accounts/625702934721171442/audiences/delete", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, '{"data":[{"id":"740197499249692672","type":"RetailMediaAudience","attributes":{}},{"id":"740206991503921152","type":"RetailMediaAudience","attributes":{}}],"warnings":[],"errors":[]}');
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/delete")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts/625702934721171442/audiences/delete');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":[{"id":"740197499249692672","type":"RetailMediaAudience","attributes":{}},{"id":"740206991503921152","type":"RetailMediaAudience","attributes":{}}],"warnings":[],"errors":[]}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
-  ```
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response (200)**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "id": "740197499249692672",
-              "type": "RetailMediaAudience",
-              "attributes": {}
-          }
-      ],
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": [
+        {
+            "id": "740197499249692672",
+            "type": "RetailMediaAudience",
+            "attributes": {}
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
 
 ***
 
 ## Responses
 
-| Responses | Description                                                                                                 |
-| --------- | ----------------------------------------------------------------------------------------------------------- |
-| 🔵`200`   | Success. All audiences operations were performed successfully; some warnings/errors may be returned inline. |
-| 🔴`400`   | Bad request. Check request body formatting or missing required parameters.                                  |
-| 🔴`401`   | Authentication error. Verify the API token.                                                                 |
-| 🔴`403`   | Forbidden. The API client is not authorized to access this resource.                                        |
+<table>
+  <thead>
+    <tr>
+      <th>Responses</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:large&#95;blue&#95;circle:<br /><code>200</code></td>
+      <td>Success. All audiences operations were performed successfully; some warnings/errors may be returned inline.</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>400</code></td>
+      <td>Bad request. Check request body formatting or missing required parameters.</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>401</code></td>
+      <td>Authentication error. Verify the API token.</td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle:<br /><code>403</code></td>
+      <td>Forbidden. The API client is not authorized to access this resource.</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -699,61 +781,71 @@ https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences/dele
 
 #### `empty-data-object`
 
-**Error**: Cannot have an empty data object **Message**: The request must have at least one element in the data object.
+**Error**: Cannot have an empty data object  
+**Message**: The request must have at least one element in the data object.
 
 ***
 
 #### `empty-attributes-object`
 
-**Error**: Cannot have an empty attributes object **Message**: The request must have the attributes object provided.
+**Error**: Cannot have an empty attributes object  
+**Message**: The request must have the attributes object provided.
 
 ***
 
 #### `non-parsable-id`
 
-**Error**: One or more IDs cannot be parsed **Message**: All IDs in the audience object must be a valid numerical ID.
+**Error**: One or more IDs cannot be parsed  
+**Message**: All IDs in the audience object must be a valid numerical ID.
 
 ***
 
 #### `duplicate-id`
 
-**Error**: Audience ID cannot be duplicated **Message**: The data object must not have multiple audience objects with the same ID.
+**Error**: Audience ID cannot be duplicated  
+**Message**: The data object must not have multiple audience objects with the same ID.
 
 ***
 
 #### `invalid-audience-type`
 
-**Error**: Audience type is invalid **Message**: `abcdef` is not a valid audience type.
+**Error**: Audience type is invalid  
+**Message**: `abcdef` is not a valid audience type.
 
 ***
 
 #### `payload-too-big`
 
-**Error**: Cannot create more than 10 audiences at a time **Message**: Each request must have at most 10 audience objects.
+**Error**: Cannot create more than 10 audiences at a time  
+**Message**: Each request must have at most 10 audience objects.
 
 ***
 
 #### `multiple-algebra-operators`
 
-**Error**: Cannot have an algebra node with multiple operators defined **Message**: Each algebra node must have exactly one operator defined.
+**Error**: Cannot have an algebra node with multiple operators defined  
+**Message**: Each algebra node must have exactly one operator defined.
 
 ***
 
 #### `audience-algebra-cannot-be-null-or-empty`
 
-**Error**: Algebra cannot be null or empty **Message**: You must provide a definition for the algebra.
+**Error**: Algebra cannot be null or empty  
+**Message**: You must provide a definition for the algebra.
 
 ***
 
 #### `audience-algebra-too-deep`
 
-**Error**: Audience algebra too deep **Message**: The audience algebra tree cannot have a depth greater than 10.
+**Error**: Audience algebra too deep  
+**Message**: The audience algebra tree cannot have a depth greater than 10.
 
 ***
 
 #### `audience-algebra-has-too-many-segments`
 
-**Error**: Audience algebra has too many segments **Message**: The audience algebra can include at most 10 segments defined inside.
+**Error**: Audience algebra has too many segments  
+**Message**: The audience algebra can include at most 10 segments defined inside.
 
 ***
 
@@ -761,73 +853,85 @@ https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences/dele
 
 #### `duplicate-name`
 
-**Error**: Cannot have duplicated audience names **Message**: Each audience in the request must have a unique name.
+**Error**: Cannot have duplicated audience names  
+**Message**: Each audience in the request must have a unique name.
 
 ***
 
 #### `name-must-not-be-empty`
 
-**Error**: Audience name property must not be empty **Message**: Cannot have an empty name in a `create audience` entity.
+**Error**: Audience name property must not be empty  
+**Message**: Cannot have an empty name in a `create audience` entity.
 
 ***
 
 #### `name-must-not-be-too-long`
 
-**Error**: Audience name property must not be too long **Message**: Audience names must be no longer than 10 characters.
+**Error**: Audience name property must not be too long  
+**Message**: Audience names must be no longer than 10 characters.
 
 ***
 
 #### `name-must-be-unique`
 
-**Error**: Audience name must be unique **Message**: Another audience exists with the name: `abcdef`.
+**Error**: Audience name must be unique  
+**Message**: Another audience exists with the name: `abcdef`.
 
 ***
 
 #### `audiences-limit-reached`
 
-**Error**: Too many audiences **Message**: Advertiser(s) 30, 40 have reached the number of allowed audiences.
+**Error**: Too many audiences  
+**Message**: Advertiser(s) 30, 40 have reached the number of allowed audiences.
 
 ***
 
 #### `audience-algebra-must-be-limited`
 
-**Error**: Audience algebra must be limited **Message**: The audience algebra does not limit the amount of users it targets.
+**Error**: Audience algebra must be limited  
+**Message**: The audience algebra does not limit the amount of users it targets.
 
 ***
 
 #### `audience-algebra-and-or-nodes-must-include-more-than-one-node`
 
-**Error**: "And"/"or" nodes must include more than one node **Message**: The audience algebra "and" and "or" nodes must include more than one node, otherwise use an `audienceSegmentId` node.
+**Error**: "And"/"or" nodes must include more than one node  
+**Message**: The audience algebra "and" and "or" nodes must include more than one node, otherwise use an `audienceSegmentId` node.
 
 ***
 
 #### `audience-channel-must-be-valid`
 
-**Error**: Audience channel must be valid **Message**: The audience's algebra contains incompatible segment channels.
+**Error**: Audience channel must be valid  
+**Message**: The audience's algebra contains incompatible segment channels.
 
 ***
 
 #### `audience-channel-must-match-line-item-channel`
 
-**Error**: Audience channel must match line item channel **Message**: Your audience algebra contains segments which are incompatible with one or more line items.
+**Error**: Audience channel must match line item channel  
+**Message**: Your audience algebra contains segments which are incompatible with one or more line items.
 
 ***
 
 #### `audience-retailer-must-match-segment-retailers`
 
-**Error**: Audience retailer must match segment retailers **Message**: The segments: 30, 40 don't match the audience retailer. You must include only segments with the same retailer as the audience.
+**Error**: Audience retailer must match segment retailers  
+**Message**: The segments: 30, 40 don't match the audience retailer. You must include only segments with the same retailer as the audience.
 
 ***
 
 #### `audience-must-contain-only-existing-segments`
 
-**Error**: Audience must contain only existing segments **Message**: The segments: 30, 40 don't exist. You must include only existing segments.
+**Error**: Audience must contain only existing segments  
+**Message**: The segments: 30, 40 don't exist. You must include only existing segments.
 
 ***
 
 #### `audience-must-not-be-used-in-line-item`
 
-**Error**: Audience must not be used in a line item **Message**: The audience must be removed from all line items to be able to delete it.
+**Error**: Audience must not be used in a line item  
+**Message**: The audience must be removed from all line items to be able to delete it.
 
 ***
 
@@ -835,31 +939,36 @@ https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences/dele
 
 #### `account-must-exist`
 
-**Error**: Account must exist **Message**: The account used must exist.
+**Error**: Account must exist  
+**Message**: The account used must exist.
 
 ***
 
 #### `account-must-be-active`
 
-**Error**: Account must be active **Message**: The account used must be active.
+**Error**: Account must be active  
+**Message**: The account used must be active.
 
 ***
 
 #### `account-must-be-supply`
 
-**Error**: Account must be supply **Message**: The account used must be a supply account.
+**Error**: Account must be supply  
+**Message**: The account used must be a supply account.
 
 ***
 
 #### `retailer-must-be-authorized`
 
-**Error**: Retailer must be authorized **Message**: The retailer associated with the account must be authorized.
+**Error**: Retailer must be authorized  
+**Message**: The retailer associated with the account must be authorized.
 
 ***
 
 #### `retailer-must-be-live`
 
-**Error**: Retailer must be live **Message**: The retailer used must be live.
+**Error**: Retailer must be live  
+**Message**: The retailer used must be live.
 
 ***
 
@@ -867,35 +976,40 @@ https://api.criteo.com/preview/retail-media/accounts/{account-id}/audiences/dele
 
 #### `pagination-is-required`
 
-**Error**: Pagination is required **Message**: Pagination is required when no entity IDs are provided in the filters.
+**Error**: Pagination is required  
+**Message**: Pagination is required when no entity IDs are provided in the filters.
 
 ***
 
 #### `pagination-limit-cannot-be-zero`
 
-**Error**: Pagination limit cannot be zero **Message**: Pagination limit must be greater than 0 when offset is positive.
+**Error**: Pagination limit cannot be zero  
+**Message**: Pagination limit must be greater than 0 when offset is positive.
 
 ***
 
 #### `pagination-limit-invalid`
 
-**Error**: Pagination limit is invalid **Message**: Pagination limit must be a positive number lower than 10 (current limit set to 10).
+**Error**: Pagination limit is invalid  
+**Message**: Pagination limit must be a positive number lower than 10 (current limit set to 10).
 
 ***
 
 #### `pagination-offset-invalid`
 
-**Error**: Pagination offset is invalid **Message**: Pagination offset must be a positive number.
+**Error**: Pagination offset is invalid  
+**Message**: Pagination offset must be a positive number.
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
+<br />
 
-***
-
-What’s Next
+<Danger>
+  **SEND FEEDBACK CUSTOM COMPONENT**
+</Danger>
+## What's next
 
 * [Audience Segments Endpoints](/retail-media/v2026-preview/docs/audience-segments)
 * [Audiences Size](/retail-media/v2026-preview/docs/audience-size)

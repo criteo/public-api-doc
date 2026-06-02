@@ -1,0 +1,814 @@
+---
+title: MPO Single Seller Campaigns
+hidden: true
+---
+
+## Overview
+
+A **Single-Seller campaign** is a marketplace performance configuration where:​
+
+* Each **seller** gets their **own dedicated campaign**.
+
+* All those seller-specific campaigns are created from a **shared template campaign** configured by Criteo.
+
+* You control **whether a seller runs, when they run, and how much they can spend** by managing **per-seller budgets** attached to that template via the Marketplace Performance Outcomes (MPO) API.
+
+This guide is intended for marketplace integrators and technical users who manage MPO campaigns programmatically through the API.
+
+The **template campaign concept**:
+
+* Is a non-delivering **blueprint** that contains:
+
+  * Optimization goal and bidding strategy (like Target Budget)
+
+  * Audience / targeting configuration
+
+  * Creative configuration and other non-seller-specific settings
+
+* Must remain **active** for derived Single-Seller campaigns to be eligible to serve.
+
+* Does **not** itself serve impressions or spend budget.
+
+When you create a first **budget** for a given `(seller, template)` pair via the MPO budgets endpoint, Criteo automatically creates (if needed) and manages the underlying Single-Seller campaign/campaign for that seller.
+
+## Single-Seller vs Multi-Seller MPO campaigns
+
+“Single-Seller" campaigns build on top of the “multi-seller” model where multiple sellers share a single campaign.
+
+<table>
+  <thead>
+    <tr>
+      <th>Aspect</th>
+      <th>Multi-Seller</th>
+      <th>Single-Seller campaigns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Sellers per campaign</td>
+      <td>Many sellers share one campaign</td>
+      <td>One seller per campaign (per-seller campaign)</td>
+    </tr>
+    <tr>
+      <td>Configuration</td>
+      <td>One configuration shared by all sellers</td>
+      <td>Shared template configuration + per-seller campaign derived from it</td>
+    </tr>
+    <tr>
+      <td>Budget model</td>
+      <td>Shared budgets across multiple sellers</td>
+      <td>One capped total budget per seller per template (no shared budgets)</td>
+    </tr>
+    <tr>
+      <td>Cost control</td>
+      <td>Supports CPC-based control only</td>
+      <td>Single-Seller requires budget-based control (template must use budget as cost controller)</td>
+    </tr>
+    <tr>
+      <td>Budget types</td>
+      <td>Various (including daily caps)</td>
+      <td>Capped total budget over a date range only; no daily or uncapped budgets</td>
+    </tr>
+    <tr>
+      <td>Pacing</td>
+      <td>Daily caps managed explicitly</td>
+      <td>Automatic smoothing: total budget distributed over the period, with daily caps recomputed</td>
+    </tr>
+  </tbody>
+</table>
+
+When deciding which to use:
+
+* Use **Single-Seller campaigns** when:
+
+  * you need per-seller control of budgets and pacing.
+
+  * you need per-seller performance.
+
+* Use **multi-seller campaigns** for small seller budgets.
+
+***
+
+## Core Entities and Identifiers
+
+​This section clarifies the main entities used in Single-Seller setups and where their identifiers come from:
+
+* **Advertiser**
+
+  * External business entity in Criteo.
+
+  * Typically obtained via the Marketing Solutions “Advertisers” endpoints.
+
+* **MPO Template campaign (`templateCampaignId`)**
+
+  * A Criteo-provisioned **template campaign** flagged for Single-Seller use.
+
+  * You do **not** create this via MPO; it is configured in Criteo’s internal tools.
+
+  * You will receive its **campaign ID** from Criteo (e.g. `templateCampaignId`), which you must use in MPO budget calls.
+
+* **Seller (sellerId)**
+
+  * A marketplace seller associated with your campaigns.
+
+  * Discoverable via MPO Sellers endpoints (for example:
+
+  `GET /marketplace-performance-outcomes/sellers?sellerName=YoursellerName`).
+
+* **Single-Seller campaign (sellerCampaignId)**
+
+  * The per-seller campaign derived from the template.
+
+  * Created **implicitly** when you create the first valid budget for `(sellerId, templateCampaignId)`.
+
+  * Used by MPO stats endpoints (for example: seller-campaign statistics).
+
+* **Budget (budgetId)**
+
+  * Represents a **dated, capped total budget** for a `(sellerId, templateCampaignId)` pair.
+
+  * Created and managed via MPO **budgets** endpoints:
+
+    * `POST /marketplace-performance-outcomes/budgets`
+
+    * `PATCH /marketplace-performance-outcomes/budgets`
+
+    * `GET /marketplace-performance-outcomes/budgets[...]`
+
+* **productSet**
+
+  * An optional **server-side filter** attached to a Single-Seller campaign that restricts which products are eligible to be advertised.
+
+  * Configured via the **seller-campaign update** endpoint `PATCH /marketplace-performance-outcomes/seller-campaigns`.
+
+Keep these relationships in mind:
+
+* A **templateCampaignId** may have **many** derived Single-Seller campaigns (one per seller).
+
+* For each `(sellerId, templateCampaignId)` combination you manage budgets over time with **non-overlapping** budget periods.
+
+* A Single-Seller campaign can have **at most one productSet** attached at any given time.
+
+***
+
+## Access and Enablement
+
+### 1. Feature availability
+
+​Single-Seller campaigns may be **gated** or rolled out progressively. Before using the flows described below:​
+
+* Ensure your **account is enabled** for:
+
+  * Marketplace Performance Outcomes (MPO) API.
+
+  * Single-Seller campaigns.
+
+* Confirm this with your Criteo representative or support contact.
+
+If you call Single-Seller-specific flows without being enabled, you may receive authorization or validation errors (for example, using a template that is not marked as Single-Seller-compatible).
+
+### 2. Getting a Single-Seller template
+
+You cannot create Single-Seller templates through MPO. Instead:​
+
+1. **Discuss your use case with Criteo**
+
+   * Provide the advertiser(s), vertical, and desired optimization goal.
+
+   * Describe whether Single-Seller will coexist with legacy MPO campaigns.
+
+2. **Criteo configures the template**
+
+   Criteo will create a template campaign with:
+
+* Budget-based cost control (no CPC for Single-Seller).
+
+* Your desired optimization goal and targeting defaults.
+
+* Any required marketplace specific constraints.
+
+3. **Criteo shares the following with you**
+
+   * **Template campaign ID** to be used in MPO budgets as `campaignId`.
+
+   * The **minimum allowed daily budget per seller** for that template.
+
+4. **You store and manage this configuration**
+
+   * Persist the `templateCampaignId` and minimal budget constraints in your own system.
+
+   * Use them when constructing MPO budget requests for each seller.
+
+### 3. Prerequisite Data and Permissions
+
+​Your integration should already:
+
+* Use the **MPO Sellers** endpoints to discover or sync `sellerId` values associated with your campaigns.
+
+* Have the **Campaign Manage** permission for the relevant advertiser and campaigns.
+
+* Be able to call MPO endpoints such as:
+
+  * `/marketplace-performance-outcomes/sellers`
+
+  * `/marketplace-performance-outcomes/budgets`
+
+  * `/marketplace-performance-outcomes/stats/...`
+
+***
+
+## Budget Management for Single-Seller Campaigns
+
+​Budget objects are the primary control surface for Single-Seller campaigns.  
+They:
+
+* Create the underlying Single-Seller campaign if not yet present for a `(sellerId, templateCampaignId)` pair.
+
+* Define **how much** and **when** that Single-Seller campaign is allowed to spend.
+
+* Control **pause / resume** state via a `isSuspended` flag.
+
+<Info>
+  **Note**
+  Exact JSON envelopes (e.g. JSON:API `data` wrappers) may differ; the examples below focus on the key attributes and patterns. Always refer to the MPO budgets reference for the canonical schema.
+</Info>
+
+### Budget Behavior Overview
+
+* Each budget is a **capped total amount** over a **date range**:
+
+  * No daily or uncapped budget types in Single-Seller mode.
+
+* Daily pacing is **automatic**:
+
+  * The system computes an average daily amount from the total budget and dates.
+
+  * Under-delivery or over-delivery on a given day can be compensated later as long as the budget period is active.
+
+* For a given `(sellerId, templateCampaignId)`:
+
+  * **Budget periods must not overlap**.
+
+  * You can schedule **future budgets** as long as their periods do not overlap existing **active** budgets.
+
+  * **Suspended budgets** do not block future budgets for the same period (they’re treated as logically canceled).
+
+### Typical Fields in a Budget
+
+​At a high level, a budget resource will include fields conceptually similar to:
+
+* **sellerId** (required)
+
+Marketplace seller identifier for which the budget applies.
+
+* **campaignIds** (required, length = 1 for Single-Seller)
+
+List containing the **Single-Seller template campaign ID**. For Single-Seller, only one campaign ID per budget is supported.
+
+* **amount** (required)
+
+Total amount for the budget period (for example: monetary value in your currency).
+
+* **startDate**, **endDate** (required)
+
+Dates that define when the budget becomes active and when it stops allowing spend.
+
+* **isSuspended** (optional / nullable)
+
+Boolean flag controlling whether the budget is actively allowed to spend (`false`) or paused (`true`).
+
+* **id** (response field)
+
+Unique identifier of the budget (`budgetId`) returned by the API.
+
+<Info>
+  ​Refer to the MPO reference for the exact field names and formats for your API version.
+</Info>
+
+***
+
+## Workflow: Create the First Single-Seller Budget (and Campaign)
+
+This section describes the typical flow to onboard a seller on a Single-Seller template.
+
+### Preconditions
+
+* You have:
+
+  * `advertiserId`
+
+  * `templateCampaignId` (Single-Seller template campaign ID)
+
+  * `sellerId`
+
+* Your account is enabled for Single-Seller.
+
+* You know the **minimum allowed budget** per seller for this template.
+
+### Step 1 – Construct the Budget Payload
+
+Conceptual example:​
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets
+```
+
+**Sample request**
+
+```json
+
+Content-Type: application/json
+[
+  {
+    "campaignIds": ["456"],
+    "sellerId": "123",
+    "startDate": "2026-04-16",
+    "endDate": "2026-04-30",
+    "budgetType": "Capped",
+    "amount": "1200"
+  }
+]
+```
+
+​Key points:
+
+* `campaignIds` contains exactly **one** ID: the Single-Seller template campaign ID.
+
+* `amount`: must be **≥ the minimum per-seller budget** communicated by Criteo **by the number of days** between start and end dates for this budget.
+
+* `startDate` / `endDate` must describe a valid period (`startDate <= endDate`).
+
+### Step 2 – Interpret the Response
+
+​A successful response will return:​
+
+* The **new budget ID** (`budgetId`).
+
+* Echoed fields with normalized formats (for example: truncated seconds, normalized dates).
+
+* A `isSuspended` value and possibly other status information.
+
+​From the moment this **first valid budget** is accepted for a `(sellerId, templateCampaignId)` pair:
+
+* Criteo creates the corresponding **Single-Seller campaign/campaign** synchronously.
+
+* There may be a delay before delivery begins; plan for an **asynchronous provisioning delay** before you see impressions.
+
+### Step 3 – Avoid Overlapping Budgets
+
+​When planning future periods:
+
+* Do **not** create budgets whose date ranges overlap for the same `(sellerId, templateCampaignId)`.
+
+* If you need to extend or change a period:
+
+  * Update the existing budget when possible (see next section).
+
+  * Or cancel/suspend it and create a new, non-overlapping budget.
+
+***
+
+## Workflow: Update an Existing Budget
+
+​Use budget updates to adjust amount, dates, or suspension status.
+
+### Preconditions
+
+* You have the `budgetId` (from creation or from a previous GET).
+
+* The budget is still within a modifiable state according to MPO rules (see reference docs for any immutable fields or cutoffs).
+
+### Example: Increase Budget Amount mid-flight
+
+<Badge color="purple" size="sm" shape="pill">PATCH</Badge>
+
+```text
+https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets
+```
+
+Conceptual example using a PATCH-style update:
+
+```json
+
+Content-Type: application/json
+{
+  "budgetId": "789",
+  "amount": "2000"
+}
+```
+
+​Behavior:
+
+* The total budget is increased from e.g. 1200 → 2000 for the global period.
+
+* The pacing logic will recompute daily caps for the remaining days of the budget period.
+
+* The update should be **idempotent**: sending the same `PATCH` twice with the same values should result in the same final state.
+
+### Example: Extend The End Date
+
+```json
+
+Content-Type: application/json
+{
+  "budgetId": "789",
+  "endDate": "2026-05-31"
+}
+```
+
+​Guidance:
+
+* Ensure the extended period still does **not overlap** with any other active budgets for the same (`sellerId`, `templateCampaignId`).
+
+* If the system enforces specific max duration or future-horizon limits, violations will be returned as 4xx errors with field-specific messages.
+
+***
+
+## Workflow: Suspend and Resume a Single-Seller Campaign
+
+You **do not** pause Single-Seller campaigns directly. Instead, you pause/resume the budget.
+
+### Suspend (pause) via Budget
+
+To stop spend:
+
+<Badge color="purple" size="sm" shape="pill">PATCH</Badge>
+
+<CodeGroup>
+
+```text Text
+https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets/{budgetId}
+```
+
+```json JSON
+Content-Type: application/json
+{
+  "budgetId": "789",
+  "isSuspended": true
+}
+```
+</CodeGroup>
+
+Expected behavior:
+
+* The budget becomes **inactive**, and the associated Single-Seller campaign stops serving.
+* The budget remains present in the API for auditing and historical purposes.
+
+### Resume via budget
+
+To resume spend:
+
+<Badge color="purple" size="sm" shape="pill">PATCH</Badge>
+
+<CodeGroup>
+
+```text Text
+https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets/{budgetId}
+```
+
+```json JSON
+Content-Type: application/json
+{
+  "budgetId": "789",
+  "isSuspended": false
+}
+```
+</CodeGroup>
+
+Guidance:
+
+* If the `endDate` is in the past, resuming will not restart delivery; you may need to create a new budget with a future period.
+* If there is a **future budget** scheduled for the same `(sellerId, templateCampaignId)`: the campaign will automatically resume when that future budget’s `startDate` is reached (assuming that future budget is not itself suspended).
+
+### Canceling a Scheduled Future Budget
+
+To logically cancel a future, not-yet-active budget:
+
+<Badge color="purple" size="sm" shape="pill">PATCH</Badge>
+
+<CodeGroup>
+
+```text Text
+https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets/{budgetId}
+```
+
+```json JSON
+Content-Type: application/json
+{
+  "budgetId": "FUTURE_BUDGET_1011",
+  "isSuspended": true
+}
+```
+</CodeGroup>
+
+After suspension:
+
+* Treat the budget as **canceled**.
+* You can create a **new** budget covering the same period if needed; suspended budgets should not block new ones for the same dates.
+
+***
+
+## Inspecting Budgets and Performance
+
+You can retrieve budgets and monitor performance using existing MPO endpoints.
+
+<Info>
+  You can find more details about all MPO endpoints in our API Reference [here](https://developers.criteo.com/marketing-solutions/reference/getmarketplaceadvertisers).
+</Info>
+
+### Budgets
+
+* List or filter budgets:
+  * `GET /marketplace-performance-outcomes/budgets` with query parameters such as:
+    * `sellerId`
+    * `campaignId` (template campaign ID)
+    * date filters, etc.
+* Retrieve one budget by ID:
+  * `GET /marketplace-performance-outcomes/budgets/{budgetId}`
+
+Use these endpoints to:
+
+* Synchronize your internal state.
+* Debug issues (e.g. confirm whether a budget is `suspended`, check effective dates and amounts).
+
+### Performance statistics
+
+Single-Seller performance is exposed via the same stats APIs used for MPO, such as:
+
+* `GET /marketplace-performance-outcomes/stats/campaigns`
+* `GET /marketplace-performance-outcomes/stats/sellers`
+* `GET /marketplace-performance-outcomes/stats/seller-campaigns`
+
+Use the appropriate combinations of:
+
+* `sellerId`
+* template `campaignId`
+* Single-Seller `sellerCampaignId` (where applicable)
+
+to track performance at the desired granularity.
+
+***
+
+## `productSet` for Single-Seller Campaigns
+
+The **productSet** feature lets you restrict a Single-Seller campaign to a specific list of product IDs from the seller’s catalog.
+
+### Overview
+
+For Single-Seller campaigns:
+
+* A **`productSet`** is a **whitelist of product IDs**:
+  * Only products whose external item IDs are in the productSet are eligible to be advertised by that Single-Seller campaign.
+* The productSet:
+  * Is configured at the **Single-Seller campaign / seller campaign** level.
+  * Applies to all ads served by that campaign.
+  * Is **optional**; if no productSet is configured, the campaign can use all eligible products from the seller’s catalog (subject to other targeting and policy constraints).
+* There is at most **one `productSet` per Single-Seller campaign** at a given time.
+
+### Where `productSet` is supported
+
+* `productSet` configuration is **only supported for Single-Seller campaigns** associated with a Single-Seller template.
+* Do not attempt to use productSet on:
+  * Legacy multi-seller (MPO) campaigns.
+  * Other campaign types that are not explicitly documented as supporting `productSet`.
+
+***
+
+## `productSet`: Supported Structure and Behavior
+
+### Read: Inspecting the current `productSet`
+
+When you retrieve a Single-Seller campaign (for example: `GET /marketplace-performance-outcomes/seller-campaigns`), the response will:
+
+* Return **no productSet** or `productSet: null` if no productSet has ever been configured.
+* Return a **structured rule** when a productSet is configured.
+
+Schematic response fragment:
+
+```json
+{
+  "data": [
+    {
+      "id": "SELLER_123.TEMPLATE_CAMPAIGN_456",
+      "sellerId": "SELLER_123",
+      "campaignId": "TEMPLATE_CAMPAIGN_456",
+      "productSet": {
+          "rules": [
+              {
+                  "operator": "IsIn",
+                  "field": "ExternalItemId",
+                  "values": [
+                        "SKU_1",
+                        "SKU_2",
+                        "SKU_3"
+                    ]
+                }
+            ],
+            "productSetStatus": "Valid",
+            "productSetNumberOfProducts": 3
+        }
+    }
+  ]
+}
+```
+
+Interpretation:
+
+* `productSet.value` contains an array of **rules**; in Single-Seller mode, only a single rule is supported.
+* Each rule:
+  * `operator`: `"IsIn"` – inclusion list.
+  * `field`: `"ExternalItemId"` – field in the seller’s catalog feed.
+  * `values`: list of product IDs (strings).
+
+If `productSet` is `null` or omitted, there is no additional product-ID filter applied.
+
+### Create / Update: Attaching a productSet
+
+To **create or update** the productSet for a Single-Seller campaign, call the seller-campaign update endpoint (for example: `PATCH /marketplace-performance-outcomes/seller-campaigns`) with a `productSet` object.
+
+Schematic request body (batch of one item):
+
+```json
+[
+  {
+    "id": "SELLER_123.TEMPLATE_CAMPAIGN_456",
+    "productSet": {"value": [{
+                          "operator": "IsIn",
+                          "field": "ExternalItemId",
+                          "values": ["SKU_001","SKU_002","SKU_003","SKU_004","SKU_005","SKU_006","SKU_007","SKU_008","SKU_009","SKU_010","SKU_011"]
+                        }]
+                    }
+  }
+]
+```
+
+Behavior:
+
+* If the Single-Seller campaign had **no productSet** before, this **creates** and attaches a new productSet.
+* If a productSet already existed, this **replaces** the existing rule with the new one (the behavior is “update in place”, not “attach multiple productSets”).
+* After a successful update, subsequent GETs for this campaign will return the new productSet configuration.
+
+Constraints:
+
+* Only the rule type (`operator = "IsIn"` or `operator = "IsNotIn"`) and `field = "ExternalItemId"` is supported for Single-Seller productSet usage.
+* A minimum number of product IDs per productSet may be enforced per advertiser (by default: 20); if you provide fewer IDs than configured, the API may return a 4xx error.
+
+### Delete / Unset: Removing the productSet
+
+To **remove** the productSet (and revert to “no extra product filter”), set the `productSet.value` to `null` in an update call.
+
+Schematic request:
+
+```json
+[
+  {
+    "id": "SELLER_123.TEMPLATE_CAMPAIGN_456",
+    "productSet": {
+      "value": null
+    }
+  }
+]
+```
+
+Expected behavior:
+
+* The Single-Seller campaign stops using a productSet to filter products.
+* A subsequent GET for this campaign will show `productSet: null` (or omit the field, depending on the schema).
+* Products are once again selected from the seller’s catalog without additional ID whitelisting, subject to other targeting rules and policies.
+
+***
+
+## `productSet`: Usage Patterns and Edge Cases
+
+### Supported patterns
+
+* **Single-Seller + no productSet**
+  Default mode: all eligible products from the seller are available to the campaign.
+* **Single-Seller + one productSet rule on ExternalItemId**
+  Supported and recommended pattern when you want to restrict inventory to a list of SKUs.
+* **Multiple productSets per Single-Seller campaign**
+  Not supported; updates replace the existing productSet rule.
+
+### Common errors and how to avoid them
+
+#### 1. Using productSet with a non-Single-Seller campaign
+
+If you attempt to configure a productSet on a campaign that is **not associated with a Single-Seller template**, the API may:
+
+* Reject the request with a 4xx error (for example, indicating an unsupported campaign type).
+* Or explicitly state that productSet is only supported on Single-Seller campaigns.
+
+To avoid this:
+
+* Only send a `productSet` for campaigns that your Criteo contact has confirmed as **Single-Seller**.
+* If you manage both Single-Seller and multi-seller campaigns, track this distinction in your own data model.
+
+#### 2. Too few product IDs
+
+If the advertiser-specific minimum number of product IDs is, for example, 10, the following may fail:
+
+```json
+"values": ["SKU_001", "SKU_002", "SKU_003"]
+```
+
+When this constraint is violated, the API should respond with:
+
+* A 4xx status code.
+* An error payload that references the `productSet` or `values` field and describes the minimum requirement.
+
+Your agent or integration should:
+
+* Prompt the user (or upstream system) to provide more IDs.
+* Retry only after a corrected payload is available.
+
+#### 3. Non-matching or invalid product IDs
+
+If some IDs in `values` do not exist in the seller’s catalog or are not eligible (for example, inactive or disapproved products):
+
+* The request may still be accepted as long as the payload is syntactically valid.
+* At serving time, only **existing, eligible** products will be used; others are effectively ignored.
+
+For best results:
+
+* Use your own catalog or feeds to validate IDs where possible.
+* Monitor performance and impression volume; a productSet with many invalid IDs may lead to under-delivery or **blank banner**.
+
+***
+
+## Putting It All Together: Typical Automated Flow
+
+This section summarizes a typical end-to-end workflow an agent or automation could follow to set up and manage Single-Seller campaigns.
+
+### A. Onboard a new seller to a Single-Seller template
+
+1. **Fetch seller list**
+   Call `GET /marketplace-performance-outcomes/sellers` to obtain `sellerId` values.
+2. **Check local configuration**
+   Confirm you have:
+   * `templateCampaignId` for Single-Seller.
+   * Minimum allowed budget per seller.
+3. **Create first budget for the new seller**
+   Call `POST /marketplace-performance-outcomes/budgets` with:
+   * `sellerId` = the new seller.
+   * `campaignIds` = `[templateCampaignId]`.
+   * `budgetType` = `Capped`.
+   * Valid `amount`, `startDate`, `endDate`.
+4. **Wait for provisioning and start monitoring**
+   After the budget becomes active, the Single-Seller campaign is created and starts delivering. Use stats endpoints to monitor performance.
+
+### B. Adjust spend mid-flight
+
+1. **Retrieve the current budget**
+   `GET /marketplace-performance-outcomes/budgets?sellerId=...&campaignId=templateCampaignId`
+2. **Decide new amount or dates**
+   Incorporate minimum/maximum constraints and business logic.
+3. **PATCH the budget**
+   `PATCH /marketplace-performance-outcomes/budgets` with the updated fields.
+4. **Confirm the updated state**
+   Optionally re-GET the budget or check campaign performance to ensure changes took effect.
+
+### C. Pause / resume seller activity
+
+1. **Pause**
+   `PATCH /marketplace-performance-outcomes/budgets` with `"isSuspended": true`.
+2. **Resume**
+   `PATCH /marketplace-performance-outcomes/budgets` with `"isSuspended": false` (if the end date is still in the future).
+3. **Cancel scheduled future budgets**
+   For future budgets, set `isSuspended: true` and treat them as canceled.
+
+### D. Restrict products for a seller
+
+1. **Obtain product IDs**
+   From your catalog or internal systems, list product external IDs for the seller.
+2. **Attach productSet**
+   `PATCH /marketplace-performance-outcomes/seller-campaigns` with a `productSet` containing:
+   * `operator`: `"IsIn"`
+   * `field`: `"ExternalItemId"`
+   * `values`: `[SKU_1, SKU_2, ...]`
+3. **Update or remove later as needed**
+   * Update the list of `values` to change the whitelist.
+   * Set `productSet.value` to `null` to remove the filter entirely.
+
+***
+
+## Error Handling and Best Practices
+
+To build robust, agent-friendly integrations:
+
+* Treat **4xx codes** as input or business logic errors:
+  * Log them with field-level context.
+  * Adjust inputs before retrying.
+* Reserve **5xx codes and network errors** for retries:
+  * Apply exponential backoff.
+  * Consider idempotency when retrying create/update calls, apart of a first budget creation where the process has to stop and the associated error reported to your Criteo point of contact.
+* Always handle:
+  * Budget overlap errors for a `(sellerId, templateCampaignId)` pair.
+  * Budget amount or date constraint violations.
+  * productSet validation errors (wrong structure, too few IDs, unsupported field/operator).
+* When in doubt:
+  * Use `GET` endpoints (sellers, budgets, seller-campaigns) to **reconstruct the current state**.
+  * Rebuild your intended change as a new request, ensuring alignment with the latest server state.
+
+<br />

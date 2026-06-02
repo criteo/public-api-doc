@@ -1,0 +1,524 @@
+---
+title: Balance Management
+hidden: true
+---
+
+The balance management endpoints are additional sets of balance apps that allow users to have more control of their balances, along with the existing balance endpoints, which help to link existing balances to a campaign. Balance management will provide flexibility to create and update balances. Balance managing also provides additional `POST` and `PATCH` endpoints to provide the ability to edit specific balance attributes, depending on the end-user access level.
+
+***
+
+<Note>
+  ### Learn more about campaign management with our API [**here**](/retail-media/v2026-preview/docs/balances)!
+</Note>
+
+## Endpoints
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/balances</code></td>
+      <td>Get All Balances</td>
+    </tr>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/balances/&#123;balanceId&#125;</code></td>
+      <td>Get a specific balance</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/balances</code></td>
+      <td>Create a new balance</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/balances/&#123;balanceId&#125;/add-funds</code></td>
+      <td>Add funds to an existing balance</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/balances/&#123;balanceId&#125;/change-dates</code></td>
+      <td>Change a balance dates</td>
+    </tr>
+    <tr>
+      <td><strong>PATCH</strong></td>
+      <td><code>/accounts/&#123;accountId&#125;/balances/&#123;balanceId&#125;</code></td>
+      <td>Update balance fields without changing the funds</td>
+    </tr>
+  </tbody>
+</table>
+
+***
+
+## Balance response attributes
+
+#### `id` Required
+
+- **Data Type:** string
+- **Values:** int64
+
+**Description:** Balance ID
+
+#### `name` Required
+
+- **Data Type:** string
+- **Values:** string
+
+**Description:** The name of the balance
+
+#### `poNumber` Required
+
+- **Data Type:** string
+- **Values:** string
+
+**Description:** Purchase order number
+
+#### `deposited` Required
+
+- **Data Type:** decimal
+- **Values:** decimal value or `null` for uncapped balances
+
+**Description:** The amount of billable funds allotted to the balance. The amount should be based on the currency types of an account that the balance link to. User may want to confirm currency with their account settings.For uncapped budgets pass `null` as the deposited amount.
+
+#### `spent` Required
+
+- **Data Type:** number
+- **Values:** Amount of funds already spent
+
+**Description:** The total lifetime spend on this balance
+
+#### `remaining` Required
+
+- **Data Type:** number
+- **Values:** between 0 and `deposited`
+
+**Description:** Amount of funds remaining until the balance cap is hit. The balance will return a `null` value if no funds have been used.
+
+#### `startDate` Required
+
+- **Data Type:** date
+- **Values:** YYYY-MM-DD
+
+**Description:** The balance start date in the [account](/retail-media/docs/accounts-endpoints) timeZone if not set
+
+#### `endDate`
+
+- **Data Type:** date
+- **Values:** YYYY-MM-DD
+
+**Description:** Balance end date in the [account](/retail-media/docs/accounts-endpoints) timeZone. If the balance has a `null` end date then it indicates that there is no expiration date and the balance will not stop spending until an end date is specified.
+
+#### `status`
+
+- **Data Type:** enum
+- **Values:** `active`, `scheduled`, `ended`, `unknown`
+
+**Description:** The current balance status
+
+#### `createdAt`
+
+- **Data Type:** timestamp
+- **Values:** ISO-8601
+
+**Description:** Timestamp in UTC of balance creation
+
+#### `updatedAt`
+
+- **Data Type:** timestamp
+- **Values:** ISO-8601
+
+**Description:** Timestamp in UTC of balance updated
+
+***
+
+## Get all balances
+
+This endpoint lists all balances in an account.  Response results will be provided in paginated form.
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/balances
+```
+
+**Sample Request**
+
+```bash
+curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response** 
+
+```json
+{
+    "metadata": {
+        "totalItemsAcrossAllPages": 54,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 3,
+        "nextPage": "https://api.criteo.com/preview/retail-media/accounts/4/balances?pageIndex=1&pageSize=25"
+    },
+    "data": [
+        {
+            "attributes": {
+                "name": "Balance A",
+                "poNumber": "",
+                "memo": "Spring marketing balance",
+                "deposited": 10.00000000,
+                "spent": 10.00000000,
+                "remaining": 0.00000000,
+                "startDate": "2020-04-13",
+                "endDate": null,
+                "status": "ended",
+                "createdAt": "2020-04-13T15:39:48+00:00",
+                "updatedAt": "2023-06-13T13:35:53+00:00",
+                "balanceType": "capped",
+                "spendType": "Onsite",
+                "privateMarketBillingType": "billByRetailer",
+                "id": "3"
+            },
+            "id": "3",
+            "type": "BalanceResponse"
+        },
+        // ...
+        {
+            "attributes": {
+                "name": "Balance B",
+                "poNumber": "",
+                "memo": "Winter marketing balance",
+                "deposited": 0.01000000,
+                "spent": 0.00000000,
+                "remaining": 0.01000000,
+                "startDate": "2022-06-30",
+                "endDate": "2022-07-08",
+                "status": "ended",
+                "createdAt": "2022-06-30T23:51:15+00:00",
+                "updatedAt": "2022-06-30T23:51:15+00:00",
+                "balanceType": "capped",
+                "spendType": "Onsite",
+                "privateMarketBillingType": "billByRetailer",
+                "id": "330495533735960576"
+            },
+            "id": "330495533735960576",
+            "type": "BalanceResponse"
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Get specific balance
+
+Retrieves the balance details of one specific balances belonging to an account 
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/balances/{balanceId}
+```
+
+**Sample Request** 
+
+```bash
+curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances/3' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": "Balance A",
+            "poNumber": "",
+            "memo": "Trade marketing balance for spring 2020",
+            "deposited": 10.00000000,
+            "spent": 10.00000000,
+            "remaining": 0.00000000,
+            "startDate": "2020-04-13",
+            "endDate": null,
+            "status": "ended",
+            "createdAt": "2020-04-13T15:39:48+00:00",
+            "updatedAt": "2023-06-13T13:35:53+00:00",
+            "balanceType": "capped",
+            "spendType": "Onsite",
+            "privateMarketBillingType": "billByRetailer",
+            "id": "3"
+        },
+        "id": "3",
+        "type": "BalanceResponse"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Create a new account balance
+
+The endpoint allows you to create a new account balance 
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/balances
+```
+
+**Sample Request** 
+
+```bash
+curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+	"data": {
+		"attributes": {
+			"name": "Balance C - API",
+			"deposited": "100",
+			"startDate": "2023-08-01",
+			"endDate": "2023-08-29",
+			"spendType": "onsite",
+			"memo": "My API balance",
+			"poNumber": "123"
+		},
+		"id": "4",
+		"type": "RetailMediaBalanceCreation"
+	}
+}'
+```
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": "Balance C - API",
+            "poNumber": "123",
+            "memo": "My API balance",
+            "deposited": 100.00000000,
+            "spent": 0.00000000,
+            "remaining": 100.00000000,
+            "startDate": "2023-08-01",
+            "endDate": "2023-08-29",
+            "status": "active",
+            "createdAt": "2023-08-04T19:43:15+00:00",
+            "updatedAt": "2023-08-04T19:43:15+00:00",
+            "balanceType": "capped",
+            "spendType": "Onsite",
+            "privateMarketBillingType": "billByRetailer",
+            "id": "475388270283501568"
+        },
+        "id": "475388270283501568",
+        "type": "BalanceResponse"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Readjust funds for an existing balance
+
+Adjust an existing balance funds without changing other balance attributes. 
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/balances/{balanceid}/add-funds
+```
+
+**Sample Request** 
+
+In the example below, the call requests a $10 deduction from an existing balance. The original balance was $100, and after the call, the new balance amount is now $90. To remove funds from a balance set the `deltaAmount` to a negative number, whereas set a positive amount to add funds. 
+
+```bash
+curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances/475388270283501568/add-funds' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+	"data": {
+		"attributes": {
+			"deltaAmount": "-10",
+			"memo": "Balance re-adjustment. Removing $10 from balance",
+			"poNumber": "123456"
+		},
+		"id": "475388270283501568",
+		"type": "<string>"
+	}
+}'
+```
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": "Balance C - API",
+            "poNumber": "123456",
+            "memo": "Balance re-adjustment. Removing $10 from balance",
+            "deposited": 90.00000000,
+            "spent": 0.00000000,
+            "remaining": 90.00000000,
+            "startDate": "2023-08-01",
+            "endDate": "2023-08-29",
+            "status": "active",
+            "createdAt": "2023-08-04T19:43:15+00:00",
+            "updatedAt": "2023-08-07T15:43:59+00:00",
+            "balanceType": "capped",
+            "spendType": "Onsite",
+            "privateMarketBillingType": "billByRetailer",
+            "id": "475388270283501568"
+        },
+        "id": "475388270283501568",
+        "type": "BalanceResponse"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Change balance dates
+
+Update a balance dates without changing all other balance attributes. The endpoint can be used for scenarios with users with limited permissions to make adjustments to a balance. 
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/balances/{balanceId}/change-dates
+```
+
+**Sample Request**
+
+```bash
+curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances/475388270283501568/change-dates' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+	"data": {
+		"attributes": {
+			"startDate": "2023-08-01",
+			"endDate": "2023-08-07",
+			"memo": "Updating the balance start and end dates"
+		},
+		"id": "475388270283501568",
+		"type": "RetailMediaBalanceUpdate"
+	}
+}'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": "Balance C - API",
+            "poNumber": "123456",
+            "memo": "Updating the balance start and end dates",
+            "deposited": 90.00000000,
+            "spent": 0.00000000,
+            "remaining": 90.00000000,
+            "startDate": "2023-08-01",
+            "endDate": "2023-08-07",
+            "status": "active",
+            "createdAt": "2023-08-04T19:43:15+00:00",
+            "updatedAt": "2023-08-07T16:06:51+00:00",
+            "balanceType": "capped",
+            "spendType": "Onsite",
+            "privateMarketBillingType": "billByRetailer",
+            "id": "475388270283501568"
+        },
+        "id": "475388270283501568",
+        "type": "BalanceResponse"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Update balance fields without changing the funds
+
+Update all balance fields without changing the balance funds. The endpoint can be used for scenarios with users with limited permissions to make adjustments to a balance.
+
+<Badge color="purple" size="sm" shape="pill">PATCH</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/balances/{balanceId}
+```
+
+**Sample Request**
+
+```bash
+curl -L -X PATCH 'https://api.criteo.com/preview/retail-media/accounts/4/balances/475388270283501568' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+	"data": {
+		"attributes": {
+			"name": "Balance ABC",
+			"poNumber": "65432",
+			"startDate": "2023-08-01",
+			"endDate": "2023-08-07",
+			"memo": "Updating balance without changing the funds"
+		},
+		"id": "475388270283501568",
+		"type": "RetailMediaBalanceUpdate"
+	}
+}'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "attributes": {
+            "name": "Balance ABC",
+            "poNumber": "65432",
+            "memo": "Updating balance without changing the funds",
+            "deposited": 90.00000000,
+            "spent": 0.00000000,
+            "remaining": 90.00000000,
+            "startDate": "2023-08-01",
+            "endDate": "2023-08-07",
+            "status": "active",
+            "createdAt": "2023-08-04T19:43:15+00:00",
+            "updatedAt": "2023-08-07T16:08:40+00:00",
+            "balanceType": "capped",
+            "spendType": "Onsite",
+            "privateMarketBillingType": "billByRetailer",
+            "id": "475388270283501568"
+        },
+        "id": "475388270283501568",
+        "type": "BalanceResponse"
+    },
+    "warnings": [],
+    "errors": []
+}
+```

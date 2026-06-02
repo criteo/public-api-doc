@@ -1,0 +1,765 @@
+---
+title: Keywords (COPY)
+hidden: true
+---
+
+<Note>
+  ### A FEW THINGS TO KNOW
+
+  Shoppers browsing through the retailer's search page may utilize search for phrases associated with line item products where the line item may not be allowed to search on that page. Similar to this scenario, the shopper can also enter search phrases that align with products permitted to serve on a page. The keyword API endpoint allows you to control your open auction line item by determining which keyword to target positively or negatively. The endpoint also provides keyword bidding capabilities to optimize line items based on relevant keywords. 
+
+  Check out the [**Onsite Sponsored Products**](/retail-media/v2026-preview/docs/onsite-sponsored-products) for a complete summary of Criteo's keyword service.
+</Note>
+
+## **Endpoints**
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/line-items/&#123;LineItemId&#125;/keywords</code></td>
+      <td>Retrieve a set of positive and negative keywords for a line item</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>line-items/&#123;LineItemId&#125;/keywords/add-remove</code></td>
+      <td>Add or remove keywords from a line item</td>
+    </tr>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/line-items/&#123;LineItemId&#125;/keywords/set-bid</code></td>
+      <td>Add or remove keywords from a line item.</td>
+    </tr>
+  </tbody>
+</table>
+
+  
+
+## **Attributes**
+
+#### `id` Required
+
+- **Data Type:** string
+- **Default:** Computerized value
+
+**Description:** The external line item id
+
+#### `reviewState` Optional
+
+- **Data Type:** enum
+- **Default:** `InReview`
+
+**Description:** Review the keyword's status, only applicable for `PositiveExactMatch` keywords.
+- **Values:** Keywords not reviewed by the automatic keyword service will be reviewed and approved by the retailer.
+- `InReview` - keyword has been submitted manually, and the review is still pending
+- `Approved` - keyword was approved manually
+- `AutoApproved` - keyword was approved automatically
+- `Rejected` - keyword was rejected manually
+- `AutoRejected` - keyword was rejected automatically
+- matchType
+- matchType  Required
+- **Default:** `PositiveExactMatch`
+
+**Description:** The matching algorithm to be used when comparing this keyword with shopper search phrases.
+- **Values:**
+- `PositiveExactMatch` - normalized keyword is an exact match for the normalized search phrase bid
+- `NegativeExactMatch` - normalized keyword is an exact match for the normalized search phrase do not bid
+- `NegativeBroadMatch` - normalized keyword is a substring of the normalized search phrase do not bid
+- bid
+- bid  Optional
+- **Data Type:** decimal
+- **Default:** `null`
+
+**Description:** The bid override for the positive keyword. The keyword will use the default line item bid if the value is `null`. The currency of the bid is the default currency for the retailer.
+- **Values:** decimal value
+- Keyword bids must be **equal or greater than** the retailer `minBid` and **equal or less than** the line item `maxBid`.
+- You may use the [Open Auction Line Item](/retail-media/docs/onsite-sponsored-products-line-items) API to view and check if you're setting a keyword bid that is more than the allowed amount. You may also reference the [Catalog](/retail-media/docs/catalog-endpoints) API to check for the product sku minimum bid, which offers the retailer min. bid value.
+- isDeleted
+- **Data Type:** boolean
+
+**Description:** Controls if the keyword will be added or removed from the line item.
+- **Values:** `true`, `false`
+- inputKeywords
+- inputKeywords  Required
+- **Data Type:** number
+- **Default:** N/A
+
+**Description:** Keywords supplied by the user matching this normalized keyword phrase binned by match type.
+- `negativeBroad` - collection of supplied negative broad phrases
+- `negativeExact` - collection of supplied negative exact phrases
+- `positiveExact` - collection of supplied positive exact phrases
+- createdAt
+- **Data Type:** date-time
+- **Default:** Computerized value
+
+**Description:** Date keyword was created in the line item.
+- **Values:** yyyy-mm-dd T hh:mm:ss
+- updatedAt
+
+**Description:** Last date keyword was updated in the line-item.
+- phrase
+- **Data Type:** string
+
+**Description:** Raw text of the keyword to be added or removed.
+- **Values:** minLength: 0, maxLeght: 255
+
+#### `matchType` Required
+
+- **Data Type:** enum
+- **Default:** `PositiveExactMatch`
+
+**Description:** The matching algorithm to be used when comparing this keyword with shopper search phrases.
+- **Values:**
+- `PositiveExactMatch` - normalized keyword is an exact match for the normalized search phrase bid
+- `NegativeExactMatch` - normalized keyword is an exact match for the normalized search phrase do not bid
+- `NegativeBroadMatch` - normalized keyword is a substring of the normalized search phrase do not bid
+- bid
+- bid  Optional
+- **Data Type:** decimal
+- **Default:** `null`
+
+**Description:** The bid override for the positive keyword. The keyword will use the default line item bid if the value is `null`. The currency of the bid is the default currency for the retailer.
+- **Values:** decimal value
+- Keyword bids must be **equal or greater than** the retailer `minBid` and **equal or less than** the line item `maxBid`.
+- You may use the [Open Auction Line Item](/retail-media/docs/onsite-sponsored-products-line-items) API to view and check if you're setting a keyword bid that is more than the allowed amount. You may also reference the [Catalog](/retail-media/docs/catalog-endpoints) API to check for the product sku minimum bid, which offers the retailer min. bid value.
+- isDeleted
+- **Data Type:** boolean
+
+**Description:** Controls if the keyword will be added or removed from the line item.
+- **Values:** `true`, `false`
+- inputKeywords
+- inputKeywords  Required
+- **Data Type:** number
+- **Default:** N/A
+
+**Description:** Keywords supplied by the user matching this normalized keyword phrase binned by match type.
+- `negativeBroad` - collection of supplied negative broad phrases
+- `negativeExact` - collection of supplied negative exact phrases
+- `positiveExact` - collection of supplied positive exact phrases
+- createdAt
+- **Data Type:** date-time
+- **Default:** Computerized value
+
+**Description:** Date keyword was created in the line item.
+- **Values:** yyyy-mm-dd T hh:mm:ss
+- updatedAt
+
+**Description:** Last date keyword was updated in the line-item.
+- phrase
+- **Data Type:** string
+
+**Description:** Raw text of the keyword to be added or removed.
+- **Values:** minLength: 0, maxLeght: 255
+
+#### `bid` Optional
+
+- **Data Type:** decimal
+- **Default:** `null`
+
+**Description:** The bid override for the positive keyword. The keyword will use the default line item bid if the value is `null`. The currency of the bid is the default currency for the retailer.
+- **Values:** decimal value
+- Keyword bids must be **equal or greater than** the retailer `minBid` and **equal or less than** the line item `maxBid`.
+- You may use the [Open Auction Line Item](/retail-media/docs/onsite-sponsored-products-line-items) API to view and check if you're setting a keyword bid that is more than the allowed amount. You may also reference the [Catalog](/retail-media/docs/catalog-endpoints) API to check for the product sku minimum bid, which offers the retailer min. bid value.
+
+#### `isDeleted` Required
+
+- **Data Type:** boolean
+- **Default:** `null`
+
+**Description:** Controls if the keyword will be added or removed from the line item.
+- **Values:** `true`, `false`
+
+#### `inputKeywords` Required
+
+- **Data Type:** number
+- **Default:** N/A
+
+**Description:** Keywords supplied by the user matching this normalized keyword phrase binned by match type.
+- **Values:**
+- `negativeBroad` - collection of supplied negative broad phrases
+- `negativeExact` - collection of supplied negative exact phrases
+- `positiveExact` - collection of supplied positive exact phrases
+- createdAt
+- **Data Type:** date-time
+- **Default:** Computerized value
+
+**Description:** Date keyword was created in the line item.
+- **Values:** yyyy-mm-dd T hh:mm:ss
+- updatedAt
+
+**Description:** Last date keyword was updated in the line-item.
+- phrase
+- **Data Type:** string
+- **Default:** `null`
+
+**Description:** Raw text of the keyword to be added or removed.
+- **Values:** minLength: 0, maxLeght: 255
+
+#### `createdAt`
+
+- **Data Type:** date-time
+- **Default:** Computerized value
+
+**Description:** Date keyword was created in the line item.
+- **Values:** yyyy-mm-dd T hh:mm:ss
+
+#### `updatedAt`
+
+- **Data Type:** date-time
+- **Default:** Computerized value
+
+**Description:** Last date keyword was updated in the line-item.
+- **Values:** yyyy-mm-dd T hh:mm:ss
+
+#### `phrase`
+
+- **Data Type:** string
+- **Default:** `null`
+
+**Description:** Raw text of the keyword to be added or removed.
+- **Values:** minLength: 0, maxLeght: 255
+
+## **Get Keywords by Line Item Id**
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/line-items/{LineItemId}/keywords
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/preview/retail-media/line-items/325713346766241792/keywords' \
+-H 'Accept: text/plain' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import http.client
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = ''
+headers = {
+  'Accept': 'text/plain',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("GET", "/preview/retail-media/line-items/358669652976373760/keywords", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/line-items/358669652976373760/keywords")
+  .method("GET", body)
+  .addHeader("Accept", "text/plain")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/line-items/358669652976373760/keywords');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'text/plain',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "id": "358669652976373760",
+        "type": "RetailMediaKeywordsModel",
+        "attributes": {
+            "keywords": {
+                "vegetable": {
+                    "matchType": "NegativeBroadMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [
+                            "vegetable"
+                        ],
+                        "negativeExact": [],
+                        "positiveExact": []
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "tomato": {
+                    "matchType": "NegativeExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [
+                            "tomatoes"
+                        ],
+                        "positiveExact": []
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "strawberry": {
+                    "matchType": "NegativeExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [
+                            "strawberry"
+                        ],
+                        "positiveExact": []
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "broccoli": {
+                    "matchType": "NegativeExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [
+                            "broccoli"
+                        ],
+                        "positiveExact": []
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "banana": {
+                    "matchType": "NegativeExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [
+                            "banana"
+                        ],
+                        "positiveExact": []
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "pasta": {
+                    "reviewState": "Approved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [],
+                        "positiveExact": [
+                            "pasta"
+                        ]
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "milk": {
+                    "reviewState": "Approved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": 0.50,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [],
+                        "positiveExact": [
+                            "milk"
+                        ]
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "juice": {
+                    "reviewState": "Approved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [],
+                        "positiveExact": [
+                            "juice"
+                        ]
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "egg": {
+                    "reviewState": "Approved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": 0.50,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [],
+                        "positiveExact": [
+                            "eggs"
+                        ]
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                },
+                "fruit": {
+                    "matchType": "NegativeBroadMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [
+                            "fruits"
+                        ],
+                        "negativeExact": [],
+                        "positiveExact": []
+                    },
+                    "createdAt": "0001-01-01T00:00:00",
+                    "updatedAt": "0001-01-01T00:00:00"
+                }
+            }
+        }
+    }
+}
+```
+
+## **Add or Remove Keyword from Line Item**
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/line-items/{LineItemId/keywords/add-remove
+```
+
+<Info>
+  **Negative Targeting v1**
+
+  The negative keyword targeting in this API will eventually replace the [Negative Keyword Targeting](/retail-media/v2025.07/docs/negative-keywords-open-auction-only) endpoints. You may continue using those endpoints without disrupting your services. We recommend reviewing and testing the new Keyword endpoints to prepare for a future migration to these new endpoints.
+</Info>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/preview/retail-media/line-items/325713346766241792/keywords/add-remove' \
+-H 'Content-Type: application/json' \
+-H 'Accept: text/plain' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+--data-raw '{
+	"data": {
+		"type": "RetailMediaKeywordAddRemove",
+		"id": "325713346766241792",
+		"attributes": {
+			"keywords": [
+				{
+					"phrase": "cookies and bread",
+					"matchType": "PositiveExactMatch",
+					"isDeleted": "false"
+				},
+				{
+					"phrase": "raspberry",
+					"matchType": "NegativeExactMatch",
+					"isDeleted": "false"
+				},
+                
+				{
+					"phrase": "potatoes",
+					"matchType": "NegativeExactMatch",
+					"isDeleted": "true"
+				}
+			]
+		}
+	}
+}'
+```
+
+```python Python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaKeywordAddRemove",
+    "id": "325713346766241792",
+    "attributes": {
+      "keywords": [
+        {
+          "phrase": "cookies and bread",
+          "matchType": "PositiveExactMatch",
+          "isDeleted": "false"
+        },
+        {
+          "phrase": "raspberry",
+          "matchType": "NegativeExactMatch",
+          "isDeleted": "false"
+        },
+        {
+          "phrase": "potatoes",
+          "matchType": "NegativeExactMatch",
+          "isDeleted": "true"
+        }
+      ]
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'text/plain',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/preview/retail-media/line-items/358669652976373760/keywords/add-remove", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\n\t\"data\": {\n\t\t\"type\": \"RetailMediaKeywordAddRemove\",\n\t\t\"id\": \"325713346766241792\",\n\t\t\"attributes\": {\n\t\t\t\"keywords\": [\n\t\t\t\t{\n\t\t\t\t\t\"phrase\": \"cookies and bread\",\n\t\t\t\t\t\"matchType\": \"PositiveExactMatch\",\n\t\t\t\t\t\"isDeleted\": \"false\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"phrase\": \"raspberry\",\n\t\t\t\t\t\"matchType\": \"NegativeExactMatch\",\n\t\t\t\t\t\"isDeleted\": \"false\"\n\t\t\t\t},\n                \n\t\t\t\t{\n\t\t\t\t\t\"phrase\": \"potatoes\",\n\t\t\t\t\t\"matchType\": \"NegativeExactMatch\",\n\t\t\t\t\t\"isDeleted\": \"true\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/line-items/358669652976373760/keywords/add-remove")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "text/plain")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/line-items/358669652976373760/keywords/add-remove');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'text/plain',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{\n	"data": {\n		"type": "RetailMediaKeywordAddRemove",\n		"id": "325713346766241792",\n		"attributes": {\n			"keywords": [\n				{\n					"phrase": "cookies and bread",\n					"matchType": "PositiveExactMatch",\n					"isDeleted": "false"\n				},\n				{\n					"phrase": "raspberry",\n					"matchType": "NegativeExactMatch",\n					"isDeleted": "false"\n				},\n                \n				{\n					"phrase": "potatoes",\n					"matchType": "NegativeExactMatch",\n					"isDeleted": "true"\n				}\n			]\n		}\n	}\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**\
+*200 successful status will return an empty object array* 
+
+```json
+{}
+```
+
+## **Set Bid on Keyword**
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/line-items/{LineItemId}/keywords/set-bid
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/preview/retail-media/line-items/358669652976373760/keywords/set-bid' \
+-H 'Content-Type: application/json' \
+-H 'Accept: text/plain' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+--data-raw '{
+  "data": {
+    "type": "RetailMediaKeywordsSetBid",
+    "id": "358669652976373760",
+    "attributes": {
+      "keywords": [
+        {
+          "phrase": "eggs",
+          "bid": "0.50"
+        },
+        {
+          "phrase": "milk",
+          "bid": "0.50"
+        }
+      ]
+    }
+  }
+}'
+```
+
+```python Python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaKeywordsSetBid",
+    "id": "358669652976373760",
+    "attributes": {
+      "keywords": [
+        {
+          "phrase": "eggs",
+          "bid": "0.50"
+        },
+        {
+          "phrase": "milk",
+          "bid": "0.50"
+        }
+      ]
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'text/plain',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/preview/retail-media/line-items/358669652976373760/keywords/set-bid", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaKeywordsSetBid",
+    "id": "358669652976373760",
+    "attributes": {
+      "keywords": [
+        {
+          "phrase": "eggs",
+          "bid": "0.50"
+        },
+        {
+          "phrase": "milk",
+          "bid": "0.50"
+        }
+      ]
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'text/plain',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/preview/retail-media/line-items/358669652976373760/keywords/set-bid", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/line-items/358669652976373760/keywords/set-bid');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'text/plain',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{\n  "data": {\n    "type": "RetailMediaKeywordsSetBid",\n    "id": "358669652976373760",\n    "attributes": {\n      "keywords": [\n        {\n          "phrase": "eggs",\n          "bid": "0.50"\n        },\n        {\n          "phrase": "milk",\n          "bid": "0.50"\n        }\n      ]\n    }\n  }\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**\
+*200 successful status will return an empty object array* 
+
+```json
+{}
+```
+
+## **Responses**
+
+<table>
+  <thead>
+    <tr>
+      <th>Response</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>:large&#95;blue&#95;circle: <code>200</code> OK</td>
+      <td>Call completed with success</td>
+    </tr>
+    <tr>
+      <td>:large&#95;blue&#95;circle: <code>201</code> OK</td>
+      <td><ul><li>The call to add/remove the keyword from the line item was executed successfully</li><li>The call to set keyword bid to the line item was executed successfully</li></ul></td>
+    </tr>
+    <tr>
+      <td>:red&#95;circle: <code>400</code> - Bad Request</td>
+      <td>Setting a bid for a positive keyword that doesn't exist on the line item.<br /><strong>Error Message</strong><br /><code>"On line item &#123;LineItemId&#125; normalized keyword &#92;"&#123;keyword&#125;&#92;"/en&#95;US not found"</code><br />Setting a keyword bid above the line-item <code>maxBid</code> value will result in a 400 bad request error message. In this example, the <code>maxBid</code> value is at least 0.40.<br /><strong>Error Message</strong><br /><code>"Invalid bid value, bid greater than maximum of 1.00000000, found for keyword: "</code><br />Setting a keyword bid below the retailer <code>minBid</code> value will result in a 400 bad request error message. In this example, the <code>minBid</code> value is at least 0.40.<br /><strong>Error Message</strong><br /><code>"Invalid bid value, bid less than minimum of 0.4000, found for keyword: "</code></td>
+    </tr>
+  </tbody>
+</table>

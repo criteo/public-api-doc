@@ -1,17 +1,16 @@
 ---
-title: "Product Importer API"
+title: Product Importer API
+description: This document outlines the Criteo Product Catalog API, including its
+  available endpoints and the schema used in request payloads.
 ---
-
-1. Guides for Retail Media API
-2. [Catalog](/retail-media/v2026-preview/docs/catalogs)
-
-This document outlines the Criteo Product Catalog API, including its available endpoints and the schema used in request payloads.
 
 ## Usage workflow
 
 The following diagram provides a high-level overview of the API call sequence for submitting one or more products to Criteo’s database.
 
-![638](/images/retail-media/v2026-preview/docs/59b87cd-piv3.png "piv3.png")
+<Frame caption="piv3.png">
+  <img src="/images/retail-media/v2026-preview/docs/59b87cd-piv3.png" alt="piv3.png" />
+</Frame>
 
 * **Step 1**: Authenticate your app by calling the `/oauth2/token` endpoint (please see the [dedicated guide for Authentication](/retail-media/v2026-preview/docs/authentication) ),
 * **Step 2**: Criteo API will authenticate and authorize your app, and return you an **access token** to be used in the following calls,
@@ -42,15 +41,36 @@ The following diagram provides a high-level overview of the API call sequence fo
 
 * For AMERICAS: [api.us.criteo.com](https://api.us.criteo.com)
 * For APAC: [api.as.criteo.com](https://api.as.criteo.com)
-* Fr EMEA: [api.eu.criteo.com](https://api.eu.criteo.com)
+* For EMEA: [api.eu.criteo.com](https://api.eu.criteo.com)
 
 **Methods**
 
-| Method       | HTTP Request                                                                      | Description                                                                                                                              |
-| ------------ | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Authenticate | * *POST*\* `/oauth2/token`                                                        | Get the token necessary to perform any action through our API. Please see the [dedicated guide for Authentication](/retail-media/v2026-preview/docs/authentication) |
-| Batch        | - *POST*\* `/preview/retail-media/catalog/products/batch`                         | Request an asynchronous batch operation of insertions, updates, and deletes. Returns the location of the report of the operation         |
-| Report       | * *GET*\* `/preview/retail-media/catalog/products/batch/report/{operation-token}` | Get the report of the batch processing                                                                                                   |
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>HTTP Request</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Authenticate</td>
+      <td><ul><li>&#95;POST&#95;&#42; <code>/oauth2/token</code></li></ul></td>
+      <td>Get the token necessary to perform any action through our API.<br />Please see the dedicated guide for Authentication</td>
+    </tr>
+    <tr>
+      <td>Batch</td>
+      <td><ul><li>&#95;POST&#95;&#42; <code>/preview/retail-media/catalog/products/batch</code></li></ul></td>
+      <td>Request an asynchronous batch operation of insertions, updates, and deletes. Returns the location of the report of the operation</td>
+    </tr>
+    <tr>
+      <td>Report</td>
+      <td><ul><li>&#95;GET&#95;&#42; <code>/preview/retail-media/catalog/products/batch/report/&#123;operation-token&#125;</code></li></ul></td>
+      <td>Get the report of the batch processing</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -64,11 +84,28 @@ The following diagram provides a high-level overview of the API call sequence fo
 
 ## Authentication
 
-This endpoint allows to get detailed information on API authentication in [our authentication guide](/retail-media/docs/authentication).
+This endpoint allows to get detailed information on API authentication in [our authentication guide](/retail-media/v2026-preview/docs/authentication).
 
-| Type     | Endpoint        | Objective                                                     | Parameters                                                                   | Remarks                          |
-| -------- | --------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------- |
-| **POST** | `/oauth2/token` | Get the token necessary to perform any action through our API | `client_id` (mandatory) `client_secret` (mandatory) `grant_type` (mandatory) | The token will be valid for 900s |
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Endpoint</th>
+      <th>Objective</th>
+      <th>Parameters</th>
+      <th>Remarks</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/oauth2/token</code></td>
+      <td>Get the token necessary to perform any action through our API</td>
+      <td><code>client&#95;id</code> (mandatory)<br /><code>client&#95;secret</code> (mandatory)<br /><code>grant&#95;type</code> (mandatory)</td>
+      <td>The token will be valid for 900s</td>
+    </tr>
+  </tbody>
+</table>
 
 <Warning>
   You will need this token as an authorization for every other endpoint, which is in the form of a bearer token.
@@ -82,27 +119,82 @@ This endpoint allows to get detailed information on API authentication in [our a
 
 This endpoint is used to publish a batch of operations to insert, update and deletes products. The batch is processed asynchronously. The response provides an `operationToken `which can be used to track the status of the report of the operation.
 
-| Type     | Endpoint                                       | Parameters                                                               | Schema                                                                                                                                      |
-| -------- | ---------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **POST** | `/preview/retail-media/catalog/products/batch` | **ProductsCustomBatchRequest**- optional - Defines a batch of operations | [ProductsCustomBatchRequest](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productscustombatchrequest) |
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Endpoint</th>
+      <th>Parameters</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>POST</strong></td>
+      <td><code>/preview/retail-media/catalog/products/batch</code></td>
+      <td><strong>ProductsCustomBatchRequest</strong><br /><ul><li>optional - Defines a batch of operations</li></ul></td>
+      <td>ProductsCustomBatchRequest</td>
+    </tr>
+  </tbody>
+</table>
 
 **Responses**
 
-| HTTP code | Description                                                                                                                                        | Schema                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **202**   | Batch accepted. The status of the operation can be tracked using the report endpoint and the `operationToken`.                                     | [BatchAcceptedResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#batchacceptedresponse) |
-| **400**   | Bad Request. Allowed error types and errors:- `{"type": "validation", "code": "required-field"}`
-- `{"type": "validation", "code": "json-format"}` | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)                   |
-| **401**   | Unauthorized. Allowed error types and errors:- `{"type": "authentication", "code": "not-authenticated"}`                                           | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)                   |
-| **403**   | Forbidden. Allowed error types and errors:- `{"type": "authentication", "code": "not-authenticated"}`                                              | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)                   |
-| **413**   | Request too long                                                                                                                                   | No Content                                                                                                                        |
-| **429**   | Too Many Requests. Allowed error types and errors:- `{"type": "availability", "code": "too-many-requests"}`                                        | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)                   |
-| **500**   | Internal Server Error. Allowed error types and errors:- `{"type": "availability", "code": "internal-error"}`                                       | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)                   |
-| **503**   | Service Unavailable. Allowed error types and errors:- `{"type": "availability", "code": "service-unavailable"}`                                    | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)                   |
+<table>
+  <thead>
+    <tr>
+      <th>HTTP code</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>202</strong></td>
+      <td>Batch accepted. The status of the operation can be tracked using the report endpoint and the <code>operationToken</code>.</td>
+      <td>BatchAcceptedResponse</td>
+    </tr>
+    <tr>
+      <td><strong>400</strong></td>
+      <td>Bad Request. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "validation", "code": "required-field"&#125;</code></li><li><code>&#123;"type": "validation", "code": "json-format"&#125;</code></li></ul></td>
+      <td>FailResponse</td>
+    </tr>
+    <tr>
+      <td><strong>401</strong></td>
+      <td>Unauthorized. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "authentication", "code": "not-authenticated"&#125;</code></li></ul></td>
+      <td>FailResponse</td>
+    </tr>
+    <tr>
+      <td><strong>403</strong></td>
+      <td>Forbidden. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "authentication", "code": "not-authenticated"&#125;</code></li></ul></td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse">FailResponse</a></td>
+    </tr>
+    <tr>
+      <td><strong>413</strong></td>
+      <td>Request too long</td>
+      <td>No Content</td>
+    </tr>
+    <tr>
+      <td><strong>429</strong></td>
+      <td>Too Many Requests. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "availability", "code": "too-many-requests"&#125;</code></li></ul></td>
+      <td>FailResponse</td>
+    </tr>
+    <tr>
+      <td><strong>500</strong></td>
+      <td>Internal Server Error. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "availability", "code": "internal-error"&#125;</code></li></ul></td>
+      <td>FailResponse</td>
+    </tr>
+    <tr>
+      <td><strong>503</strong></td>
+      <td>Service Unavailable. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "availability", "code": "service-unavailable"&#125;</code></li></ul></td>
+      <td>FailResponse</td>
+    </tr>
+  </tbody>
+</table>
 
 **Produces**
 
-* `application/json`
+* `application/json `
 
 ***
 
@@ -112,167 +204,658 @@ This endpoint is used to publish a batch of operations to insert, update and del
 
 A batch was accepted. The report can be accessed using the reporting endpoint.
 
-| Name                          | Schema |
-| ----------------------------- | ------ |
-| **operationToken** *required* | string |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>operationToken</strong> &#95;required&#95;</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
 
 ### `CustomAttribute`
 
 Defines a custom attribute of a product.
 
-| Name                 | Description                                                                       | Schema |
-| -------------------- | --------------------------------------------------------------------------------- | ------ |
-| **name** *required*  | The name of the attribute. Underscores will be replaced by spaces upon insertion. | string |
-| **value** *required* | The value of the attribute.                                                       | string |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>name</strong><br />&#95;required&#95;</td>
+      <td>The name of the attribute. Underscores will be replaced by spaces upon insertion.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>value</strong><br />&#95;required&#95;</td>
+      <td>The value of the attribute.</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
 
 ### `Error`
 
 Error descriptor.
 
-| Name                    | Description                                                                                                                                                                                                    | Schema |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| **code** *required*     | A MACHINE-READABLE error code string in kebab-case. Unique across Criteo                                                                                                                                       | string |
-| **detail** *required*   | A HUMAN-READABLE detailed explanation specific to this occurrence of the problem.This should not be more that 1 paragraph                                                                                      | string |
-| **instance** *required* | A MACHINE-READABLE URI reference that identifies the specific occurrence of the problem. This could be useful when we want to the return the API Endpoint identifying the exact resource related to the error. | string |
-| **title** *required*    | A short, HUMAN-READABLE summary of the problem type. It should not change from occurrence to occurrence of the problem, except for purposes of localization.                                                   | string |
-| **traceId** *required*  | The MACHINE-READABLE correlation ID provided by the gateway                                                                                                                                                    | string |
-| **type** *required*     | A MACHINE-READABLE code specifying error category. This information is used on client side to focus on certain type of error, to either retry some processing or display only certain type of errors.          | string |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>code</strong><br />&#95;required&#95;</td>
+      <td>A MACHINE-READABLE error code string in kebab-case. Unique across Criteo</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>detail</strong><br />&#95;required&#95;</td>
+      <td>A HUMAN-READABLE detailed explanation specific to this occurrence of the problem.This should not be more that 1 paragraph</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>instance</strong><br />&#95;required&#95;</td>
+      <td>A MACHINE-READABLE URI reference that identifies the specific occurrence of the problem. This could be useful when we want to the return the API Endpoint identifying the exact resource related to the error.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>title</strong><br />&#95;required&#95;</td>
+      <td>A short, HUMAN-READABLE summary of the problem type. It should not change from occurrence to occurrence of the problem, except for purposes of localization.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>traceId</strong><br />&#95;required&#95;</td>
+      <td>The MACHINE-READABLE correlation ID provided by the gateway</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>type</strong><br />&#95;required&#95;</td>
+      <td>A MACHINE-READABLE code specifying error category. This information is used on client side to focus on certain type of error, to either retry some processing or display only certain type of errors.</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
 
 ### `FailResponse`
 
 Error server response.
 
-| Name                    | Description      | Schema                                                                                                    |
-| ----------------------- | ---------------- | --------------------------------------------------------------------------------------------------------- |
-| **errors** *required*   | List of errors   | [Error](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#error) - array |
-| **warnings** *optional* | List of warnings | Warning - array                                                                                           |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>errors</strong><br />&#95;required&#95;</td>
+      <td>List of errors</td>
+      <td>Error - array</td>
+    </tr>
+    <tr>
+      <td><strong>warnings</strong><br />&#95;optional&#95;</td>
+      <td>List of warnings</td>
+      <td>Warning - array</td>
+    </tr>
+  </tbody>
+</table>
 
 ### `Filters`
 
 An object mapping filter names to arrays of string values for the product.
 
-| Name           | Description           | Schema    |
-| -------------- | --------------------- | --------- |
-| **filterName** | Name of the filter    | string    |
-| **values**     | Values for the filter | string\[] |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>filterName</strong></td>
+      <td>Name of the filter</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>values</strong></td>
+      <td>Values for the filter</td>
+      <td>string[]</td>
+    </tr>
+  </tbody>
+</table>
 
 ### `Installment`
 
 Defines the installment of a product.
 
-| Name                  | Description                                      | Schema                                                                                            |
-| --------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| **amount** *optional* | The amount the buyer has to pay per month.       | [Price](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price) |
-| **months** *optional* | The number of installments the buyer has to pay. | Object                                                                                            |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>amount</strong> &#95;optional&#95;</td>
+      <td>The amount the buyer has to pay per month.</td>
+      <td><a href="/retail-media/v2026-preview/docs/product-importer-api#price">Price</a></td>
+    </tr>
+    <tr>
+      <td><strong>months</strong> &#95;optional&#95;</td>
+      <td>The number of installments the buyer has to pay.</td>
+      <td>Object</td>
+    </tr>
+  </tbody>
+</table>
 
 ### `LoyaltyPoints`
 
 Defines how a client earns loyalty points after buying this product.
 
-| Name                       | Description                                                                                                                                           | Schema          |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| **name** *optional*        | Name of loyalty points program. It is recommended to limit the name to 12 full-width characters or 24 Roman characters.                               | string          |
-| **pointsValue** *optional* | The retailer’s loyalty points in absolute value.                                                                                                      | Object          |
-| **ratio** *optional*       | The ratio of a point when converted to currency. Google assumes currency based on Merchant Center settings. If ratio is left out, it defaults to 1.0. | Number (double) |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>name</strong> &#95;optional&#95;</td>
+      <td>Name of loyalty points program. It is recommended to limit the name to 12 full-width characters or 24 Roman characters.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>pointsValue</strong> &#95;optional&#95;</td>
+      <td>The retailer’s loyalty points in absolute value.</td>
+      <td>Object</td>
+    </tr>
+    <tr>
+      <td><strong>ratio</strong> &#95;optional&#95;</td>
+      <td>The ratio of a point when converted to currency. Google assumes currency based on Merchant Center settings. If ratio is left out, it defaults to 1.0.</td>
+      <td>Number (double)</td>
+    </tr>
+  </tbody>
+</table>
 
 ### `Price`
 
 Defines a price.
 
-| Name                    | Description                        | Schema |
-| ----------------------- | ---------------------------------- | ------ |
-| **currency** *optional* | The price represented as a number. | string |
-| **value** *optional*    | The currency of the price.         | string |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>currency</strong> &#95;optional&#95;</td>
+      <td>The price represented as a number.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>value</strong> &#95;optional&#95;</td>
+      <td>The currency of the price.</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
 
 ### `Product`
 
 Defines a product to be inserted or updated.
 
-| name                                    | description                                                                                                                                                                                                                   | schema                                                                                                                                            |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **id** *required*                       | A unique identifier for the item. Aka Product ID.                                                                                                                                                                             | string                                                                                                                                            |
-| **offerId** *optional*                  | Not used by Criteo.                                                                                                                                                                                                           | string                                                                                                                                            |
-| **title** *required*                    | Title of the item. (max 500 UTF-8 chars).                                                                                                                                                                                     | string                                                                                                                                            |
-| **description** *optional*              | Description of the item. RECOMMENDED. (max 5000 UTF-8 chars).                                                                                                                                                                 | string                                                                                                                                            |
-| **link** *required*                     | URL directly linking to your item's page on your website. (max 1000 UTF-8 chars).                                                                                                                                             | string                                                                                                                                            |
-| **imageLink** *required*                | URL of an image of the item. Supported formats: PNG, JPEG, GIF. (max 2000 UTF-8 chars).                                                                                                                                       | string                                                                                                                                            |
-| **additionalImageLinks** *optional*     | Additional URLs of images of the item.                                                                                                                                                                                        | string array                                                                                                                                      |
-| **contentLanguage** *optional*          | The 2-letter ISO 639-1 language code for the item.                                                                                                                                                                            | string                                                                                                                                            |
-| **targetCountry** *optional*            | The CLDR territory code for the item.                                                                                                                                                                                         | string                                                                                                                                            |
-| **channel** *optional*                  | The item's channel (`online` only).                                                                                                                                                                                           | enum (`online`)                                                                                                                                   |
-| **expirationDate** *optional*           | Date on which the item should expire, as specified upon insertion, in ISO 8601 format. By default the value of the expirationDate is 30 days.                                                                                 | string                                                                                                                                            |
-| **adult** *optional*                    | Set to true if the item is targeted towards adults. RECOMMENDED.                                                                                                                                                              | boolean                                                                                                                                           |
-| **kind** *optional*                     | Identifies what kind of resource this is.                                                                                                                                                                                     | enum (content#product)                                                                                                                            |
-| **brand** *optional*                    | Brand of the item. RECOMMENDED.                                                                                                                                                                                               | string                                                                                                                                            |
-| **color** *optional*                    | Color of the item.                                                                                                                                                                                                            | string                                                                                                                                            |
-| **googleProductCategory** *optional*    | Google's category of the item (see Google product taxonomy). RECOMMENDED.                                                                                                                                                     | string                                                                                                                                            |
-| **gtin** *optional*                     | Global Trade Item Number (GTIN) of the item. RECOMMENDED.                                                                                                                                                                     | string                                                                                                                                            |
-| **itemGroupId** *optional*              | Shared identifier for all variants of the same product. RECOMMENDED.                                                                                                                                                          | string                                                                                                                                            |
-| **material** *optional*                 | The material of which the item is made.                                                                                                                                                                                       | string                                                                                                                                            |
-| **mpn** *optional*                      | Manufacturer Part Number (MPN) of the item. RECOMMENDED.                                                                                                                                                                      | string                                                                                                                                            |
-| **pattern** *optional*                  | The item's pattern (e.g. polka dots).                                                                                                                                                                                         | string                                                                                                                                            |
-| **price** *optional*                    | Price of the item. RECOMMENDED.                                                                                                                                                                                               | [Price](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price)                                                 |
-| **salePrice** *optional*                | Advertised sale price of the item. RECOMMENDED.                                                                                                                                                                               | [Price](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price)                                                 |
-| **salePriceEffectiveDate** *optional*   | Date range during which the item is on sale.                                                                                                                                                                                  | string                                                                                                                                            |
-| **sizes** *optional*                    | Size of the item. RECOMMENDED. Only one value is allowed. For variants with different sizes, insert a separate product for each size with the same `itemGroupId` value.                                                       | string array                                                                                                                                      |
-| **taxes** *optional*                    | Tax information.                                                                                                                                                                                                              | [ProductTax](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#producttax) array                                 |
-| **customAttributes** *optional*         | A list of custom (merchant-provided) attributes. This is useful for submitting attributes not explicitly exposed by the API. Declaring attributes explicitly exposed by the API using is forbidden                            | [CustomAttribute](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#customattribute) array                       |
-| **identifierExists** *optional*         | False when the item does not have unique product identifiers appropriate to its category, such as GTIN, MPN, and brand. Required according to the Unique Product Identifier Rules for all target countries except for Canada. | boolean                                                                                                                                           |
-| **installment** *optional*              | Number and amount of installments to pay for an item. Brazil only.                                                                                                                                                            | [Installment](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#installment)                                     |
-| **loyaltyPoints** *optional*            | Loyalty points that users receive after purchasing the item. Japan only.                                                                                                                                                      | [LoyaltyPoints](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#loyaltypoints)                                 |
-| **multipack** *optional*                | The number of identical products in a merchant-defined multipack. To avoid any overflow issue, pass it as a string.                                                                                                           | object                                                                                                                                            |
-| **customLabel0** *optional*             | Custom label 0 for custom grouping of items in a Shopping campaign.                                                                                                                                                           | string                                                                                                                                            |
-| **customLabel1** *optional*             | Custom label 1 for custom grouping of items in a Shopping campaign.                                                                                                                                                           | string                                                                                                                                            |
-| **customLabel2** *optional*             | Custom label 2 for custom grouping of items in a Shopping campaign.                                                                                                                                                           | string                                                                                                                                            |
-| **customLabel3** *optional*             | Custom label 3 for custom grouping of items in a Shopping campaign.                                                                                                                                                           | string                                                                                                                                            |
-| **customLabel4** *optional*             | Custom label 4 for custom grouping of items in a Shopping campaign.                                                                                                                                                           | string                                                                                                                                            |
-| **isBundle** *optional*                 | Whether the item is a merchant-defined bundle. A bundle is a custom grouping of different products sold by a merchant for a single price.                                                                                     | boolean                                                                                                                                           |
-| **mobileLink** *optional*               | accounts.link to a mobile-optimized version of the landing page.                                                                                                                                                              | string                                                                                                                                            |
-| **availabilityDate** *optional*         | The day a pre-ordered product becomes available for delivery, in ISO 8601 format.                                                                                                                                             | string                                                                                                                                            |
-| **unitPricingMeasure** *optional*       | The measure and dimension of an item.                                                                                                                                                                                         | [ProductUnitPricingMeasure](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productunitpricingmeasure)         |
-| **unitPricingBaseMeasure** *optional*   | The preference of the denominator of the unit price.                                                                                                                                                                          | [ProductUnitPricingBaseMeasure](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productunitpricingbasemeasure) |
-| **shipping** *optional*                 | Shipping rules.                                                                                                                                                                                                               | [ProductShipping](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshipping) array                       |
-| **shippingLabel** *optional*            | The shipping label of the product, used to group product in account-level shipping rules.                                                                                                                                     | string                                                                                                                                            |
-| **shippingLength** *optional*           | Length of the item for shipping.                                                                                                                                                                                              | [ProductShippingDimension](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshippingdimension)           |
-| **shippingWidth** *optional*            | Width of the item for shipping.                                                                                                                                                                                               | [ProductShippingDimension](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshippingdimension)           |
-| **shippingHeight** *optional*           | Height of the item for shipping.                                                                                                                                                                                              | [ProductShippingDimension](#https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshippingdimension)          |
-| **shippingWeight** *optional*           | Weight of the item for shipping.                                                                                                                                                                                              | [ProductShippingWeight](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshippingweight)                 |
-| **displayAdsId** *optional*             | An identifier for an item for dynamic Retargeting campaigns.                                                                                                                                                                  | string                                                                                                                                            |
-| **displayAdsSimilarIds** *optional*     | Advertiser-specified recommendations.                                                                                                                                                                                         | string                                                                                                                                            |
-| **displayAdsTitle** *optional*          | Title of an item for dynamic Retargeting campaigns.                                                                                                                                                                           | string                                                                                                                                            |
-| **displayAdsLink** *optional*           | URL directly to your item's landing page for dynamic Retargeting campaigns.                                                                                                                                                   | string                                                                                                                                            |
-| **displayAdsValue** *optional*          | Offer margin for dynamic Retargeting campaigns.                                                                                                                                                                               | number (double)                                                                                                                                   |
-| **sellOnGoogleQuantity** *optional*     | The quantity of the product that is available for selling on Google. Supported only for online products.                                                                                                                      | object                                                                                                                                            |
-| **promotionIds** *optional*             | The unique ID of a promotion.                                                                                                                                                                                                 | string array                                                                                                                                      |
-| **maxHandlingTime** *optional*          | Maximal product handling time (in business days).                                                                                                                                                                             | object                                                                                                                                            |
-| **minHandlingTime** *optional*          | Minimal product handling time (in business days).                                                                                                                                                                             | object                                                                                                                                            |
-| **costOfGoodsSold** *optional*          | Cost of goods sold. Used for gross profit reporting.                                                                                                                                                                          | [Price](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price)                                                 |
-| **source** *optional*                   | The source of the offer, i.e., how the offer was created.                                                                                                                                                                     | enum (`api`, `crawl`, `feed`)                                                                                                                     |
-| **includedDestinations** *optional*     | The list of destinations to include for this target (corresponds to checked check boxes in Merchant Center). Default destinations are always included unless provided in `excludedDestinations`.                              | string array                                                                                                                                      |
-| **excludedDestinations** *optional*     | The list of destinations to exclude for this target (corresponds to unchecked check boxes in Merchant Center).                                                                                                                | string array                                                                                                                                      |
-| **adsLabels** *optional*                | Similar to `adsGrouping`, but only works on CPC.                                                                                                                                                                              | string array                                                                                                                                      |
-| **adsRedirect** *optional*              | Allows advertisers to override the item URL when the product is shown within the context of Product Ads.                                                                                                                      | string                                                                                                                                            |
-| **productTypeKeys** *optional*          | Category keys of the item (formatted as in productTypes). This information is required by RetailMedia.                                                                                                                        | string array                                                                                                                                      |
-| **productTypes** *optional*             | Categories of the item (formatted as in products data specification).                                                                                                                                                         | string array                                                                                                                                      |
-| **ageGroup** *optional*                 | Target age group of the item.                                                                                                                                                                                                 | string                                                                                                                                            |
-| **availability** *optional*             | Availability status of the item. RECOMMENDED.                                                                                                                                                                                 | string                                                                                                                                            |
-| **condition** *optional*                | Condition or state of the item.                                                                                                                                                                                               | string                                                                                                                                            |
-| **gender** *optional*                   | Target gender of the item.                                                                                                                                                                                                    | string                                                                                                                                            |
-| **sizeSystem** *optional*               | System in which the size is specified. Recommended for apparel items.                                                                                                                                                         | string                                                                                                                                            |
-| **sizeType** *optional*                 | The cut of the item. Recommended for apparel items.                                                                                                                                                                           | string                                                                                                                                            |
-| **energyEfficiencyClass** *optional*    | The energy efficiency class as defined in EU directive 2010/30/EU.                                                                                                                                                            | string                                                                                                                                            |
-| **minEnergyEfficiencyClass** *optional* | The energy efficiency class as defined in EU directive 2010/30/EU.                                                                                                                                                            | string                                                                                                                                            |
-| **maxEnergyEfficiencyClass** *optional* | The energy efficiency class as defined in EU directive 2010/30/EU.                                                                                                                                                            | string                                                                                                                                            |
-| **taxCategory** *optional*              | The tax category of the product, used to configure detailed tax nexus in account-level tax settings.                                                                                                                          | string                                                                                                                                            |
-| **transitTimeLabel** *optional*         | The transit time label of the product, used to group product in account-level transit time tables.                                                                                                                            | string                                                                                                                                            |
-| **sellerId** *optional*                 | ⚠️ **Deprecated Field, please use`externalSellerId` instead** The ID of the seller (case-sensitive and max 50 UTF-8 chars). This information is required by the Criteo Offsite Ads.                                           | string                                                                                                                                            |
-| **externalSellerId** *optional*         | The external id of the seller (case sensitive and 50 UTF8 characters max). This information is required by the Criteo Offsite Ads and RetailMedia.                                                                            | string                                                                                                                                            |
-| **externalSellerName** *optional*       | The external name of the seller (case sensitive and 50 UTF8 characters max). This information is required by the Criteo Offsite Ads and RetailMedia.                                                                          | string                                                                                                                                            |
-| **adsGrouping** *optional*              | Used to group items in an arbitrary way. Only for CPA%, discouraged otherwise.                                                                                                                                                | string                                                                                                                                            |
-| **numberOfReviews**                     | The number of customer reviews for the product                                                                                                                                                                                | integer (int32)                                                                                                                                   |
-| **productRating**                       | The product rating for the product                                                                                                                                                                                            | string                                                                                                                                            |
-| **badge**                               | URL of a badge image to display on the product.                                                                                                                                                                               | string                                                                                                                                            |
-| **Filters** *optional*                  | Defines filtering criteria to apply when importing products. This object allows specifying conditions such as brand, category, or custom attributes to limit which products are processed.                                    | [Filters](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#filters)                                             |
+<table>
+  <thead>
+    <tr>
+      <th>name</th>
+      <th>description</th>
+      <th>schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>id</strong><br />&#95;required&#95;</td>
+      <td>A unique identifier for the item. Aka Product ID.<br />Case-insensitive, no quotation marks, ASCII characters, cannot match <code>item&#95;group&#95;id</code>, <code>seller&#95;id</code>, (50 UTF8 characters max).</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>offerId</strong><br />&#95;optional&#95;</td>
+      <td>Not used by Criteo.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>title</strong><br />&#95;required&#95;</td>
+      <td>Title of the item. (max 500 UTF-8 chars).</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>description</strong><br />&#95;optional&#95;</td>
+      <td>Description of the item. RECOMMENDED. (max 5000 UTF-8 chars).</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>link</strong><br />&#95;required&#95;</td>
+      <td>URL directly linking to your item's page on your website. (2000 UTF8 characters max)</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>imageLink</strong><br />&#95;required&#95;</td>
+      <td>URL of an image of the item. Supported formats: PNG, JPEG, GIF. (max 2000 UTF-8 chars).</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>additionalImageLinks</strong><br />&#95;optional&#95;</td>
+      <td>Additional URLs of images of the item.(2000 UTF8 characters max)</td>
+      <td>string array</td>
+    </tr>
+    <tr>
+      <td><strong>contentLanguage</strong><br />&#95;optional&#95;</td>
+      <td>The 2-letter ISO 639-1 language code for the item.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>targetCountry</strong><br />&#95;optional&#95;</td>
+      <td>The CLDR territory code for the item.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>channel</strong><br />&#95;optional&#95;</td>
+      <td>The item's channel (<code>online</code> only).</td>
+      <td>enum (<code>online</code>)</td>
+    </tr>
+    <tr>
+      <td><strong>expirationDate</strong><br />&#95;optional&#95;</td>
+      <td>Date on which the item should expire, as specified upon insertion, in ISO 8601 format. By default the value of the expirationDate is 30 days.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>adult</strong><br />&#95;optional&#95;</td>
+      <td>Set to true if the item is targeted towards adults. RECOMMENDED.</td>
+      <td>boolean</td>
+    </tr>
+    <tr>
+      <td><strong>kind</strong><br />&#95;optional&#95;</td>
+      <td>Identifies what kind of resource this is.</td>
+      <td>enum (content#product)</td>
+    </tr>
+    <tr>
+      <td><strong>brand</strong><br />&#95;optional&#95;</td>
+      <td>Brand of the item. (70 UTF8 characters max). RECOMMENDED.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>color</strong><br />&#95;optional&#95;</td>
+      <td>Color of the item.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>googleProductCategory</strong><br />&#95;optional&#95;</td>
+      <td>Google's category of the item (see Google product taxonomy). RECOMMENDED.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>gtin</strong><br />&#95;optional&#95;</td>
+      <td>Global Trade Item Number (GTIN) of the item. (14 digits max). RECOMMENDED.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>itemGroupId</strong><br />&#95;optional&#95;</td>
+      <td>Shared identifier for all variants of the same product. Case-insensitive, no quotation marks, ASCII characters, cannot match <code>id</code>, <code>seller&#95;id</code>, (50 UTF8 characters max). RECOMMENDED.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>material</strong><br />&#95;optional&#95;</td>
+      <td>The material of which the item is made.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>mpn</strong><br />&#95;optional&#95;</td>
+      <td>Manufacturer Part Number (MPN) of the item. (70 UTF8 characters max) RECOMMENDED.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>pattern</strong><br />&#95;optional&#95;</td>
+      <td>The item's pattern (e.g. polka dots).</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>price</strong><br />&#95;optional&#95;</td>
+      <td>Price of the item. (14 characters max). RECOMMENDED.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price">Price</a></td>
+    </tr>
+    <tr>
+      <td><strong>salePrice</strong><br />&#95;optional&#95;</td>
+      <td>Advertised sale price of the item. RECOMMENDED.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price">Price</a></td>
+    </tr>
+    <tr>
+      <td><strong>salePriceEffectiveDate</strong><br />&#95;optional&#95;</td>
+      <td>Date range during which the item is on sale.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>sizes</strong><br />&#95;optional&#95;</td>
+      <td>Size of the item. RECOMMENDED. Only one value is allowed. For variants with different sizes, insert a separate product for each size with the same <code>itemGroupId</code> value.</td>
+      <td>string array</td>
+    </tr>
+    <tr>
+      <td><strong>taxes</strong><br />&#95;optional&#95;</td>
+      <td>Tax information.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#producttax">ProductTax</a> array</td>
+    </tr>
+    <tr>
+      <td><strong>customAttributes</strong><br />&#95;optional&#95;</td>
+      <td>A list of custom (merchant-provided) attributes. This is useful for submitting attributes not explicitly exposed by the API. Declaring attributes explicitly exposed by the API using is forbidden</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#customattribute">CustomAttribute</a> array</td>
+    </tr>
+    <tr>
+      <td><strong>identifierExists</strong><br />&#95;optional&#95;</td>
+      <td>False when the item does not have unique product identifiers appropriate to its category, such as GTIN, MPN, and brand. Required according to the Unique Product Identifier Rules for all target countries except for Canada.</td>
+      <td>boolean</td>
+    </tr>
+    <tr>
+      <td><strong>installment</strong><br />&#95;optional&#95;</td>
+      <td>Number and amount of installments to pay for an item. Brazil only.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#installment">Installment</a></td>
+    </tr>
+    <tr>
+      <td><strong>loyaltyPoints</strong><br />&#95;optional&#95;</td>
+      <td>Loyalty points that users receive after purchasing the item. Japan only.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#loyaltypoints">LoyaltyPoints</a></td>
+    </tr>
+    <tr>
+      <td><strong>multipack</strong><br />&#95;optional&#95;</td>
+      <td>The number of identical products in a merchant-defined multipack. To avoid any overflow issue, pass it as a string.</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td><strong>customLabel0</strong><br />&#95;optional&#95;</td>
+      <td>Custom label 0 for custom grouping of items in a Shopping campaign.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>customLabel1</strong><br />&#95;optional&#95;</td>
+      <td>Custom label 1 for custom grouping of items in a Shopping campaign.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>customLabel2</strong><br />&#95;optional&#95;</td>
+      <td>Custom label 2 for custom grouping of items in a Shopping campaign.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>customLabel3</strong><br />&#95;optional&#95;</td>
+      <td>Custom label 3 for custom grouping of items in a Shopping campaign.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>customLabel4</strong><br />&#95;optional&#95;</td>
+      <td>Custom label 4 for custom grouping of items in a Shopping campaign.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>isBundle</strong><br />&#95;optional&#95;</td>
+      <td>Whether the item is a merchant-defined bundle. A bundle is a custom grouping of different products sold by a merchant for a single price.</td>
+      <td>boolean</td>
+    </tr>
+    <tr>
+      <td><strong>mobileLink</strong><br />&#95;optional&#95;</td>
+      <td>accounts.link to a mobile-optimized version of the landing page.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>availabilityDate</strong><br />&#95;optional&#95;</td>
+      <td>The day a pre-ordered product becomes available for delivery, in ISO 8601 format.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>unitPricingMeasure</strong><br />&#95;optional&#95;</td>
+      <td>The measure and dimension of an item.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productunitpricingmeasure">ProductUnitPricingMeasure</a></td>
+    </tr>
+    <tr>
+      <td><strong>unitPricingBaseMeasure</strong><br />&#95;optional&#95;</td>
+      <td>The preference of the denominator of the unit price.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productunitpricingbasemeasure">ProductUnitPricingBaseMeasure</a></td>
+    </tr>
+    <tr>
+      <td><strong>shipping</strong><br />&#95;optional&#95;</td>
+      <td>Shipping rules.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshipping">ProductShipping</a> array</td>
+    </tr>
+    <tr>
+      <td><strong>shippingLabel</strong><br />&#95;optional&#95;</td>
+      <td>The shipping label of the product, used to group product in account-level shipping rules.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>shippingLength</strong><br />&#95;optional&#95;</td>
+      <td>Length of the item for shipping.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshippingdimension">ProductShippingDimension</a></td>
+    </tr>
+    <tr>
+      <td><strong>shippingWidth</strong><br />&#95;optional&#95;</td>
+      <td>Width of the item for shipping.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshippingdimension">ProductShippingDimension</a></td>
+    </tr>
+    <tr>
+      <td><strong>shippingHeight</strong><br />&#95;optional&#95;</td>
+      <td>Height of the item for shipping.</td>
+      <td><a href="#https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshippingdimension">ProductShippingDimension</a></td>
+    </tr>
+    <tr>
+      <td><strong>shippingWeight</strong><br />&#95;optional&#95;</td>
+      <td>Weight of the item for shipping.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productshippingweight">ProductShippingWeight</a></td>
+    </tr>
+    <tr>
+      <td><strong>displayAdsId</strong><br />&#95;optional&#95;</td>
+      <td>An identifier for an item for dynamic Retargeting campaigns.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>displayAdsSimilarIds</strong><br />&#95;optional&#95;</td>
+      <td>Advertiser-specified recommendations.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>displayAdsTitle</strong><br />&#95;optional&#95;</td>
+      <td>Title of an item for dynamic Retargeting campaigns.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>displayAdsLink</strong><br />&#95;optional&#95;</td>
+      <td>URL directly to your item's landing page for dynamic Retargeting campaigns.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>displayAdsValue</strong><br />&#95;optional&#95;</td>
+      <td>Offer margin for dynamic Retargeting campaigns.</td>
+      <td>number (double)</td>
+    </tr>
+    <tr>
+      <td><strong>sellOnGoogleQuantity</strong><br />&#95;optional&#95;</td>
+      <td>The quantity of the product that is available for selling on Google. Supported only for online products.</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td><strong>promotionIds</strong><br />&#95;optional&#95;</td>
+      <td>The unique ID of a promotion.</td>
+      <td>string array</td>
+    </tr>
+    <tr>
+      <td><strong>maxHandlingTime</strong><br />&#95;optional&#95;</td>
+      <td>Maximal product handling time (in business days).</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td><strong>minHandlingTime</strong><br />&#95;optional&#95;</td>
+      <td>Minimal product handling time (in business days).</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td><strong>costOfGoodsSold</strong><br />&#95;optional&#95;</td>
+      <td>Cost of goods sold. Used for gross profit reporting.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price">Price</a></td>
+    </tr>
+    <tr>
+      <td><strong>source</strong><br />&#95;optional&#95;</td>
+      <td>The source of the offer, i.e., how the offer was created.</td>
+      <td>enum (<code>api</code>, <code>crawl</code>, <code>feed</code>)</td>
+    </tr>
+    <tr>
+      <td><strong>includedDestinations</strong><br />&#95;optional&#95;</td>
+      <td>The list of destinations to include for this target (corresponds to checked check boxes in Merchant Center). Default destinations are always included unless provided in <code>excludedDestinations</code>.</td>
+      <td>string array</td>
+    </tr>
+    <tr>
+      <td><strong>excludedDestinations</strong><br />&#95;optional&#95;</td>
+      <td>The list of destinations to exclude for this target (corresponds to unchecked check boxes in Merchant Center).</td>
+      <td>string array</td>
+    </tr>
+    <tr>
+      <td><strong>adsLabels</strong><br />&#95;optional&#95;</td>
+      <td>Similar to <code>adsGrouping</code>, but only works on CPC.</td>
+      <td>string array</td>
+    </tr>
+    <tr>
+      <td><strong>adsRedirect</strong><br />&#95;optional&#95;</td>
+      <td>Allows advertisers to override the item URL when the product is shown within the context of Product Ads.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>productTypeKeys</strong> &#95;optional&#95;</td>
+      <td>Category keys of the item (formatted as in productTypes).<br />This information is required by RetailMedia.</td>
+      <td>string array</td>
+    </tr>
+    <tr>
+      <td><strong>productTypes</strong><br />&#95;optional&#95;</td>
+      <td>Categories of the item (formatted as in products data specification).</td>
+      <td>string array</td>
+    </tr>
+    <tr>
+      <td><strong>ageGroup</strong><br />&#95;optional&#95;</td>
+      <td>Target age group of the item.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>availability</strong><br />&#95;optional&#95;</td>
+      <td>Availability status of the item. RECOMMENDED.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>condition</strong><br />&#95;optional&#95;</td>
+      <td>Condition or state of the item.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>gender</strong><br />&#95;optional&#95;</td>
+      <td>Target gender of the item.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>sizeSystem</strong><br />&#95;optional&#95;</td>
+      <td>System in which the size is specified. Recommended for apparel items.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>sizeType</strong><br />&#95;optional&#95;</td>
+      <td>The cut of the item. Recommended for apparel items.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>energyEfficiencyClass</strong><br />&#95;optional&#95;</td>
+      <td>The energy efficiency class as defined in EU directive 2010/30/EU.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>minEnergyEfficiencyClass</strong><br />&#95;optional&#95;</td>
+      <td>The energy efficiency class as defined in EU directive 2010/30/EU.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>maxEnergyEfficiencyClass</strong><br />&#95;optional&#95;</td>
+      <td>The energy efficiency class as defined in EU directive 2010/30/EU.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>taxCategory</strong><br />&#95;optional&#95;</td>
+      <td>The tax category of the product, used to configure detailed tax nexus in account-level tax settings.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>transitTimeLabel</strong><br />&#95;optional&#95;</td>
+      <td>The transit time label of the product, used to group product in account-level transit time tables.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>sellerId</strong><br />&#95;optional&#95;</td>
+      <td>⚠️ <strong>Deprecated Field, please use 0  instead</strong><br />The ID of the seller (case-sensitive and max 50 UTF-8 chars). This information is required by the Criteo Offsite Ads.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>externalSellerId</strong><br />&#95;optional&#95;</td>
+      <td>The external id of the seller (case-insensitive, no quotation marks, ASCII characters, cannot match <code>id</code>, <code>itemGroupId</code>, 50 UTF8 characters max.<br />This information is required by the Criteo Offsite Ads and RetailMedia.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>externalSellerName</strong> &#95;optional&#95;</td>
+      <td>The external name of the seller (case sensitive and 200 UTF8 characters max). This information is required by the Criteo Offsite Ads and RetailMedia.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>adsGrouping</strong><br />&#95;optional&#95;</td>
+      <td>Used to group items in an arbitrary way. Only for CPA%, discouraged otherwise.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>numberOfReviews</strong></td>
+      <td>The number of customer reviews for the product</td>
+      <td>integer (int32)</td>
+    </tr>
+    <tr>
+      <td><strong>productRating</strong></td>
+      <td>The product rating for the product</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>badge</strong></td>
+      <td>URL of a badge image to display on the product.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>Filters</strong><br />&#95;optional&#95;</td>
+      <td>Defines filtering criteria to apply when importing products. This object allows specifying conditions such as brand, category, or custom attributes to limit which products are processed.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#filters">Filters</a></td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -280,15 +863,52 @@ Defines a product to be inserted or updated.
 
 Defines the shipping information of a product.
 
-| Name                             | Description                                                                                                                                                                                                                                        | Schema                                                                                            |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **country** *optional*           | The CLDR territory code of the country to which an item will ship.                                                                                                                                                                                 | string                                                                                            |
-| **locationGroupName** *optional* | The location where the shipping is applicable, represented by a location group name.                                                                                                                                                               | string                                                                                            |
-| **locationId** *optional*        | The numeric ID of a location that the shipping rate applies to as defined in the AdWords API.                                                                                                                                                      | object                                                                                            |
-| **postalCode** *optional*        | The postal code range that the tax rate applies to, represented by a ZIP code, a ZIP code prefix using `*` (wildcard), a range between two ZIP codes or two ZIP code prefixes of equal length. Examples: `94114`, `94*`, `94002-95460`, `94*-95*`. | string                                                                                            |
-| **price** *optional*             | Fixed shipping price, represented as a number.                                                                                                                                                                                                     | [Price](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price) |
-| **region** *optional*            | The geographic region to which a shipping rate applies.                                                                                                                                                                                            | string                                                                                            |
-| **service** *optional*           | A free-form description of the service class or delivery speed.                                                                                                                                                                                    | string                                                                                            |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>country</strong><br />&#95;optional&#95;</td>
+      <td>The CLDR territory code of the country to which an item will ship.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>locationGroupName</strong><br />&#95;optional&#95;</td>
+      <td>The location where the shipping is applicable, represented by a location group name.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>locationId</strong><br />&#95;optional&#95;</td>
+      <td>The numeric ID of a location that the shipping rate applies to as defined in the AdWords API.</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td><strong>postalCode</strong><br />&#95;optional&#95;</td>
+      <td>The postal code range that the tax rate applies to, represented by a ZIP code, a ZIP code prefix using <code>&#42;</code> (wildcard), a range between two ZIP codes or two ZIP code prefixes of equal length. Examples: <code>94114</code>, <code>94&#42;</code>, <code>94002-95460</code>, <code>94&#42;-95&#42;</code>.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>price</strong><br />&#95;optional&#95;</td>
+      <td>Fixed shipping price, represented as a number.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#price">Price</a></td>
+    </tr>
+    <tr>
+      <td><strong>region</strong><br />&#95;optional&#95;</td>
+      <td>The geographic region to which a shipping rate applies.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>service</strong><br />&#95;optional&#95;</td>
+      <td>A free-form description of the service class or delivery speed.</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -296,10 +916,27 @@ Defines the shipping information of a product.
 
 Defines the shipping dimension of a product.
 
-| Name                 | Description                                                                   | Schema          |
-| -------------------- | ----------------------------------------------------------------------------- | --------------- |
-| **unit** *optional*  | The unit of value.                                                            | string          |
-| **value** *optional* | The dimension of the product used to calculate the shipping cost of the item. | number (double) |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>unit</strong><br />&#95;optional&#95;</td>
+      <td>The unit of value.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>value</strong> &#95;optional&#95;</td>
+      <td>The dimension of the product used to calculate the shipping cost of the item.</td>
+      <td>number<br />(double)</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -307,10 +944,27 @@ Defines the shipping dimension of a product.
 
 Defines the shipping weight of a product.
 
-| Name                 | Description                                                                | Schema          |
-| -------------------- | -------------------------------------------------------------------------- | --------------- |
-| **unit** *optional*  | The unit of value.                                                         | string          |
-| **value** *optional* | The weight of the product used to calculate the shipping cost of the item. | number (double) |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>unit</strong><br />&#95;optional&#95;</td>
+      <td>The unit of value.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>value</strong><br />&#95;optional&#95;</td>
+      <td>The weight of the product used to calculate the shipping cost of the item.</td>
+      <td>number<br />(double)</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -318,14 +972,47 @@ Defines the shipping weight of a product.
 
 Defines the tax information of a product.
 
-| Name                      | Description                                                                                                                                                                                                                                        | Schema          |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| **country** *optional*    | The country within which the item is taxed, specified as a CLDR territory code.                                                                                                                                                                    | string          |
-| **locationId** *optional* | The numeric ID of a location that the tax rate applies to as defined in the AdWords API.                                                                                                                                                           | object          |
-| **postalCode** *optional* | The postal code range that the tax rate applies to, represented by a ZIP code, a ZIP code prefix using `*` (wildcard), a range between two ZIP codes or two ZIP code prefixes of equal length. Examples: `94114`, `94*`, `94002-95460`, `94*-95*`. | string          |
-| **rate** *optional*       | The percentage of tax rate that applies to the item price.                                                                                                                                                                                         | number (double) |
-| **region** *optional*     | The geographic region to which the tax rate applies.                                                                                                                                                                                               | string          |
-| **taxShip** *optional*    | Set to true if tax is charged on shipping.                                                                                                                                                                                                         | boolean         |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>country</strong><br />&#95;optional&#95;</td>
+      <td>The country within which the item is taxed, specified as a CLDR territory code.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>locationId</strong><br />&#95;optional&#95;</td>
+      <td>The numeric ID of a location that the tax rate applies to as defined in the AdWords API.</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td><strong>postalCode</strong><br />&#95;optional&#95;</td>
+      <td>The postal code range that the tax rate applies to, represented by a ZIP code, a ZIP code prefix using <code>&#42;</code> (wildcard), a range between two ZIP codes or two ZIP code prefixes of equal length. Examples: <code>94114</code>, <code>94&#42;</code>, <code>94002-95460</code>, <code>94&#42;-95&#42;</code>.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>rate</strong><br />&#95;optional&#95;</td>
+      <td>The percentage of tax rate that applies to the item price.</td>
+      <td>number<br />(double)</td>
+    </tr>
+    <tr>
+      <td><strong>region</strong><br />&#95;optional&#95;</td>
+      <td>The geographic region to which the tax rate applies.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>taxShip</strong><br />&#95;optional&#95;</td>
+      <td>Set to true if tax is charged on shipping.</td>
+      <td>boolean</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -333,10 +1020,27 @@ Defines the tax information of a product.
 
 Defines a measurement.
 
-| Name                 | Description                        | Schema |
-| -------------------- | ---------------------------------- | ------ |
-| **unit** *optional*  | The unit of the denominator.       | string |
-| **value** *optional* | The denominator of the unit price. | object |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>unit</strong> &#95;optional&#95;</td>
+      <td>The unit of the denominator.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>value</strong> &#95;optional&#95;</td>
+      <td>The denominator of the unit price.</td>
+      <td>object</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -344,18 +1048,48 @@ Defines a measurement.
 
 Defines a measurement.
 
-| Name                 | Description                 | Schema          |
-| -------------------- | --------------------------- | --------------- |
-| **unit** *optional*  | The unit of measure.        | string          |
-| **value** *optional* | The measurement of an item. | number (double) |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>unit</strong> &#95;optional&#95;</td>
+      <td>The unit of measure.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>value</strong> &#95;optional&#95;</td>
+      <td>The measurement of an item.</td>
+      <td>number (double)</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
 ### `ProductsCustomBatchRequest`
 
-| Name                   | Description                                       | Schema                                                                                                                                                        |
-| ---------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **entries** *required* | The request entries to be processed in the batch. | [ProductsCustomBatchRequestEntry](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productscustombatchrequestentry) - array |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>entries</strong><br />&#95;required&#95;</td>
+      <td>The request entries to be processed in the batch.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#productscustombatchrequestentry">ProductsCustomBatchRequestEntry</a> - array</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -363,14 +1097,47 @@ Defines a measurement.
 
 A batch entry encoding a single non-batch products request.
 
-| Name                      | Description                                                     | Schema                                                                                                |
-| ------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| **batchId** *optional*    | An entry ID, unique within the batch request.                   | integer (int64)                                                                                       |
-| **feedId** *optional*     | Not used by Criteo.                                             | string                                                                                                |
-| **merchantId** *required* | The ID of the managing account. Criteo: the partnerId.          | integer (int32)                                                                                       |
-| **method** *required*     | The method of the batch entry.                                  | enum (`delete`, `insert`)                                                                             |
-| **product** *optional*    | The product to insert. Only required if the method is insert.   | [Product](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#product) |
-| **productId** *optional*  | The Product ID to delete. Only defined if the method is delete. | string                                                                                                |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>batchId</strong><br />&#95;optional&#95;</td>
+      <td>An entry ID, unique within the batch request.</td>
+      <td>integer (int64)</td>
+    </tr>
+    <tr>
+      <td><strong>feedId</strong><br />&#95;optional&#95;</td>
+      <td>Not used by Criteo.</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>merchantId</strong><br />&#95;required&#95;</td>
+      <td>The ID of the managing account. Criteo: the partnerId.</td>
+      <td>integer (int32)</td>
+    </tr>
+    <tr>
+      <td><strong>method</strong><br />&#95;required&#95;</td>
+      <td>The method of the batch entry.</td>
+      <td>enum (<code>delete</code>, <code>insert</code>)</td>
+    </tr>
+    <tr>
+      <td><strong>product</strong><br />&#95;optional&#95;</td>
+      <td>The product to insert. Only required if the method is insert.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#product">Product</a></td>
+    </tr>
+    <tr>
+      <td><strong>productId</strong><br />&#95;optional&#95;</td>
+      <td>The Product ID to delete. Only defined if the method is delete.</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -378,11 +1145,28 @@ A batch entry encoding a single non-batch products request.
 
 An error on a batch operation.
 
-| Name                           | Schema                                                                                                                                                                                                                                                                                                     |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **isServerRelated** *required* | boolean                                                                                                                                                                                                                                                                                                    |
-| **message** *optional*         | string                                                                                                                                                                                                                                                                                                     |
-| **type** *required*            | enum (`UnknownError`, `InvalidBigImageUrl`, `InvalidProductId`, `InvalidProductUrl`, `InvalidSmallImageUrl`, `JsonParsingIssue`, `MissingID`, `MissingImages`, `MissingName`, `MissingURL`, `NonAsciiId`, `OverlargeBigImage`, `OverlargeID`, `OverlargeSmallImage`, `OverlargeURL`, `ConfigurationError`) |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>isServerRelated</strong><br />&#95;required&#95;</td>
+      <td>boolean</td>
+    </tr>
+    <tr>
+      <td><strong>message</strong><br />&#95;optional&#95;</td>
+      <td>string</td>
+    </tr>
+    <tr>
+      <td><strong>type</strong><br />&#95;required&#95;</td>
+      <td>enum (<code>UnknownError</code>, <code>InvalidBigImageUrl</code>, <code>InvalidProductId</code>, <code>InvalidProductUrl</code>, <code>InvalidSmallImageUrl</code>, <code>JsonParsingIssue</code>, <code>MissingID</code>, <code>MissingImages</code>, <code>MissingName</code>, <code>MissingURL</code>, <code>NonAsciiId</code>, <code>OverlargeBigImage</code>, <code>OverlargeID</code>, <code>OverlargeSmallImage</code>, <code>OverlargeURL</code>, <code>ConfigurationError</code>)</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -390,10 +1174,24 @@ An error on a batch operation.
 
 A list of errors on a batch operation.
 
-| Name                     | Schema                                                                                                                            |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| **errors** *required*    | [ReportDetailError](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#reportdetailerror) - array |
-| **productId** *required* | string                                                                                                                            |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>errors</strong> &#95;required&#95;</td>
+      <td><a href="/retail-media/v2026-preview/docs/product-importer-api#reportdetailerror">ReportDetailError</a> - array</td>
+    </tr>
+    <tr>
+      <td><strong>productId</strong> &#95;required&#95;</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
 
 ***
 
@@ -401,15 +1199,52 @@ A list of errors on a batch operation.
 
 The report on a given operationToken is ready.
 
-| Name                                      | Description                                                                                                                        | Schema                                                                                                                              |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **errorDetails** *required*               | The list of errors with details.                                                                                                   | [ReportDetailErrors](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#reportdetailerrors) - array |
-| **importRequestTimestamp** *required*     | The date when the original batch request was sent.                                                                                 | integer (int64)                                                                                                                     |
-| **numberOfProductsDeleted** *required*    | The number of products deleted.                                                                                                    | integer (int32)                                                                                                                     |
-| **numberOfProductsInTheBatch** *required* | The number of products present in the batch.                                                                                       | integer (int32)                                                                                                                     |
-| **numberOfProductsUpserted** *required*   | The number of products upserted.                                                                                                   | integer (int32)                                                                                                                     |
-| **numberOfProductsWithErrors** *required* | The number of products with errors.                                                                                                | integer (int32)                                                                                                                     |
-| **status** *required*                     | The status of the operation. The operation is completed when the status is one of: `VALIDATED`, `VALIDATED_WITH_ERRORS`, `FAILED`) | enum (`ACCEPTED`, `IN_PROGRESS`, `VALIDATED`, `VALIDATED_WITH_ERRORS`, `FAILED`)                                                    |
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>errorDetails</strong><br />&#95;required&#95;</td>
+      <td>The list of errors with details.</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#reportdetailerrors">ReportDetailErrors</a> - array</td>
+    </tr>
+    <tr>
+      <td><strong>importRequestTimestamp</strong><br />&#95;required&#95;</td>
+      <td>The date when the original batch request was sent.</td>
+      <td>integer (int64)</td>
+    </tr>
+    <tr>
+      <td><strong>numberOfProductsDeleted</strong><br />&#95;required&#95;</td>
+      <td>The number of products deleted.</td>
+      <td>integer (int32)</td>
+    </tr>
+    <tr>
+      <td><strong>numberOfProductsInTheBatch</strong><br />&#95;required&#95;</td>
+      <td>The number of products present in the batch.</td>
+      <td>integer (int32)</td>
+    </tr>
+    <tr>
+      <td><strong>numberOfProductsUpserted</strong><br />&#95;required&#95;</td>
+      <td>The number of products upserted.</td>
+      <td>integer (int32)</td>
+    </tr>
+    <tr>
+      <td><strong>numberOfProductsWithErrors</strong><br />&#95;required&#95;</td>
+      <td>The number of products with errors.</td>
+      <td>integer (int32)</td>
+    </tr>
+    <tr>
+      <td><strong>status</strong><br />&#95;required&#95;</td>
+      <td>The status of the operation. The operation is completed when the status is one of: <code>VALIDATED</code>, <code>VALIDATED&#95;WITH&#95;ERRORS</code>, <code>FAILED</code>)</td>
+      <td>enum (<code>ACCEPTED</code>, <code>IN&#95;PROGRESS</code>, <code>VALIDATED</code>, <code>VALIDATED&#95;WITH&#95;ERRORS</code>, <code>FAILED</code>)</td>
+    </tr>
+  </tbody>
+</table>
 
 For more information about the semantics of each field, please refer to the Criteo Product Feed Specification.
 
@@ -421,23 +1256,78 @@ For more information about the semantics of each field, please refer to the Crit
 
 This endpoint gets the report of an asynchronous batch operation previously requested.
 
-| Type    | Endpoint                                                                | Parameters                                                             | Schema |
-| ------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------ |
-| **GET** | `/preview/retail-media/catalog/products/batch/report/{operation-token}` | **operation-token***required* The token returned by the batch endpoint | string |
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Endpoint</th>
+      <th>Parameters</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GET</strong></td>
+      <td><code>/preview/retail-media/catalog/products/batch/report/&#123;operation-token&#125;</code></td>
+      <td><strong>operation-token</strong><br />&#95;required&#95; The token returned by the batch endpoint</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
 
 **Responses**
 
-| HTTP Code | Description                                                                                                                                                                                      | Schema                                                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `200`     | The report object                                                                                                                                                                                | [ReportOkResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#reportokresponse) |
-| `400`     | Bad Request. Allowed error types and errors:- `{"type": "validation", "code": "catalog-operation-token-is-malformed"}`
-- `{"type": "validation", "code": "catalog-operation-report-is-expired"}` | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)         |
-| `401`     | Unauthorized. Allowed error types and errors:- `{"type": "authentication", "code": "not-authenticated"}`                                                                                         | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)         |
-| `403`     | Forbidden. Allowed error types and errors:- `{"type": "authentication", "code": "not-authenticated"}`                                                                                            | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)         |
-| `404`     | Not Found. Allowed error types and errors:- `{"type": "validation", "code": "catalog-operation-not-found"}`                                                                                      | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)         |
-| `429`     | Too Many Requests                                                                                                                                                                                | No Content                                                                                                              |
-| `500`     | Internal Server Error. Allowed error types and errors:- `{"type": "availability", "code": "internal-error"}`                                                                                     | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)         |
-| `503`     | Service Unavailable. Allowed error types and errors:- `{"type": "availability", "code": "service-unavailable"}`                                                                                  | [FailResponse](https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse)         |
+<table>
+  <thead>
+    <tr>
+      <th>HTTP Code</th>
+      <th>Description</th>
+      <th>Schema</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>200</code></td>
+      <td>The report object</td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#reportokresponse">ReportOkResponse</a></td>
+    </tr>
+    <tr>
+      <td><code>400</code></td>
+      <td>Bad Request. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "validation", "code": "catalog-operation-token-is-malformed"&#125;</code></li><li><code>&#123;"type": "validation", "code": "catalog-operation-report-is-expired"&#125;</code></li></ul></td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse">FailResponse</a></td>
+    </tr>
+    <tr>
+      <td><code>401</code></td>
+      <td>Unauthorized. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "authentication", "code": "not-authenticated"&#125;</code></li></ul></td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse">FailResponse</a></td>
+    </tr>
+    <tr>
+      <td><code>403</code></td>
+      <td>Forbidden. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "authentication", "code": "not-authenticated"&#125;</code></li></ul></td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse">FailResponse</a></td>
+    </tr>
+    <tr>
+      <td><code>404</code></td>
+      <td>Not Found. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "validation", "code": "catalog-operation-not-found"&#125;</code></li></ul></td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse">FailResponse</a></td>
+    </tr>
+    <tr>
+      <td><code>429</code></td>
+      <td>Too Many Requests</td>
+      <td>No Content</td>
+    </tr>
+    <tr>
+      <td><code>500</code></td>
+      <td>Internal Server Error. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "availability", "code": "internal-error"&#125;</code></li></ul></td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse">FailResponse</a></td>
+    </tr>
+    <tr>
+      <td><code>503</code></td>
+      <td>Service Unavailable. Allowed error types and errors:<br /><ul><li><code>&#123;"type": "availability", "code": "service-unavailable"&#125;</code></li></ul></td>
+      <td><a href="https://developers.criteo.com/retail-media/v2026-preview/docs/product-importer-api#failresponse">FailResponse</a></td>
+    </tr>
+  </tbody>
+</table>
 
 **Produces**
 
@@ -451,13 +1341,14 @@ For more information about this API, please reach out to your representative at 
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
+<br />
 
-***
-
-What’s Next
+<Danger>
+  **SEND FEEDBACK CUSTOM COMPONENT**
+</Danger>
+## What's next
 
 * [Product Importer Examples](/retail-media/v2026-preview/docs/product-importer-examples)
-* [Catalog Endpoints](/retail-media/v2026-preview/docs/catalogs)
+* [Catalog Endpoints](/retail-media/v2026-preview/docs/catalog-endpoints)

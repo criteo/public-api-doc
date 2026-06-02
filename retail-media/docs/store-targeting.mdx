@@ -1,0 +1,237 @@
+---
+title: Store Targeting
+hidden: true
+---
+
+* This endpoint and its underlying capabilities only apply to Onsite Display Line items.
+* Store targeting allows you to restrict Onsite Display line items to serve only users shopping in a limited list of stores
+
+## Endpoints
+
+<table>
+  <thead>
+    <tr>
+      <th>Verb</th>
+      <th>Endpoint</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>GET</code></td>
+      <td><code>/preferred-line-items/&#123;line-item-id&#125;/targeting/stores</code></td>
+      <td>Get All targeted Stores on a specific Line Item</td>
+    </tr>
+    <tr>
+      <td><code>PUT</code></td>
+      <td><code>/preferred-line-items/&#123;line-item-id&#125;/targeting/stores</code></td>
+      <td>Initialize or Override Stores targeting on a specific Line Item</td>
+    </tr>
+    <tr>
+      <td><code>POST</code></td>
+      <td><code>/preferred-line-items/&#123;line-item-id&#125;/targeting/stores/append</code></td>
+      <td>Add targeted Stores to a Specific Line Item</td>
+    </tr>
+    <tr>
+      <td><code>POST</code></td>
+      <td><code>/preferred-line-items/&#123;line-item-id&#125;/targeting/stores/delete</code></td>
+      <td>Remove targeted Stores from a Specific Line Item</td>
+    </tr>
+  </tbody>
+</table>
+
+When using the feature, the PUT endpoint must first initialize it, defining its `scope`. POST endpoints can only alter the list of stores.
+
+## Store Attributes
+
+#### `scope` Required on PUT endpoint
+
+- **Data Type:** enum
+- **Values:** `include`, `exclude`
+
+**Description:** Whether listed stores should be included or excluded from the line item
+
+#### `storeIds`
+
+- **Data Type:** string array
+- **Values:** -
+
+**Description:** List of all stores
+
+## List all targeted Stores on an Onsite Display Line Item
+
+<Badge color="green" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{line-item-id}/targeting/stores
+```
+
+**Sample Request**
+
+```bash
+curl -X GET "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188/targeting/stores" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaStoreTarget",
+        "attributes": {
+            "scope": "include",
+            "storeIds": [
+                "store3",
+                "store4"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+## Initiate targeted Stores list and scope on a Line item
+
+* This endpoint initializes the feature on an Onsite Display Line item.
+* If targeted Stores were already defined, those will be overridden
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{line-item-id}/targeting/stores
+```
+
+**Sample Response**
+
+```bash
+curl -X PUT "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188/targeting/stores" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaStoreTarget",
+                "attributes": {
+                    "scope": "exclude",
+                    "storeIds": [
+                        "store1",
+                        "store2"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Request**
+
+```bash
+{
+    "data": {
+        "type": "RetailMediaStoreTarget",
+        "attributes": {
+            "scope": "exclude",
+            "storeIds": [
+                "store1",
+                "store2"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+## Add targeted Stores on a Line item
+
+* This endpoint adds target stores to an Onsite Display Line item.  
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{line-item-id}/targeting/stores/append
+```
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188/targeting/stores/append" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaStoreTarget",
+                "attributes": {
+                    "storeIds": [
+                        "store1",
+                        "store2"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaStoreTarget",
+        "attributes": {
+            "scope": "include",
+            "storeIds": [
+                "store1",
+                "store2"
+            ]
+        }
+    },
+    "errors": [],
+    "warnings": []
+}
+```
+
+## Remove targeted Stores on a line item
+
+* This endpoint removes previously targeted Stores
+
+<Badge color="blue" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{line-item-id}/targeting/stores/delete
+```
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188/targeting/stores/delete" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaStoreTarget",
+                "attributes": {
+                    "storeIds": [
+                        "store2"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaStoreTarget",
+        "attributes": {
+            "scope": "include",
+            "storeIds": [
+                "store1"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```

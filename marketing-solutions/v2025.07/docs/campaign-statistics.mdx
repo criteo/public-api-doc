@@ -1,71 +1,117 @@
 ---
-title: "Campaign Statistics"
+title: Campaign Statistics
 ---
-
-1. Marketing Solutions Endpoints
-2. [Analytics](/marketing-solutions/v2025.07/docs/analytics)
 
 ## **Retrieving Statistics for a Specific Advertiser**
 
-The Statistics API allows measurement and reporting on campaigns using the metrics and dimensions you specify.
+The Statistics API allows measurement and reporting on campaigns using the metrics and dimensions you specify. 
 
-![](/images/marketing-solutions/v2025.07/docs/b0623eb-post.png)
+<CodeGroup>
 
-```
+```text Text
 https://api.criteo.com/2025-07/statistics/report
 ```
 
-<CodeGroup>
-  ```bash bash
-  {
-      "advertiserIds": "12345",
-      "startDate": "2020-09-10T04:00:00.000Z",
-      "endDate": "2020-09-14T04:00:00.000Z",
-      "format": "csv",
-      "dimensions": ["AdsetId","Day"],
-      "metrics": ["Displays","Clicks"],
-      "timezone": "PST",
-      "currency": "USD"
-  }
-  ```
+```json Example POST Body
+{
+    "advertiserIds": "12345",
+    "startDate": "2020-09-10T04:00:00.000Z",
+    "endDate": "2020-09-14T04:00:00.000Z",
+    "format": "csv",
+    "dimensions": ["AdsetId","Day"],
+    "metrics": ["Displays","Clicks"],
+    "timezone": "PST",
+    "currency": "USD"
+}
+```
 </CodeGroup>
 
-   
+ \
+   
 
 A report is generated via a POST call and the results are returned directly in the response.
 
-<CodeGroup>
-  ```bash bash
-  AdsetId;Day;Currency;Displays;Clicks
-  54321;2020/9/10;USD;2534;35
-  54321;2020/9/11;USD;6234;96
-  54321;2020/9/12;USD;4357;54
-  54321;2020/9/13;USD;3245;45
-  54321;2020/9/14;USD;4584;72
-  ```
-</CodeGroup>
+```text Example CSV Response
+AdsetId;Day;Currency;Displays;Clicks
+54321;2020/9/10;USD;2534;35
+54321;2020/9/11;USD;6234;96
+54321;2020/9/12;USD;4357;54
+54321;2020/9/13;USD;3245;45
+54321;2020/9/14;USD;4584;72
+```
 
-   
+ \
+ 
 
 ### **Creating a Report Request**
 
 A complete stats request requires the following fields:
 
-| Parameter       | Definition                                                                                                                                | Type          | Required?                                       |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------- |
-| `advertiserIds` | A list of advertiser ids (comma separated)                                                                                                | string        | N                                               |
-| `currency`      | The currency to be used in the report, ISO format.A list of supported currencies is [available here](doc:campaign-statistics#currencies). | string        | Y                                               |
-| `startDate`     | Start date, [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format.                                                                    | string        | Y                                               |
-| `endDate`       | End date, [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format.                                                                      | string        | Y                                               |
-| `format`        | The output format. CSV, JSON, XML or EXCEL.                                                                                               | string        | Y                                               |
-| `dimensions`    | See the [Dimensions](doc:campaign-statistics#dimensions) page.                                                                            | Arrayk:api-he | Y                                               |
-| `metrics`       | See the [Metrics](doc:campaign-statistics#full-list-of-metrics) page.                                                                     | Arrayk:api-he | Y                                               |
-| `timezone`      | The timezone for organizing the data in the report.A list of supported values is [available here](doc:campaign-statistics#timezones).     | string        | NUTC will be default timezone if not specified. |
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Definition</th>
+      <th>Type</th>
+      <th>Required?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>advertiserIds</code></td>
+      <td>A list of advertiser ids (comma separated)</td>
+      <td>string</td>
+      <td>N</td>
+    </tr>
+    <tr>
+      <td><code>currency</code></td>
+      <td>The currency to be used in the report, ISO format.<br />A list of supported currencies is <a href="/marketing-solutions/v2025.07/docs/campaign-statistics#currencies">available here</a>.</td>
+      <td>string</td>
+      <td>Y</td>
+    </tr>
+    <tr>
+      <td><code>startDate</code></td>
+      <td>Start date, <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a> format.</td>
+      <td>string</td>
+      <td>Y</td>
+    </tr>
+    <tr>
+      <td><code>endDate</code></td>
+      <td>End date, <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a> format.</td>
+      <td>string</td>
+      <td>Y</td>
+    </tr>
+    <tr>
+      <td><code>format</code></td>
+      <td>The output format. CSV, JSON, XML or EXCEL.</td>
+      <td>string</td>
+      <td>Y</td>
+    </tr>
+    <tr>
+      <td><code>dimensions</code></td>
+      <td>See the <a href="/marketing-solutions/v2025.07/docs/campaign-statistics#dimensions">Dimensions</a> page.</td>
+      <td>Arrayk:api-he</td>
+      <td>Y</td>
+    </tr>
+    <tr>
+      <td><code>metrics</code></td>
+      <td>See the <a href="/marketing-solutions/v2025.07/docs/campaign-statistics#full-list-of-metrics">Metrics</a> page.</td>
+      <td>Arrayk:api-he</td>
+      <td>Y</td>
+    </tr>
+    <tr>
+      <td><code>timezone</code></td>
+      <td>The timezone for organizing the data in the report.<br />A list of supported values is <a href="/marketing-solutions/v2025.07/docs/campaign-statistics#timezones">available here</a>.</td>
+      <td>string</td>
+      <td>N<br />UTC will be default timezone if not specified.</td>
+    </tr>
+  </tbody>
+</table>
 
- 
+   
 
 <Warning>
-  ### A Note on AdvertiserIds
+  **A Note on AdvertiserIds**
 
   Advertisers which are not in your portfolio will be skipped. The specified advertisers must have at least one campaign to appear in the report.
 
@@ -76,15 +122,73 @@ A complete stats request requires the following fields:
 
 The following response codes may be returned by the API:
 
-`400`: Bad request, invalid syntax or validation error. Review the request to make sure the format is valid. `401`: Authentication failed. Ensure the authentication header is formatted properly and your access token hasn't expired. `403`: No campaign found. Verify your campaign IDs are correct. `429`: Throttling failure. Wait a minute to try again - there is a limit of 200 requests per minute. `500`: Unknown error.
+`400`: Bad request, invalid syntax or validation error. Review the request to make sure the format is valid.\
+`401`: Authentication failed. Ensure the authentication header is formatted properly and your access token hasn't expired.\
+`403`: No campaign found. Verify your campaign IDs are correct.\
+`429`: Throttling failure. Wait a minute to try again - there is a limit of 200 requests per minute.\
+`500`: Unknown error.
 
-   
+ \
+ 
 
 ## **Validation Errors**
 
-Below is a list of error codes for the Statistics endpoint and a more detailed description of their meaning. General guidance on handling API errors can be found [here](doc:api-error-types).
+Below is a list of error codes for the Statistics endpoint and a more detailed description of their meaning. General guidance on handling API errors can be found [here](/marketing-solutions/v2025.07/docs/api-error-types).
 
-**`duplicate-dimensions`** Duplicate dimension(s) found.     **`duplicate-metrics`** Duplicate metrics(s) found..     **`insufficient-advertiser-permission`** Insufficient advertiser permission.     **`insufficient-advertisers-permissions`** Insufficient advertisers permission.     **`invalid-country`** This feature is currently unavailable in the country of advertiser.     **`invalid-currency`** Invalid currency.     **`invalid-date-range`** The start date can not be after the end date.     **`invalid-environment`** Invalid environment.     **`invalid-event-type`** Invalid Event Type.     **`invalid-format`** Format is not valid. Must be one of 'csv', 'xml', 'excel' or 'json'.     **`invalid-start-date`** The start date is too old.     **`invalid-timezone`** Invalid time zone.     **`report-generation-failed`** A problem occurred while generating the report.     **`required-field`** The required field is missing. Examples:
+**`duplicate-dimensions`**\
+Duplicate dimension(s) found.\
+ \
+ \
+**`duplicate-metrics`**\
+Duplicate metrics(s) found..\
+ \
+ \
+**`insufficient-advertiser-permission`**\
+Insufficient advertiser permission.\
+ \
+ \
+**`insufficient-advertisers-permissions`**\
+Insufficient advertisers permission.\
+ \
+ \
+**`invalid-country`**\
+This feature is currently unavailable in the country of advertiser.\
+ \
+ \
+**`invalid-currency`**\
+Invalid currency.\
+ \
+ \
+**`invalid-date-range`**\
+The start date can not be after the end date.\
+ \
+ \
+**`invalid-environment`**\
+Invalid environment.\
+ \
+ \
+**`invalid-event-type`**\
+Invalid Event Type.\
+ \
+ \
+**`invalid-format`**\
+Format is not valid. Must be one of 'csv', 'xml', 'excel' or 'json'.\
+ \
+ \
+**`invalid-start-date`**\
+The start date is too old.\
+ \
+ \
+**`invalid-timezone`**\
+Invalid time zone.\
+ \
+ \
+**`report-generation-failed`**\
+A problem occurred while generating the report.\
+ \
+ \
+**`required-field`**\
+The required field is missing. Examples:
 
 * A start date and end date are required.
 * At least one metric must be provided.
@@ -93,7 +197,22 @@ Below is a list of error codes for the Statistics endpoint and a more detailed d
 * Currency is required.
 * At least one advertiser id must be provided.
 
-    **`required-request-body`** Request body is required.     **`unsupported-dimensions`** A request is invalid or the server wasn't able to process the request due to a serialization error.     **`unsupported-dimensions-combination`** The requested dimensions combination is not supported.     **`invalid-metrics`** The requested metrics are not supported.
+ \
+ \
+**`required-request-body`**\
+Request body is required.\
+ \
+ \
+**`unsupported-dimensions`**\
+A request is invalid or the server wasn't able to process the request due to a serialization error.\
+ \
+ \
+**`unsupported-dimensions-combination`**\
+The requested dimensions combination is not supported.\
+ \
+ \
+**`invalid-metrics`**\
+The requested metrics are not supported.
 
 ## **Dimensions**
 
@@ -101,18 +220,35 @@ Dimensions allow you to specify the aggregation level suited to your needs.
 
 There are no restrictions on the number of dimensions or the order of dimensions. The full list is below:
 
-| Type     | Dimension                                                                                                                                                                             |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Campaign | `AdsetId`, `Adset`, `AdvertiserId`, `Advertiser`, `CategoryId`, `Category`, `CampaignId`, `Campaign`, `AdId`,` Ad`,`CouponId`, `Coupon`, `MarketingObjectiveId`, `MarketingObjective` |
-| Time     | `Hour`, `Day`, `Week`, `Month`, `Year`                                                                                                                                                |
-| Other    | `ChannelId`, `Channel`, `Os`, `Device`                                                                                                                                                |
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Dimension</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Campaign</td>
+      <td><code>AdsetId</code>, <code>Adset</code>, <code>AdvertiserId</code>, <code>Advertiser</code>, <code>CategoryId</code>, <code>Category</code>, <code>CampaignId</code>, <code>Campaign</code>, <code>AdId</code>,<code> Ad</code>,<code>CouponId</code>, <code>Coupon</code>, <code>MarketingObjectiveId</code>, <code>MarketingObjective</code></td>
+    </tr>
+    <tr>
+      <td>Time</td>
+      <td><code>Hour</code>, <code>Day</code>, <code>Week</code>, <code>Month</code>, <code>Year</code></td>
+    </tr>
+    <tr>
+      <td>Other</td>
+      <td><code>ChannelId</code>, <code>Channel</code>, <code>Os</code>, <code>Device</code></td>
+    </tr>
+  </tbody>
+</table>
 
 The `dimensions` array of the stats request should contain all requested dimensions.
 
-For example: `['Advertiser','Adset','Day','Hour']`
+For example:  `['Advertiser','Adset','Day','Hour']`
 
 <Info>
-  ### Names vs. IDs
+  **Names vs. IDs**
 
   In the dimensions above, `Advertiser` will return the name of the advertiser, whereas `AdvertiserId` returns the numerical ID.
 </Info>
@@ -121,943 +257,2859 @@ For example: `['Advertiser','Adset','Day','Hour']`
 
 ### **Naming Convention**
 
-Metrics are created with a common structure, such as: `SalesAllPc30d`
+Metrics are created with a common structure, such as:  `SalesAllPc30d`
 
-The naming follows the following pattern: `[Measurement][Devices][AttributionModel][LookbackWindow] `
+The naming follows the following pattern:\
+`[Measurement][Devices][AttributionModel][LookbackWindow] `
 
-   
+ \
+   
 
-**Measurement** What you would like to measure in your report. `Clicks`, `Displays`, `AdvertiserCost`, etc. (see full metrics list)
+**Measurement**\
+What you would like to measure in your report.\
+`Clicks`, `Displays`, `AdvertiserCost`, etc. (see full metrics list)
 
-**Devices** Cross-device sales are sales that occurred on a different device than the one where the click occurred. Specifying `All` includes cross-device sales. `All`
+**Devices**\
+Cross-device sales are sales that occurred on a different device than the one where the click occurred.  Specifying `All` includes cross-device sales.\
+`All`
 
-**Attribution Model** A sale is attributed when your customer sees or clicks an ad and converts within a specified window of time. It could be post-click, post-view or your custom attribution, if you send us your attribution data for sales. `Pc`,`Pv`, `ClientAttribution`
+**Attribution Model**\
+A sale is attributed when your customer sees or clicks an ad and converts within a specified window of time. It could be post-click, post-view or your custom attribution, if you send us your attribution data for sales.\
+`Pc`,`Pv`, `ClientAttribution`
 
 <Warning>
-  ### If you are using a newly introduced lookback window (PC1D, PC7D), your request won’t return data prior to January 1st, 2020. The request will deliver a 0 for these metrics.
+  **If you are using a newly introduced lookback window (PC1D, PC7D), your request won’t return data prior to January 1st, 2020. The request will deliver a 0 for these metrics.**
 </Warning>
 
-**Lookback Window** The time between a sale and the view or click of an ad. `30D`, `7D`, `1D`, `24H`
+**Lookback Window**\
+The time between a sale and the view or click of an ad.\
+`30D`, `7D`, `1D`, `24H`
 
-   
+ \
+   
 
 ### **Full List of Metrics**
 
-Metrics refer to measurements such as **clicks**, **revenue**, or **cost per visit**.
+Metrics refer to measurements such as **clicks**, **revenue**, or **cost per visit**. 
 
-All metrics available in Criteo Commerce Growth are available through the Statistics API v2.  
+All metrics available in Criteo Commerce Growth are available through the Statistics API v2.   
 
 The following is a list of available metrics in Criteo Commerce Growth (**bolded**) and their corresponding metric names for the `metrics` array of your request.
 
 <Info>
-  ### A note about percentages
+  **A note about percentages**
 
   Percentages will be returned as decimal values between 0 and 1. For example, 99.99% will be returned as .9999
 </Info>
 
-   
+ \
+   
 
-**Clicks** The number of clicks driven by your ads. `Clicks`
+**Clicks**\
+The number of clicks driven by your ads.\
+`Clicks`
 
-**Displays** The number of ad impressions served on publishers via Criteo. `Displays`
+**Displays**\
+The number of ad impressions served on publishers via Criteo.\
+`Displays`
 
-**Viewed displays** The number of ads that have been viewed. A display is considered viewed if at least 50% of the ad appears on the screen for at least one second. `ViewableDisplays`
+**Viewed displays**\
+The number of ads that have been viewed. A display is considered viewed if at least 50% of the ad appears on the screen for at least one second.\
+`ViewableDisplays`
 
-**Unviewed displays** The number of ads that have not been viewed. A display that doesn't meet the viewed displays' criteria is considered unviewed. `NonViewableDisplays`
+**Unviewed displays**\
+The number of ads that have not been viewed. A display that doesn't meet the viewed displays' criteria is considered unviewed.\
+`NonViewableDisplays`
 
-**Untracked displays** This is the number of untracked displays. Some displays cannot be tracked because of the display environment (for instance, native banner) `UntrackableDisplays`
+**Untracked displays**\
+This is the number of untracked displays. Some displays cannot be tracked because of the display environment (for instance, native banner)\
+`UntrackableDisplays`
 
-**Cost** Total money spent on Criteo advertising. `AdvertiserCost`
+**Cost**\
+Total money spent on Criteo advertising.\
+`AdvertiserCost`
 
-**Qualified Visits** The number of users on the target website or app for which at least two events or one sale event occurred within the hour following a click. `QualifiedVisits`
+**Qualified Visits**\
+The number of users on the target website or app for which at least two events or one sale event occurred within the hour following a click.\
+`QualifiedVisits`
 
-**Visits** The number of users on the target website or app for which at least one event occurred within the hour following a click. `Visits`
+**Visits**\
+The number of users on the target website or app for which at least one event occurred within the hour following a click.\
+`Visits`
 
-**Cost per Visit** The amount of money spent per visit to your website or app. `CostPerVisit`
+**Cost per Visit**\
+The amount of money spent per visit to your website or app.\
+`CostPerVisit`
 
-**Bounce Rate** The proportion of website visitors leaving after only viewing one page. `BounceRate`
+**Bounce Rate**\
+The proportion of website visitors leaving after only viewing one page.\
+`BounceRate`
 
-**Potential Displays** The number of display opportunities, or the number of bid requests received. `PotentialDisplays`
+**Potential Displays**\
+The number of display opportunities, or the number of bid requests received.\
+`PotentialDisplays`
 
-**Win Rate** The number of displays divided by the total number of display opportunities. `OverallCompetitionWin`
+**Win Rate**\
+The number of displays divided by the total number of display opportunities.\
+`OverallCompetitionWin`
 
-**Sales** The number of transactions or conversions resulting from Criteo ads. `SalesClientAttribution`,`SalesAllClientAttribution`,`SalesPc30d`,`SalesAllPc30d`,`SalesPv24h`,`SalesAllPv24h`,`SalesPc30dPv24h`,`SalesAllPc30dPv24h`,`SalesPc1d`,`SalesAllPc1d`,`SalesPc7d`,`SalesAllPc7d`
+**Sales**\
+The number of transactions or conversions resulting from Criteo ads.\
+`SalesClientAttribution`,`SalesAllClientAttribution`,`SalesPc30d`,`SalesAllPc30d`,`SalesPv24h`,`SalesAllPv24h`,`SalesPc30dPv24h`,`SalesAllPc30dPv24h`,`SalesPc1d`,`SalesAllPc1d`,`SalesPc7d`,`SalesAllPc7d`
 
-**Revenue** The amount of money generated by online sales. `RevenueGeneratedClientAttribution`,`RevenueGeneratedAllClientAttribution`,`RevenueGeneratedPc30d`,`RevenueGeneratedAllPc30d`,`RevenueGeneratedPv24h`,`RevenueGeneratedAllPv24h`,`RevenueGeneratedPc30dPv24h`,`RevenueGeneratedAllPc30dPv24h`,`RevenueGeneratedPc1d`,`RevenueGeneratedAllPc1d`,`RevenueGeneratedPc7d`,`RevenueGeneratedAllPc7d`
+**Revenue**\
+The amount of money generated by online sales.\
+`RevenueGeneratedClientAttribution`,`RevenueGeneratedAllClientAttribution`,`RevenueGeneratedPc30d`,`RevenueGeneratedAllPc30d`,`RevenueGeneratedPv24h`,`RevenueGeneratedAllPv24h`,`RevenueGeneratedPc30dPv24h`,`RevenueGeneratedAllPc30dPv24h`,`RevenueGeneratedPc1d`,`RevenueGeneratedAllPc1d`,`RevenueGeneratedPc7d`,`RevenueGeneratedAllPc7d`
 
-**Exposed Users** The number of users who have been served an ad. `ExposedUsers`
+**Exposed Users**\
+The number of users who have been served an ad.\
+`ExposedUsers`
 
-**Audience** Potential users who could be served an ad. `Audience`
+**Audience**\
+Potential users who could be served an ad.\
+`Audience`
 
-**Reach** Share of potential users who have been served an ad. `Reach`
+**Reach**\
+Share of potential users who have been served an ad.\
+`Reach`
 
 <Info>
-  ### A Note about Audience and Reach with the Category Dimension
+  **A Note about Audience and Reach with the Category Dimension**
 
   The algorithm used for merging audience count across categories is non-commutative (by design).
 
   It is expected that Audience and Reach metrics produce slightly different results when queried with and without the category dimension.
 </Info>
 
- 
+   
 
-**Average Cart** Average revenue generated by a conversion or sale. `AverageCartClientAttribution`, `AverageCartAllClientAttribution`, `AverageCartPc30d`, `AverageCartAllPc30d`, `AverageCartPv24h`, `AverageCartAllPv24h`, `AverageCartPc30dPv24h`, `AverageCartAllPc30dPv24h`, `AverageCartPc1d`, `AverageCartAllPc1d`, `AverageCartPc7d`, `AverageCartAllPc7d`
+**Average Cart**\
+Average revenue generated by a conversion or sale.\
+`AverageCartClientAttribution`, `AverageCartAllClientAttribution`, `AverageCartPc30d`, `AverageCartAllPc30d`, `AverageCartPv24h`, `AverageCartAllPv24h`, `AverageCartPc30dPv24h`, `AverageCartAllPc30dPv24h`, `AverageCartPc1d`, `AverageCartAllPc1d`, `AverageCartPc7d`, `AverageCartAllPc7d` 
 
-**CTR (Click Through Rate)** Percentage of users served an ad who clicked. `ClickThroughRate`
+**CTR (Click Through Rate)**\
+Percentage of users served an ad who clicked.\
+`ClickThroughRate`
 
-**CVR (Conversion Rate)** Percentage of conversions or sales compared to the clicks that occurred. `ConversionRateClientAttribution`,`ConversionRateAllClientAttribution`,`ConversionRatePc30d`,`ConversionRateAllPc30d`,`ConversionRatePv24h`,`ConversionRateAllPv24h`,`ConversionRatePc30dPv24h`,`ConversionRateAllPc30dPv24h`, `ConversionRatePc1d`,`ConversionRateAllPc1d`,`ConversionRatePc7d`,`ConversionRateAllPc7d`
+**CVR (Conversion Rate)**\
+Percentage of conversions or sales compared to the clicks that occurred.\
+`ConversionRateClientAttribution`,`ConversionRateAllClientAttribution`,`ConversionRatePc30d`,`ConversionRateAllPc30d`,`ConversionRatePv24h`,`ConversionRateAllPv24h`,`ConversionRatePc30dPv24h`,`ConversionRateAllPc30dPv24h`, `ConversionRatePc1d`,`ConversionRateAllPc1d`,`ConversionRatePc7d`,`ConversionRateAllPc7d`
 
-**COS (Cost of Sale)** Advertising cost per conversion or sale. `ECosClientAttribution`,`ECosAllClientAttribution`,`ECosPc30d`,`ECosAllPc30d`,`ECosPv24h`,`ECosAllPv24h`,`ECosPc30dPv24h`,`ECosAllPc30dPv24h`,`ECosPc1d`,`ECosAllPc1d`,`ECosPc7d`,`ECosAllPc7d`
+**COS (Cost of Sale)**\
+Advertising cost per conversion or sale.\
+`ECosClientAttribution`,`ECosAllClientAttribution`,`ECosPc30d`,`ECosAllPc30d`,`ECosPv24h`,`ECosAllPv24h`,`ECosPc30dPv24h`,`ECosAllPc30dPv24h`,`ECosPc1d`,`ECosAllPc1d`,`ECosPc7d`,`ECosAllPc7d`
 
-**CPO (Cost perOrder)** The price you pay for each order. Calculated as total cost divided by the total number of orders. `CostPerOrderClientAttribution`,`CostPerOrderAllClientAttribution`,`CostPerOrderPc30d`,`CostPerOrderAllPc30d`,`CostPerOrderPv24h`,`CostPerOrderAllPv24h`,`CostPerOrderPc30dPv24h`,`CostPerOrderAllPc30dPv24h`,`CostPerOrderPc1d`,`CostPerOrderAllPc1d`,`CostPerOrderPc7d`,`CostPerOrderAllPc7d`
+**CPO (Cost perOrder)**\
+The price you pay for each order. Calculated as total cost divided by the total number of orders.\
+`CostPerOrderClientAttribution`,`CostPerOrderAllClientAttribution`,`CostPerOrderPc30d`,`CostPerOrderAllPc30d`,`CostPerOrderPv24h`,`CostPerOrderAllPv24h`,`CostPerOrderPc30dPv24h`,`CostPerOrderAllPc30dPv24h`,`CostPerOrderPc1d`,`CostPerOrderAllPc1d`,`CostPerOrderPc7d`,`CostPerOrderAllPc7d`
 
-**CPC (Cost per Click)** Cost per click. `Cpc`
+**CPC (Cost per Click)**\
+Cost per click.\
+`Cpc`
 
-**CPM (Cost per Mille)** Cost per 1000 Impressions. `ECpm`
+**CPM (Cost per Mille)**\
+Cost per 1000 Impressions.\
+`ECpm`
 
-**ROAS (Return on Ad Spend)** The ratio between revenue generated and the cost. `RoasClientAttribution`,`RoasAllClientAttribution`,`RoasPc30d`,`RoasAllPc30d`,`RoasPv24h`,`RoasAllPv24h`,`RoasPc30dPv24h`,`RoasAllPc30dPv24h`,`RoasPc1d`,`RoasAllPc1d`,`RoasPc7d`,`RoasAllPc7d`
+**ROAS (Return on Ad Spend)**\
+The ratio between revenue generated and the cost.\
+`RoasClientAttribution`,`RoasAllClientAttribution`,`RoasPc30d`,`RoasAllPc30d`,`RoasPv24h`,`RoasAllPv24h`,`RoasPc30dPv24h`,`RoasAllPc30dPv24h`,`RoasPc1d`,`RoasAllPc1d`,`RoasPc7d`,`RoasAllPc7d`
 
-**Advertiser Value** The revenue generated by each product, considering margin (if provided in your product catalog). `AdvertiserValue`,`AdvertiserAllValue`
+**Advertiser Value**\
+The revenue generated by each product, considering margin (if provided in your product catalog).\
+`AdvertiserValue`,`AdvertiserAllValue`
 
-**COV (Cost of Advertiser Value)** The ratio between the advertiser value generated by sales and the cost of the campaign(s), given as a percentage. `CostOfAdvertiserValue`,CostOfAdvertiserValueAll\`
+**COV (Cost of Advertiser Value)**\
+The ratio between the advertiser value generated by sales and the cost of the campaign(s), given as a percentage.\
+`CostOfAdvertiserValue`,CostOfAdvertiserValueAll\`
 
-**Post-Install Sales** The number of your completed events after an app install. `PostInstallSales`
+**Post-Install Sales**\
+The number of your completed events after an app install.\
+`PostInstallSales`
 
-**App Installs** The number of installations of your app. `AppInstalls`
+**App Installs**\
+The number of installations of your app.\
+`AppInstalls`
 
-**Post-Install CVR (Conversion Rate)** Percentage of post-install sales compared to the clicks that occurred. `PostInstallConversionRate`
+**Post-Install CVR (Conversion Rate)**\
+Percentage of post-install sales compared to the clicks that occurred.\
+`PostInstallConversionRate`
 
-**Post-Install COS (Cost of Sale)** The cost of sale for app install campaigns. `PostInstallCostOfSale`
+**Post-Install COS (Cost of Sale)**\
+The cost of sale for app install campaigns.\
+`PostInstallCostOfSale`
 
-**Post-Install Order Value** The amount of money generated by sales after an app install. `PostInstallOrderValue`
+**Post-Install Order Value**\
+The amount of money generated by sales after an app install.\
+`PostInstallOrderValue`
 
-**Cost per Install** The ad cost per app install. `CostPerInstall`
+**Cost per Install**\
+The ad cost per app install.\
+`CostPerInstall`
 
-**Install Rate** The percentage of completed app installs compared to the number of clicks. `InstallRate`
+**Install Rate**\
+The percentage of completed app installs compared to the number of clicks.\
+`InstallRate`
 
-**Post-Install CPO (Cost per Order)** The cost per order for sales after an app install. `PostInstallCostPerOrder`
+**Post-Install CPO (Cost per Order)**\
+ The cost per order for sales after an app install.\
+`PostInstallCostPerOrder`
 
-**Post-Install ROAS** The return on ad spend for sales after an app install. `PostInstallRoas`
+**Post-Install ROAS**\
+The return on ad spend for sales after an app install.\
+`PostInstallRoas`
 
-**Omnichannel ROAS (Return on Ad Spend)** The ratio between revenue generated online and offline, and the cost. `OmnichannelRoasClientAttribution`,`OmnichannelRoasPc30d`,`OmnichannelRoasAllPc30d`,`OmnichannelRoasPv24h`,`OmnichannelRoasAllPv24h`
+**Omnichannel ROAS (Return on Ad Spend)**\
+The ratio between revenue generated online and offline, and the cost.\
+`OmnichannelRoasClientAttribution`,`OmnichannelRoasPc30d`,`OmnichannelRoasAllPc30d`,`OmnichannelRoasPv24h`,`OmnichannelRoasAllPv24h`
 
-**Omnichannel Revenue** The revenue generated by online and offline sales. `OmnichannelRevenueClientAttribution`,`OmnichannelRevenuePc30d`,`OmnichannelRevenueAllPc30d`,`OmnichannelRevenuePv24h`,`OmnichannelRevenueAllPv24h`
+**Omnichannel Revenue**\
+The revenue generated by online and offline sales.\
+`OmnichannelRevenueClientAttribution`,`OmnichannelRevenuePc30d`,`OmnichannelRevenueAllPc30d`,`OmnichannelRevenuePv24h`,`OmnichannelRevenueAllPv24h`
 
-**Omnichannel Sales** The number of online and offline transactions or conversions resulting from Criteo ads. `OmnichannelsalesClientAttribution`,`OmnichannelSalesPc30d`,`OmnichannelSalesAllPc30d`,`OmnichannelSalesPv24h`,`OmnichannelSalesAllPv24h`
+**Omnichannel Sales**\
+The number of online and offline transactions or conversions resulting from Criteo ads.\
+`OmnichannelsalesClientAttribution`,`OmnichannelSalesPc30d`,`OmnichannelSalesAllPc30d`,`OmnichannelSalesPv24h`,`OmnichannelSalesAllPv24h`
 
-**Store ROAS** The ratio between the revenue generated offline and the cost. `RoasOfflinePc30d`,`RoasOfflinePv24h`
+**Store ROAS**\
+The ratio between the revenue generated offline and the cost.\
+`RoasOfflinePc30d`,`RoasOfflinePv24h`
 
-**Store Sales** The number of completed in-store transactions or purchases. `SalesOfflinePc30d`,`SalesOfflinePv24h`
+**Store Sales**\
+The number of completed in-store transactions or purchases.\
+`SalesOfflinePc30d`,`SalesOfflinePv24h`
 
-**Store Revenue** The amount of revenue generated by in-store sales. `RevenueGeneratedOfflinePc30d`,`RevenueGeneratedOfflinePv24h`
+**Store Revenue**\
+The amount of revenue generated by in-store sales.\
+`RevenueGeneratedOfflinePc30d`,`RevenueGeneratedOfflinePv24h`
 
 ## **Currencies**
 
 Below is a table of all currency codes supported for the `currency` field of your stats report requests.
 
-| Currency Code | Symbol | Full Name                           |
-| ------------- | ------ | ----------------------------------- |
-| EUR           | €      | Euro                                |
-| USD           | $      | US Dollar                           |
-| GBP           | £      | British Pound                       |
-| CHF           | Ch     | Swiss Franc                         |
-| JPY           | ¥      | Japanese Yen                        |
-| BGN           | Л      | Bulgarian Lev                       |
-| CZK           | K      | Czech Koruna                        |
-| DKK           | Kr     | Danish Krone                        |
-| HUF           | Ft     | Hungarian Forint                    |
-| LTL           | Lt     | Lithuanian Litas                    |
-| PLN           | Z      | Polish Zloty                        |
-| RON           | Le     | Romanian New Leu                    |
-| SEK           | Kr     | Swedish Krona                       |
-| NOK           | Kr     | Norwegian Krone                     |
-| HRK           | Kn     | Croatian Kuna                       |
-| RUB           | Р      | Russian Ruble                       |
-| TRY           | Tl     | Turkish Lira                        |
-| AUD           | $      | Australian Dollar                   |
-| BRL           | R$     | Brazilian Real                      |
-| CAD           | $      | Canadian Dollar                     |
-| CNY           | ¥      | Chinese Yuan Renminbi               |
-| HKD           | Hk     | Hong Kong Dollar                    |
-| IDR           | Rp     | Indonesian Rupiah                   |
-| INR           | Rs     | Indian Rupee                        |
-| KRW           | N/A    | South Korean Won                    |
-| MXN           | $      | Mexican Peso                        |
-| MYR           | Rm     | Malaysian Ringgit                   |
-| NZD           | $      | New Zealand Dollar                  |
-| PHP           | N/A    | Philippine Peso                     |
-| SGD           | $      | Singapore Dollar                    |
-| THB           | N/A    | Thai Baht                           |
-| ZAR           | R      | South African Rand                  |
-| ARS           | $      | Argentine Peso                      |
-| COP           | $      | Colombian Peso                      |
-| AED           | د      | United Arab Emirates Dirham         |
-| KZT           | Т      | Kazakhstani Tenge                   |
-| SAR           | N/A    | Saudi Riyal                         |
-| UAH           | N/A    | Ukrainian Hryvnia                   |
-| EGP           | £      | Egyptian Pound                      |
-| MAD           | Dh     | Moroccan Dirham                     |
-| ILS           | N/A    | Israeli Shekel                      |
-| BHD           | Bd     | Bahraini Dinar                      |
-| JOD           | Jd     | Jordanian Dinar                     |
-| KWD           | ك      | Kuwaiti Dinar                       |
-| LBP           | ل      | Lebanese Pound                      |
-| OMR           | N/A    | Omani Rial                          |
-| QAR           | N/A    | Qatari Riyal                        |
-| NGN           | N/A    | Nigerian Naira                      |
-| KES           | Ks     | Kenyan Shilling                     |
-| ALL           | Le     | Albania Lek                         |
-| ETB           | Br     | Ethopian Birr                       |
-| BSD           | $      | Bahamian Dollar                     |
-| BDT           | N/A    | Bangladeshi Taka                    |
-| BAM           | Km     | Bosnia-Herzegovina Convertible Mark |
-| BWP           | P      | Botswana Pula                       |
-| MMK           | K      | Burmese Kyat                        |
-| AFN           | ؋      | Afghan Afghani                      |
-| BTN           | Nu     | Bhutanese Ngultrum                  |
-| GEL           | N/A    | Georgian Lari                       |
-| GHS           | Gh     | Ghanaian Cedi                       |
-| GIP           | £      | Gibraltar Pound                     |
-| ISK           | Kr     | Icelandic Krona                     |
-| KHR           | N/A    | Cambodian Riel                      |
-| JMD           | J$     | Jamaican Dollar                     |
-| LAK           | N/A    | Lao Kip                             |
-| MKD           | Д      | Macedonian Denar                    |
-| MUR           | N/A    | Mauritian Rupee                     |
-| MNT           | N/A    | Mongolian Tögrög                    |
-| NPR           | N/A    | Nepalese Rupee                      |
-| NAD           | $      | Namibian Dollar                     |
-| PKR           | N/A    | Pakistani Rupee                     |
-| RWF           | Fr     | Rwandan Franc                       |
-| LKR           | N/A    | Sri Lankan Rupee                    |
-| SZL           | L      | Swazi Lilangeni                     |
-| TZS           | Ts     | Tanzanian Shilling                  |
-| TTD           | Tt     | Trinidad And Tobago Dollar          |
-| UGX           | Us     | Ugandan Shilling                    |
-| ZMW           | Zk     | Zambian Kwacha                      |
-| BOB           | $B     | Bolivian Boliviano                  |
-| CRC           | N/A    | Costa Rican Colón                   |
-| DOP           | Rd     | Dominican Peso                      |
-| GTQ           | Q      | Guatemalan Quetzal                  |
-| HNL           | L      | Honduran Lempira                    |
-| NIO           | C$     | Nicaraguan Córdoba                  |
-| PAB           | B/     | Panamanian Balboa                   |
-| PYG           | Gs     | Paraguayan Guaraní                  |
-| PEN           | S/     | Peruvian Nuevo Sol                  |
-| UYU           | $U     | Uruguayan Peso                      |
-| VEF           | Bs     | Venezuelan Bolívar                  |
-| XAF           | Fr     | Central African Cfa Franc           |
-| XOF           | Fr     | West African Cfa Franc              |
-| HTG           | G      | Haitian Gourde                      |
-| MGA           | Ar     | Malagasy Ariary                     |
-| DZD           | د      | Algerian Dinar                      |
-| IQD           | د      | Iraqi Dinar                         |
-| LYD           | ل      | Libyan Dinar                        |
-| TND           | د      | Tunisian Dinar                      |
-| YER           | N/A    | Yemeni Rial                         |
-| BND           | $      | Brunei Dollar                       |
-| AOA           | Kz     | Angolan Kwanza                      |
-| MZN           | Mt     | Mozambican Metical                  |
-| AMD           | Am     | Armenian Dram                       |
-| AZN           | М      | Azerbaijani Manat                   |
-| KGS           | Л      | Kyrgyzstani Som                     |
-| TJS           | Tj     | Tajikistani Somoni                  |
-| UZS           | Л      | Uzbekistani Som                     |
-| MDL           | L      | Moldovan Leu                        |
-| RSD           | Д      | Serbian Dinar                       |
-| XPF           | Fr     | Cfp Franc                           |
-| MOP           | Mo     | Macanese Pataca                     |
-| VND           | N/A    | Viet Nam Dong                       |
-| TWD           | Nt     | Taiwan Dollar                       |
-| CLP           | $      | Chilean Peso                        |
+<table>
+  <thead>
+    <tr>
+      <th>Currency Code</th>
+      <th>Symbol</th>
+      <th>Full Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>EUR</td>
+      <td>€</td>
+      <td>Euro</td>
+    </tr>
+    <tr>
+      <td>USD</td>
+      <td>$</td>
+      <td>US Dollar</td>
+    </tr>
+    <tr>
+      <td>GBP</td>
+      <td>£</td>
+      <td>British Pound</td>
+    </tr>
+    <tr>
+      <td>CHF</td>
+      <td>Ch</td>
+      <td>Swiss Franc</td>
+    </tr>
+    <tr>
+      <td>JPY</td>
+      <td>¥</td>
+      <td>Japanese Yen</td>
+    </tr>
+    <tr>
+      <td>BGN</td>
+      <td>Л</td>
+      <td>Bulgarian Lev</td>
+    </tr>
+    <tr>
+      <td>CZK</td>
+      <td>K</td>
+      <td>Czech Koruna</td>
+    </tr>
+    <tr>
+      <td>DKK</td>
+      <td>Kr</td>
+      <td>Danish Krone</td>
+    </tr>
+    <tr>
+      <td>HUF</td>
+      <td>Ft</td>
+      <td>Hungarian Forint</td>
+    </tr>
+    <tr>
+      <td>LTL</td>
+      <td>Lt</td>
+      <td>Lithuanian Litas</td>
+    </tr>
+    <tr>
+      <td>PLN</td>
+      <td>Z</td>
+      <td>Polish Zloty</td>
+    </tr>
+    <tr>
+      <td>RON</td>
+      <td>Le</td>
+      <td>Romanian New Leu</td>
+    </tr>
+    <tr>
+      <td>SEK</td>
+      <td>Kr</td>
+      <td>Swedish Krona</td>
+    </tr>
+    <tr>
+      <td>NOK</td>
+      <td>Kr</td>
+      <td>Norwegian Krone</td>
+    </tr>
+    <tr>
+      <td>HRK</td>
+      <td>Kn</td>
+      <td>Croatian Kuna</td>
+    </tr>
+    <tr>
+      <td>RUB</td>
+      <td>Р</td>
+      <td>Russian Ruble</td>
+    </tr>
+    <tr>
+      <td>TRY</td>
+      <td>Tl</td>
+      <td>Turkish Lira</td>
+    </tr>
+    <tr>
+      <td>AUD</td>
+      <td>$</td>
+      <td>Australian Dollar</td>
+    </tr>
+    <tr>
+      <td>BRL</td>
+      <td>R$</td>
+      <td>Brazilian Real</td>
+    </tr>
+    <tr>
+      <td>CAD</td>
+      <td>$</td>
+      <td>Canadian Dollar</td>
+    </tr>
+    <tr>
+      <td>CNY</td>
+      <td>¥</td>
+      <td>Chinese Yuan Renminbi</td>
+    </tr>
+    <tr>
+      <td>HKD</td>
+      <td>Hk</td>
+      <td>Hong Kong Dollar</td>
+    </tr>
+    <tr>
+      <td>IDR</td>
+      <td>Rp</td>
+      <td>Indonesian Rupiah</td>
+    </tr>
+    <tr>
+      <td>INR</td>
+      <td>Rs</td>
+      <td>Indian Rupee</td>
+    </tr>
+    <tr>
+      <td>KRW</td>
+      <td>N/A</td>
+      <td>South Korean Won</td>
+    </tr>
+    <tr>
+      <td>MXN</td>
+      <td>$</td>
+      <td>Mexican Peso</td>
+    </tr>
+    <tr>
+      <td>MYR</td>
+      <td>Rm</td>
+      <td>Malaysian Ringgit</td>
+    </tr>
+    <tr>
+      <td>NZD</td>
+      <td>$</td>
+      <td>New Zealand Dollar</td>
+    </tr>
+    <tr>
+      <td>PHP</td>
+      <td>N/A</td>
+      <td>Philippine Peso</td>
+    </tr>
+    <tr>
+      <td>SGD</td>
+      <td>$</td>
+      <td>Singapore Dollar</td>
+    </tr>
+    <tr>
+      <td>THB</td>
+      <td>N/A</td>
+      <td>Thai Baht</td>
+    </tr>
+    <tr>
+      <td>ZAR</td>
+      <td>R</td>
+      <td>South African Rand</td>
+    </tr>
+    <tr>
+      <td>ARS</td>
+      <td>$</td>
+      <td>Argentine Peso</td>
+    </tr>
+    <tr>
+      <td>COP</td>
+      <td>$</td>
+      <td>Colombian Peso</td>
+    </tr>
+    <tr>
+      <td>AED</td>
+      <td>د</td>
+      <td>United Arab Emirates Dirham</td>
+    </tr>
+    <tr>
+      <td>KZT</td>
+      <td>Т</td>
+      <td>Kazakhstani Tenge</td>
+    </tr>
+    <tr>
+      <td>SAR</td>
+      <td>N/A</td>
+      <td>Saudi Riyal</td>
+    </tr>
+    <tr>
+      <td>UAH</td>
+      <td>N/A</td>
+      <td>Ukrainian Hryvnia</td>
+    </tr>
+    <tr>
+      <td>EGP</td>
+      <td>£</td>
+      <td>Egyptian Pound</td>
+    </tr>
+    <tr>
+      <td>MAD</td>
+      <td>Dh</td>
+      <td>Moroccan Dirham</td>
+    </tr>
+    <tr>
+      <td>ILS</td>
+      <td>N/A</td>
+      <td>Israeli Shekel</td>
+    </tr>
+    <tr>
+      <td>BHD</td>
+      <td>Bd</td>
+      <td>Bahraini Dinar</td>
+    </tr>
+    <tr>
+      <td>JOD</td>
+      <td>Jd</td>
+      <td>Jordanian Dinar</td>
+    </tr>
+    <tr>
+      <td>KWD</td>
+      <td>ك</td>
+      <td>Kuwaiti Dinar</td>
+    </tr>
+    <tr>
+      <td>LBP</td>
+      <td>ل</td>
+      <td>Lebanese Pound</td>
+    </tr>
+    <tr>
+      <td>OMR</td>
+      <td>N/A</td>
+      <td>Omani Rial</td>
+    </tr>
+    <tr>
+      <td>QAR</td>
+      <td>N/A</td>
+      <td>Qatari Riyal</td>
+    </tr>
+    <tr>
+      <td>NGN</td>
+      <td>N/A</td>
+      <td>Nigerian Naira</td>
+    </tr>
+    <tr>
+      <td>KES</td>
+      <td>Ks</td>
+      <td>Kenyan Shilling</td>
+    </tr>
+    <tr>
+      <td>ALL</td>
+      <td>Le</td>
+      <td>Albania Lek</td>
+    </tr>
+    <tr>
+      <td>ETB</td>
+      <td>Br</td>
+      <td>Ethopian Birr</td>
+    </tr>
+    <tr>
+      <td>BSD</td>
+      <td>$</td>
+      <td>Bahamian Dollar</td>
+    </tr>
+    <tr>
+      <td>BDT</td>
+      <td>N/A</td>
+      <td>Bangladeshi Taka</td>
+    </tr>
+    <tr>
+      <td>BAM</td>
+      <td>Km</td>
+      <td>Bosnia-Herzegovina Convertible Mark</td>
+    </tr>
+    <tr>
+      <td>BWP</td>
+      <td>P</td>
+      <td>Botswana Pula</td>
+    </tr>
+    <tr>
+      <td>MMK</td>
+      <td>K</td>
+      <td>Burmese Kyat</td>
+    </tr>
+    <tr>
+      <td>AFN</td>
+      <td>؋</td>
+      <td>Afghan Afghani</td>
+    </tr>
+    <tr>
+      <td>BTN</td>
+      <td>Nu</td>
+      <td>Bhutanese Ngultrum</td>
+    </tr>
+    <tr>
+      <td>GEL</td>
+      <td>N/A</td>
+      <td>Georgian Lari</td>
+    </tr>
+    <tr>
+      <td>GHS</td>
+      <td>Gh</td>
+      <td>Ghanaian Cedi</td>
+    </tr>
+    <tr>
+      <td>GIP</td>
+      <td>£</td>
+      <td>Gibraltar Pound</td>
+    </tr>
+    <tr>
+      <td>ISK</td>
+      <td>Kr</td>
+      <td>Icelandic Krona</td>
+    </tr>
+    <tr>
+      <td>KHR</td>
+      <td>N/A</td>
+      <td>Cambodian Riel</td>
+    </tr>
+    <tr>
+      <td>JMD</td>
+      <td>J$</td>
+      <td>Jamaican Dollar</td>
+    </tr>
+    <tr>
+      <td>LAK</td>
+      <td>N/A</td>
+      <td>Lao Kip</td>
+    </tr>
+    <tr>
+      <td>MKD</td>
+      <td>Д</td>
+      <td>Macedonian Denar</td>
+    </tr>
+    <tr>
+      <td>MUR</td>
+      <td>N/A</td>
+      <td>Mauritian Rupee</td>
+    </tr>
+    <tr>
+      <td>MNT</td>
+      <td>N/A</td>
+      <td>Mongolian Tögrög</td>
+    </tr>
+    <tr>
+      <td>NPR</td>
+      <td>N/A</td>
+      <td>Nepalese Rupee</td>
+    </tr>
+    <tr>
+      <td>NAD</td>
+      <td>$</td>
+      <td>Namibian Dollar</td>
+    </tr>
+    <tr>
+      <td>PKR</td>
+      <td>N/A</td>
+      <td>Pakistani Rupee</td>
+    </tr>
+    <tr>
+      <td>RWF</td>
+      <td>Fr</td>
+      <td>Rwandan Franc</td>
+    </tr>
+    <tr>
+      <td>LKR</td>
+      <td>N/A</td>
+      <td>Sri Lankan Rupee</td>
+    </tr>
+    <tr>
+      <td>SZL</td>
+      <td>L</td>
+      <td>Swazi Lilangeni</td>
+    </tr>
+    <tr>
+      <td>TZS</td>
+      <td>Ts</td>
+      <td>Tanzanian Shilling</td>
+    </tr>
+    <tr>
+      <td>TTD</td>
+      <td>Tt</td>
+      <td>Trinidad And Tobago Dollar</td>
+    </tr>
+    <tr>
+      <td>UGX</td>
+      <td>Us</td>
+      <td>Ugandan Shilling</td>
+    </tr>
+    <tr>
+      <td>ZMW</td>
+      <td>Zk</td>
+      <td>Zambian Kwacha</td>
+    </tr>
+    <tr>
+      <td>BOB</td>
+      <td>$B</td>
+      <td>Bolivian Boliviano</td>
+    </tr>
+    <tr>
+      <td>CRC</td>
+      <td>N/A</td>
+      <td>Costa Rican Colón</td>
+    </tr>
+    <tr>
+      <td>DOP</td>
+      <td>Rd</td>
+      <td>Dominican Peso</td>
+    </tr>
+    <tr>
+      <td>GTQ</td>
+      <td>Q</td>
+      <td>Guatemalan Quetzal</td>
+    </tr>
+    <tr>
+      <td>HNL</td>
+      <td>L</td>
+      <td>Honduran Lempira</td>
+    </tr>
+    <tr>
+      <td>NIO</td>
+      <td>C$</td>
+      <td>Nicaraguan Córdoba</td>
+    </tr>
+    <tr>
+      <td>PAB</td>
+      <td>B/</td>
+      <td>Panamanian Balboa</td>
+    </tr>
+    <tr>
+      <td>PYG</td>
+      <td>Gs</td>
+      <td>Paraguayan Guaraní</td>
+    </tr>
+    <tr>
+      <td>PEN</td>
+      <td>S/</td>
+      <td>Peruvian Nuevo Sol</td>
+    </tr>
+    <tr>
+      <td>UYU</td>
+      <td>$U</td>
+      <td>Uruguayan Peso</td>
+    </tr>
+    <tr>
+      <td>VEF</td>
+      <td>Bs</td>
+      <td>Venezuelan Bolívar</td>
+    </tr>
+    <tr>
+      <td>XAF</td>
+      <td>Fr</td>
+      <td>Central African Cfa Franc</td>
+    </tr>
+    <tr>
+      <td>XOF</td>
+      <td>Fr</td>
+      <td>West African Cfa Franc</td>
+    </tr>
+    <tr>
+      <td>HTG</td>
+      <td>G</td>
+      <td>Haitian Gourde</td>
+    </tr>
+    <tr>
+      <td>MGA</td>
+      <td>Ar</td>
+      <td>Malagasy Ariary</td>
+    </tr>
+    <tr>
+      <td>DZD</td>
+      <td>د</td>
+      <td>Algerian Dinar</td>
+    </tr>
+    <tr>
+      <td>IQD</td>
+      <td>د</td>
+      <td>Iraqi Dinar</td>
+    </tr>
+    <tr>
+      <td>LYD</td>
+      <td>ل</td>
+      <td>Libyan Dinar</td>
+    </tr>
+    <tr>
+      <td>TND</td>
+      <td>د</td>
+      <td>Tunisian Dinar</td>
+    </tr>
+    <tr>
+      <td>YER</td>
+      <td>N/A</td>
+      <td>Yemeni Rial</td>
+    </tr>
+    <tr>
+      <td>BND</td>
+      <td>$</td>
+      <td>Brunei Dollar</td>
+    </tr>
+    <tr>
+      <td>AOA</td>
+      <td>Kz</td>
+      <td>Angolan Kwanza</td>
+    </tr>
+    <tr>
+      <td>MZN</td>
+      <td>Mt</td>
+      <td>Mozambican Metical</td>
+    </tr>
+    <tr>
+      <td>AMD</td>
+      <td>Am</td>
+      <td>Armenian Dram</td>
+    </tr>
+    <tr>
+      <td>AZN</td>
+      <td>М</td>
+      <td>Azerbaijani Manat</td>
+    </tr>
+    <tr>
+      <td>KGS</td>
+      <td>Л</td>
+      <td>Kyrgyzstani Som</td>
+    </tr>
+    <tr>
+      <td>TJS</td>
+      <td>Tj</td>
+      <td>Tajikistani Somoni</td>
+    </tr>
+    <tr>
+      <td>UZS</td>
+      <td>Л</td>
+      <td>Uzbekistani Som</td>
+    </tr>
+    <tr>
+      <td>MDL</td>
+      <td>L</td>
+      <td>Moldovan Leu</td>
+    </tr>
+    <tr>
+      <td>RSD</td>
+      <td>Д</td>
+      <td>Serbian Dinar</td>
+    </tr>
+    <tr>
+      <td>XPF</td>
+      <td>Fr</td>
+      <td>Cfp Franc</td>
+    </tr>
+    <tr>
+      <td>MOP</td>
+      <td>Mo</td>
+      <td>Macanese Pataca</td>
+    </tr>
+    <tr>
+      <td>VND</td>
+      <td>N/A</td>
+      <td>Viet Nam Dong</td>
+    </tr>
+    <tr>
+      <td>TWD</td>
+      <td>Nt</td>
+      <td>Taiwan Dollar</td>
+    </tr>
+    <tr>
+      <td>CLP</td>
+      <td>$</td>
+      <td>Chilean Peso</td>
+    </tr>
+  </tbody>
+</table>
 
 ## **Timezones**
 
 Below is a table of all timezone values supported for the `timezone` field of your stats report requests. UTC will be default timezone if not specified.
 
-| Continent / Country / City       |
-| -------------------------------- |
-| Africa/Abidjan                   |
-| Africa/Accra                     |
-| Africa/Addis\_Ababa              |
-| Africa/Algiers                   |
-| Africa/Asmara                    |
-| Africa/Bamako                    |
-| Africa/Bangui                    |
-| Africa/Banjul                    |
-| Africa/Bissau                    |
-| Africa/Blantyre                  |
-| Africa/Brazzaville               |
-| Africa/Bujumbura                 |
-| Africa/Cairo                     |
-| Africa/Casablanca                |
-| Africa/Ceuta                     |
-| Africa/Conakry                   |
-| Africa/Dakar                     |
-| Africa/Dar\_es\_Salaam           |
-| Africa/Djibouti                  |
-| Africa/Douala                    |
-| Africa/El\_Aaiun                 |
-| Africa/Freetown                  |
-| Africa/Gaborone                  |
-| Africa/Harare                    |
-| Africa/Johannesburg              |
-| Africa/Juba                      |
-| Africa/Kampala                   |
-| Africa/Khartoum                  |
-| Africa/Kigali                    |
-| Africa/Kinshasa                  |
-| Africa/Lagos                     |
-| Africa/Libreville                |
-| Africa/Lome                      |
-| Africa/Luanda                    |
-| Africa/Lubumbashi                |
-| Africa/Lusaka                    |
-| Africa/Malabo                    |
-| Africa/Maputo                    |
-| Africa/Maseru                    |
-| Africa/Mbabane                   |
-| Africa/Mogadishu                 |
-| Africa/Monrovia                  |
-| Africa/Nairobi                   |
-| Africa/Ndjamena                  |
-| Africa/Niamey                    |
-| Africa/Nouakchott                |
-| Africa/Ouagadougou               |
-| Africa/Porto-Novo                |
-| Africa/Sao\_Tome                 |
-| Africa/Tripoli                   |
-| Africa/Tunis                     |
-| Africa/Windhoek                  |
-| America/Adak                     |
-| America/Anchorage                |
-| America/Anguilla                 |
-| America/Antigua                  |
-| America/Araguaina                |
-| America/Argentina/Buenos\_Aires  |
-| America/Argentina/Catamarca      |
-| America/Argentina/Cordoba        |
-| America/Argentina/Jujuy          |
-| America/Argentina/La\_Rioja      |
-| America/Argentina/Mendoza        |
-| America/Argentina/Rio\_Gallegos  |
-| America/Argentina/Salta          |
-| America/Argentina/San\_Juan      |
-| America/Argentina/San\_Luis      |
-| America/Argentina/Tucuman        |
-| America/Argentina/Ushuaia        |
-| America/Aruba                    |
-| America/Asuncion                 |
-| America/Atikokan                 |
-| America/Bahia                    |
-| America/Bahia\_Banderas          |
-| America/Barbados                 |
-| America/Belem                    |
-| America/Belize                   |
-| America/Blanc-Sablon             |
-| America/Boa\_Vista               |
-| America/Bogota                   |
-| America/Boise                    |
-| America/Cambridge\_Bay           |
-| America/Campo\_Grande            |
-| America/Cancun                   |
-| America/Caracas                  |
-| America/Cayenne                  |
-| America/Cayman                   |
-| America/Chicago                  |
-| America/Chihuahua                |
-| America/Costa\_Rica              |
-| America/Creston                  |
-| America/Cuiaba                   |
-| America/Curacao                  |
-| America/Danmarkshavn             |
-| America/Dawson                   |
-| America/Dawson\_Creek            |
-| America/Denver                   |
-| America/Detroit                  |
-| America/Dominica                 |
-| America/Edmonton                 |
-| America/Eirunepe                 |
-| America/El\_Salvador             |
-| America/Fortaleza                |
-| America/Glace\_Bay               |
-| America/Godthab                  |
-| America/Goose\_Bay               |
-| America/Grand\_Turk              |
-| America/Grenada                  |
-| America/Guadeloupe               |
-| America/Guatemala                |
-| America/Guayaquil                |
-| America/Guyana                   |
-| America/Halifax                  |
-| America/Havana                   |
-| America/Hermosillo               |
-| America/Indiana/Indianapolis     |
-| America/Indiana/Knox             |
-| America/Indiana/Marengo          |
-| America/Indiana/Petersburg       |
-| America/Indiana/Tell\_City       |
-| America/Indiana/Vevay            |
-| America/Indiana/Vincennes        |
-| America/Indiana/Winamac          |
-| America/Inuvik                   |
-| America/Iqaluit                  |
-| America/Jamaica                  |
-| America/Juneau                   |
-| America/Kentucky/Louisville      |
-| America/Kentucky/Monticello      |
-| America/Kralendijk               |
-| America/La\_Paz                  |
-| America/Lima                     |
-| America/Los\_Angeles             |
-| America/Lower\_Princes           |
-| America/Maceio                   |
-| America/Managua                  |
-| America/Manaus                   |
-| America/Marigot                  |
-| America/Martinique               |
-| America/Matamoros                |
-| America/Mazatlan                 |
-| America/Menominee                |
-| America/Merida                   |
-| America/Metlakatla               |
-| America/Mexico\_City             |
-| America/Miquelon                 |
-| America/Moncton                  |
-| America/Monterrey                |
-| America/Montevideo               |
-| America/Montserrat               |
-| America/Nassau                   |
-| America/New\_York                |
-| America/Nipigon                  |
-| America/Nome                     |
-| America/Noronha                  |
-| America/North\_Dakota/Beulah     |
-| America/North\_Dakota/Center     |
-| America/North\_Dakota/New\_Salem |
-| America/Ojinaga                  |
-| America/Panama                   |
-| America/Pangnirtung              |
-| America/Paramaribo               |
-| America/Phoenix                  |
-| America/Port\_of\_Spain          |
-| America/Port-au-Prince           |
-| America/Porto\_Velho             |
-| America/Puerto\_Rico             |
-| America/Rainy\_River             |
-| America/Rankin\_Inlet            |
-| America/Recife                   |
-| America/Regina                   |
-| America/Resolute                 |
-| America/Rio\_Branco              |
-| America/Santarem                 |
-| America/Santiago                 |
-| America/Santo\_Domingo           |
-| America/Sao\_Paulo               |
-| America/Scoresbysund             |
-| America/Sitka                    |
-| America/St\_Barthelemy           |
-| America/St\_Kitts                |
-| America/St\_Lucia                |
-| America/St\_Thomas               |
-| America/St\_Vincent              |
-| America/Swift\_Current           |
-| America/Tegucigalpa              |
-| America/Thule                    |
-| America/Thunder\_Bay             |
-| America/Tijuana                  |
-| America/Toronto                  |
-| America/Tortola                  |
-| America/Vancouver                |
-| America/Whitehorse               |
-| America/Winnipeg                 |
-| America/Yakutat                  |
-| America/Yellowknife              |
-| Antarctica/Casey                 |
-| Antarctica/Davis                 |
-| Antarctica/DumontDUrville        |
-| Antarctica/Macquarie             |
-| Antarctica/Mawson                |
-| Antarctica/McMurdo               |
-| Antarctica/Palmer                |
-| Antarctica/Rothera               |
-| Antarctica/Syowa                 |
-| Antarctica/Troll                 |
-| Antarctica/Vostok                |
-| Arctic/Longyearbyen              |
-| Asia/Aden                        |
-| Asia/Almaty                      |
-| Asia/Amman                       |
-| Asia/Anadyr                      |
-| Asia/Aqtau                       |
-| Asia/Aqtobe                      |
-| Asia/Ashgabat                    |
-| Asia/Baghdad                     |
-| Asia/Bahrain                     |
-| Asia/Baku                        |
-| Asia/Bangkok                     |
-| Asia/Beirut                      |
-| Asia/Bishkek                     |
-| Asia/Brunei                      |
-| Asia/Chita                       |
-| Asia/Choibalsan                  |
-| Asia/Damascus                    |
-| Asia/Dhaka                       |
-| Asia/Dili                        |
-| Asia/Dubai                       |
-| Asia/Dushanbe                    |
-| Asia/Gaza                        |
-| Asia/Hebron                      |
-| Asia/Ho\_Chi\_Minh               |
-| Asia/Hong\_Kong                  |
-| Asia/Hovd                        |
-| Asia/Irkutsk                     |
-| Asia/Jakarta                     |
-| Asia/Jayapura                    |
-| Asia/Jerusalem                   |
-| Asia/Kamchatka                   |
-| Asia/Karachi                     |
-| Asia/Khandyga                    |
-| Asia/Krasnoyarsk                 |
-| Asia/Kuala\_Lumpur               |
-| Asia/Kuching                     |
-| Asia/Kuwait                      |
-| Asia/Macau                       |
-| Asia/Magadan                     |
-| Asia/Makassar                    |
-| Asia/Manila                      |
-| Asia/Muscat                      |
-| Asia/Nicosia                     |
-| Asia/Novokuznetsk                |
-| Asia/Novosibirsk                 |
-| Asia/Omsk                        |
-| Asia/Oral                        |
-| Asia/Phnom\_Penh                 |
-| Asia/Pontianak                   |
-| Asia/Pyongyang                   |
-| Asia/Qatar                       |
-| Asia/Qyzylorda                   |
-| Asia/Riyadh                      |
-| Asia/Sakhalin                    |
-| Asia/Samarkand                   |
-| Asia/Seoul                       |
-| Asia/Shanghai                    |
-| Asia/Singapore                   |
-| Asia/Srednekolymsk               |
-| Asia/Taipei                      |
-| Asia/Tashkent                    |
-| Asia/Tbilisi                     |
-| Asia/Thimphu                     |
-| Asia/Tokyo                       |
-| Asia/Ulaanbaatar                 |
-| Asia/Urumqi                      |
-| Asia/Ust-Nera                    |
-| Asia/Vientiane                   |
-| Asia/Vladivostok                 |
-| Asia/Yakutsk                     |
-| Asia/Yekaterinburg               |
-| Asia/Yerevan                     |
-| Atlantic/Azores                  |
-| Atlantic/Bermuda                 |
-| Atlantic/Canary                  |
-| Atlantic/Cape\_Verde             |
-| Atlantic/Faroe                   |
-| Atlantic/Madeira                 |
-| Atlantic/Reykjavik               |
-| Atlantic/South\_Georgia          |
-| Atlantic/St\_Helena              |
-| Atlantic/Stanley                 |
-| Australia/Brisbane               |
-| Australia/Currie                 |
-| Australia/Hobart                 |
-| Australia/Lindeman               |
-| Australia/Melbourne              |
-| Australia/Perth                  |
-| Australia/Sydney                 |
-| Europe/Amsterdam                 |
-| Europe/Andorra                   |
-| Europe/Athens                    |
-| Europe/Belgrade                  |
-| Europe/Berlin                    |
-| Europe/Bratislava                |
-| Europe/Brussels                  |
-| Europe/Bucharest                 |
-| Europe/Budapest                  |
-| Europe/Busingen                  |
-| Europe/Chisinau                  |
-| Europe/Copenhagen                |
-| Europe/Dublin                    |
-| Europe/Gibraltar                 |
-| Europe/Guernsey                  |
-| Europe/Helsinki                  |
-| Europe/Isle\_of\_Man             |
-| Europe/Istanbul                  |
-| Europe/Jersey                    |
-| Europe/Kaliningrad               |
-| Europe/Kiev                      |
-| Europe/Lisbon                    |
-| Europe/Ljubljana                 |
-| Europe/London                    |
-| Europe/Luxembourg                |
-| Europe/Madrid                    |
-| Europe/Malta                     |
-| Europe/Mariehamn                 |
-| Europe/Minsk                     |
-| Europe/Monaco                    |
-| Europe/Moscow                    |
-| Europe/Oslo                      |
-| Europe/Paris                     |
-| Europe/Podgorica                 |
-| Europe/Prague                    |
-| Europe/Riga                      |
-| Europe/Rome                      |
-| Europe/Samara                    |
-| Europe/San\_Marino               |
-| Europe/Sarajevo                  |
-| Europe/Simferopol                |
-| Europe/Skopje                    |
-| Europe/Sofia                     |
-| Europe/Stockholm                 |
-| Europe/Tallinn                   |
-| Europe/Tirane                    |
-| Europe/Uzhgorod                  |
-| Europe/Vaduz                     |
-| Europe/Vatican                   |
-| Europe/Vienna                    |
-| Europe/Vilnius                   |
-| Europe/Volgograd                 |
-| Europe/Warsaw                    |
-| Europe/Zagreb                    |
-| Europe/Zaporozhye                |
-| Europe/Zurich                    |
-| Indian/Antananarivo              |
-| Indian/Chagos                    |
-| Indian/Christmas                 |
-| Indian/Comoro                    |
-| Indian/Kerguelen                 |
-| Indian/Mahe                      |
-| Indian/Maldives                  |
-| Indian/Mauritius                 |
-| Indian/Mayotte                   |
-| Indian/Reunion                   |
-| Pacific/Apia                     |
-| Pacific/Auckland                 |
-| Pacific/Bougainville             |
-| Pacific/Chuuk                    |
-| Pacific/Easter                   |
-| Pacific/Efate                    |
-| Pacific/Enderbury                |
-| Pacific/Fakaofo                  |
-| Pacific/Fiji                     |
-| Pacific/Funafuti                 |
-| Pacific/Galapagos                |
-| Pacific/Gambier                  |
-| Pacific/Guadalcanal              |
-| Pacific/Guam                     |
-| Pacific/Honolulu                 |
-| Pacific/Kiritimati               |
-| Pacific/Kosrae                   |
-| Pacific/Kwajalein                |
-| Pacific/Majuro                   |
-| Pacific/Midway                   |
-| Pacific/Nauru                    |
-| Pacific/Niue                     |
-| Pacific/Norfolk                  |
-| Pacific/Noumea                   |
-| Pacific/Pago\_Pago               |
-| Pacific/Palau                    |
-| Pacific/Pitcairn                 |
-| Pacific/Pohnpei                  |
-| Pacific/Port\_Moresby            |
-| Pacific/Rarotonga                |
-| Pacific/Saipan                   |
-| Pacific/Tahiti                   |
-| Pacific/Tarawa                   |
-| Pacific/Tongatapu                |
-| Pacific/Wake                     |
+<table>
+  <thead>
+    <tr>
+      <th>Continent / Country / City</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Africa/Abidjan</td>
+    </tr>
+    <tr>
+      <td>Africa/Accra</td>
+    </tr>
+    <tr>
+      <td>Africa/Addis&#92;&#95;Ababa</td>
+    </tr>
+    <tr>
+      <td>Africa/Algiers</td>
+    </tr>
+    <tr>
+      <td>Africa/Asmara</td>
+    </tr>
+    <tr>
+      <td>Africa/Bamako</td>
+    </tr>
+    <tr>
+      <td>Africa/Bangui</td>
+    </tr>
+    <tr>
+      <td>Africa/Banjul</td>
+    </tr>
+    <tr>
+      <td>Africa/Bissau</td>
+    </tr>
+    <tr>
+      <td>Africa/Blantyre</td>
+    </tr>
+    <tr>
+      <td>Africa/Brazzaville</td>
+    </tr>
+    <tr>
+      <td>Africa/Bujumbura</td>
+    </tr>
+    <tr>
+      <td>Africa/Cairo</td>
+    </tr>
+    <tr>
+      <td>Africa/Casablanca</td>
+    </tr>
+    <tr>
+      <td>Africa/Ceuta</td>
+    </tr>
+    <tr>
+      <td>Africa/Conakry</td>
+    </tr>
+    <tr>
+      <td>Africa/Dakar</td>
+    </tr>
+    <tr>
+      <td>Africa/Dar&#92;&#95;es&#92;&#95;Salaam</td>
+    </tr>
+    <tr>
+      <td>Africa/Djibouti</td>
+    </tr>
+    <tr>
+      <td>Africa/Douala</td>
+    </tr>
+    <tr>
+      <td>Africa/El&#92;&#95;Aaiun</td>
+    </tr>
+    <tr>
+      <td>Africa/Freetown</td>
+    </tr>
+    <tr>
+      <td>Africa/Gaborone</td>
+    </tr>
+    <tr>
+      <td>Africa/Harare</td>
+    </tr>
+    <tr>
+      <td>Africa/Johannesburg</td>
+    </tr>
+    <tr>
+      <td>Africa/Juba</td>
+    </tr>
+    <tr>
+      <td>Africa/Kampala</td>
+    </tr>
+    <tr>
+      <td>Africa/Khartoum</td>
+    </tr>
+    <tr>
+      <td>Africa/Kigali</td>
+    </tr>
+    <tr>
+      <td>Africa/Kinshasa</td>
+    </tr>
+    <tr>
+      <td>Africa/Lagos</td>
+    </tr>
+    <tr>
+      <td>Africa/Libreville</td>
+    </tr>
+    <tr>
+      <td>Africa/Lome</td>
+    </tr>
+    <tr>
+      <td>Africa/Luanda</td>
+    </tr>
+    <tr>
+      <td>Africa/Lubumbashi</td>
+    </tr>
+    <tr>
+      <td>Africa/Lusaka</td>
+    </tr>
+    <tr>
+      <td>Africa/Malabo</td>
+    </tr>
+    <tr>
+      <td>Africa/Maputo</td>
+    </tr>
+    <tr>
+      <td>Africa/Maseru</td>
+    </tr>
+    <tr>
+      <td>Africa/Mbabane</td>
+    </tr>
+    <tr>
+      <td>Africa/Mogadishu</td>
+    </tr>
+    <tr>
+      <td>Africa/Monrovia</td>
+    </tr>
+    <tr>
+      <td>Africa/Nairobi</td>
+    </tr>
+    <tr>
+      <td>Africa/Ndjamena</td>
+    </tr>
+    <tr>
+      <td>Africa/Niamey</td>
+    </tr>
+    <tr>
+      <td>Africa/Nouakchott</td>
+    </tr>
+    <tr>
+      <td>Africa/Ouagadougou</td>
+    </tr>
+    <tr>
+      <td>Africa/Porto-Novo</td>
+    </tr>
+    <tr>
+      <td>Africa/Sao&#92;&#95;Tome</td>
+    </tr>
+    <tr>
+      <td>Africa/Tripoli</td>
+    </tr>
+    <tr>
+      <td>Africa/Tunis</td>
+    </tr>
+    <tr>
+      <td>Africa/Windhoek</td>
+    </tr>
+    <tr>
+      <td>America/Adak</td>
+    </tr>
+    <tr>
+      <td>America/Anchorage</td>
+    </tr>
+    <tr>
+      <td>America/Anguilla</td>
+    </tr>
+    <tr>
+      <td>America/Antigua</td>
+    </tr>
+    <tr>
+      <td>America/Araguaina</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Buenos&#92;&#95;Aires</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Catamarca</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Cordoba</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Jujuy</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/La&#92;&#95;Rioja</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Mendoza</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Rio&#92;&#95;Gallegos</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Salta</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/San&#92;&#95;Juan</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/San&#92;&#95;Luis</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Tucuman</td>
+    </tr>
+    <tr>
+      <td>America/Argentina/Ushuaia</td>
+    </tr>
+    <tr>
+      <td>America/Aruba</td>
+    </tr>
+    <tr>
+      <td>America/Asuncion</td>
+    </tr>
+    <tr>
+      <td>America/Atikokan</td>
+    </tr>
+    <tr>
+      <td>America/Bahia</td>
+    </tr>
+    <tr>
+      <td>America/Bahia&#92;&#95;Banderas</td>
+    </tr>
+    <tr>
+      <td>America/Barbados</td>
+    </tr>
+    <tr>
+      <td>America/Belem</td>
+    </tr>
+    <tr>
+      <td>America/Belize</td>
+    </tr>
+    <tr>
+      <td>America/Blanc-Sablon</td>
+    </tr>
+    <tr>
+      <td>America/Boa&#92;&#95;Vista</td>
+    </tr>
+    <tr>
+      <td>America/Bogota</td>
+    </tr>
+    <tr>
+      <td>America/Boise</td>
+    </tr>
+    <tr>
+      <td>America/Cambridge&#92;&#95;Bay</td>
+    </tr>
+    <tr>
+      <td>America/Campo&#92;&#95;Grande</td>
+    </tr>
+    <tr>
+      <td>America/Cancun</td>
+    </tr>
+    <tr>
+      <td>America/Caracas</td>
+    </tr>
+    <tr>
+      <td>America/Cayenne</td>
+    </tr>
+    <tr>
+      <td>America/Cayman</td>
+    </tr>
+    <tr>
+      <td>America/Chicago</td>
+    </tr>
+    <tr>
+      <td>America/Chihuahua</td>
+    </tr>
+    <tr>
+      <td>America/Costa&#92;&#95;Rica</td>
+    </tr>
+    <tr>
+      <td>America/Creston</td>
+    </tr>
+    <tr>
+      <td>America/Cuiaba</td>
+    </tr>
+    <tr>
+      <td>America/Curacao</td>
+    </tr>
+    <tr>
+      <td>America/Danmarkshavn</td>
+    </tr>
+    <tr>
+      <td>America/Dawson</td>
+    </tr>
+    <tr>
+      <td>America/Dawson&#92;&#95;Creek</td>
+    </tr>
+    <tr>
+      <td>America/Denver</td>
+    </tr>
+    <tr>
+      <td>America/Detroit</td>
+    </tr>
+    <tr>
+      <td>America/Dominica</td>
+    </tr>
+    <tr>
+      <td>America/Edmonton</td>
+    </tr>
+    <tr>
+      <td>America/Eirunepe</td>
+    </tr>
+    <tr>
+      <td>America/El&#92;&#95;Salvador</td>
+    </tr>
+    <tr>
+      <td>America/Fortaleza</td>
+    </tr>
+    <tr>
+      <td>America/Glace&#92;&#95;Bay</td>
+    </tr>
+    <tr>
+      <td>America/Godthab</td>
+    </tr>
+    <tr>
+      <td>America/Goose&#92;&#95;Bay</td>
+    </tr>
+    <tr>
+      <td>America/Grand&#92;&#95;Turk</td>
+    </tr>
+    <tr>
+      <td>America/Grenada</td>
+    </tr>
+    <tr>
+      <td>America/Guadeloupe</td>
+    </tr>
+    <tr>
+      <td>America/Guatemala</td>
+    </tr>
+    <tr>
+      <td>America/Guayaquil</td>
+    </tr>
+    <tr>
+      <td>America/Guyana</td>
+    </tr>
+    <tr>
+      <td>America/Halifax</td>
+    </tr>
+    <tr>
+      <td>America/Havana</td>
+    </tr>
+    <tr>
+      <td>America/Hermosillo</td>
+    </tr>
+    <tr>
+      <td>America/Indiana/Indianapolis</td>
+    </tr>
+    <tr>
+      <td>America/Indiana/Knox</td>
+    </tr>
+    <tr>
+      <td>America/Indiana/Marengo</td>
+    </tr>
+    <tr>
+      <td>America/Indiana/Petersburg</td>
+    </tr>
+    <tr>
+      <td>America/Indiana/Tell&#92;&#95;City</td>
+    </tr>
+    <tr>
+      <td>America/Indiana/Vevay</td>
+    </tr>
+    <tr>
+      <td>America/Indiana/Vincennes</td>
+    </tr>
+    <tr>
+      <td>America/Indiana/Winamac</td>
+    </tr>
+    <tr>
+      <td>America/Inuvik</td>
+    </tr>
+    <tr>
+      <td>America/Iqaluit</td>
+    </tr>
+    <tr>
+      <td>America/Jamaica</td>
+    </tr>
+    <tr>
+      <td>America/Juneau</td>
+    </tr>
+    <tr>
+      <td>America/Kentucky/Louisville</td>
+    </tr>
+    <tr>
+      <td>America/Kentucky/Monticello</td>
+    </tr>
+    <tr>
+      <td>America/Kralendijk</td>
+    </tr>
+    <tr>
+      <td>America/La&#92;&#95;Paz</td>
+    </tr>
+    <tr>
+      <td>America/Lima</td>
+    </tr>
+    <tr>
+      <td>America/Los&#92;&#95;Angeles</td>
+    </tr>
+    <tr>
+      <td>America/Lower&#92;&#95;Princes</td>
+    </tr>
+    <tr>
+      <td>America/Maceio</td>
+    </tr>
+    <tr>
+      <td>America/Managua</td>
+    </tr>
+    <tr>
+      <td>America/Manaus</td>
+    </tr>
+    <tr>
+      <td>America/Marigot</td>
+    </tr>
+    <tr>
+      <td>America/Martinique</td>
+    </tr>
+    <tr>
+      <td>America/Matamoros</td>
+    </tr>
+    <tr>
+      <td>America/Mazatlan</td>
+    </tr>
+    <tr>
+      <td>America/Menominee</td>
+    </tr>
+    <tr>
+      <td>America/Merida</td>
+    </tr>
+    <tr>
+      <td>America/Metlakatla</td>
+    </tr>
+    <tr>
+      <td>America/Mexico&#92;&#95;City</td>
+    </tr>
+    <tr>
+      <td>America/Miquelon</td>
+    </tr>
+    <tr>
+      <td>America/Moncton</td>
+    </tr>
+    <tr>
+      <td>America/Monterrey</td>
+    </tr>
+    <tr>
+      <td>America/Montevideo</td>
+    </tr>
+    <tr>
+      <td>America/Montserrat</td>
+    </tr>
+    <tr>
+      <td>America/Nassau</td>
+    </tr>
+    <tr>
+      <td>America/New&#92;&#95;York</td>
+    </tr>
+    <tr>
+      <td>America/Nipigon</td>
+    </tr>
+    <tr>
+      <td>America/Nome</td>
+    </tr>
+    <tr>
+      <td>America/Noronha</td>
+    </tr>
+    <tr>
+      <td>America/North&#92;&#95;Dakota/Beulah</td>
+    </tr>
+    <tr>
+      <td>America/North&#92;&#95;Dakota/Center</td>
+    </tr>
+    <tr>
+      <td>America/North&#92;&#95;Dakota/New&#92;&#95;Salem</td>
+    </tr>
+    <tr>
+      <td>America/Ojinaga</td>
+    </tr>
+    <tr>
+      <td>America/Panama</td>
+    </tr>
+    <tr>
+      <td>America/Pangnirtung</td>
+    </tr>
+    <tr>
+      <td>America/Paramaribo</td>
+    </tr>
+    <tr>
+      <td>America/Phoenix</td>
+    </tr>
+    <tr>
+      <td>America/Port&#92;&#95;of&#92;&#95;Spain</td>
+    </tr>
+    <tr>
+      <td>America/Port-au-Prince</td>
+    </tr>
+    <tr>
+      <td>America/Porto&#92;&#95;Velho</td>
+    </tr>
+    <tr>
+      <td>America/Puerto&#92;&#95;Rico</td>
+    </tr>
+    <tr>
+      <td>America/Rainy&#92;&#95;River</td>
+    </tr>
+    <tr>
+      <td>America/Rankin&#92;&#95;Inlet</td>
+    </tr>
+    <tr>
+      <td>America/Recife</td>
+    </tr>
+    <tr>
+      <td>America/Regina</td>
+    </tr>
+    <tr>
+      <td>America/Resolute</td>
+    </tr>
+    <tr>
+      <td>America/Rio&#92;&#95;Branco</td>
+    </tr>
+    <tr>
+      <td>America/Santarem</td>
+    </tr>
+    <tr>
+      <td>America/Santiago</td>
+    </tr>
+    <tr>
+      <td>America/Santo&#92;&#95;Domingo</td>
+    </tr>
+    <tr>
+      <td>America/Sao&#92;&#95;Paulo</td>
+    </tr>
+    <tr>
+      <td>America/Scoresbysund</td>
+    </tr>
+    <tr>
+      <td>America/Sitka</td>
+    </tr>
+    <tr>
+      <td>America/St&#92;&#95;Barthelemy</td>
+    </tr>
+    <tr>
+      <td>America/St&#92;&#95;Kitts</td>
+    </tr>
+    <tr>
+      <td>America/St&#92;&#95;Lucia</td>
+    </tr>
+    <tr>
+      <td>America/St&#92;&#95;Thomas</td>
+    </tr>
+    <tr>
+      <td>America/St&#92;&#95;Vincent</td>
+    </tr>
+    <tr>
+      <td>America/Swift&#92;&#95;Current</td>
+    </tr>
+    <tr>
+      <td>America/Tegucigalpa</td>
+    </tr>
+    <tr>
+      <td>America/Thule</td>
+    </tr>
+    <tr>
+      <td>America/Thunder&#92;&#95;Bay</td>
+    </tr>
+    <tr>
+      <td>America/Tijuana</td>
+    </tr>
+    <tr>
+      <td>America/Toronto</td>
+    </tr>
+    <tr>
+      <td>America/Tortola</td>
+    </tr>
+    <tr>
+      <td>America/Vancouver</td>
+    </tr>
+    <tr>
+      <td>America/Whitehorse</td>
+    </tr>
+    <tr>
+      <td>America/Winnipeg</td>
+    </tr>
+    <tr>
+      <td>America/Yakutat</td>
+    </tr>
+    <tr>
+      <td>America/Yellowknife</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Casey</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Davis</td>
+    </tr>
+    <tr>
+      <td>Antarctica/DumontDUrville</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Macquarie</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Mawson</td>
+    </tr>
+    <tr>
+      <td>Antarctica/McMurdo</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Palmer</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Rothera</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Syowa</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Troll</td>
+    </tr>
+    <tr>
+      <td>Antarctica/Vostok</td>
+    </tr>
+    <tr>
+      <td>Arctic/Longyearbyen</td>
+    </tr>
+    <tr>
+      <td>Asia/Aden</td>
+    </tr>
+    <tr>
+      <td>Asia/Almaty</td>
+    </tr>
+    <tr>
+      <td>Asia/Amman</td>
+    </tr>
+    <tr>
+      <td>Asia/Anadyr</td>
+    </tr>
+    <tr>
+      <td>Asia/Aqtau</td>
+    </tr>
+    <tr>
+      <td>Asia/Aqtobe</td>
+    </tr>
+    <tr>
+      <td>Asia/Ashgabat</td>
+    </tr>
+    <tr>
+      <td>Asia/Baghdad</td>
+    </tr>
+    <tr>
+      <td>Asia/Bahrain</td>
+    </tr>
+    <tr>
+      <td>Asia/Baku</td>
+    </tr>
+    <tr>
+      <td>Asia/Bangkok</td>
+    </tr>
+    <tr>
+      <td>Asia/Beirut</td>
+    </tr>
+    <tr>
+      <td>Asia/Bishkek</td>
+    </tr>
+    <tr>
+      <td>Asia/Brunei</td>
+    </tr>
+    <tr>
+      <td>Asia/Chita</td>
+    </tr>
+    <tr>
+      <td>Asia/Choibalsan</td>
+    </tr>
+    <tr>
+      <td>Asia/Damascus</td>
+    </tr>
+    <tr>
+      <td>Asia/Dhaka</td>
+    </tr>
+    <tr>
+      <td>Asia/Dili</td>
+    </tr>
+    <tr>
+      <td>Asia/Dubai</td>
+    </tr>
+    <tr>
+      <td>Asia/Dushanbe</td>
+    </tr>
+    <tr>
+      <td>Asia/Gaza</td>
+    </tr>
+    <tr>
+      <td>Asia/Hebron</td>
+    </tr>
+    <tr>
+      <td>Asia/Ho&#92;&#95;Chi&#92;&#95;Minh</td>
+    </tr>
+    <tr>
+      <td>Asia/Hong&#92;&#95;Kong</td>
+    </tr>
+    <tr>
+      <td>Asia/Hovd</td>
+    </tr>
+    <tr>
+      <td>Asia/Irkutsk</td>
+    </tr>
+    <tr>
+      <td>Asia/Jakarta</td>
+    </tr>
+    <tr>
+      <td>Asia/Jayapura</td>
+    </tr>
+    <tr>
+      <td>Asia/Jerusalem</td>
+    </tr>
+    <tr>
+      <td>Asia/Kamchatka</td>
+    </tr>
+    <tr>
+      <td>Asia/Karachi</td>
+    </tr>
+    <tr>
+      <td>Asia/Khandyga</td>
+    </tr>
+    <tr>
+      <td>Asia/Krasnoyarsk</td>
+    </tr>
+    <tr>
+      <td>Asia/Kuala&#92;&#95;Lumpur</td>
+    </tr>
+    <tr>
+      <td>Asia/Kuching</td>
+    </tr>
+    <tr>
+      <td>Asia/Kuwait</td>
+    </tr>
+    <tr>
+      <td>Asia/Macau</td>
+    </tr>
+    <tr>
+      <td>Asia/Magadan</td>
+    </tr>
+    <tr>
+      <td>Asia/Makassar</td>
+    </tr>
+    <tr>
+      <td>Asia/Manila</td>
+    </tr>
+    <tr>
+      <td>Asia/Muscat</td>
+    </tr>
+    <tr>
+      <td>Asia/Nicosia</td>
+    </tr>
+    <tr>
+      <td>Asia/Novokuznetsk</td>
+    </tr>
+    <tr>
+      <td>Asia/Novosibirsk</td>
+    </tr>
+    <tr>
+      <td>Asia/Omsk</td>
+    </tr>
+    <tr>
+      <td>Asia/Oral</td>
+    </tr>
+    <tr>
+      <td>Asia/Phnom&#92;&#95;Penh</td>
+    </tr>
+    <tr>
+      <td>Asia/Pontianak</td>
+    </tr>
+    <tr>
+      <td>Asia/Pyongyang</td>
+    </tr>
+    <tr>
+      <td>Asia/Qatar</td>
+    </tr>
+    <tr>
+      <td>Asia/Qyzylorda</td>
+    </tr>
+    <tr>
+      <td>Asia/Riyadh</td>
+    </tr>
+    <tr>
+      <td>Asia/Sakhalin</td>
+    </tr>
+    <tr>
+      <td>Asia/Samarkand</td>
+    </tr>
+    <tr>
+      <td>Asia/Seoul</td>
+    </tr>
+    <tr>
+      <td>Asia/Shanghai</td>
+    </tr>
+    <tr>
+      <td>Asia/Singapore</td>
+    </tr>
+    <tr>
+      <td>Asia/Srednekolymsk</td>
+    </tr>
+    <tr>
+      <td>Asia/Taipei</td>
+    </tr>
+    <tr>
+      <td>Asia/Tashkent</td>
+    </tr>
+    <tr>
+      <td>Asia/Tbilisi</td>
+    </tr>
+    <tr>
+      <td>Asia/Thimphu</td>
+    </tr>
+    <tr>
+      <td>Asia/Tokyo</td>
+    </tr>
+    <tr>
+      <td>Asia/Ulaanbaatar</td>
+    </tr>
+    <tr>
+      <td>Asia/Urumqi</td>
+    </tr>
+    <tr>
+      <td>Asia/Ust-Nera</td>
+    </tr>
+    <tr>
+      <td>Asia/Vientiane</td>
+    </tr>
+    <tr>
+      <td>Asia/Vladivostok</td>
+    </tr>
+    <tr>
+      <td>Asia/Yakutsk</td>
+    </tr>
+    <tr>
+      <td>Asia/Yekaterinburg</td>
+    </tr>
+    <tr>
+      <td>Asia/Yerevan</td>
+    </tr>
+    <tr>
+      <td>Atlantic/Azores</td>
+    </tr>
+    <tr>
+      <td>Atlantic/Bermuda</td>
+    </tr>
+    <tr>
+      <td>Atlantic/Canary</td>
+    </tr>
+    <tr>
+      <td>Atlantic/Cape&#92;&#95;Verde</td>
+    </tr>
+    <tr>
+      <td>Atlantic/Faroe</td>
+    </tr>
+    <tr>
+      <td>Atlantic/Madeira</td>
+    </tr>
+    <tr>
+      <td>Atlantic/Reykjavik</td>
+    </tr>
+    <tr>
+      <td>Atlantic/South&#92;&#95;Georgia</td>
+    </tr>
+    <tr>
+      <td>Atlantic/St&#92;&#95;Helena</td>
+    </tr>
+    <tr>
+      <td>Atlantic/Stanley</td>
+    </tr>
+    <tr>
+      <td>Australia/Brisbane</td>
+    </tr>
+    <tr>
+      <td>Australia/Currie</td>
+    </tr>
+    <tr>
+      <td>Australia/Hobart</td>
+    </tr>
+    <tr>
+      <td>Australia/Lindeman</td>
+    </tr>
+    <tr>
+      <td>Australia/Melbourne</td>
+    </tr>
+    <tr>
+      <td>Australia/Perth</td>
+    </tr>
+    <tr>
+      <td>Australia/Sydney</td>
+    </tr>
+    <tr>
+      <td>Europe/Amsterdam</td>
+    </tr>
+    <tr>
+      <td>Europe/Andorra</td>
+    </tr>
+    <tr>
+      <td>Europe/Athens</td>
+    </tr>
+    <tr>
+      <td>Europe/Belgrade</td>
+    </tr>
+    <tr>
+      <td>Europe/Berlin</td>
+    </tr>
+    <tr>
+      <td>Europe/Bratislava</td>
+    </tr>
+    <tr>
+      <td>Europe/Brussels</td>
+    </tr>
+    <tr>
+      <td>Europe/Bucharest</td>
+    </tr>
+    <tr>
+      <td>Europe/Budapest</td>
+    </tr>
+    <tr>
+      <td>Europe/Busingen</td>
+    </tr>
+    <tr>
+      <td>Europe/Chisinau</td>
+    </tr>
+    <tr>
+      <td>Europe/Copenhagen</td>
+    </tr>
+    <tr>
+      <td>Europe/Dublin</td>
+    </tr>
+    <tr>
+      <td>Europe/Gibraltar</td>
+    </tr>
+    <tr>
+      <td>Europe/Guernsey</td>
+    </tr>
+    <tr>
+      <td>Europe/Helsinki</td>
+    </tr>
+    <tr>
+      <td>Europe/Isle&#92;&#95;of&#92;&#95;Man</td>
+    </tr>
+    <tr>
+      <td>Europe/Istanbul</td>
+    </tr>
+    <tr>
+      <td>Europe/Jersey</td>
+    </tr>
+    <tr>
+      <td>Europe/Kaliningrad</td>
+    </tr>
+    <tr>
+      <td>Europe/Kiev</td>
+    </tr>
+    <tr>
+      <td>Europe/Lisbon</td>
+    </tr>
+    <tr>
+      <td>Europe/Ljubljana</td>
+    </tr>
+    <tr>
+      <td>Europe/London</td>
+    </tr>
+    <tr>
+      <td>Europe/Luxembourg</td>
+    </tr>
+    <tr>
+      <td>Europe/Madrid</td>
+    </tr>
+    <tr>
+      <td>Europe/Malta</td>
+    </tr>
+    <tr>
+      <td>Europe/Mariehamn</td>
+    </tr>
+    <tr>
+      <td>Europe/Minsk</td>
+    </tr>
+    <tr>
+      <td>Europe/Monaco</td>
+    </tr>
+    <tr>
+      <td>Europe/Moscow</td>
+    </tr>
+    <tr>
+      <td>Europe/Oslo</td>
+    </tr>
+    <tr>
+      <td>Europe/Paris</td>
+    </tr>
+    <tr>
+      <td>Europe/Podgorica</td>
+    </tr>
+    <tr>
+      <td>Europe/Prague</td>
+    </tr>
+    <tr>
+      <td>Europe/Riga</td>
+    </tr>
+    <tr>
+      <td>Europe/Rome</td>
+    </tr>
+    <tr>
+      <td>Europe/Samara</td>
+    </tr>
+    <tr>
+      <td>Europe/San&#92;&#95;Marino</td>
+    </tr>
+    <tr>
+      <td>Europe/Sarajevo</td>
+    </tr>
+    <tr>
+      <td>Europe/Simferopol</td>
+    </tr>
+    <tr>
+      <td>Europe/Skopje</td>
+    </tr>
+    <tr>
+      <td>Europe/Sofia</td>
+    </tr>
+    <tr>
+      <td>Europe/Stockholm</td>
+    </tr>
+    <tr>
+      <td>Europe/Tallinn</td>
+    </tr>
+    <tr>
+      <td>Europe/Tirane</td>
+    </tr>
+    <tr>
+      <td>Europe/Uzhgorod</td>
+    </tr>
+    <tr>
+      <td>Europe/Vaduz</td>
+    </tr>
+    <tr>
+      <td>Europe/Vatican</td>
+    </tr>
+    <tr>
+      <td>Europe/Vienna</td>
+    </tr>
+    <tr>
+      <td>Europe/Vilnius</td>
+    </tr>
+    <tr>
+      <td>Europe/Volgograd</td>
+    </tr>
+    <tr>
+      <td>Europe/Warsaw</td>
+    </tr>
+    <tr>
+      <td>Europe/Zagreb</td>
+    </tr>
+    <tr>
+      <td>Europe/Zaporozhye</td>
+    </tr>
+    <tr>
+      <td>Europe/Zurich</td>
+    </tr>
+    <tr>
+      <td>Indian/Antananarivo</td>
+    </tr>
+    <tr>
+      <td>Indian/Chagos</td>
+    </tr>
+    <tr>
+      <td>Indian/Christmas</td>
+    </tr>
+    <tr>
+      <td>Indian/Comoro</td>
+    </tr>
+    <tr>
+      <td>Indian/Kerguelen</td>
+    </tr>
+    <tr>
+      <td>Indian/Mahe</td>
+    </tr>
+    <tr>
+      <td>Indian/Maldives</td>
+    </tr>
+    <tr>
+      <td>Indian/Mauritius</td>
+    </tr>
+    <tr>
+      <td>Indian/Mayotte</td>
+    </tr>
+    <tr>
+      <td>Indian/Reunion</td>
+    </tr>
+    <tr>
+      <td>Pacific/Apia</td>
+    </tr>
+    <tr>
+      <td>Pacific/Auckland</td>
+    </tr>
+    <tr>
+      <td>Pacific/Bougainville</td>
+    </tr>
+    <tr>
+      <td>Pacific/Chuuk</td>
+    </tr>
+    <tr>
+      <td>Pacific/Easter</td>
+    </tr>
+    <tr>
+      <td>Pacific/Efate</td>
+    </tr>
+    <tr>
+      <td>Pacific/Enderbury</td>
+    </tr>
+    <tr>
+      <td>Pacific/Fakaofo</td>
+    </tr>
+    <tr>
+      <td>Pacific/Fiji</td>
+    </tr>
+    <tr>
+      <td>Pacific/Funafuti</td>
+    </tr>
+    <tr>
+      <td>Pacific/Galapagos</td>
+    </tr>
+    <tr>
+      <td>Pacific/Gambier</td>
+    </tr>
+    <tr>
+      <td>Pacific/Guadalcanal</td>
+    </tr>
+    <tr>
+      <td>Pacific/Guam</td>
+    </tr>
+    <tr>
+      <td>Pacific/Honolulu</td>
+    </tr>
+    <tr>
+      <td>Pacific/Kiritimati</td>
+    </tr>
+    <tr>
+      <td>Pacific/Kosrae</td>
+    </tr>
+    <tr>
+      <td>Pacific/Kwajalein</td>
+    </tr>
+    <tr>
+      <td>Pacific/Majuro</td>
+    </tr>
+    <tr>
+      <td>Pacific/Midway</td>
+    </tr>
+    <tr>
+      <td>Pacific/Nauru</td>
+    </tr>
+    <tr>
+      <td>Pacific/Niue</td>
+    </tr>
+    <tr>
+      <td>Pacific/Norfolk</td>
+    </tr>
+    <tr>
+      <td>Pacific/Noumea</td>
+    </tr>
+    <tr>
+      <td>Pacific/Pago&#92;&#95;Pago</td>
+    </tr>
+    <tr>
+      <td>Pacific/Palau</td>
+    </tr>
+    <tr>
+      <td>Pacific/Pitcairn</td>
+    </tr>
+    <tr>
+      <td>Pacific/Pohnpei</td>
+    </tr>
+    <tr>
+      <td>Pacific/Port&#92;&#95;Moresby</td>
+    </tr>
+    <tr>
+      <td>Pacific/Rarotonga</td>
+    </tr>
+    <tr>
+      <td>Pacific/Saipan</td>
+    </tr>
+    <tr>
+      <td>Pacific/Tahiti</td>
+    </tr>
+    <tr>
+      <td>Pacific/Tarawa</td>
+    </tr>
+    <tr>
+      <td>Pacific/Tongatapu</td>
+    </tr>
+    <tr>
+      <td>Pacific/Wake</td>
+    </tr>
+  </tbody>
+</table>
 
-| Timezone Codes |
-| -------------- |
-| GMT            |
-| ACDT           |
-| ACST           |
-| ACT            |
-| ACWST          |
-| ADT            |
-| AEDT           |
-| AEST           |
-| AFT            |
-| AKDT           |
-| AKST           |
-| ALMT           |
-| AMST           |
-| AMT            |
-| ANAST          |
-| ANAT           |
-| ART            |
-| AST            |
-| AWST           |
-| AZOST          |
-| AZOT           |
-| AZST           |
-| AZT            |
-| BNT            |
-| BOT            |
-| BRST           |
-| BRT            |
-| BST            |
-| BTT            |
-| CAST           |
-| CCT            |
-| CDT            |
-| CEST           |
-| CET            |
-| CHADT          |
-| CHAST          |
-| CHUT           |
-| CKT            |
-| CLST           |
-| CLT            |
-| COT            |
-| CST            |
-| CXT            |
-| DAVT           |
-| DDUT           |
-| EASST          |
-| EAST           |
-| EAT            |
-| EDT            |
-| EEST           |
-| EET            |
-| EGST           |
-| EGT            |
-| EST            |
-| FET            |
-| FJST           |
-| FJT            |
-| FKST           |
-| FKT            |
-| FNT            |
-| GALT           |
-| GAMT           |
-| GET            |
-| GFT            |
-| GILT           |
-| GMT            |
-| GYT            |
-| HKT            |
-| HST            |
-| ICT            |
-| IDT            |
-| IOT            |
-| IRKST          |
-| IRKT           |
-| IST            |
-| JST            |
-| KGT            |
-| KOST           |
-| KRAST          |
-| KRAT           |
-| KST            |
-| LHDT           |
-| LHST           |
-| LINT           |
-| MAGST          |
-| MAGT           |
-| MART           |
-| MAWT           |
-| MDT            |
-| MHT            |
-| MMT            |
-| MSD            |
-| MSK            |
-| MST            |
-| MUT            |
-| MVT            |
-| MYT            |
-| NDT            |
-| NFT            |
-| NOVST          |
-| NOVT           |
-| NPT            |
-| NST            |
-| NUT            |
-| NZDT           |
-| NZST           |
-| OMSST          |
-| OMST           |
-| PDT            |
-| PET            |
-| PETST          |
-| PETT           |
-| PGT            |
-| PHOT           |
-| PHT            |
-| PKT            |
-| PMDT           |
-| PMST           |
-| PONT           |
-| PST            |
-| PWT            |
-| PYST           |
-| PYT            |
-| RET            |
-| SAST           |
-| SCT            |
-| SGT            |
-| TAHT           |
-| TFT            |
-| TJT            |
-| TKT            |
-| TMT            |
-| TOT            |
-| TVT            |
-| ULAST          |
-| ULAT           |
-| UTC            |
-| UYST           |
-| UYT            |
-| UZT            |
-| VET            |
-| VLAST          |
-| VLAT           |
-| VUT            |
-| WAKT           |
-| WAST           |
-| WAT            |
-| WET            |
-| WFT            |
-| WGST           |
-| WGT            |
-| YAKST          |
-| YAKT           |
-| YAPT           |
-| YEKST          |
-| YEKT           |
+<table>
+  <thead>
+    <tr>
+      <th>Timezone Codes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GMT</td>
+    </tr>
+    <tr>
+      <td>ACDT</td>
+    </tr>
+    <tr>
+      <td>ACST</td>
+    </tr>
+    <tr>
+      <td>ACT</td>
+    </tr>
+    <tr>
+      <td>ACWST</td>
+    </tr>
+    <tr>
+      <td>ADT</td>
+    </tr>
+    <tr>
+      <td>AEDT</td>
+    </tr>
+    <tr>
+      <td>AEST</td>
+    </tr>
+    <tr>
+      <td>AFT</td>
+    </tr>
+    <tr>
+      <td>AKDT</td>
+    </tr>
+    <tr>
+      <td>AKST</td>
+    </tr>
+    <tr>
+      <td>ALMT</td>
+    </tr>
+    <tr>
+      <td>AMST</td>
+    </tr>
+    <tr>
+      <td>AMT</td>
+    </tr>
+    <tr>
+      <td>ANAST</td>
+    </tr>
+    <tr>
+      <td>ANAT</td>
+    </tr>
+    <tr>
+      <td>ART</td>
+    </tr>
+    <tr>
+      <td>AST</td>
+    </tr>
+    <tr>
+      <td>AWST</td>
+    </tr>
+    <tr>
+      <td>AZOST</td>
+    </tr>
+    <tr>
+      <td>AZOT</td>
+    </tr>
+    <tr>
+      <td>AZST</td>
+    </tr>
+    <tr>
+      <td>AZT</td>
+    </tr>
+    <tr>
+      <td>BNT</td>
+    </tr>
+    <tr>
+      <td>BOT</td>
+    </tr>
+    <tr>
+      <td>BRST</td>
+    </tr>
+    <tr>
+      <td>BRT</td>
+    </tr>
+    <tr>
+      <td>BST</td>
+    </tr>
+    <tr>
+      <td>BTT</td>
+    </tr>
+    <tr>
+      <td>CAST</td>
+    </tr>
+    <tr>
+      <td>CCT</td>
+    </tr>
+    <tr>
+      <td>CDT</td>
+    </tr>
+    <tr>
+      <td>CEST</td>
+    </tr>
+    <tr>
+      <td>CET</td>
+    </tr>
+    <tr>
+      <td>CHADT</td>
+    </tr>
+    <tr>
+      <td>CHAST</td>
+    </tr>
+    <tr>
+      <td>CHUT</td>
+    </tr>
+    <tr>
+      <td>CKT</td>
+    </tr>
+    <tr>
+      <td>CLST</td>
+    </tr>
+    <tr>
+      <td>CLT</td>
+    </tr>
+    <tr>
+      <td>COT</td>
+    </tr>
+    <tr>
+      <td>CST</td>
+    </tr>
+    <tr>
+      <td>CXT</td>
+    </tr>
+    <tr>
+      <td>DAVT</td>
+    </tr>
+    <tr>
+      <td>DDUT</td>
+    </tr>
+    <tr>
+      <td>EASST</td>
+    </tr>
+    <tr>
+      <td>EAST</td>
+    </tr>
+    <tr>
+      <td>EAT</td>
+    </tr>
+    <tr>
+      <td>EDT</td>
+    </tr>
+    <tr>
+      <td>EEST</td>
+    </tr>
+    <tr>
+      <td>EET</td>
+    </tr>
+    <tr>
+      <td>EGST</td>
+    </tr>
+    <tr>
+      <td>EGT</td>
+    </tr>
+    <tr>
+      <td>EST</td>
+    </tr>
+    <tr>
+      <td>FET</td>
+    </tr>
+    <tr>
+      <td>FJST</td>
+    </tr>
+    <tr>
+      <td>FJT</td>
+    </tr>
+    <tr>
+      <td>FKST</td>
+    </tr>
+    <tr>
+      <td>FKT</td>
+    </tr>
+    <tr>
+      <td>FNT</td>
+    </tr>
+    <tr>
+      <td>GALT</td>
+    </tr>
+    <tr>
+      <td>GAMT</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+    </tr>
+    <tr>
+      <td>GFT</td>
+    </tr>
+    <tr>
+      <td>GILT</td>
+    </tr>
+    <tr>
+      <td>GMT</td>
+    </tr>
+    <tr>
+      <td>GYT</td>
+    </tr>
+    <tr>
+      <td>HKT</td>
+    </tr>
+    <tr>
+      <td>HST</td>
+    </tr>
+    <tr>
+      <td>ICT</td>
+    </tr>
+    <tr>
+      <td>IDT</td>
+    </tr>
+    <tr>
+      <td>IOT</td>
+    </tr>
+    <tr>
+      <td>IRKST</td>
+    </tr>
+    <tr>
+      <td>IRKT</td>
+    </tr>
+    <tr>
+      <td>IST</td>
+    </tr>
+    <tr>
+      <td>JST</td>
+    </tr>
+    <tr>
+      <td>KGT</td>
+    </tr>
+    <tr>
+      <td>KOST</td>
+    </tr>
+    <tr>
+      <td>KRAST</td>
+    </tr>
+    <tr>
+      <td>KRAT</td>
+    </tr>
+    <tr>
+      <td>KST</td>
+    </tr>
+    <tr>
+      <td>LHDT</td>
+    </tr>
+    <tr>
+      <td>LHST</td>
+    </tr>
+    <tr>
+      <td>LINT</td>
+    </tr>
+    <tr>
+      <td>MAGST</td>
+    </tr>
+    <tr>
+      <td>MAGT</td>
+    </tr>
+    <tr>
+      <td>MART</td>
+    </tr>
+    <tr>
+      <td>MAWT</td>
+    </tr>
+    <tr>
+      <td>MDT</td>
+    </tr>
+    <tr>
+      <td>MHT</td>
+    </tr>
+    <tr>
+      <td>MMT</td>
+    </tr>
+    <tr>
+      <td>MSD</td>
+    </tr>
+    <tr>
+      <td>MSK</td>
+    </tr>
+    <tr>
+      <td>MST</td>
+    </tr>
+    <tr>
+      <td>MUT</td>
+    </tr>
+    <tr>
+      <td>MVT</td>
+    </tr>
+    <tr>
+      <td>MYT</td>
+    </tr>
+    <tr>
+      <td>NDT</td>
+    </tr>
+    <tr>
+      <td>NFT</td>
+    </tr>
+    <tr>
+      <td>NOVST</td>
+    </tr>
+    <tr>
+      <td>NOVT</td>
+    </tr>
+    <tr>
+      <td>NPT</td>
+    </tr>
+    <tr>
+      <td>NST</td>
+    </tr>
+    <tr>
+      <td>NUT</td>
+    </tr>
+    <tr>
+      <td>NZDT</td>
+    </tr>
+    <tr>
+      <td>NZST</td>
+    </tr>
+    <tr>
+      <td>OMSST</td>
+    </tr>
+    <tr>
+      <td>OMST</td>
+    </tr>
+    <tr>
+      <td>PDT</td>
+    </tr>
+    <tr>
+      <td>PET</td>
+    </tr>
+    <tr>
+      <td>PETST</td>
+    </tr>
+    <tr>
+      <td>PETT</td>
+    </tr>
+    <tr>
+      <td>PGT</td>
+    </tr>
+    <tr>
+      <td>PHOT</td>
+    </tr>
+    <tr>
+      <td>PHT</td>
+    </tr>
+    <tr>
+      <td>PKT</td>
+    </tr>
+    <tr>
+      <td>PMDT</td>
+    </tr>
+    <tr>
+      <td>PMST</td>
+    </tr>
+    <tr>
+      <td>PONT</td>
+    </tr>
+    <tr>
+      <td>PST</td>
+    </tr>
+    <tr>
+      <td>PWT</td>
+    </tr>
+    <tr>
+      <td>PYST</td>
+    </tr>
+    <tr>
+      <td>PYT</td>
+    </tr>
+    <tr>
+      <td>RET</td>
+    </tr>
+    <tr>
+      <td>SAST</td>
+    </tr>
+    <tr>
+      <td>SCT</td>
+    </tr>
+    <tr>
+      <td>SGT</td>
+    </tr>
+    <tr>
+      <td>TAHT</td>
+    </tr>
+    <tr>
+      <td>TFT</td>
+    </tr>
+    <tr>
+      <td>TJT</td>
+    </tr>
+    <tr>
+      <td>TKT</td>
+    </tr>
+    <tr>
+      <td>TMT</td>
+    </tr>
+    <tr>
+      <td>TOT</td>
+    </tr>
+    <tr>
+      <td>TVT</td>
+    </tr>
+    <tr>
+      <td>ULAST</td>
+    </tr>
+    <tr>
+      <td>ULAT</td>
+    </tr>
+    <tr>
+      <td>UTC</td>
+    </tr>
+    <tr>
+      <td>UYST</td>
+    </tr>
+    <tr>
+      <td>UYT</td>
+    </tr>
+    <tr>
+      <td>UZT</td>
+    </tr>
+    <tr>
+      <td>VET</td>
+    </tr>
+    <tr>
+      <td>VLAST</td>
+    </tr>
+    <tr>
+      <td>VLAT</td>
+    </tr>
+    <tr>
+      <td>VUT</td>
+    </tr>
+    <tr>
+      <td>WAKT</td>
+    </tr>
+    <tr>
+      <td>WAST</td>
+    </tr>
+    <tr>
+      <td>WAT</td>
+    </tr>
+    <tr>
+      <td>WET</td>
+    </tr>
+    <tr>
+      <td>WFT</td>
+    </tr>
+    <tr>
+      <td>WGST</td>
+    </tr>
+    <tr>
+      <td>WGT</td>
+    </tr>
+    <tr>
+      <td>YAKST</td>
+    </tr>
+    <tr>
+      <td>YAKT</td>
+    </tr>
+    <tr>
+      <td>YAPT</td>
+    </tr>
+    <tr>
+      <td>YEKST</td>
+    </tr>
+    <tr>
+      <td>YEKT</td>
+    </tr>
+  </tbody>
+</table>
 
-| UTC / ETC Offsets |
-| ----------------- |
-| UTC -12           |
-| UTC -11           |
-| UTC -10           |
-| UTC -9:30         |
-| UTC -9            |
-| UTC -8            |
-| UTC -7            |
-| UTC -6            |
-| UTC -5            |
-| UTC -4            |
-| UTC -3:30         |
-| UTC -3            |
-| UTC -2:30         |
-| UTC -2            |
-| UTC -1            |
-| UTC-12            |
-| UTC-11            |
-| UTC-10            |
-| UTC-9:30          |
-| UTC-9             |
-| UTC-8             |
-| UTC-7             |
-| UTC-6             |
-| UTC-5             |
-| UTC-4             |
-| UTC-3:30          |
-| UTC-3             |
-| UTC-2:30          |
-| UTC-2             |
-| UTC-1             |
-| UTC               |
-| UTC+0             |
-| UTC+1             |
-| UTC+2             |
-| UTC+3             |
-| UTC+3:30          |
-| UTC+4             |
-| UTC+4:30          |
-| UTC+5             |
-| UTC+5:30          |
-| UTC+5:45          |
-| UTC+6             |
-| UTC+6:30          |
-| UTC+7             |
-| UTC+8             |
-| UTC+8:30          |
-| UTC+8:45          |
-| UTC+9             |
-| UTC+9:30          |
-| UTC+10            |
-| UTC+10:30         |
-| UTC+11            |
-| UTC+12            |
-| UTC+12            |
-| UTC+12:45         |
-| UTC+13            |
-| UTC+13:45         |
-| UTC+14            |
-| UTC +0            |
-| UTC +1            |
-| UTC +2            |
-| UTC +3            |
-| UTC +3:30         |
-| UTC +4            |
-| UTC +4:30         |
-| UTC +5            |
-| UTC +5:30         |
-| UTC +5:45         |
-| UTC +6            |
-| UTC +6:30         |
-| UTC +7            |
-| UTC +8            |
-| UTC +8:30         |
-| UTC +8:45         |
-| UTC +9            |
-| UTC +9:30         |
-| UTC +10           |
-| UTC +10:30        |
-| UTC +11           |
-| UTC +12           |
-| UTC +12:45        |
-| UTC +13           |
-| UTC +13:45        |
-| UTC +14           |
-| ETC/GMT           |
-| ETC/GMT-0         |
-| ETC/GMT-1         |
-| ETC/GMT-2         |
-| ETC/GMT-3         |
-| ETC/GMT-4         |
-| ETC/GMT-5         |
-| ETC/GMT-6         |
-| ETC/GMT-7         |
-| ETC/GMT-8         |
-| ETC/GMT-9         |
-| ETC/GMT-10        |
-| ETC/GMT-11        |
-| ETC/GMT-12        |
-| ETC/GMT-13        |
-| ETC/GMT-14        |
-| ETC/GMT+0         |
-| ETC/GMT+1         |
-| ETC/GMT+2         |
-| ETC/GMT+3         |
-| ETC/GMT+4         |
-| ETC/GMT+5         |
-| ETC/GMT+6         |
-| ETC/GMT+7         |
-| ETC/GMT+8         |
-| ETC/GMT+9         |
-| ETC/GMT+10        |
-| ETC/GMT+11        |
-| ETC/GMT+12        |
-| ETC/GMT0          |
-| ETC/Greenwich     |
-| ETC/UCT           |
-| ETC/Universal     |
-| ETC/UTC           |
-
-***
-
-[Analytics](/marketing-solutions/v2025.07/docs/analytics)
-
-[Transaction IDs](/marketing-solutions/v2025.07/docs/transaction-ids)
+<table>
+  <thead>
+    <tr>
+      <th>UTC / ETC Offsets</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>UTC -12</td>
+    </tr>
+    <tr>
+      <td>UTC -11</td>
+    </tr>
+    <tr>
+      <td>UTC -10</td>
+    </tr>
+    <tr>
+      <td>UTC -9:30</td>
+    </tr>
+    <tr>
+      <td>UTC -9</td>
+    </tr>
+    <tr>
+      <td>UTC -8</td>
+    </tr>
+    <tr>
+      <td>UTC -7</td>
+    </tr>
+    <tr>
+      <td>UTC -6</td>
+    </tr>
+    <tr>
+      <td>UTC -5</td>
+    </tr>
+    <tr>
+      <td>UTC -4</td>
+    </tr>
+    <tr>
+      <td>UTC -3:30</td>
+    </tr>
+    <tr>
+      <td>UTC -3</td>
+    </tr>
+    <tr>
+      <td>UTC -2:30</td>
+    </tr>
+    <tr>
+      <td>UTC -2</td>
+    </tr>
+    <tr>
+      <td>UTC -1</td>
+    </tr>
+    <tr>
+      <td>UTC-12</td>
+    </tr>
+    <tr>
+      <td>UTC-11</td>
+    </tr>
+    <tr>
+      <td>UTC-10</td>
+    </tr>
+    <tr>
+      <td>UTC-9:30</td>
+    </tr>
+    <tr>
+      <td>UTC-9</td>
+    </tr>
+    <tr>
+      <td>UTC-8</td>
+    </tr>
+    <tr>
+      <td>UTC-7</td>
+    </tr>
+    <tr>
+      <td>UTC-6</td>
+    </tr>
+    <tr>
+      <td>UTC-5</td>
+    </tr>
+    <tr>
+      <td>UTC-4</td>
+    </tr>
+    <tr>
+      <td>UTC-3:30</td>
+    </tr>
+    <tr>
+      <td>UTC-3</td>
+    </tr>
+    <tr>
+      <td>UTC-2:30</td>
+    </tr>
+    <tr>
+      <td>UTC-2</td>
+    </tr>
+    <tr>
+      <td>UTC-1</td>
+    </tr>
+    <tr>
+      <td>UTC</td>
+    </tr>
+    <tr>
+      <td>UTC+0</td>
+    </tr>
+    <tr>
+      <td>UTC+1</td>
+    </tr>
+    <tr>
+      <td>UTC+2</td>
+    </tr>
+    <tr>
+      <td>UTC+3</td>
+    </tr>
+    <tr>
+      <td>UTC+3:30</td>
+    </tr>
+    <tr>
+      <td>UTC+4</td>
+    </tr>
+    <tr>
+      <td>UTC+4:30</td>
+    </tr>
+    <tr>
+      <td>UTC+5</td>
+    </tr>
+    <tr>
+      <td>UTC+5:30</td>
+    </tr>
+    <tr>
+      <td>UTC+5:45</td>
+    </tr>
+    <tr>
+      <td>UTC+6</td>
+    </tr>
+    <tr>
+      <td>UTC+6:30</td>
+    </tr>
+    <tr>
+      <td>UTC+7</td>
+    </tr>
+    <tr>
+      <td>UTC+8</td>
+    </tr>
+    <tr>
+      <td>UTC+8:30</td>
+    </tr>
+    <tr>
+      <td>UTC+8:45</td>
+    </tr>
+    <tr>
+      <td>UTC+9</td>
+    </tr>
+    <tr>
+      <td>UTC+9:30</td>
+    </tr>
+    <tr>
+      <td>UTC+10</td>
+    </tr>
+    <tr>
+      <td>UTC+10:30</td>
+    </tr>
+    <tr>
+      <td>UTC+11</td>
+    </tr>
+    <tr>
+      <td>UTC+12</td>
+    </tr>
+    <tr>
+      <td>UTC+12</td>
+    </tr>
+    <tr>
+      <td>UTC+12:45</td>
+    </tr>
+    <tr>
+      <td>UTC+13</td>
+    </tr>
+    <tr>
+      <td>UTC+13:45</td>
+    </tr>
+    <tr>
+      <td>UTC+14</td>
+    </tr>
+    <tr>
+      <td>UTC +0</td>
+    </tr>
+    <tr>
+      <td>UTC +1</td>
+    </tr>
+    <tr>
+      <td>UTC +2</td>
+    </tr>
+    <tr>
+      <td>UTC +3</td>
+    </tr>
+    <tr>
+      <td>UTC +3:30</td>
+    </tr>
+    <tr>
+      <td>UTC +4</td>
+    </tr>
+    <tr>
+      <td>UTC +4:30</td>
+    </tr>
+    <tr>
+      <td>UTC +5</td>
+    </tr>
+    <tr>
+      <td>UTC +5:30</td>
+    </tr>
+    <tr>
+      <td>UTC +5:45</td>
+    </tr>
+    <tr>
+      <td>UTC +6</td>
+    </tr>
+    <tr>
+      <td>UTC +6:30</td>
+    </tr>
+    <tr>
+      <td>UTC +7</td>
+    </tr>
+    <tr>
+      <td>UTC +8</td>
+    </tr>
+    <tr>
+      <td>UTC +8:30</td>
+    </tr>
+    <tr>
+      <td>UTC +8:45</td>
+    </tr>
+    <tr>
+      <td>UTC +9</td>
+    </tr>
+    <tr>
+      <td>UTC +9:30</td>
+    </tr>
+    <tr>
+      <td>UTC +10</td>
+    </tr>
+    <tr>
+      <td>UTC +10:30</td>
+    </tr>
+    <tr>
+      <td>UTC +11</td>
+    </tr>
+    <tr>
+      <td>UTC +12</td>
+    </tr>
+    <tr>
+      <td>UTC +12:45</td>
+    </tr>
+    <tr>
+      <td>UTC +13</td>
+    </tr>
+    <tr>
+      <td>UTC +13:45</td>
+    </tr>
+    <tr>
+      <td>UTC +14</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-0</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-1</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-2</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-3</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-4</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-5</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-6</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-7</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-8</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-9</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-10</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-11</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-12</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-13</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT-14</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+0</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+1</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+2</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+3</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+4</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+5</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+6</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+7</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+8</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+9</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+10</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+11</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT+12</td>
+    </tr>
+    <tr>
+      <td>ETC/GMT0</td>
+    </tr>
+    <tr>
+      <td>ETC/Greenwich</td>
+    </tr>
+    <tr>
+      <td>ETC/UCT</td>
+    </tr>
+    <tr>
+      <td>ETC/Universal</td>
+    </tr>
+    <tr>
+      <td>ETC/UTC</td>
+    </tr>
+  </tbody>
+</table>
