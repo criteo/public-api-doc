@@ -19,25 +19,69 @@ original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Med
 ## **Endpoints**
 
 <table>
-  <thead>
-    <tr>
-      <th>Method</th>
-      <th>Endpoint</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>GET</strong></td>
-      <td><code>/accounts/&#123;accountId&#125;/line-items</code></td>
-      <td>Retrieve all line items associated with a specific account.</td>
-    </tr>
-    <tr>
-      <td><strong>GET</strong></td>
-      <td><code>/line-items/&#123;lineItemId&#125;</code></td>
-      <td>Retrieve details of a specific line item.</td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Method
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/line-items
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve all line items associated with a specific account.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve details of a specific line item.
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>
 
 <br />
@@ -45,80 +89,514 @@ original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Med
 ## **Line Item Attributes**
 
 <table>
-  <thead>
-    <tr>
-      <th>Attribute</th>
-      <th>Data Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>id</code></td>
-      <td>string</td>
-      <td>Line item ID, generated internally by Criteo<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>name</code></td>
-      <td>string</td>
-      <td>Line item name, must be unique within a campaign<br />Accepted values: up to 255-chars string<br />Writeable? Y / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>campaignId</code></td>
-      <td>string</td>
-      <td><a href="/retail-media/v2025.10/docs/campaign">Campaign</a> ID, in which the respective line item belongs<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>type</code></td>
-      <td>enum</td>
-      <td><a href="/retail-media/v2025.10/docs/campaign">Campaign</a> type<br />Accepted values: <code>auction</code>, <code>preferred</code><br />Writeable? Y / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>targetRetailerId</code></td>
-      <td>string</td>
-      <td><a href="/retail-media/v2025.10/docs/retailers">Retailer</a> ID, in which the respective line item serves ad on<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>startDate</code></td>
-      <td>date</td>
-      <td>Start date of the line item, in the <a href="/retail-media/v2025.10/docs/account">Account</a> timezone; used to schedule its activation and start serving ads.<br />To understand the conditions that will cause a status to change, check out <a href="/retail-media/v2025.10/docs/campaign-lineitem-status">Campaign &amp; Line Item Status</a><br />Accepted values: <code>yyyy-mm-dd</code><br />Writeable? Y / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>endDate</code></td>
-      <td>date</td>
-      <td>End date of the line item, in the <a href="/retail-media/v2025.10/docs/account">Account</a> timezone; serves ads indefinitely if omitted or set to <code>null</code>.<br />A timestamp can be included as well if the line item is desired to end at a certain time of day<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss±hh:mm</code> (in <a href="https://www.iso.org/iso-8601-date-and-time-format.html">ISO-8601</a> )<br />Default: if <code>null</code> or absent, balance will be available indefinitely<br />Writeable? Y / Nullable? Y</td>
-    </tr>
-    <tr>
-      <td><code>budget</code></td>
-      <td>decimal</td>
-      <td>Line item lifetime spend cap, uncapped if omitted or set to <code>null</code><br />Accepted values: <code>budget</code> ≥ 0.0<br />Default: <code>0.0</code><br />Writeable? Y / Nullable? Y</td>
-    </tr>
-    <tr>
-      <td><code>budgetSpent</code></td>
-      <td>decimal</td>
-      <td>Budget amount the line item has already spent<br />Accepted values: <code>budgetSpent</code> ≥ 0.0<br />Default: <code>0.0</code><br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>budgetRemaining</code></td>
-      <td>decimal</td>
-      <td>Budget amount the line item has remaining until cap is hit; <code>null</code> if budget is uncapped<br />Accepted values: 0 ≤ <code>budgetRemaining</code> ≤ <code>budget</code><br />Default: <code>0.0</code><br />Writeable? N / Nullable? Y</td>
-    </tr>
-    <tr>
-      <td><code>status</code></td>
-      <td>enum</td>
-      <td>Line item status; can only be updated by a user to <code>active</code> or <code>paused</code>; all other values are applied automatically depending on financials, flight dates, or missing attributes required for line item to serve.<br />To understand the conditions that will cause a status to change, check out <a href="/retail-media/v2025.10/docs/campaign-lineitem-status">Campaign &amp; Line Item Status</a><br />Accepted values: <code>active</code>, <code>paused</code>, <code>scheduled</code>, <code>ended</code>, <code>budgetHit</code>, <code>noFunds</code>, <code>draft</code>, <code>archived</code><br />Writeable? Y / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>createdAt</code></td>
-      <td>timestamp</td>
-      <td>Timestamp of line item creation, in UTC<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss±hh:mm</code>(in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a>)<br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>updatedAt</code></td>
-      <td>timestamp</td>
-      <td>Timestamp of last line item update, in UTC<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss±hh:mm</code>(in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a>)<br />Default: same as <code>createdAt</code><br />Writeable? N / Nullable? N</td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item ID, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      name
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item name, must be unique within a campaign
+    </p>
+    <p>
+     Accepted values: up to 255-chars string
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.10/docs/campaign">
+      Campaign
+     </a>
+     ID, in which the respective line item belongs
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      type
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.10/docs/campaign">
+      Campaign
+     </a>
+     type
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      auction
+     </code>
+     ,
+     <code>
+      preferred
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      targetRetailerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.10/docs/retailers">
+      Retailer
+     </a>
+     ID, in which the respective line item serves ad on
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     Start date of the line item, in the
+     <a href="/retail-media/v2025.10/docs/account">
+      Account
+     </a>
+     timezone; used to schedule its activation and start serving ads.
+    </p>
+    <p>
+     To understand the conditions that will cause a status to change, check out
+     <a href="/retail-media/v2025.10/docs/campaign-lineitem-status">
+      Campaign &amp; Line Item Status
+     </a>
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-dd
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     End date of the line item, in the
+     <a href="/retail-media/v2025.10/docs/account">
+      Account
+     </a>
+     timezone; serves ads indefinitely if omitted or set to
+     <code>
+      null
+     </code>
+     .
+    </p>
+    <p>
+     A timestamp can be included as well if the line item is desired to end at a certain time of day
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss±hh:mm
+     </code>
+     (in
+     <a href="https://www.iso.org/iso-8601-date-and-time-format.html">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Default: if
+     <code>
+      null
+     </code>
+     or absent, balance will be available indefinitely
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budget
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item lifetime spend cap, uncapped if omitted or set to
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      budget
+     </code>
+     ≥ 0.0
+    </p>
+    <p>
+     Default:
+     <code>
+      0.0
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budgetSpent
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Budget amount the line item has already spent
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      budgetSpent
+     </code>
+     ≥ 0.0
+    </p>
+    <p>
+     Default:
+     <code>
+      0.0
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budgetRemaining
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Budget amount the line item has remaining until cap is hit;
+     <code>
+      null
+     </code>
+     if budget is uncapped
+    </p>
+    <p>
+     Accepted values: 0 ≤
+     <code>
+      budgetRemaining
+     </code>
+     ≤
+     <code>
+      budget
+     </code>
+    </p>
+    <p>
+     Default:
+     <code>
+      0.0
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      status
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item status; can only be updated by a user to
+     <code>
+      active
+     </code>
+     or
+     <code>
+      paused
+     </code>
+     ; all other values are applied automatically depending on financials, flight dates, or missing attributes required for line item to serve.
+    </p>
+    <p>
+     To understand the conditions that will cause a status to change, check out
+     <a href="/retail-media/v2025.10/docs/campaign-lineitem-status">
+      Campaign &amp; Line Item Status
+     </a>
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      active
+     </code>
+     ,
+     <code>
+      paused
+     </code>
+     ,
+     <code>
+      scheduled
+     </code>
+     ,
+     <code>
+      ended
+     </code>
+     ,
+     <code>
+      budgetHit
+     </code>
+     ,
+     <code>
+      noFunds
+     </code>
+     ,
+     <code>
+      draft
+     </code>
+     ,
+     <code>
+      archived
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      createdAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of line item creation, in UTC
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss±hh:mm
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      updatedAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of last line item update, in UTC
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss±hh:mm
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Default: same as
+     <code>
+      createdAt
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>
 
 <br />
@@ -379,24 +857,87 @@ catch(HTTP_Request2_Exception $e) {
 ## **Responses**
 
 <table>
-  <thead>
-    <tr>
-      <th>Response</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>🟢<br /><code>200</code></td>
-      <td>Call completed successfully. The specified line item details are returned.</td>
-    </tr>
-    <tr>
-      <td>🔴<br /><code>403</code></td>
-      <td>API user is not authorized to make requests for the account ID. To request authorization, follow the<br /><a href="/retail-media/v2025.10/docs/authorization-requests">authorization request</a><br />steps.</td>
-    </tr>
-    <tr>
-      <td>🔴<br /><code>404</code></td>
-      <td>Line item ID not found. Ensure the<br /><code>lineItemId</code><br />is correct and exists.</td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢
+    </p>
+    <p>
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call completed successfully. The specified line item details are returned.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      403
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     API user is not authorized to make requests for the account ID. To request authorization, follow the
+    </p>
+    <p>
+     <a href="/retail-media/v2025.10/docs/authorization-requests">
+      authorization request
+     </a>
+    </p>
+    <p>
+     steps.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      404
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item ID not found. Ensure the
+    </p>
+    <p>
+     <code>
+      lineItemId
+     </code>
+    </p>
+    <p>
+     is correct and exists.
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>

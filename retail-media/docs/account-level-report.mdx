@@ -22,20 +22,48 @@ The endpoint supports asynchronous report generation and provides access to the 
 ## Endpoint
 
 <table>
-  <thead>
-    <tr>
-      <th>Verb</th>
-      <th>Endpoint</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>POST</strong></td>
-      <td><code>/retail-media/reports/accounts</code></td>
-      <td>Request flexible reporting at the account level</td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /retail-media/reports/accounts
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Request flexible reporting at the account level
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>
 
 <Info>
@@ -53,110 +81,711 @@ The endpoint supports asynchronous report generation and provides access to the 
 ## Report Request Attributes
 
 <table>
-  <thead>
-    <tr>
-      <th>Attribute</th>
-      <th>Data Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>accountIds</code>&#42;</td>
-      <td>string</td>
-      <td>Account ID(s) of the desired report<br />Examples: <code>accountIds: "12345"</code> <code>accountIds: ["12345", "67890"]</code><br />When a supply account ID is included, other IDs in the request will be ignored. The report will include Commerce Max retailer-billed campaigns in addition to the campaigns running on that account. Use <code>budgetModel</code> to separate campaign types within the same report.<br />Accepted values: single or list of string/int64 (max 5 IDs per call) Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>aggregationLevel</code></td>
-      <td>enum</td>
-      <td>Accepted values: <code>campaign</code>, <code>lineItem</code></td>
-    </tr>
-    <tr>
-      <td><code>reportType</code></td>
-      <td>enum</td>
-      <td>Report types are pre-packaged reports that allow the specification of the report breakdown. See Report Types for more details about each of them.<br /><ul><li>&#95;Note&#95;&#42;: when <code>metrics</code> and <code>dimensions</code> are used, the <code>reportType</code> is ignored.</li></ul><br />Accepted values: refer to Report Types page for a complete list of available values Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>dimensions</code></td>
-      <td>list``</td>
-      <td>Dimension attributes desired for metrics breakdown for the custom report of the campaign(s) / line item(s).<br /><ul><li>&#95;Note&#95;: when <code>metrics</code> and <code>dimensions</code> are used, the <code>reportType</code> is automatically ignored</li></ul><br />Accepted values: refer to Metrics and Dimensions page for a complete list of available values Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>metrics</code></td>
-      <td>list``</td>
-      <td>Quantitative metrics desired in the custom report of the campaign(s) / line item(s).<br /><ul><li>&#95;Note&#95;&#42;:</li><li>when <code>metrics</code> and <code>dimensions</code> are used, the <code>reportType</code> is automatically ignored</li><li>when including <code>winRate</code> metric, it is required to either define <code>campaignType</code> as <code>sponsoredProducts</code> or include <code>campaignTypeName</code> in the list of dimensions</li></ul><br />Accepted values: refer to Metrics and Dimensions page for a complete list of available values Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>startDate</code>&#42;</td>
-      <td>date</td>
-      <td>Start date to report (inclusive)<br />Accepted values: <code>YYYY-MM-DD</code> Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>endDate</code>&#42;</td>
-      <td>date</td>
-      <td>End date to report (inclusive)<br />Accepted values: <code>YYYY-MM-DD</code> Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>campaignType</code></td>
-      <td>enum</td>
-      <td>Campaign type<br />Accepted values: <code>sponsoredProducts</code>, <code>onSiteDisplays</code> Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>timeZone</code></td>
-      <td>string</td>
-      <td>Time zone to consider in the report<br />Accepted values: IANA (TZ database) time zones (example: <code>America/New&#95;York</code>, <code>Europe/Paris</code>, <code>Asia/Tokyo</code>, <code>UTC</code>) Writeable? N / Nullable? Y</td>
-    </tr>
-    <tr>
-      <td><code>clickAttributionWindow</code></td>
-      <td>enum</td>
-      <td>The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if <code>viewAttributionWindow</code> is one of the accepted values.<br />The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click. Defaults to campaign settings if omitted; must be specified if <code>viewAttributionWindow</code> is one of the accepted values.<br />Accepted values: <code>none</code>, <code>7D</code>, <code>14D</code>, <code>30D</code> Writeable? N / Nullable? Y</td>
-    </tr>
-    <tr>
-      <td><code>viewAttributionWindow</code></td>
-      <td>enum</td>
-      <td>The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to <code>clickAttributionWindow</code>; must be specified if <code>clickAttributionWindow</code> is one of the accepted values.<br />The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression. Defaults to campaign settings if omitted; must be less than or equal to <code>clickAttributionWindow</code>; must be specified if <code>clickAttributionWindow</code> is one of the accepted values.<br />Accepted values: <code>none</code>, <code>1D</code>, <code>7D</code>, <code>14D</code>, <code>30D</code> Writeable? N / Nullable? Y</td>
-    </tr>
-    <tr>
-      <td><code>salesChannel</code></td>
-      <td>enum</td>
-      <td>Filter on specific sales channel: online or offline<br />Accepted values: <code>online</code>, <code>offline</code> Writeable? N / Nullable? Y</td>
-    </tr>
-    <tr>
-      <td><code>format</code></td>
-      <td>enum</td>
-      <td>Format of the report data returned<br />Accepted values: <code>json</code>, <code>json-compact</code>, <code>json-newline</code>, <code>csv</code> Default: <code>json</code> Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>searchTermTypes</code></td>
-      <td>string</td>
-      <td>The match type used to associate a search term and keywords entered for the campaign.<br />Accepted values: <code>Entered</code>: the search term matches exactly what was entered manually by the Commerce Max user <code>Searched</code>: the search term matches what a shopper searched on the retailer’s website. <code>Null</code>: All other cases, typically corresponding to automatically matched keywords.</td>
-    </tr>
-    <tr>
-      <td><code>searchTermTargeting</code></td>
-      <td>string</td>
-      <td>Indicates how the keyword was targeted — either manually by the user or automatically by the platform.<br /><code>Manual targeting</code>: The search term matches a keyword entered in Commerce Max or a variation created via stemming.<br /><code>Automatic targeting</code>: The search term was added by the automated keyword tool.</td>
-    </tr>
-    <tr>
-      <td><code>targetedKeywordType</code></td>
-      <td>string</td>
-      <td>Specifies the conquesting strategy used with the keyword.<br /><code>Conquesting</code>: Targets competitors' branded keywords. <code>Branded</code>: Targets the advertiser’s own branded keywords. <code>Generic</code>: Targets neutral or non-branded keywords. <code>Unknown</code>: Used for keyword/product pairs without a defined conquesting type (e.g. before conquesting was implemented).</td>
-    </tr>
-    <tr>
-      <td><code>mediaType</code></td>
-      <td>string</td>
-      <td>The type of creative asset used in the ad, such as Display or Video.</td>
-    </tr>
-    <tr>
-      <td><code>budgetModel</code></td>
-      <td>string</td>
-      <td>Identifies the funding source for the campaign's media spend. Values: <code>Criteo Budget</code>, <code>Retailer Budget</code></td>
-    </tr>
-    <tr>
-      <td><code>activationPlatform</code></td>
-      <td>string</td>
-      <td>Platform through which the campaign was activated<br />Values: <code>Commerce Max</code>, <code>Private Market</code></td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountIds
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Account ID(s) of the desired report
+    </p>
+    <p>
+     Examples:
+     <code>
+      accountIds: "12345"
+     </code>
+     <code>
+      accountIds: ["12345", "67890"]
+     </code>
+    </p>
+    <p>
+     When a supply account ID is included, other IDs in the request will be ignored. The report will include Commerce Max retailer-billed campaigns in addition to the campaigns running on that account. Use
+     <code>
+      budgetModel
+     </code>
+     to separate campaign types within the same report.
+    </p>
+    <p>
+     Accepted values: single or list of string/int64 (max 5 IDs per call) Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      aggregationLevel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Accepted values:
+     <code>
+      campaign
+     </code>
+     ,
+     <code>
+      lineItem
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      reportType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Report types are pre-packaged reports that allow the specification of the report breakdown. See Report Types for more details about each of them.
+    </p>
+    <ul>
+     <li>
+      _Note_*: when
+      <code>
+       metrics
+      </code>
+      and
+      <code>
+       dimensions
+      </code>
+      are used, the
+      <code>
+       reportType
+      </code>
+      is ignored.
+     </li>
+    </ul>
+    <p>
+     Accepted values: refer to Report Types page for a complete list of available values Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      dimensions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     list``
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension attributes desired for metrics breakdown for the custom report of the campaign(s) / line item(s).
+    </p>
+    <ul>
+     <li>
+      _Note_: when
+      <code>
+       metrics
+      </code>
+      and
+      <code>
+       dimensions
+      </code>
+      are used, the
+      <code>
+       reportType
+      </code>
+      is automatically ignored
+     </li>
+    </ul>
+    <p>
+     Accepted values: refer to Metrics and Dimensions page for a complete list of available values Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      metrics
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     list``
+    </p>
+   </td>
+   <td>
+    <p>
+     Quantitative metrics desired in the custom report of the campaign(s) / line item(s).
+    </p>
+    <ul>
+     <li>
+      _Note_*:
+     </li>
+     <li>
+      when
+      <code>
+       metrics
+      </code>
+      and
+      <code>
+       dimensions
+      </code>
+      are used, the
+      <code>
+       reportType
+      </code>
+      is automatically ignored
+     </li>
+     <li>
+      when including
+      <code>
+       winRate
+      </code>
+      metric, it is required to either define
+      <code>
+       campaignType
+      </code>
+      as
+      <code>
+       sponsoredProducts
+      </code>
+      or include
+      <code>
+       campaignTypeName
+      </code>
+      in the list of dimensions
+     </li>
+    </ul>
+    <p>
+     Accepted values: refer to Metrics and Dimensions page for a complete list of available values Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     Start date to report (inclusive)
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      YYYY-MM-DD
+     </code>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     End date to report (inclusive)
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      YYYY-MM-DD
+     </code>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign type
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      sponsoredProducts
+     </code>
+     ,
+     <code>
+      onSiteDisplays
+     </code>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timeZone
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Time zone to consider in the report
+    </p>
+    <p>
+     Accepted values: IANA (TZ database) time zones (example:
+     <code>
+      America/New_York
+     </code>
+     ,
+     <code>
+      Europe/Paris
+     </code>
+     ,
+     <code>
+      Asia/Tokyo
+     </code>
+     ,
+     <code>
+      UTC
+     </code>
+     ) Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clickAttributionWindow
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if
+     <code>
+      viewAttributionWindow
+     </code>
+     is one of the accepted values.
+    </p>
+    <p>
+     The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click. Defaults to campaign settings if omitted; must be specified if
+     <code>
+      viewAttributionWindow
+     </code>
+     is one of the accepted values.
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      none
+     </code>
+     ,
+     <code>
+      7D
+     </code>
+     ,
+     <code>
+      14D
+     </code>
+     ,
+     <code>
+      30D
+     </code>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      viewAttributionWindow
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to
+     <code>
+      clickAttributionWindow
+     </code>
+     ; must be specified if
+     <code>
+      clickAttributionWindow
+     </code>
+     is one of the accepted values.
+    </p>
+    <p>
+     The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression. Defaults to campaign settings if omitted; must be less than or equal to
+     <code>
+      clickAttributionWindow
+     </code>
+     ; must be specified if
+     <code>
+      clickAttributionWindow
+     </code>
+     is one of the accepted values.
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      none
+     </code>
+     ,
+     <code>
+      1D
+     </code>
+     ,
+     <code>
+      7D
+     </code>
+     ,
+     <code>
+      14D
+     </code>
+     ,
+     <code>
+      30D
+     </code>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      salesChannel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter on specific sales channel: online or offline
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      online
+     </code>
+     ,
+     <code>
+      offline
+     </code>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      format
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Format of the report data returned
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      json
+     </code>
+     ,
+     <code>
+      json-compact
+     </code>
+     ,
+     <code>
+      json-newline
+     </code>
+     ,
+     <code>
+      csv
+     </code>
+     Default:
+     <code>
+      json
+     </code>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      searchTermTypes
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The match type used to associate a search term and keywords entered for the campaign.
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      Entered
+     </code>
+     : the search term matches exactly what was entered manually by the Commerce Max user
+     <code>
+      Searched
+     </code>
+     : the search term matches what a shopper searched on the retailer’s website.
+     <code>
+      Null
+     </code>
+     : All other cases, typically corresponding to automatically matched keywords.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      searchTermTargeting
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates how the keyword was targeted — either manually by the user or automatically by the platform.
+    </p>
+    <p>
+     <code>
+      Manual targeting
+     </code>
+     : The search term matches a keyword entered in Commerce Max or a variation created via stemming.
+    </p>
+    <p>
+     <code>
+      Automatic targeting
+     </code>
+     : The search term was added by the automated keyword tool.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      targetedKeywordType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Specifies the conquesting strategy used with the keyword.
+    </p>
+    <p>
+     <code>
+      Conquesting
+     </code>
+     : Targets competitors' branded keywords.
+     <code>
+      Branded
+     </code>
+     : Targets the advertiser’s own branded keywords.
+     <code>
+      Generic
+     </code>
+     : Targets neutral or non-branded keywords.
+     <code>
+      Unknown
+     </code>
+     : Used for keyword/product pairs without a defined conquesting type (e.g. before conquesting was implemented).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      mediaType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The type of creative asset used in the ad, such as Display or Video.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budgetModel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Identifies the funding source for the campaign's media spend. Values:
+     <code>
+      Criteo Budget
+     </code>
+     ,
+     <code>
+      Retailer Budget
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      activationPlatform
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Platform through which the campaign was activated
+    </p>
+    <p>
+     Values:
+     <code>
+      Commerce Max
+     </code>
+     ,
+     <code>
+      Private Market
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>
 
 _(*) Required_
@@ -393,28 +1022,182 @@ curl_close($ch);
 ## Responses
 
 <table>
-  <thead>
-    <tr>
-      <th>Response</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>🔵 <code>200</code></td>
-      <td>Call executed with success<br /><ul><li>&#95;Report Type has been ignored&#95;&#42; - Report Type has been ignored since Dimensions and Metrics has been provided. Please remove them if you want to use one of the templates.</li></ul><br />When generating a report type using the <code>metrics</code> and <code>dimensions</code> filters for multi dimension reporting, a warning message will be presented in the <code>200</code> to inform that <code>reportType</code> is ignored. This is because multi dimension takes priority in this scenario.</td>
-    </tr>
-    <tr>
-      <td>🔴 <code>400</code></td>
-      <td>Common Validation Errors<br /><ul><li><strong><code>endDate</code>cannot be more than 100 days from<code>startDate</code></strong> - Using a date range with more than 100 days apart</li><li><strong><code>reportType</code>invalid</strong> - calling an unsupported <code>report type</code> will throw a 400 error</li><li><strong><code>timeZone</code>must be a valid timezone</strong> - using a time zone value that is not listed in the list tz database time zones</li><li><strong>format invalid</strong> - using an unsupported file format</li></ul></td>
-    </tr>
-    <tr>
-      <td>🔴<code>400</code></td>
-      <td>Validation Error<br />In the API, win rate metric will be available to sponsored product campaigns only. When using this metric, please specify <code>campaignTypeName</code> in the list of dimensions to obtain a value<br /><strong>"title": "<code>WinRate</code> metric is only supported for Sponsored Products campaigns.", </strong><br /><strong>"detail": "Please provide either the<code>campaignTypeName</code> in dimensions or filter on <code>SponsoredProducts</code> using the <code>campaignType</code> filter."</strong></td>
-    </tr>
-    <tr>
-      <td>🔴 <code>410</code></td>
-      <td>Expired or Lost Report Error<br />The report is expired, lost, or failed to create. Re-create the report through a new request.</td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+    <ul>
+     <li>
+      _Report Type has been ignored_* - Report Type has been ignored since Dimensions and Metrics has been provided. Please remove them if you want to use one of the templates.
+     </li>
+    </ul>
+    <p>
+     When generating a report type using the
+     <code>
+      metrics
+     </code>
+     and
+     <code>
+      dimensions
+     </code>
+     filters for multi dimension reporting, a warning message will be presented in the
+     <code>
+      200
+     </code>
+     to inform that
+     <code>
+      reportType
+     </code>
+     is ignored. This is because multi dimension takes priority in this scenario.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Common Validation Errors
+    </p>
+    <ul>
+     <li>
+      <strong>
+       <code>
+        endDate
+       </code>
+       cannot be more than 100 days from
+       <code>
+        startDate
+       </code>
+      </strong>
+      - Using a date range with more than 100 days apart
+     </li>
+     <li>
+      <strong>
+       <code>
+        reportType
+       </code>
+       invalid
+      </strong>
+      - calling an unsupported
+      <code>
+       report type
+      </code>
+      will throw a 400 error
+     </li>
+     <li>
+      <strong>
+       <code>
+        timeZone
+       </code>
+       must be a valid timezone
+      </strong>
+      - using a time zone value that is not listed in the list tz database time zones
+     </li>
+     <li>
+      <strong>
+       format invalid
+      </strong>
+      - using an unsupported file format
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Validation Error
+    </p>
+    <p>
+     In the API, win rate metric will be available to sponsored product campaigns only. When using this metric, please specify
+     <code>
+      campaignTypeName
+     </code>
+     in the list of dimensions to obtain a value
+    </p>
+    <p>
+     <strong>
+      "title": "
+      <code>
+       WinRate
+      </code>
+      metric is only supported for Sponsored Products campaigns.",
+     </strong>
+    </p>
+    <p>
+     <strong>
+      "detail": "Please provide either the
+      <code>
+       campaignTypeName
+      </code>
+      in dimensions or filter on
+      <code>
+       SponsoredProducts
+      </code>
+      using the
+      <code>
+       campaignType
+      </code>
+      filter."
+     </strong>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      410
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Expired or Lost Report Error
+    </p>
+    <p>
+     The report is expired, lost, or failed to create. Re-create the report through a new request.
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>

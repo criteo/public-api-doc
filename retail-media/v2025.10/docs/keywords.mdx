@@ -14,35 +14,111 @@ original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Med
 ## Endpoints
 
 <table>
-  <thead>
-    <tr>
-      <th>Verb</th>
-      <th>Endpoint</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>GET</strong></td>
-      <td><code>/line-items/&#123;lineItemId&#125;/keywords</code></td>
-      <td>Retrieve a set of positive and negative keywords for a line item</td>
-    </tr>
-    <tr>
-      <td><strong>GET</strong></td>
-      <td><code>/line-items/&#123;lineItemId&#125;/keywords/recommended</code></td>
-      <td>Retrieve a collection of recommended keywords for a line item</td>
-    </tr>
-    <tr>
-      <td><strong>POST</strong></td>
-      <td><code>/line-items/&#123;lineItemId&#125;/keywords/add-remove</code></td>
-      <td>Add or remove keywords from a line item</td>
-    </tr>
-    <tr>
-      <td><strong>POST</strong></td>
-      <td><code>/line-items/&#123;lineItemId&#125;/keywords/set-bid</code></td>
-      <td>Set a bid override at keyword level</td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;/keywords
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve a set of positive and negative keywords for a line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;/keywords/recommended
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve a collection of recommended keywords for a line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;/keywords/add-remove
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Add or remove keywords from a line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;/keywords/set-bid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Set a bid override at keyword level
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>
 
 ***
@@ -50,65 +126,457 @@ original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Med
 ## Keyword Attributes
 
 <table>
-  <thead>
-    <tr>
-      <th>Attribute</th>
-      <th>Data Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>id</code>&#42;</td>
-      <td>string</td>
-      <td><a href="/retail-media/v2025.10/docs/line-items">Line Item</a> ID, generated internally by Criteo<br />Accepted values: string of int64<br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>keywords</code>&#42;</td>
-      <td>object</td>
-      <td>Keywords structure, indexed by normalized keyword phrases each of them containing structure of:<br /><ul><li><code>matchType</code></li><li><code>bid</code></li><li><code>inputKeywords</code></li><li><code>reviewState</code></li><li><code>createdAt</code></li><li><code>updatedAt</code></li></ul></td>
-    </tr>
-    <tr>
-      <td><code>matchType</code>&#42;</td>
-      <td>enum</td>
-      <td>Matching algorithm type to be used when comparing this keyword with shopper search phrases.<br />Accepted values:<br /><ul><li><code>PositiveExactMatch</code>: normalized keyword is an exact match for the normalized search phrase bid</li><li><code>NegativeExactMatch</code>: normalized keyword is an exact match for the normalized search phrase do not bid</li><li><code>NegativeBroadMatch</code>: normalized keyword is a substring of the normalized search phrase do not bid</li></ul><br />Default: <code>PositiveExactMatch</code><br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>reviewState</code></td>
-      <td>enum</td>
-      <td>Status of Keyword review, only applicable for <code>PositiveExactMatch</code> match type keywords.<br />Keywords not reviewed by the automatic keyword service will be reviewed and approved by the retailer.<br />Accepted values:<br /><ul><li><code>InReview</code>: keyword has been submitted manually, and the review is still pending</li><li><code>Approved</code>: keyword was approved manually</li><li><code>AutoApproved</code>: keyword was approved automatically</li><li><code>Rejected</code>: keyword was rejected manually</li><li><code>AutoRejected</code>: keyword was rejected automatically</li><li><code>Recommended</code>: keyword was recommended by our keyword model</li></ul><br />Default: <code>InReview</code><br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>bid</code></td>
-      <td>decimal</td>
-      <td>The bid override for the positive keyword. The keyword will use the default line item bid if the value is <code>null</code>. The currency of the bid is the default currency for the retailer. The bid can be applied to both manual keywords and recommended keywords.<br />Accepted values: retailer's <code>minBid</code> ≤ <code>bid</code> ≤ line-item's <code>maxBid</code>, available in the endpoints detailed in <a href="/retail-media/v2025.10/docs/catalog-endpoints">Catalog Endpoints</a> and <a href="/retail-media/v2025.10/docs/onsite-display-line-itemsv2">Onsite Display Line Items</a>, respectively<br />Default: <code>null</code><br />Writeable? Y / Nullable? Y</td>
-    </tr>
-    <tr>
-      <td><code>isDeleted</code></td>
-      <td>boolean</td>
-      <td>Control flag to add or remove the keyword from the line-item<br />Accepted values: <code>true</code> / <code>false</code><br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>inputKeywords</code>&#42;</td>
-      <td>object</td>
-      <td>Keywords structure associated with line-item containing normalized keyword phrases and organized by match type.<br />Parameters:<br /><ul><li><code>positiveExact</code>: list of supplied positive exact phrases</li><li><code>negativeExact</code>: list of supplied negative exact phrases</li><li><code>negativeBroad</code>: list of supplied negative broad phrases</li></ul></td>
-    </tr>
-    <tr>
-      <td><code>phrase</code></td>
-      <td>string</td>
-      <td>Raw text of the keyword to be added or removed<br />Accepted values: up to 255-chars string<br />Writeable? Y / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>createdAt</code></td>
-      <td>timestamp</td>
-      <td>Timestamp when keyword was configured in the line-item (or recommended to line-item)<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss</code>(in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a>)<br />Writeable? N / Nullable? N</td>
-    </tr>
-    <tr>
-      <td><code>updatedAt</code></td>
-      <td>timestamp</td>
-      <td>Timestamp when keyword was last modified in the line-item (or recommended to line-item)<br />Accepted values: <code>yyyy-mm-ddThh:mm:ss</code>(in <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a>)<br />Writeable? N / Nullable? N</td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.10/docs/line-items">
+      Line Item
+     </a>
+     ID, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keywords
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     object
+    </p>
+   </td>
+   <td>
+    <p>
+     Keywords structure, indexed by normalized keyword phrases each of them containing structure of:
+    </p>
+    <ul>
+     <li>
+      <code>
+       matchType
+      </code>
+     </li>
+     <li>
+      <code>
+       bid
+      </code>
+     </li>
+     <li>
+      <code>
+       inputKeywords
+      </code>
+     </li>
+     <li>
+      <code>
+       reviewState
+      </code>
+     </li>
+     <li>
+      <code>
+       createdAt
+      </code>
+     </li>
+     <li>
+      <code>
+       updatedAt
+      </code>
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      matchType
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Matching algorithm type to be used when comparing this keyword with shopper search phrases.
+    </p>
+    <p>
+     Accepted values:
+    </p>
+    <ul>
+     <li>
+      <code>
+       PositiveExactMatch
+      </code>
+      : normalized keyword is an exact match for the normalized search phrase bid
+     </li>
+     <li>
+      <code>
+       NegativeExactMatch
+      </code>
+      : normalized keyword is an exact match for the normalized search phrase do not bid
+     </li>
+     <li>
+      <code>
+       NegativeBroadMatch
+      </code>
+      : normalized keyword is a substring of the normalized search phrase do not bid
+     </li>
+    </ul>
+    <p>
+     Default:
+     <code>
+      PositiveExactMatch
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      reviewState
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Status of Keyword review, only applicable for
+     <code>
+      PositiveExactMatch
+     </code>
+     match type keywords.
+    </p>
+    <p>
+     Keywords not reviewed by the automatic keyword service will be reviewed and approved by the retailer.
+    </p>
+    <p>
+     Accepted values:
+    </p>
+    <ul>
+     <li>
+      <code>
+       InReview
+      </code>
+      : keyword has been submitted manually, and the review is still pending
+     </li>
+     <li>
+      <code>
+       Approved
+      </code>
+      : keyword was approved manually
+     </li>
+     <li>
+      <code>
+       AutoApproved
+      </code>
+      : keyword was approved automatically
+     </li>
+     <li>
+      <code>
+       Rejected
+      </code>
+      : keyword was rejected manually
+     </li>
+     <li>
+      <code>
+       AutoRejected
+      </code>
+      : keyword was rejected automatically
+     </li>
+     <li>
+      <code>
+       Recommended
+      </code>
+      : keyword was recommended by our keyword model
+     </li>
+    </ul>
+    <p>
+     Default:
+     <code>
+      InReview
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      bid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     The bid override for the positive keyword. The keyword will use the default line item bid if the value is
+     <code>
+      null
+     </code>
+     . The currency of the bid is the default currency for the retailer. The bid can be applied to both manual keywords and recommended keywords.
+    </p>
+    <p>
+     Accepted values: retailer's
+     <code>
+      minBid
+     </code>
+     ≤
+     <code>
+      bid
+     </code>
+     ≤ line-item's
+     <code>
+      maxBid
+     </code>
+     , available in the endpoints detailed in
+     <a href="/retail-media/v2025.10/docs/catalog-endpoints">
+      Catalog Endpoints
+     </a>
+     and
+     <a href="/retail-media/v2025.10/docs/onsite-display-line-itemsv2">
+      Onsite Display Line Items
+     </a>
+     , respectively
+    </p>
+    <p>
+     Default:
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      isDeleted
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     boolean
+    </p>
+   </td>
+   <td>
+    <p>
+     Control flag to add or remove the keyword from the line-item
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      true
+     </code>
+     /
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      inputKeywords
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     object
+    </p>
+   </td>
+   <td>
+    <p>
+     Keywords structure associated with line-item containing normalized keyword phrases and organized by match type.
+    </p>
+    <p>
+     Parameters:
+    </p>
+    <ul>
+     <li>
+      <code>
+       positiveExact
+      </code>
+      : list of supplied positive exact phrases
+     </li>
+     <li>
+      <code>
+       negativeExact
+      </code>
+      : list of supplied negative exact phrases
+     </li>
+     <li>
+      <code>
+       negativeBroad
+      </code>
+      : list of supplied negative broad phrases
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      phrase
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Raw text of the keyword to be added or removed
+    </p>
+    <p>
+     Accepted values: up to 255-chars string
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      createdAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp when keyword was configured in the line-item (or recommended to line-item)
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      updatedAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp when keyword was last modified in the line-item (or recommended to line-item)
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>
 
 _*Required_
@@ -857,24 +1325,125 @@ _200 successful status will return an empty object array_
 ## Responses
 
 <table>
-  <thead>
-    <tr>
-      <th>Response</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>🔵 <code>200</code> OK</td>
-      <td>Call completed with success</td>
-    </tr>
-    <tr>
-      <td>🔵 <code>201</code> OK</td>
-      <td><ul><li>The call to add/remove the keyword from the line item was executed successfully</li><li>The call to set keyword bid to the line item was executed successfully</li></ul></td>
-    </tr>
-    <tr>
-      <td>🔴 <code>400</code> - Bad Request</td>
-      <td>Setting a bid for a positive keyword that doesn't exist on the line item.<br /><strong>Error Message</strong><br /><code>"On line item &#123;lineItemId&#125; normalized keyword &#92;"&#123;keyword&#125;&#92;"/en&#95;US not found"</code><br />Setting a keyword bid above the line-item <code>maxBid</code> value will result in a 400 bad request error message. In this example, the <code>maxBid</code> value is at least 0.40.<br /><strong>Error Message</strong><br /><code>"Invalid bid value, bid greater than maximum of 1.00000000, found for keyword: "</code><br />Setting a keyword bid below the retailer <code>minBid</code> value will result in a 400 bad request error message. In this example, the <code>minBid</code> value is at least 0.40.<br /><strong>Error Message</strong><br /><code>"Invalid bid value, bid less than minimum of 0.4000, found for keyword: "</code></td>
-    </tr>
-  </tbody>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      200
+     </code>
+     OK
+    </p>
+   </td>
+   <td>
+    <p>
+     Call completed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      201
+     </code>
+     OK
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      The call to add/remove the keyword from the line item was executed successfully
+     </li>
+     <li>
+      The call to set keyword bid to the line item was executed successfully
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+     - Bad Request
+    </p>
+   </td>
+   <td>
+    <p>
+     Setting a bid for a positive keyword that doesn't exist on the line item.
+    </p>
+    <p>
+     <strong>
+      Error Message
+     </strong>
+    </p>
+    <p>
+     <code>
+      "On line item &#123;lineItemId&#125; normalized keyword \"&#123;keyword&#125;\"/en_US not found"
+     </code>
+    </p>
+    <p>
+     Setting a keyword bid above the line-item
+     <code>
+      maxBid
+     </code>
+     value will result in a 400 bad request error message. In this example, the
+     <code>
+      maxBid
+     </code>
+     value is at least 0.40.
+    </p>
+    <p>
+     <strong>
+      Error Message
+     </strong>
+    </p>
+    <p>
+     <code>
+      "Invalid bid value, bid greater than maximum of 1.00000000, found for keyword: "
+     </code>
+    </p>
+    <p>
+     Setting a keyword bid below the retailer
+     <code>
+      minBid
+     </code>
+     value will result in a 400 bad request error message. In this example, the
+     <code>
+      minBid
+     </code>
+     value is at least 0.40.
+    </p>
+    <p>
+     <strong>
+      Error Message
+     </strong>
+    </p>
+    <p>
+     <code>
+      "Invalid bid value, bid less than minimum of 0.4000, found for keyword: "
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
 </table>
