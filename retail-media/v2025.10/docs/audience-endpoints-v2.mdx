@@ -1,0 +1,848 @@
+---
+title: Audience Builder
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2025_10/docs/Guides for Retail Media API/audiences/audience-endpoints-v2.md
+hidden: true
+---
+
+<Note>
+  ### Getting Started
+
+  An _audience_ represents an aggregation of all users who interacted with specific brands or categories over a defined period. Audiences are used only with preferred deals line items with the audience type options of delivering audiences based on a **customerList** or **userBehavior**. Additionally, in Audience V2, there is now an option to specify the user segments to _"include"_ or _"exclude"_ in your user segment targeting.
+</Note>
+
+## **Endpoints**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      GET
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      v2/accounts/&#123;accountId&#125;/audiences
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get all audiences by account id
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      POST
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      v2/accounts/&#123;accountId&#125;/audiences
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a new audience under an account id
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## **Audience Attributes**
+
+<ParamField path="id" type="string">
+  Audience ID
+
+  **Values:** int64
+</ParamField>
+
+<ParamField path="type" type="enum" required>
+  Type of the audience
+
+  **Values:** `customerList`, `userBehaviour`
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  Audience name
+
+  **Values:** -
+</ParamField>
+
+<ParamField path="userAction" type="enum" required>
+  User behavior that is targeted
+
+  **Values:** `viewed`, `buy`, `addToCart`
+</ParamField>
+
+<ParamField path="lookbackWindow" type="enum" required>
+  Length of the loopback window, in days
+
+  **Values:** `P7D`, `P14D`, `P30D`, `P45D`, `P60D`, `P90D`, `P120D`, `P150D`, `P180D`
+</ParamField>
+
+<ParamField path="brandIds" type="int array">
+  *Optional.*
+
+  Brand ids to target
+
+  - **Note:** Either categoryId or brandIds must be specified in the call when creating new audiences
+
+  **Values:** list of brand ids
+</ParamField>
+
+<ParamField path="categoryIds" type="int array">
+  *Optional.*
+
+  Category ids to target.
+
+  - **Note:** Either categoryId or brandIds must be specified in the call when creating new audiences
+
+  **Values:** list of category ids
+</ParamField>
+
+<ParamField path="retailerId" type="string" required>
+  Id of the retailer associated with the audience
+
+  **Values:** -
+</ParamField>
+
+<ParamField path="userBehaviorDetails" type="object">
+  Details related to the user behavior audience.
+
+  **Values:** UserBehaviorDetails
+</ParamField>
+
+<ParamField path="inclusiveSegment" type="object" required>
+  Details related to inclusive user behavior audience
+
+  **Values:** UserBehaviorAudienceSegment
+</ParamField>
+
+<ParamField path="exclusiveSegment" type="object">
+  *Optional.*
+
+  Details related to exclusive user behavior audience. Can only be specified if inclusiveSegment is specified
+
+  **Values:** UserBehaviorAudienceSegment
+</ParamField>
+
+<ParamField path="minPrice" type="double">
+  *Optional.*
+
+  The min price of targeted skus.
+
+  **Values:** -
+</ParamField>
+
+<ParamField path="minPrice" type="double">
+  *Optional.*
+
+  The max price of targeted skus.
+
+  **Values:** -
+</ParamField>
+
+<ParamField path="customerListDetails" type="object">
+  *Optional.*
+
+  Details related to the customer list audience
+
+  **Values:** customerListDetails
+</ParamField>
+
+<ParamField path="size" type="string" required>
+  Number of users in the customer list audience.
+
+  **Values:** int64
+</ParamField>
+
+## **Get All Audiences by Account Id**
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/v2/accounts/{accountId}/audiences
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/v2/accounts/5/audiences?pageSize=3' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import http.client
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = ''
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("GET", "/{version}/retail-media/v2/accounts/5/audiences?pageSize=3", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/v2/accounts/5/audiences?pageSize=3")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/v2/accounts/5/audiences?pageSize=3');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "type": "userBehavior",
+            "id": "395198227654242304",
+            "attributes": {
+                "retailerId": "299",
+                "name": " audience_v2_criteo_1",
+                "userBehaviorDetails": {
+                    "inclusiveSegment": {
+                        "userAction": "buy",
+                        "lookbackWindow": "P180D",
+                        "categoryIds": [],
+                        "brandIds": [
+                            109138
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "userBehavior",
+            "id": "403532223410847744",
+            "attributes": {
+                "retailerId": "299",
+                "name": "audience_v2_criteo_2",
+                "userBehaviorDetails": {
+                    "inclusiveSegment": {
+                        "userAction": "buy",
+                        "lookbackWindow": "P150D",
+                        "categoryIds": [
+                            7023453,
+                            7023464,
+                            7023557,
+                            7023675,
+                            7025275,
+                            7025520,
+                            7025710,
+                            7026190,
+                            7026459,
+                            7026788,
+                            7027760
+                        ],
+                        "brandIds": [
+                            2000162919
+                        ],
+                        "minPrice": 10.0,
+                        "maxPrice": 100.0
+                    },
+                    "exclusiveSegment": {
+                        "userAction": "view",
+                        "lookbackWindow": "P60D",
+                        "categoryIds": [
+                            7023354,
+                            7024734
+                        ],
+                        "brandIds": [],
+                        "minPrice": 10.0,
+                        "maxPrice": 100.0
+                    }
+                }
+            }
+        },
+        {
+            "type": "userBehavior",
+            "id": "407429842909372416",
+            "attributes": {
+                "retailerId": "299",
+                "name": "audience_v2_criteo_3",
+                "userBehaviorDetails": {
+                    "inclusiveSegment": {
+                        "userAction": "addToCart",
+                        "lookbackWindow": "P180D",
+                        "categoryIds": [],
+                        "brandIds": [
+                            2000003211
+                        ]
+                    }
+                }
+            }
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 6,
+        "currentPageSize": 3,
+        "currentPageIndex": 0,
+        "totalPages": 2
+    }
+}
+```
+
+## **Add a New Audience**
+
+This endpoint allows the creation of a new audience.
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+POST https://api.criteo.com/{version}/retail-media/v2/accounts/{audienceId}/audiences
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L 'https://api.criteo.com/{version}/retail-media/v2/accounts/368031080744943616/audiences' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+    "data":
+    {
+        "type": "RetailMediaAudience",
+            "attributes": {
+                "retailerId": "299",
+                "name": "CriteoAudienceV3test",
+                "userBehaviorDetails": {
+                    "inclusiveSegment": {
+                        "userAction": "buy",
+                        "lookbackWindow": "P150D",
+                        "categoryIds": [
+                            7023453,
+                            7023464,
+                            7023557,
+                            7023675,
+                            7025275,
+                            7025520,
+                            7025710,
+                            7026190,
+                            7026459,
+                            7026788,
+                            7027760
+                        ],
+                        "brandIds": [
+                            2000162919
+                        ],
+                        "minPrice": 10.0,
+                        "maxPrice": 100.0
+                    },
+                    "exclusiveSegment": {
+                        "userAction": "view",
+                        "lookbackWindow": "P60D",
+                        "categoryIds": [
+                            7023354,
+                            7024734
+                        ],
+                        "brandIds": [],
+                        "minPrice": 10.0,
+                        "maxPrice": 100.0
+                    }
+                }
+            }
+    }
+}'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/v2/accounts/368031080744943616/audiences"
+
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaAudience",
+    "attributes": {
+      "retailerId": "299",
+      "name": "CriteoAudienceV3test",
+      "userBehaviorDetails": {
+        "inclusiveSegment": {
+          "userAction": "buy",
+          "lookbackWindow": "P150D",
+          "categoryIds": [
+            7023453,
+            7023464,
+            7023557,
+            7023675,
+            7025275,
+            7025520,
+            7025710,
+            7026190,
+            7026459,
+            7026788,
+            7027760
+          ],
+          "brandIds": [
+            2000162919
+          ],
+          "minPrice": 10,
+          "maxPrice": 100
+        },
+        "exclusiveSegment": {
+          "userAction": "view",
+          "lookbackWindow": "P60D",
+          "categoryIds": [
+            7023354,
+            7024734
+          ],
+          "brandIds": [],
+          "minPrice": 10,
+          "maxPrice": 100
+        }
+      }
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{
+  \n    \"data\":
+  \n    {
+    \n        \"type\": \"RetailMediaAudience\",
+    \n            \"attributes\": {
+      \n                \"retailerId\": \"299\",
+      \n                \"name\": \"CriteoAudienceV3test\",
+      \n                \"userBehaviorDetails\": {
+        \n                    \"inclusiveSegment\": {
+          \n                        \"userAction\": \"buy\",
+          \n                        \"lookbackWindow\": \"P150D\",
+          \n                        \"categoryIds\": [
+            \n                            7023453,
+            \n                            7023464,
+            \n                            7023557,
+            \n                            7023675,
+            \n                            7025275,
+            \n                            7025520,
+            \n                            7025710,
+            \n                            7026190,
+            \n                            7026459,
+            \n                            7026788,
+            \n                            7027760
+            \n                        ],
+            \n                        \"brandIds\": [
+              \n                            2000162919
+              \n                        ],
+              \n                        \"minPrice\": 10.0,
+              \n                        \"maxPrice\": 100.0
+              \n                    },
+              \n                    \"exclusiveSegment\": {
+                \n                        \"userAction\": \"view\",
+                \n                        \"lookbackWindow\": \"P60D\",
+                \n                        \"categoryIds\": [
+                  \n                            7023354,
+                  \n                            7024734
+                  \n                        ],
+                  \n                        \"brandIds\": [],
+                  \n                        \"minPrice\": 10.0,
+                  \n                        \"maxPrice\": 100.0
+                  \n                    }
+                  \n                }
+                  \n            }
+                  \n    }
+                  \n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/v2/accounts/368031080744943616/audiences")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/v2/accounts/368031080744943616/audiences');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{
+  \n    "data":
+  \n    {
+    \n        "type": "RetailMediaAudience",
+    \n            "attributes": {
+      \n                "retailerId": "299",
+      \n                "name": "CriteoAudienceV3test",
+      \n                "userBehaviorDetails": {
+        \n                    "inclusiveSegment": {
+          \n                        "userAction": "buy",
+          \n                        "lookbackWindow": "P150D",
+          \n                        "categoryIds": [
+            \n                            7023453,
+            \n                            7023464,
+            \n                            7023557,
+            \n                            7023675,
+            \n                            7025275,
+            \n                            7025520,
+            \n                            7025710,
+            \n                            7026190,
+            \n                            7026459,
+            \n                            7026788,
+            \n                            7027760
+            \n                        ],
+            \n                        "brandIds": [
+              \n                            2000162919
+              \n                        ],
+              \n                        "minPrice": 10.0,
+              \n                        "maxPrice": 100.0
+              \n                    },
+              \n                    "exclusiveSegment": {
+                \n                        "userAction": "view",
+                \n                        "lookbackWindow": "P60D",
+                \n                        "categoryIds": [
+                  \n                            7023354,
+                  \n                            7024734
+                  \n                        ],
+                  \n                        "brandIds": [],
+                  \n                        "minPrice": 10.0,
+                  \n                        "maxPrice": 100.0
+                  \n                    }
+                  \n                }
+                  \n            }
+                  \n    }
+                  \n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaAudience",
+        "id": 416274604399054848,
+        "attributes": {
+            "retailerId": "1093",
+            "userBehaviorDetails": {
+                "inclusiveSegment": {
+                    "userAction": "buy",
+                    "lookbackWindow": "P150D",
+                    "categoryIds": [
+                        7023453,
+                        7023464,
+                        7023557,
+                        7023675,
+                        7025275,
+                        7025520,
+                        7025710,
+                        7026190,
+                        7026459,
+                        7026788,
+                        7027760
+                    ],
+                    "brandIds": [
+                        2000162919
+                    ],
+                    "minPrice": 10.0,
+                    "maxPrice": 100.0
+                },
+                "exclusiveSegment": {
+                    "userAction": "view",
+                    "lookbackWindow": "P60D",
+                    "categoryIds": [
+                        7023354,
+                        7024734
+                    ],
+                    "brandIds": [],
+                    "minPrice": 10.0,
+                    "maxPrice": 100.0
+                }
+            },
+            "name": "CriteoAudienceV3test"
+        }
+    }
+}
+```
+
+## **Responses**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      201
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The audience was created successfully
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      Missing or invalid account ID.
+     </li>
+     <li>
+      Missing or invalid
+      <code>
+       retailerID
+      </code>
+      field.
+     </li>
+     <li>
+      Missing or invalid name field. Name should be less than 255 characters.
+     </li>
+     <li>
+      Missing or invalid
+      <code>
+       userType
+      </code>
+      field. Valid values are: 'buyer', and 'viewer'.
+     </li>
+     <li>
+      The
+      <code>
+       brandIds
+      </code>
+      is not a valid list of IDs or may contain more than 100 elements.
+     </li>
+     <li>
+      The
+      <code>
+       categoryIds
+      </code>
+      is not a valid list of IDs or may contain more than 100 elements.
+     </li>
+     <li>
+      Missing or invalid
+      <code>
+       lookbackWindow
+      </code>
+      field. Valid values are: P7D, P14D, P30D, P45D, P60D, P90D, P120D, P150D or P180D.
+     </li>
+     <li>
+      Exactly one of
+      <code>
+       categoryIds
+      </code>
+      or
+      <code>
+       brandIds
+      </code>
+      must be specified, but not both.
+     </li>
+     <li>
+      The retailer is invalid because it is not live
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      404
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The audience was not found. - OR - API user does not have permission to access these global brands.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      406
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Accept header must contain application/json.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      409
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     An audience name should be unique per account.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      415
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Content-Type header must be application/json if present.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>

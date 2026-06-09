@@ -1,0 +1,158 @@
+---
+title: Contact List
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2025_07/docs/Marketing Solutions Endpoints/audiences/contact-list.md
+hidden: true
+---
+
+## **Adding and Removing Users in an Audience**
+
+<Badge color="yellow" size="sm" shape="pill">PATCH</Badge>
+
+```text
+https://api.criteo.com/2025-07/audiences/{audienceId}/contactlist
+```
+
+Users can be added or removed from an audience with a PATCH request to the audience contact list endpoint with the specific audience id in the URL path. The request body requires the type of operation, the schema of the identifiers, and the list of the user identifiers to be added. In addition, if the identifier type is 'gum', an additional parameter, the `gumCallerId`, must also be included.  Please note that the supported identifier types for Criteo audiences include: 'email' (Email Address), 'madid' (Mobile Ad Identifier), 'identityLink' (a user's LiveRamp Identity Link), 'gum' (Criteo GUM cookie identifier) and 'customerid' (only for Retail Media Customer Lists).
+
+<Info>
+  GUM ID's allow clients to maintain a correspondence between their user identification system and Criteo's user identification (UID) if they are unable to send emails or mobile ad identifiers.
+
+  Please reach out to your Criteo account team for the appropriate `gumCallerId` or to get more information on this GUM sync, if needed.
+</Info>
+
+   
+
+   
+
+## Adding Users
+
+To add users to an audience, use the 'add' operation in the PATCH request as detailed below:
+
+```json Example PATCH Request - Adding Users
+{
+  "data": {
+    "type": "ContactlistAmendment",
+    "attributes": {
+        "operation": "add",
+        "identifierType": "email",
+        "identifiers": [
+            "example1@gmail.com"
+        ]
+    }
+  }
+}
+```
+
+The API will respond with an array of the **audienceId**, **operation**, **date of request**, **identifierType**, number of valid or invalid identifiers, and a sample of invalid identifiers if applicable. 
+
+```json Example Response Body - Adding Users
+{
+   "data": {
+    "type": "ContactlistAmendment",
+    "attributes": {
+       "contactListId": "12",
+       "operation": "add",
+       "requestDate": "2018-12-10T10:00:50.000Z",
+       "identifierType": "email",
+       "nbValidIdentifiers": 7343,
+       "nbInvalidIdentifiers": 13,
+       "sampleInvalidIdentifiers": [
+             "InvalidIdentifier"
+             ]
+       }
+   },
+   "errors": [],
+   "warnings": []
+}
+```
+
+   
+
+## Removing Users
+
+To remove users from an audience, use the 'remove' operation in the PATCH request as detailed below:
+
+```json Example PATCH Body - Removing Users
+{
+  "data": {
+    "type": "ContactlistAmendment",
+    "attributes": {
+        "operation": "remove",
+        "identifierType": "email",
+        "identifiers": [
+            "example1@gmail.com"
+        ]
+    }
+  }
+}
+```
+
+The API will respond similarly to the add users call, but with 'remove' as the operation.
+
+```json
+{
+   "data": {
+    "type": "ContactlistAmendment",
+    "attributes": {
+       "contactListId": "12",
+       "operation": "remove",
+       "requestDate": "2018-12-10T10:00:50.000Z",
+       "identifierType": "email",
+       "nbValidIdentifiers": 7342,
+       "nbInvalidIdentifiers": 13,
+       "sampleInvalidIdentifiers": [
+             "InvalidIdentifier"
+       ]
+    }
+  },
+   "errors": [],
+   "warnings": []
+}
+```
+
+   
+
+   
+
+<Danger>
+  **Identifier List Size Limit**
+
+  Note that there is a limit of 50,000 identifiers per single request. If you are adding more than 50,000 users, please split them into chunks of 50,000 and make multiple requests.
+</Danger>
+
+   
+
+   
+
+## **Deleting All Users From an Audience**
+
+To delete all users from an audience, a DELETE request can be made to the audience contact list endpoint with the specified audience id in the URL path. 
+
+<Badge color="purple" size="sm" shape="pill">DELETE</Badge>
+
+```text
+https://api.criteo.com/2025-07/audiences/{audienceId}/contactlist
+```
+
+The API will return an array with the specified **audienceId** where all of the users were deleted from.
+
+```json Example Response Body
+{
+    "data": {
+        "type": "Audience",
+        "id": "12"
+    },
+    "errors": [],
+    "warnings": []
+}
+```
+
+<Info>
+  Note that this will only wipe all of the users from the audience and will not delete the audience itself.
+</Info>
+
+<Warning>
+  **Note on Audience Computation**
+
+  Audience updates are processed daily at 0h UTC and 12h UTC and can take around 5 hours to reflect on a live campaign. This is important for audiences that are frequently updated as changes should be ready for processing prior to these two times.
+</Warning>

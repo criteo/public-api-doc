@@ -1,0 +1,323 @@
+---
+title: Reporting Diagnostic Guide
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/API troubleshooting/reporting-overview-diagnostic-guide.md
+description: Understanding how SSP and DSP reporting works, how to align API results with the UI, and how to navigate rate limits, data latency, and reporting discrepancies.
+---
+
+## Introduction
+
+This guide provides a consolidated reference to the reporting endpoints, permissions, and data behaviors.
+
+It’s designed to operate as a practical guide for understanding how SSP and DSP reporting works, how to align API results with the UI, and how to navigate rate limits, data latency, and reporting discrepancies.
+
+You can use it as a companion resource when building or troubleshooting your Retail Media API integrations.
+
+<Info>
+  **Reporting Endpoints**
+
+  You can find out more on our reporting endpoints in the following sections:
+
+  * [Demand Side Analytics (DSP)](/retail-media/docs/demand-side-analytics-get-started)
+  * [Supply Side Analytics (SSP)](/retail-media/docs/supply-side-reporting-ssp)
+</Info>
+
+***
+
+## Reporting Suite & Permissions
+
+### SSP (Retailer permission)
+
+The SSP Reporting suite provides retailer-level analytics to help understand the sources of Retail Media revenue. Access to the following report types requires API consent for a Supply/Retailer account:
+
+#### Revenue Report
+
+Provides retailer-level visibility into monetization revenue and its sources across advertisers, platforms, and sales channels.
+
+#### Fill Rate Report
+
+Shows how much of your inventory is filled with ads across placements, page types, and platforms to help identify opportunities to grow demand and revenue.
+
+### DSP (Brand/Seller permission)
+
+The DSP Reporting suite provides high-level analytics across Brand or Seller accounts. Access to the following report types requires **[API consent ](/retail-media/docs/consent-url-generation)for a Demand Brand/Seller account.**
+
+These report types are available at the Account, Campaign, and Line Item levels.
+
+### Flexible Reporting
+
+Flexible reporting is also available on the DSP and SSP endpoints. Instead of using one of the report types above, omit `reportType` from the request and use metrics and dimensions to customize the data returned.
+
+<Info>
+  See [this page ](/retail-media/docs/metrics-and-dimensions)for the full list of available metrics and dimensions.
+</Info>
+
+<Warning>
+  Please omit product-level metrics for **Sponsorships** and **Onsite Display campaigns** in flexible reporting. These metric-dimension combinations are not supported for these campaign types and may return incomplete or misleading results.
+</Warning>
+
+***
+
+## Report Types
+
+<Warning>
+  * Keyword reporting can misalign with the UI due to filtering logic used to support platform performance. UI exports do not rely on this logic and align with API data. Only applies to search pages.
+  * Categories are standardized across brands and retailers, which may differ from retailer-specific categories.
+</Warning>
+
+***
+
+## Comparing Sources (API vs UI)
+
+When comparing API reporting to the Criteo platform (UI), consider the following details when aligning settings.
+
+### API vs UI Default Settings Overview
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field
+    </p>
+   </th>
+   <th>
+    <p>
+     UI Default
+    </p>
+   </th>
+   <th>
+    <p>
+     API Default
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clickAttributionWindow
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     SSP Revenue: Onsite 14D
+    </p>
+    <p>
+     Sponsored Products 30D
+    </p>
+    <p>
+     DSP report: campaign attribution settings
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign attribution settings
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      viewAttributionWindow
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     SSP Revenue: Onsite 14D
+    </p>
+    <p>
+     Sponsored Products 1D
+    </p>
+    <p>
+     DSP report: campaign attribution settings
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign attribution settings
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clickMatchLevel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     SSP Revenue:
+     <code>
+      sameCategory
+     </code>
+    </p>
+    <p>
+     DSP report: campaign attribution settings
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign attribution settings
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      viewMatchLevel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     SSP Revenue: Onsite
+     <code>
+      sameCategory
+     </code>
+     Sponsored Products
+     <code>
+      sameSku
+     </code>
+     ;
+    </p>
+    <p>
+     DSP report: campaign attribution settings
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign attribution settings
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timeZone
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Account default
+    </p>
+   </td>
+   <td>
+    <p>
+     UTC
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate/endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Last 7 days
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      salesChannel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaigns Tab: online only;
+    </p>
+    <p>
+     Analytics Tab: online + offline
+    </p>
+   </td>
+   <td>
+    <p>
+     Online + offline
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Attribution
+
+* set the API `viewAttributionWindow` + `clickAttributionWindow` to match the campaign settings
+
+**or**
+
+* omit both from the API query and the API will default to campaign settings for both the DSP and SSP reports
+
+**or**
+
+* Align to the SSP Revenue report attribution settings above (UI defaults can differ from campaign-level settings).
+
+### Timezone
+
+* The UI uses the account timezone. In the API, set `timeZone` to the account’s IANA timezone.
+* If you omit `timeZone`, the API defaults to UTC (not the account timezone).
+
+### Sales Channel / Offline Sales
+
+* The UI Campaigns tab excludes offline sales; the Analytics tab includes offline sales (and can be filtered).
+* If the API request omits `salesChannel`, it includes both online + offline sales by default.
+* For parity/completeness, prefer the UI Analytics view.
+
+### Metrics + Dimensions
+
+* Ensure both UI and API use the same metrics and breakdowns (dimensions).
+* Use an API `reportType` or omit it and specify metrics/dimensions directly to match the UI.
+
+***
+
+## Data Availability, Retention & Limits
+
+### Data Availability
+
+Metrics may have several hours of latency and different types of activity and attribution data become available at different times after the event or sale. Maximum delay values are not guaranteed, and the times below reflect the 95th and 50th percentile latency.
+
+<Warning>
+  Please note that data is processed and batched hourly, so same-day data may be partially available.
+</Warning>
+
+<Warning>
+  Please note data may be slightly misaligned for fresher periods because sources vary across reports (SSP API, DSP API, UI Analytics modules). Data should align on finalization.
+</Warning>
+
+### Navigating Rate Limits & Row Limits
+
+* Reports support a maximum window of **100 days per request** for the campaigns and line items endpoints. For the [account reporting endpoint](/retail-media/docs/account-level-report), that window is **31 days max**.
+* Use [bulk calls](/retail-media/docs/bulk-calls) to pass up to **50 IDs** at a time when pulling data across a large number of Campaigns or Line Items. Note that for [the account reporting endpoint](/retail-media/docs/account-level-report), that limit is only **5 IDs**.
+* Report size is capped at **100k rows**
+* Hitting this limit will truncate data and produce incomplete results. Narrow the parameters by requesting fewer Campaigns or Line Items in report filters, shortening the date range, or adjusting the report dimensions until the result set falls within the limit.
+* If you encounter a `429 Too Many Requests` error, implement exponential backoff logic to pause and retry requests after a delay, giving the API time to reset the application’s limit before attempting again. More details on rate limits on [this page](/retail-media/docs/rate-limits) and in the table below.
+
+<br />
+## What's next
+
+* [DSP Analytics Endpoints](/retail-media/docs/demand-side-analytics-get-started)
+* [Supply Side Analytics (SSP)](/retail-media/docs/supply-side-reporting-ssp)
+* [Metrics and Dimensions (SSP)](/retail-media/docs/metrics-and-dimensions-ssp)
+* [Metrics & Dimensions (Fill Rate Report)](/retail-media/docs/metrics-dimensions-fill-rate-report)
+* [Metrics and Dimensions (DSP)](/retail-media/docs/metrics-and-dimensions)

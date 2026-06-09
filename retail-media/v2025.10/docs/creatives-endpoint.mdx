@@ -1,0 +1,225 @@
+---
+title: Creatives
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2025_10/docs/Guides for Retail Media API/creatives/creatives-endpoint.md
+hidden: true
+---
+
+A *creative* carries multiple assets and can be associated with SKUs to be rendered on a particular retailer
+
+## **Endpoints**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/creatives
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get all retailer creatives
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+ 
+
+## **Creative Attributes**
+
+<ParamField path="id" type="string">
+  **Value:** int64
+
+  Creative ID
+</ParamField>
+
+<ParamField path="name" type="string">
+  **Value:** 100 char limit
+
+  Creative name
+</ParamField>
+
+<ParamField path="status" type="enum">
+  **Value:** `Ready`, `In_Use`, `Archived`, `Deleted`
+
+  Creative status
+</ParamField>
+
+<ParamField path="brandId" type="int">
+  **Value:** int64
+
+  Brand the creative is associated to
+</ParamField>
+
+<ParamField path="retailerId" type="int">
+  **Value:** int32
+
+  Retailer the creative is designed for
+</ParamField>
+
+<ParamField path="associatedLineItemIds" type="string array">
+  **Value:** int64
+
+  Line items the creative is setup on
+</ParamField>
+
+ 
+
+## **Get All Creatives**
+
+This endpoint lists all retailers that carry the brands associated with an account.  Results are not paginated.
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/creatives
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/123/creatives" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/4/creatives"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/4/creatives")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/4/creatives');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json JSON
+{
+    "data": [
+        {
+            "id": "230344134552322148",
+            "type": "RetailMediaPreferredCreative",
+            "attributes": {
+                "name": "Creative A",
+                "status": "Ready",
+                "brandId": 123,
+                "retailerId": 101,
+                "associatedLineItemIds": [],
+                "updatedAt": "2021-12-27T15:05:21.2754496+00:00",
+                "id": "230344134552322148"
+            }
+        },
+        // ...
+        {
+            "id": "231029024543875072",
+            "type": "RetailMediaPreferredCreative",
+            "attributes": {
+                "name": "Creative C",
+                "status": "In_Use",
+                "brandId": 789,
+                "retailerId": 103,
+                "associatedLineItemIds": [
+                    "231062145805312000",
+                    "258544965714276352",
+                    "260606837818994688"
+                ],
+                "updatedAt": "2021-12-29T14:26:04.3052111+00:00",
+                "id": "231029024543875072"
+            }
+        }
+    ],
+    /* omitted if no errors */
+    "errors": [],
+    /* omitted if no warnings */
+    "warnings": []
+}
+```

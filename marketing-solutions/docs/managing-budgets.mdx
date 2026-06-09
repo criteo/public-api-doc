@@ -1,544 +1,413 @@
 ---
-title: "Managing Budgets"
+title: Managing Budgets
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/singleseller/managing-budgets.md
 ---
 
-1. Marketing Solutions Endpoints
-2. [Marketplace Performance Outcomes](/marketing-solutions/docs/marketplace-performance-outcomes)
+## Overview
 
-Budget are used to specify budget constraints for one or more Seller-Campaigns of the same Seller. You have different types of budgets :
+Budget objects are the primary control surface for Single-Seller campaigns. A budget:
 
-* **Uncapped** : Define an unlimited amount,
-* **Capped** : Define a limited amount,
-* **Daily** : Define a limited daily amount.
+* Creates the underlying Single-Seller campaign if one does not yet exist for a `(sellerId, templateCampaignId)` pair.
+* Defines **how much** and **when** that campaign is allowed to spend.
+* Controls pause / resume state via an `isSuspended` flag.
 
-A Budget can specify a `startDate` and an `endDate` :
+## Budget behavior
 
-* **`startDate`**: date at which you want your budget to be taken into consideration.
-* **`endDate`**: date until which the budget is taken into consideration.
+Each budget is a **capped total amount over a date range**:
 
-A Budget status can be either :
+* No **daily** or **uncapped** budget types in Single-Seller mode.
 
-* **Active** : this budget can be consumed in one or more Seller-Campaigns for delivering ads. A budget is active when all the following conditions are met:
+Daily pacing is **automatic**:
 
-  * the budget has not been suspended (see "[Suspending budgets](doc:managing-budgets#suspending-budgets)" section),
-  * the current date is between `startDate` and `endDate`,
-  * the spent amount of the budget is smaller than the specified amount.
+* The system computes an average daily amount from the total budget and dates.
+* Under-delivery or over-delivery on a given day can be compensated later, as long as the budget period is active.
 
-* **Inactive** : when a budget is not Active, it is Inactive. It cannot be consumed in any Seller-Campaign for delivering ads.
+For a given `(sellerId, templateCampaignId)`:
 
-<Warning>
-  Notice that there is at most one active daily budget and one active non-daily budget
-</Warning>
+* Budget periods **must not overlap**.
+* You can schedule **future budgets** as long as their periods do not overlap existing active budgets.
+* **Suspended budgets** do not block future budgets for the same period (they are treated as logically canceled).
 
-***
+## Typical budget fields
 
-## Creating Budgets for Seller-Campaigns
-
-In order to create Budgets for Seller-Campaigns, you need to make the following call:
-
-![](/images/marketing-solutions/docs/b0623eb-post.png)
-
-```
-/marketplace-performance-outcomes/budgets
-```
-
-**Sample request**
-
-<CodeGroup>
-  ```bash bash
-  [{
-      "sellerId": "1",
-      "campaignIds": ["10001"],
-      "budgetType": "Capped",
-      "amount": 10.00,
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  },{
-      "sellerId": "2",
-      "campaignIds": ["10001"],
-      "budgetType": "Capped",
-      "amount": 20.00,
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  },{
-      "sellerId": "3",
-      "campaignIds": ["10001"],
-      "budgetType": "Capped",
-      "amount": 30.00,
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  }]
-  ```
-</CodeGroup>
-
-**`SellerId`** The sellerId of the Seller for which you want to create a budget.
-
-**`campaignIds`** Array of campaignIds of the campaigns for which you want the budgets.
-
-**`budgetType`** Type of budget. You have 3 possible values for this `Uncapped`, `Capped`, `Daily`.
-
-**`amount`** Amount of money you want to specify for this budget.
-
-**`startDate`** Date at which you want your budget to be taken into consideration.
-
-**`endDate`** Date until which the budget is taken into consideration.
-
-***
-
-### Creating Capped Budgets
-
-When creating budgets, you have the choice between 3 different types of budgets. One of these is the capped budget, it enables you to define the maximum amount of money you would like to spend on a given time period.
-
-***
-
-### Creating Uncapped Budgets
-
-If you don't want to define a maximum amount of money you would like to spend on a given time period, you can create Uncapped budgets.
-
-![](/images/marketing-solutions/docs/b0623eb-post.png)
-
-```
-/marketplace-performance-outcomes/budgets
-```
-
-**Sample request**
-
-<CodeGroup>
-  ```bash bash
-  [{
-      "sellerId": "1",
-      "campaignIds": ["10001"],
-      "budgetType": "Uncapped",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  },{
-      "sellerId": "2",
-      "campaignIds": ["10001"],
-      "budgetType": "Uncapped",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  },{
-      "sellerId": "3",
-      "campaignIds": ["10001"],
-      "budgetType": "Uncapped",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  }]
-  ```
-</CodeGroup>
-
-If you want to control how fast the money is spent, you can combine the Uncapped budget with a Daily budget.
-
-***
-
-### Creating Daily Budgets
-
-Additionally to the Capped and Uncapped budgets, you can define Daily budgets. This means that you can define how fast you want to spend your budget for a given time period.
-
-<Info>
-  The Daily budget defines the maximum amount of money you would like to spend in average in the 7 last days with a maximum of 150% of the daily budget in a day.
-</Info>
-
-Notice that Daily Budgets only work if you have also specified a Total budget. This Total budget is specified either by a Capped or Uncapped budget.
-
-If you have not specified a Total budget, your Seller-Campaigns will not deliver ads (even if you specified a Daily-Budget). For example, you can create a daily Budget of $5 for the Sellers 1,2, and 3 and back them with an unlimited total budget (Uncapped Budget):
-
-![](/images/marketing-solutions/docs/b0623eb-post.png)
-
-```
-/marketplace-performance-outcomes/budgets
-```
-
-**Sample request**
-
-<CodeGroup>
-  ```bash bash
-  [{
-      "sellerId": "1",
-      "campaignIds": ["10001"],
-      "budgetType": "Uncapped",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  },{
-      "sellerId": "2",
-      "campaignIds": ["10001"],
-      "budgetType": "Uncapped",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  },{
-      "sellerId": "3",
-      "campaignIds": ["10001"],
-      "budgetType": "Uncapped",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31"
-  },{
-      "sellerId": "1",
-      "campaignIds": ["10001"],
-      "budgetType": "Daily",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31",
-      "amount": 5
-  },{
-      "sellerId": "2",
-      "campaignIds": ["10001"],
-      "budgetType": "Daily",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31",
-      "amount": 5
-  },{
-      "sellerId": "3",
-      "campaignIds": ["10001"],
-      "budgetType": "Daily",
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31",
-      "amount": 5
-  }]
-  ```
-</CodeGroup>
-
-***
-
-## Getting Budgets
-
-You can list of your budgets with following calls:
-
-![](/images/marketing-solutions/docs/8a6bfd9-get.png)
-
-```
-/marketplace-performance-outcomes/budgets
-```
-
-**Response example**
-
-<CodeGroup>
-  ```bash bash
-  [{
-      "id" : "101",
-      "sellerId": "1",
-      "campaignIds": ["10001"],
-      "budgetType": "Capped",
-      "amount": 30.00,
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31",
-      "spend" : 0,
-      "status" : "Scheduled",
-      "isSuspended" : false
-  },{
-      "id" : "102",
-      "sellerId": "2",
-      "campaignIds": ["10001"],
-      "budgetType": "Capped",
-      "amount": 30.00,
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31",
-      "spend" : 0,
-      "status" : "Scheduled",
-      "isSuspended" : false
-  },{
-      "id" : "103",
-      "sellerId": "3",
-      "campaignIds": ["10001"],
-      "budgetType": "Capped",
-      "amount": 30.00,
-      "startDate": "2019-05-01",
-      "endDate": "2019-05-31",
-      "spend" : 0,
-      "status" : "Scheduled",
-      "isSuspended" : false
-  }]
-  ```
-</CodeGroup>
-
-**`sellerId`** The internal ID that our system has attributed to your seller.
-
-**`spend`** Amount of money already spent on this budget.
-
-**`isSuspended`** The suspension status of your budget. If your budget is suspended, the system will stop using this budget for delivery clicks in the associated Seller-Campaigns.
-
-**`status`**
-
-* **Scheduled** : the budget will be used in the future starting at the `startDate`,
-* **Current** : the budget is currently being used to deliver ads,
-* **Archived** : the budget is not used anymore because it's `endDate` has been reached.
-
-| Parameter         | Definition                                                                                                                               | Type    | Required? |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------- |
-| `advertiserId`    | Return only budgets that pay for a given advertiser. Default is to not filter on advertiser                                              | integer | No        |
-| `campaignId`      | Return only budgets that pay for a given campaign. Default is to not filter on campaign                                                  | integer | No        |
-| `sellerId`        | Return only budgets belonging to the given seller. Default is to not filter on seller.                                                   | string  | No        |
-| `endAfterDate`    | Return budgets that end after the given date. Default is today (`yyyy-MM-DD`).                                                           | string  | No        |
-| `startBeforeDate` | Return budgets that start on or before the given date. Default is to not filter on startDate.                                            | string  | No        |
-| `status`          | Return only budgets with the given status. Default is to not filter on status. Possible values: **Archived**, **Current**, **Scheduled** | string  | No        |
-| `type`            | Return only budgets of the given type. Default is to not filter on budget type. Possible values: **Capped**, **Uncapped**, **Daily**     | string  | No        |
-| `withBalance`     | Return budgets with remaining balance. Default is to not filter on balance.                                                              | boolean | No        |
-| `withSpend`       | Return budgets with any positive spend. Default is to not filter on spend                                                                | boolean | No        |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      sellerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Marketplace seller identifier for which the budget applies
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     List containing the Single-Seller template campaign ID (length = 1)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      amount
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Total amount for the budget period (monetary value in your currency)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Date when the budget becomes active
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Date when the budget stops allowing spend
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budgetType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be
+     <code>
+      "Capped"
+     </code>
+     for Single-Seller
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      isSuspended
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      true
+     </code>
+     = paused;
+     <code>
+      false
+     </code>
+     = active
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Response
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique budget identifier (
+     <code>
+      budgetId
+     </code>
+     ) returned by the AP
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
-## Get one specific budget
+## Workflow: Create the first budget (and campaign)
 
-You can also fetch the details of a single budget using the following request:
+This is the flow to onboard a seller onto a Single-Seller template for the first time.
 
-![](/images/marketing-solutions/docs/8a6bfd9-get.png)
+### Preconditions
 
-```
-/marketplace-performance-outcomes/budgets/{budgetId}
-```
+You have:
 
-**Sample response**
+* `advertiserId`
+* `templateCampaignId` (Single-Seller template campaign ID, provided by Criteo)
+* `sellerId`
+* Your account is enabled for Single-Seller.
+* You know the **minimum allowed budget per seller** for this template.
 
-<CodeGroup>
-  ```bash bash
-  {
-    "id": "1759183",
-    "sellerId": "321392",
-    "campaignIds": [
-      143962
-    ],
-    "budgetType": "Capped",
-    "amount": 1000,
-    "startDate": "2021-01-11",
-    "endDate": "2021-01-12",
-    "spend": null,
-    "status": "Active",
-    "isSuspended": false
-  }
-  ```
-</CodeGroup>
+### Step 1 – Construct the budget payload
 
-***
+Endpoint:
 
-## Updating Budgets
-
-Once you have created budgets, you can modify them for:
-
-* Increasing their budget amount.
-* Decreasing their budget amount.
-* Changing their dates.
-* Changing the Campaigns that uses these budget.
-* Suspending budgets.
-
-<Info>
-  Notice that you can do all this changes with one single `PATCH` request or separately
-</Info>
-
-![](/images/marketing-solutions/docs/04a928f-patch.png)
-
-```
-/marketplace-performance-outcomes/budgets
+```text
+POST  https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets
+Content-Type: application/json
 ```
 
-**Sample request**
+Sample request:
 
-<CodeGroup>
-  ```bash bash
-  [{
-    "budgetId" : "101",  //id of the budget
-    "campaignIds": ["10001"],
-    "amount": 10.00,
-    "startDate": "2019-05-01",
-    "endDate": "2019-05-31"
-  },{
-    "budgetId" : "102",  //id of the budget
-    "campaignIds": ["10001"],
-    "amount": 20.00,
-    "startDate": "2019-05-01",
-    "endDate": "2019-05-31"
-  },{
-    "budgetId" : "103",  //id of the budget
-    "campaignIds": ["10001"],
-    "amount": 30.00,
-    "startDate": "2019-05-01",
-    "endDate": "2019-05-31"
-  }]
-  ```
-</CodeGroup>
-
-***
-
-### Increase Budget amounts
-
-When updating budgets, you can increase the budget amounts. The increased amount will be taken into account immediately.
-
-![](/images/marketing-solutions/docs/04a928f-patch.png)
-
-```
-/marketplace-performance-outcomes/budgets
+```text json
+[
+{
+"campaignIds": ["456"],
+"sellerId": "123",
+"startDate": "2026-04-16",
+"endDate": "2026-04-30",
+"budgetType": "Capped",
+"amount": "1200"
+}
+]
 ```
 
-**Sample request**
+**Key points:**
 
-<CodeGroup>
-  ```bash bash
-  [{
-    "budgetId": "101",
-    "amount": 20.00,
-  },{
-    "budgetId": "102",
-    "amount": 30.00,
-  },{
-    "budgetId": "103",
-    "amount": 40.00,
-  }]
-  ```
-</CodeGroup>
+* `campaignIds` contains exactly one ID: the Single-Seller template campaign ID.
+* `amount` must be ≥ the minimum per-seller budget communicated by Criteo, multiplied by the number of days between `startDate` and `endDate`.
+* `startDate` / `endDate` must describe a valid period (`startDate ≤ endDate`).
 
-***
+### Step 2 – Interpret the response
 
-### Decrease Capped Budget amounts
+A successful response will return:
 
-When decreasing a capped budget amount, the new amount will be taken into account this new budget immediately. However, the spend amount can continue decreasing a little bit after your change. This is because some clicks that occurred just before your change were not yet taken into account in the spend at the moment of the change.
+* The new budget ID (`budgetId`).
+* Echoed fields with normalized formats (for example: truncated seconds, normalized dates).
+* An `isSuspended` value and possibly other status information.
 
-This means that the spend amount can exceed this new decreased amount (even if the set amount was above the spend at the moment of the decrease). For example, if your current budget has an amount of $100 with a spend of $49, and you decrease your budget to $50, the new spend might still reach $52 (to take into account the few clicks that occurred before the change).
+From the moment this first valid budget is accepted for a `(sellerId, templateCampaignId)` pair:
 
-![](/images/marketing-solutions/docs/04a928f-patch.png)
+* Criteo creates the corresponding Single-Seller campaign synchronously.
+* You should plan for a short asynchronous provisioning delay before impressions begin.
 
-```
-/marketplace-performance-outcomes/budgets
-```
+### Step 3 – Avoid overlapping budgets
 
-**Sample request**
+When planning future periods:
 
-<CodeGroup>
-  ```bash bash
-  [{
-    "budgetId": "101",
-    "amount": 5.00,
-  },{
-    "budgetId": "102",
-    "amount": 15.00,
-  },{
-    "budgetId": "103",
-    "amount": 25.00,
-  }]
-  ```
-</CodeGroup>
+* Do **not** create budgets whose date ranges overlap for the same `(sellerId, templateCampaignId)`.
 
-***
+If you need to extend or change a period:
 
-### Decrease Daily Budget amounts
+* Update the existing budget when possible (see next workflow), or
+* Suspend it and create a new, **non-overlapping** budget.
 
-When decreasing a daily budget amount, we will try to achieve this new decreased daily amount as soon as possible. However, it can take up to seven days so that your 7-day average reflects the new daily amount (although, most of the time, it will take much less time).
+## Workflow: Update an existing budget
 
-![](/images/marketing-solutions/docs/04a928f-patch.png)
+Use budget updates to adjust **amount**, **dates**, or **suspension status**.
 
-```
-/marketplace-performance-outcomes/budgets
+### Preconditions
+
+You have:
+
+* The `budgetId` (from creation or a previous GET).
+* A budget still within a modifiable state (see reference docs for immutable fields or cutoffs).
+
+### Example: Increase budget amount mid-flight
+
+Endpoint:
+
+```text
+PATCH  https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets
+Content-Type: application/json
 ```
 
-**Sample request**
+Request body:
 
-<CodeGroup>
-  ```bash bash
-  [{
-    "budgetId": "101",
-    "amount": 5.00,
-  },{
-    "budgetId": "102",
-    "amount": 5.00,
-  },{
-    "budgetId": "103",
-    "amount": 5.00,
-  }]
-  ```
-</CodeGroup>
-
-***
-
-### Changing the dates of Budgets
-
-You can change the `startDate` and `endDate` of a Budget if :
-
-* the current and new values of `startDate` and `endDate` are in the future,
-* the `endDate` is not anterior to the `startDate` 
-
-![](/images/marketing-solutions/docs/04a928f-patch.png)
-
-```
-/marketplace-performance-outcomes/budgets
+```text json
+{
+"budgetId": "789",
+"amount": "2000"
+}
 ```
 
-**Sample request**
+**Behavior:**
 
-<CodeGroup>
-  ```bash bash
-  [{
-    "budgetId" : "101",
-    "startDate": "2019-05-01",
-    "endDate": "2019-05-31"
-  },{
-    "budgetId" : "102",
-    "startDate": "2019-05-01",
-    "endDate": "2019-05-31"
-  },{
-    "budgetId" : "103",
-    "startDate": "2019-05-01",
-    "endDate": "2019-05-31"
-  }]
-  ```
-</CodeGroup>
+* The total budget is increased (for example, `1200 → 2000`) for the overall period.
+* The pacing logic recomputes daily caps for the remaining days of the budget period.
+* The update is **idempotent**: sending the same PATCH twice with the same values results in the same final state.
 
-***
+### Example: Extend the end date
 
-### Sharing Budgets between campaigns
+Request body:
 
-A Seller budget can be used within several MPO-Campaign. To set it up, you need to provide several `campaignIds` at the creation of the Budget. After the creation of the budget, you can update the budget and replace the current list of campaigns (containing only 1 campaigns) with a new list of campaigns (containing multiple campaigns):
-
-![](/images/marketing-solutions/docs/04a928f-patch.png)
-
-```
-/marketplace-performance-outcomes/budgets
+```text json
+{
+"budgetId": "789",
+"endDate": "2026-05-31"
+}
 ```
 
-**Sample request**
+**Guidance:**
 
-<CodeGroup>
-  ```bash bash
-  [{
-    "budgetId" : "101",
-    "campaignIds": ["10001","10002"]
-  },{
-    "budgetId" : "102",
-    "campaignIds": ["10001","10002"]
-  },{
-    "budgetId" : "103",
-    "campaignIds": ["10001","10002"]
-  }]
-  ```
-</CodeGroup>
+* Ensure the extended period still does **not overlap** with any other active budgets for the same `(sellerId, templateCampaignId)`.
+* If the system enforces max duration or future-horizon limits, violations will be returned as 4xx errors with field-specific messages.
 
-***
+## Retrieving and inspecting budgets
 
-## Suspending Budgets
+### List or filter budgets
 
-In case you want to stop using a budget, you can suspend it. After a budget is suspended, we will stop delivering ads for the Seller-Campaigns using this budget. You can also make the bufget active if previously suspended.
-
-![](/images/marketing-solutions/docs/04a928f-patch.png)
-
-```
-/marketplace-performance-outcomes/budgets
+```text
+GET /marketplace-performance-outcomes/budgets
 ```
 
-**Sample request**
+Supported query parameters include:
 
-<CodeGroup>
-  ```bash bash
-  [{
-    "budgetId" : "101",
-    "isSuspended": true
-  },{
-    "budgetId" : "102",
-    "isSuspended": true
-  },{
-    "budgetId" : "103",
-    "isSuspended": false
-  }]
-  ```
-</CodeGroup>
+* `sellerId`
+* `campaignId` (template campaign ID)
+* Date filters (see API reference for exact names)
 
-***
+### Retrieve one budget by ID
 
-What’s Next
+```text
+GET /marketplace-performance-outcomes/budgets/{budgetId}
+```
 
-* [Getting statistics](/marketing-solutions/docs/getting-statistics)
-* [Validation Errors](/marketing-solutions/docs/validation-errors)
+Use these endpoints to:
+
+* Synchronize your internal state with the server.
+* Debug issues (for example: confirm whether a budget is suspended, verify effective dates and amounts).
+
+## Workflow: Adjust spend mid-flight (putting it together)
+
+1. **Retrieve the current budget:**
+
+```text
+GET /marketplace-performance-outcomes/budgets?sellerId=...&campaignId=templateCampaignId
+```
+
+2. **Decide on the new amount or dates**, incorporating minimum/maximum constraints and your own business logic.
+
+3. **PATCH the budget** with the updated fields.
+
+4. **Confirm the updated state** by:
+   * Re-fetching the budget, and/or
+   * Checking campaign performance via stats endpoints.
+
+## Workflow: Pause and resume a seller (putting it together)
+
+* **Pause a seller:**
+
+```text
+PATCH /marketplace-performance-outcomes/budgets
+```
+
+* **Resume a seller:**
+
+```text
+PATCH /marketplace-performance-outcomes/budgets
+```
+
+with:
+
+```text json
+{
+"budgetId": "789",
+"isSuspended": false
+}
+```
+
+(This only resumes delivery if `endDate` is still in the future.)
+
+* **Cancel scheduled future budgets:**
+  * Set `isSuspended: true` on the future budget and treat it as canceled.
+  * Create a new budget for the desired future period if you need to replace it.

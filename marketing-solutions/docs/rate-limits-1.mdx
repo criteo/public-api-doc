@@ -1,0 +1,41 @@
+---
+title: Rate Limits
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Concepts/rate-limits-1.md
+hidden: true
+---
+
+## What are Criteo API rate limits?
+
+We define rate limits as a maximum number of calls an app can make to all platform endpoints within a minute. 
+
+Through rate limits we want to ensure all clients can use Criteo services effectively. Criteo API rate limits are defined to both protect the platform and inform callers of excessive use. 
+
+System level usage is also monitored and can result in further dynamic reductions to the rate limits to protect the overall platform. This industry best practice helps us provide the reliable and scalable API that our developer community relies on.
+
+## How does the system work?
+
+All Criteo API endpoints accept OAuth 2.0 Bearer Token authentication method, and therefore will limit you to only make a certain number of requests to endpoints on behalf of your App. 
+
+When using this authentication method, rate limits are determined by the number of requests you make using per App. **Current rate limit is 100 calls per minute per App.**
+
+When an application exceeds the rate limit, the endpoint will return an HTTP 429 error code and prevent execution. 
+
+After a period of time of reduced number of calls, the call rate will drop to a level allowing successful execution. 
+
+## How can avoid getting rate limited?
+
+Your code should be able to handle 429 errors and retry after waiting a reasonable amount of time. If you are exceeding rate limit too often, consider the following practices.
+
+* Schedule calls over a wider time frame.
+
+* Cache data that does not change frequently. Some examples of calls where data can be cached are portfolio endpoints /advertisers/me and reports endpoints /statistics/report.
+
+## What can you do to handle 429 responses caused by rate limits?
+
+Properly handling 429 errors when they occur should be a part of a your implementation. We suggest some solution that you can implement depending on the needs of your integration:
+
+* A fixed delay between calls or wait 1 minute after a failed call before retry.
+
+* An exponential back off policy that waits for progressively longer periods between each failed call.
+
+* Inspect the 'retry-after' header in the HTTP response.

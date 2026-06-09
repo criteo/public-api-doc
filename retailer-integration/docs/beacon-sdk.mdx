@@ -1,18 +1,21 @@
 ---
-title: "BeaconSDK"
-description: "This guide details the process for automatic beacon tracking on web using our Criteo's BeaconSDK."
+title: BeaconSDK
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/AD TRACKING/beacon-sdk.md
+description: This guide details the process for automatic beacon tracking on web using our Criteo's BeaconSDK.
 ---
+
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
 
 # Introduction
 
 BeaconSDK is Criteo’s lightweight external JavaScript library that automates beacon tracking on web. It handles the entire beacon lifecycle (load, view, and click) so you don’t have to build or maintain a custom tracking logic. The result is faster integrations, cleaner data, and consistent measurement across all placements and products.
 
 <Frame caption="Process overview integrating with the BeaconSDK">
-  <img src="/images/retailer-integration/docs/633740f-BeaconSDK_flow.svg" />
+  <img src="/images/retailer-integration/docs/633740f-BeaconSDK_flow.svg" alt="Process overview integrating with the BeaconSDK" />
 </Frame>
 
 <Info>
-  For more information on the different levels of beacons, please check [the ad tracking introduction page.](https://developers.criteo.com/retailer-integration/docs/introduction-to-beacons-copy)
+  For more information on the different levels of beacons, please check [the ad tracking introduction page.](/retailer-integration/docs/introduction-to-beacons-copy)
 </Info>
 
 ***
@@ -23,51 +26,49 @@ Criteo’s Delivery API returns unique beacon URLs for each placement and produc
 
 ## Add Beacon Attributes to your HTML tags
 
-Each beacon URL returned by the [Delivery API response](https://developers.criteo.com/retailer-integration/docs/api-responses) must be attached to the corresponding HTML element using a `data-` attribute in the format `data-criteo-[beacon-level]-[beacon-type]`
+Each beacon URL returned by the [Delivery API response](/retailer-integration/docs/api-responses) must be attached to the corresponding HTML element using a `data-` attribute in the format `data-criteo-[beacon-level]-[beacon-type]`
 
-<CodeGroup>
-  ```bash bash
-  <!-- Product Placement -->
-  <div class="sponsored-product-placement carousel"
-    data-criteo-placement-onloadbeacon="//b.criteo.com/rm?rm_e=4cp0JZowKy"
-    data-criteo-placement-onviewbeacon="//b.criteo.com/rm?rm_e=rM9TNBqBpz"
-    data-criteo-placement-onclickbeacon=""
+```html
+<!-- Product Placement -->
+<div class="sponsored-product-placement carousel"
+  data-criteo-placement-onloadbeacon="//b.criteo.com/rm?rm_e=4cp0JZowKy"
+  data-criteo-placement-onviewbeacon="//b.criteo.com/rm?rm_e=rM9TNBqBpz"
+  data-criteo-placement-onclickbeacon="//b.criteo.com/rm?rm_e=JdnOdb4Ns8"
+>
+  <!-- Product Tile -->
+  <div class="sponsored-product-tile"
+    data-criteo-product-onloadbeacon="//b.criteo.com/rm?rm_e=q5CjxkuM0B"
+    data-criteo-product-onviewbeacon="//b.criteo.com/rm?rm_e=04im9RY12L"
   >
-    <!-- Product Tile -->
-    <div class="sponsored-product-tile"
-      data-criteo-product-onloadbeacon="//b.criteo.com/rm?rm_e=q5CjxkuM0B"
-      data-criteo-product-onviewbeacon="//b.criteo.com/rm?rm_e=04im9RY12L"
-    >
 
-      <!-- onClick beacon on link to product page -->
-      <a href="https://www.example.com/product-page"
-        data-criteo-product-onclickbeacon="//b.criteo.com/rm?rm_e=9dUq1vC2Ns">
-        <div class="img">
-          <img class="product-img" 
-            src="https://www.example.com/product-img.webp">
-        </div>
-        <div class="product-name">
-          Product Example Name 
-        </div>
-      </a>
-
-      <div class="actions">
-        <!-- onBasketChange beacon on add-to-cart button -->
-        <button class="btn add-to-cart" 
-          data-criteo-product-onbasketchangebeacon="//b.criteo.com/rm?rm_e=J7fX1vL3Qz">
-          <i class="icon">add_to_cart_icon</i>
-        </button>
-        <!-- onWishlist beacon on Favorite (e.g. heart) button -->
-        <button class="wishlist-btn" 
-          data-criteo-product-onwishlistbeacon="//b.criteo.com/rm?rm_e=W8gY2vD4Rt">
-          <i class="icon">favorite_icon</i>
-        </button>
+    <!-- onClick beacon on link to product page -->
+    <a href="https://www.example.com/product-page"
+      data-criteo-product-onclickbeacon="//b.criteo.com/rm?rm_e=9dUq1vC2Ns">
+      <div class="img">
+        <img class="product-img" 
+          src="https://www.example.com/product-img.webp">
       </div>
+      <div class="product-name">
+        Product Example Name 
+      </div>
+    </a>
 
+    <div class="actions">
+      <!-- onBasketChange beacon on add-to-cart button -->
+      <button class="btn add-to-cart" 
+        data-criteo-product-onbasketchangebeacon="//b.criteo.com/rm?rm_e=J7fX1vL3Qz">
+        <i class="icon">add_to_cart_icon</i>
+      </button>
+      <!-- onWishlist beacon on Favorite (e.g. heart) button -->
+      <button class="wishlist-btn" 
+        data-criteo-product-onwishlistbeacon="//b.criteo.com/rm?rm_e=W8gY2vD4Rt">
+        <i class="icon">favorite_icon</i>
+      </button>
     </div>
+
   </div>
-  ```
-</CodeGroup>
+</div>
+```
 
 <Info>
   `[beacon-level]` is one of `product` or `placement`, and `[beacon-type]` is one of `onloadbeacon`, `onviewbeacon`, `onclickbeacon`, `onbasketchangebeacon`, and `onwishlistbeacon`.
@@ -79,15 +80,37 @@ Each beacon URL returned by the [Delivery API response](https://developers.crite
 
 At the end of your HTML document, before the closing the `<body>` tag, include the BeaconSDK bundle using the script tag:
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" data-dynamic-tracking="true" async></script>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" data-dynamic-tracking="true" defer></script>
+```
 
-### Example
+### Implementation Examples
+
+Below are example implementations of BeaconSDK in different scenarios.
+
+#### Example 1: Basic integration
 
 Here's a simple example that uses only sponsored products and BeaconSDK to track `OnLoad`, `OnView`, and `OnClick` events. We also added a simple JavaScript function to handle add-to-cart (`OnBasketChange`) and add-to-wishlist (`OnWishlist`) beacons.
+
+[Embedded content](https://codepen.io/demo_placement/embed/ogbEmRV)
+
+#### Example 2: Dynamic content (lazy loading / SPA)
+
+When placements are dynamically injected (e.g. infinite scroll or single-page applications), enable dynamic tracking:
+
+[Embedded content](https://codepen.io/demo_placement/embed/wBKoMxP)
+
+#### Example 3: Placement-level Tracking
+
+This example shows a simplified implementation where only placement-level beacons are used.
+
+[Embedded content](https://codepen.io/demo_placement/embed/VYaZNXg)
+
+#### Example 4: Video Placement
+
+This example demonstrates how BeaconSDK can be used with video placements.
+
+[Embedded content](https://codepen.io/demo_placement/embed/WbQogrj)
 
 ***
 
@@ -99,12 +122,12 @@ BeaconSDK supports the following beacon types:
 
 * `OnLoadBeacon` — triggered as soon as the SDK detects the HTML element, regardless of its visibility in the viewport.
 * `OnViewBeacon` — triggered when the element meets [IAB’s Viewable Impression Guidelines](https://www.iab.com/wp-content/uploads/2015/06/MRC-Viewable-Ad-Impression-Measurement-Guideline.pdf).
-* `OnClickBeacon`, `OnBasketChangeBeacon`, and `OnWishlistBeacon`— triggered by default when the corresponding HTML element is clicked.
+* `OnClickBeacon`,  `OnBasketChangeBeacon`, and `OnWishlistBeacon`— triggered by default when the corresponding HTML element is clicked.
 
 All beacon URLs are sent using the [`navigator.sendBeacon()` method](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon).
 
 <Info>
-  All click events (`OnClickBeacon`, `OnBasketChangeBeacon`, and `OnWishlistBeacon`) are tracked during the [capture phase](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Events#interaction_of_multiple_event_handlers) of the dispatched event. That ensure beacons will be sent even if client-side libraries use `stopPropagation()` in bubbling events.
+  All click events (`OnClickBeacon`,  `OnBasketChangeBeacon`, and `OnWishlistBeacon`) are tracked during the [capture phase](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Events#interaction_of_multiple_event_handlers) of the dispatched event. That ensure beacons will be sent even if client-side libraries use `stopPropagation()` in bubbling events.
 </Info>
 
 ***
@@ -115,11 +138,9 @@ By default, BeaconSDK will only track HTML elements that are present in the DOM 
 
 To enable dynamic tracking of elements added later, use the `data-dynamic-tracking="true"` parameter on the script tag:
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" data-dynamic-tracking="true" async></script>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" data-dynamic-tracking="true" defer></script>
+```
 
 When this parameter is enabled, BeaconSDK uses the [MutationObserver API](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to monitor changes in the DOM and register new elements that match the `data-criteo-*` pattern.
 
@@ -129,26 +150,138 @@ When this parameter is enabled, BeaconSDK uses the [MutationObserver API](https:
 
 By default, the SDK observes all subnodes of the `<body>` element. If you want to restrict the tracking to a specific container or a shadow DOM root, you can specify a container using the `data-container-selector` attribute:
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js"
-          type="text/javascript"
-          data-dynamic-tracking="true"
-          data-container-selector=".sponsored-products"
-          async></script>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js"
+        type="text/javascript"
+        data-dynamic-tracking="true"
+        data-container-selector=".sponsored-products"
+        defer></script>
+```
 
 This limits DOM observation to elements within the specified container selector.
 
 ***
 
-# Debugging
+## Tracking Organic Add-to-cart Events
 
-We provide two tools to help debug your integration with BeaconSDK: a logger and a viewability visualizer.
+BeaconSDK introduced support to track [organic add-to-cart (ATC) events](/retailer-integration/docs/organic-add-to-cart-events) in version 5. Because add-to-cart events are not beacons, but API calls, it requires setting up a context with the necessary information to send the event correctly. For each page load:
+
+1. Load BeaconSDK
+2. Set the organic context after the initial Delivery response
+3. Tag the organic add-to-cart controls
+4. (For testing purposes) Verify the `addToCart` GET request in Network and/or console logs.
+
+### Setting the page-level context
+
+The context can be set either using attibutes in BeaconSDK's `<script>` tag or by calling the `setOrganicContext` interface.
 
 <Info>
-  Tracking always runs whether or not debug is enabled
+  Make sure BeaconSDK is loaded before setting the context.
+</Info>
+
+#### Required fields
+
+* `endpoint` — Delivery base URL (e.g. [https://d.us.criteo.com/delivery/retailmedia](https://d.us.criteo.com/delivery/retailmedia) in AMER or [https://d.eu.criteo.com/delivery/retailmedia](https://d.eu.criteo.com/delivery/retailmedia) in EMEA).
+* `partnerId` — same value as [criteo-partner-id](/retailer-integration/docs/api-parameters-1#criteo-partner-id).
+* `pageId` — page-id used on the initial Delivery call, e.g. `viewSearchResult_API_mobile` or `viewSearchResultApiMobile`.
+
+#### Recommended fields
+
+If these fields are omitted, BeaconSDK will through warnings to the console, but it will still set the context.
+
+* `visitorId` — same as [`retailer-visitor-id`](/retailer-integration/docs/api-parameters-1#retailer-visitor-id). Should only be omitted if the user opted out of tracking.
+* `pageUid` — the [`page-uid`](/retailer-integration/docs/organic-add-to-cart-events#page-uid) sent in the Delivery API response. Omitting this field will inflate the count of page views artificially.
+
+#### Optional fields
+
+* `customerId` — same as [`customer-id`](/retailer-integration/docs/api-parameters-1#customer-id). Should be sent if the shopper is logged in.
+* `authToken` — if you use [authentication tokens](/retailer-integration/docs/using-tokens) on Delivery calls, set the Bearer token. BeaconSDK uses `fetch()` with the header `Authorization: Bearer <token>`. If fetch isn’t available in the client, BeaconSDK will try to fall back to an image request, but it won't be able to send the token, and it will log a warning.
+
+#### Examples
+
+Using the `setOrganicContext` interface. Recommended for dynamic pages:
+
+```javascript
+window.BeaconSDK.setOrganicContext({
+  endpoint:    "https://d.us.criteo.com/delivery/retailmedia", // required
+  partnerId:   "<criteo-partner-id>",                          // required
+  visitorId:   "<retailer-visitor-id>",                        // optional
+  customerId:  "<customer-id>",                                // optional
+  pageId:      "<same page-id as Delivery API request>",       // required
+  pageUid:     "<from the Delivery response>",                 // nice to have but optional
+  environment: "d",                                            // optional
+  authToken:   "<bearer-token>",                      // optional
+});
+```
+
+Using attributes in the `<script>` tag. Recommended for static pages or Server-side Rendering (SSR):
+
+```html
+<script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js"
+        type="text/javascript"
+        data-dynamic-tracking="true"
+        data-organic-atc="true"
+        data-organic-endpoint="true"
+        data-organic-partner-id="<criteo-partner-id>"
+        data-organic-visitor-id="<retailer-visitor-id>"
+        data-organic-customer-id="<customer-id>"
+        data-organic-page-id="<same page-id as Delivery API request>"
+        data-organic-page-uid="<from the Delivery response>"
+        data-organic-auth-token="<bearer-token>"
+        defer></script>
+```
+
+If required values are missing, BeaconSDK will send a warning and you should use `setOrganicContext` instead.
+
+<Info>
+  If you need to reload the organic context, for example, in Single Page Applications (SPAs), you can call `window.BeaconSDK.clearOrganicContext()` and then, after the next Delivery response, you can call `setOrganicContext` again with the new context data.
+</Info>
+
+### Tagging organic add-to-cart elements
+
+Add the following attributes to the HTML element equivalent to the add-to-cart button
+
+#### Required
+
+* `data-criteo-organic-atc="true"`
+* `data-criteo-item="<sku id>"`
+* `data-criteo-price="<sku price>"`
+
+#### Optional
+
+* `data-criteo-quantity="1"`. Defaults to 1. Should only be set if clicking on the button will add more than 1 item to the cart
+* `data-criteo-parent-item="<parent sku id>"`. Set if you use parent sku ids (`item_group_id`) in your product feed.
+
+#### Example
+
+```html
+<button
+  type="button"
+  data-criteo-organic-atc="true"
+  data-criteo-item="SKU-123"
+  data-criteo-price="34.99"
+  data-criteo-quantity="1"
+  data-criteo-parent-item="P456">
+  Add to cart
+</button>
+```
+
+<Info>
+  Do not use these attributes on sponsored products — for those, use the product beacon attributes as described in this page (e.g. `data-criteo-product-onbasketchangebeacon`).
+</Info>
+
+### What to verify
+
+After calling `setOrganicContext` (or adding the script-tag organic config), clicking a tagged organic ATC button should trigger a GET request to the configured endpoint with parameters including: `event-type=addToCart`, `page-uid`, `item`, `price`, and the optionals `quantity` and `parent-item`.
+
+If you set `authToken`, the request should go via fetch with a header `Authorization: Bearer <token>`.
+
+# Debugging
+
+BeaconSDK provides two tools to help debug your integration: a logger and a viewability visualizer.
+
+<Info>
+  Tracking always runs whether or not debug is enabled.
 </Info>
 
 ## Logging beacons
@@ -157,36 +290,30 @@ To help debug beacon tracking in your browser, you can enable debug logs. This c
 
 1. Adding a cookie `criteo-viewability-debug=true`
 
-<CodeGroup>
-  ```bash bash
-  document.cookie = "criteo-viewability-debug=true;"
-  ```
-</CodeGroup>
+```javascript
+document.cookie = "criteo-viewability-debug=true;"
+```
 
 2. Adding the parameter `data-debug="true"` to the `<script>` tag
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" 
-          data-debug="true"
-          type="text/javascript"
-          async/>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" 
+        data-debug="true"
+        type="text/javascript"
+        defer/>
+```
 
 3. Using the method `enableDebug()` from the `BeaconSDK` interface available after it is loaded
 
-<CodeGroup>
-  ```bash bash
-      window.BeaconSDK.enableDebug();
-  ```
-</CodeGroup>
+```javascript
+    window.BeaconSDK.enableDebug();
+```
 
 Once enabled, BeaconSDK will log each beacon it sends to the browser console. These logs start with the prefix `Criteo: sent [beacon-level]-[beacon-type] beacon:`.
 
 You can filter your browser console by the keyword `Criteo` to isolate these logs.
 
-![](/images/retailer-integration/docs/9c7a697237f16e88dbd58e3af31bb58f6e12704002aa78da15af81916b0c26f2-image.png)
+![](https://files.readme.io/9c7a697237f16e88dbd58e3af31bb58f6e12704002aa78da15af81916b0c26f2-image.png)
 
 Each log entry includes an object with the following properties:
 
@@ -194,7 +321,7 @@ Each log entry includes an object with the following properties:
 * `BeaconURL`: the URL that was called via `sendBeacon()`
 * `HTMLElement`: the actual DOM element that triggered the beacon (hovering it in DevTools will highlight the element)
 
-```
+```text
 Criteo: sent product-onLoad beacon:
 
 {
@@ -208,9 +335,9 @@ Criteo: sent product-onLoad beacon:
 
 ## Universal Beacons
 
-BeaconSDK will track [Universal Beacons](https://developers.criteo.com/retailer-integration/docs/legacy-universal-beacons) out of the box. The only difference being that there are no product-level `OnLoad` beacons. When logging universal beacons to the console, BeaconSDK will show the beacon URL, the excluded SKUs, and the status codes.
+BeaconSDK will track [Universal Beacons](/retailer-integration/docs/legacy-universal-beacons) out of the box. The only difference being that there are no product-level `OnLoad` beacons. When logging universal beacons to the console, BeaconSDK will show the beacon URL, the excluded SKUs, and the status codes.
 
-![](/images/retailer-integration/docs/5235b1bcd08df568a0ed95d8f010389c58804def30babc2ebde896a2122372dc-image.png)
+![](https://files.readme.io/5235b1bcd08df568a0ed95d8f010389c58804def30babc2ebde896a2122372dc-image.png)
 
 ***
 
@@ -218,28 +345,24 @@ BeaconSDK will track [Universal Beacons](https://developers.criteo.com/retailer-
 
 To help debug [viewable impressions](https://www.iab.com/wp-content/uploads/2015/06/MRC-Viewable-Ad-Impression-Measurement-Guideline.pdf), i.e., `OnView` beacons, BeaconSDK also provides a visualizer that will show a blue check mark for the placement-level `OnView` beacons and a green check mark for product-level `OnView` beacons for 2 seconds.
 
-![](/images/retailer-integration/docs/16ad90f8283422bf6576af5788cd0b4f2db95ed4f0632b8695edb15f28fffbdd-image.png)
+![](https://files.readme.io/16ad90f8283422bf6576af5788cd0b4f2db95ed4f0632b8695edb15f28fffbdd-image.png)
 
 The visualizer can be enabled through the following methods:
 
 1. Adding the parameter `data-visualizer="true"` to the `<script>` tag
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" 
-          data-visualizer="true"
-          type="text/javascript" 
-          async/>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" 
+        data-visualizer="true"
+        type="text/javascript" 
+        defer/>
+```
 
 2. Using setting the property `visualizer` from the `BeaconSDK` interface to true, after the bundle is loaded
 
-<CodeGroup>
-  ```bash bash
-  window.BeaconSDK.visualizer = true;
-  ```
-</CodeGroup>
+```javascript
+window.BeaconSDK.visualizer = true;
+```
 
 ***
 
@@ -251,11 +374,9 @@ We offer three options to get started with BeaconSDK.
 
 You can directly load BeaconSDK by adding the following `<script>` tag to your website:
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" async></script>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/stable/BeaconSDK/bundle.js" defer></script>
+```
 
 You should place this script tag at the end of your `<body>` tag, just before the closing `</body>` tag. This ensures that the SDK loads after your page content. If your website dynamically loads content, see the section on [Dynamic Tracking](#dynamic-tracking)
 
@@ -273,19 +394,15 @@ This version will include all minor-version updates automatically. These are upd
 
 * Minimized bundle
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/v4/BeaconSDK/bundle.min.js" async></script>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/v5/BeaconSDK/bundle.min.js" defer></script>
+```
 
 * Expanded-code bundle
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/v4/BeaconSDK/bundle.js" async></script>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/v5/BeaconSDK/bundle.js" defer></script>
+```
 
 ### Minor version
 
@@ -293,19 +410,15 @@ This endpoint will not change it's content once released.
 
 * Minimized bundle
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/v4.0.0/BeaconSDK/bundle.min.js" async></script>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/v5.0.0/BeaconSDK/bundle.min.js" defer></script>
+```
 
 * Expanded code bundle
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://static.criteo.net/cbs/prod/v4.0.0/BeaconSDK/bundle.js" async></script>
-  ```
-</CodeGroup>
+```html
+<script src="https://static.criteo.net/cbs/prod/v5.0.0/BeaconSDK/bundle.js" defer></script>
+```
 
 ## OneTag Bundle
 
@@ -337,39 +450,33 @@ If you want to install and run BeaconSDK locally, ask your Technical Account Man
 2. Download the `.tgz` file received from your TAM. It will be named in the format: `criteo-beacon-sdk-x.y.z.tgz` (where `x.y.z` is the SDK version).
 3. Move the `.tgz` file into your project directory.
 4. Run:
-   <CodeGroup>
-     ```bash bash
-     1. npm install criteo-beacon-sdk-x.y.z.tgz
-     ```
-   </CodeGroup>
+```shell
+   1. npm install criteo-beacon-sdk-x.y.z.tgz
+```
    Make sure to replace `x.y.z` with the actual version string.
 
 After the installation, you can import Import the necessary classes from the SDK into your JavaScript file:
 
-<CodeGroup>
-  ```bash bash
-  import PlacementLevelBeaconHandler from '/beacon-sdk/PlacementLevelBeaconHandler.js';
-  import ProductLevelBeaconHandler from '/beacon-sdk/ProductLevelBeaconHandler.js';
-  import ViewabilityVisualizer from '[PROJECT_DIRECTORY]/debug/SkuViewabilityVisualizer'; // debug porposes only
+```javascript
+import PlacementLevelBeaconHandler from '/beacon-sdk/PlacementLevelBeaconHandler.js';
+import ProductLevelBeaconHandler from '/beacon-sdk/ProductLevelBeaconHandler.js';
+import ViewabilityVisualizer from '[PROJECT_DIRECTORY]/debug/SkuViewabilityVisualizer'; // debug porposes only
 
-  // Attach handlers to the global window object for easy access
-  window.PlacementLevelBeaconHandler = PlacementLevelBeaconHandler;
-  window.ProductLevelBeaconHandler = ProductLevelBeaconHandler;
-  ```
-</CodeGroup>
+// Attach handlers to the global window object for easy access
+window.PlacementLevelBeaconHandler = PlacementLevelBeaconHandler;
+window.ProductLevelBeaconHandler = ProductLevelBeaconHandler;
+```
 
 #### Use the provided functions
 
 You can then start using the functions provided by BeaconSDK:
 
-<CodeGroup>
-  ```bash bash
-  /* [...]
-      PlacementLevelBeaconHandler.attachOnViewBeacons();
-      PlacementLevelBeaconHandler.triggerOnLoadBeacons();
-  /* [...]
-  ```
-</CodeGroup>
+```javascript
+/* [...]
+    PlacementLevelBeaconHandler.attachOnViewBeacons();
+    PlacementLevelBeaconHandler.triggerOnLoadBeacons();
+/* [...]
+```
 
 ## Placement-level beacon handler
 
@@ -394,15 +501,10 @@ The `ProductLevelBeaconHandler` class provides various methods for handling prod
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-What’s Next
-
-You can now explore beacons and ad tracking best practices by visiting the pages below.
+<SendFeedback />
+## What's next
 
 * [Introduction to Beacons](/retailer-integration/docs/introduction-to-beacons)
 * [Beacon Types](/retailer-integration/docs/beacon-types)

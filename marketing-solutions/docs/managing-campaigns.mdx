@@ -1,243 +1,545 @@
 ---
-title: "Managing Campaigns"
+title: Managing Campaigns
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/singleseller/managing-campaigns.md
 ---
 
-1. Marketing Solutions Endpoints
-2. [Marketplace Performance Outcomes](/marketing-solutions/docs/marketplace-performance-outcomes)
+## Overview
 
-<Info>
-  A MPO-Campaign is a course of action to advertise the products of your sellers.
-</Info>
+In Single-Seller setups, you do not create seller-campaigns directly. Instead, the underlying per-seller campaign is created implicitly by Criteo when you create the first valid budget for a `(sellerId, templateCampaignId)` pair.
 
-## Adding Campaigns
+Once created, you can configure and control the campaign through two main surfaces:
 
-Campaigns are not added with the API. Instead, they are created, started and stopped by your Technical Solution engineer.
+* **Budget suspension** (to pause/resume the campaign).
+* **productSet configuration** (to restrict which products can be advertised).
 
-***
+## The Single-Seller campaign entity
 
-## Managing Seller-Campaigns
+A **Single-Seller campaign** (identified by `sellerCampaignId`) is the per-seller campaign derived from the template.
 
-A Seller-Campaign contains all the information relative to the advertisement for the products of a Seller in a Campaign. In particular, it contains information about bid and status:
+Key characteristics:
 
-**`bid`** Bid specified for this Seller in this Campaign
+* Created implicitly when the first valid budget for a `(sellerId, templateCampaignId)` pair is accepted.
+* There may be a short asynchronous provisioning delay before delivery begins after creation.
+* Used by MPO stats endpoints when querying performance at the seller-campaign level.
+* Can have **at most one** `productSet` attached at any given time.
 
-**`suspendedSince`** Date and time since we stopped delivering ads for this Seller in this Campaign.
+To retrieve seller-campaigns and inspect their current state:
 
-**`suspensionReasons`** List of reasons why the campaign is suspended (possible values are: `NoMoreBudget`, `ManuallyStopped`, `NoBudgetDefined`, `NoCpcDefined`, `RemovedFromCatalog`)
-
-Every Seller-Campaign is identified by:
-
-**`sellerId`** `SellerId` of the seller associated to this Seller-Campaign
-
-**`campaignId`** `CampaignId` of the MPO-campaign associated to this Seller-Campaign
-
-***
-
-## Adding Seller-Campaigns
-
-Seller-Campaigns get automatically created for every Campaign and every Seller in your feed.
-
-* New Seller-Campaigns are created inactive by default (`suspendedSince` flag is set to the moment of creation) 
-
-***
-
-## Getting Seller-Campaigns
-
-To see what Seller-Campaigns are available, can make the following query:
-
-![](/images/marketing-solutions/docs/8a6bfd9-get.png)
-
-```
-/marketplace-performance-outcomes/seller-campaigns
+```text
+GET /marketplace-performance-outcomes/seller-campaigns
 ```
 
-**Sample response**
+### Suspension reasons
+
+When a Single-Seller campaign is not delivering, the API returns a `suspensionReasons` array explaining why.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Reason
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Action required
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     ManuallyStopped
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign manually paused
+    </p>
+   </td>
+   <td>
+    <p>
+     Resume via budget
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     NoBudgetDefined
+    </p>
+   </td>
+   <td>
+    <p>
+     No valid budget linked
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a budget
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     NoCpcDefined
+    </p>
+   </td>
+   <td>
+    <p>
+     No CPC set
+    </p>
+   </td>
+   <td>
+    <p>
+     Set CPC via API
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     NoMoreBudget
+    </p>
+   </td>
+   <td>
+    <p>
+     Budget fully spent
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a new budget
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     RemovedFromCatalog
+    </p>
+   </td>
+   <td>
+    <p>
+     Products removed
+    </p>
+   </td>
+   <td>
+    <p>
+     Restore products
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     NotYetStarted
+    </p>
+   </td>
+   <td>
+    <p>
+     Newly created
+    </p>
+   </td>
+   <td>
+    <p>
+     Wait
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     NoMoreDailyBudget
+    </p>
+   </td>
+   <td>
+    <p>
+     Daily limit reached
+    </p>
+   </td>
+   <td>
+    <p>
+     Wait for daily reset
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Other
+    </p>
+   </td>
+   <td>
+    <p>
+     Internal/system issue
+    </p>
+   </td>
+   <td>
+    <p>
+     Contact your Criteo team
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+#### Checking campaign status
+
+```text json
+{
+"id": "SELLER_123.TEMPLATE_CAMPAIGN_456",
+"sellerId": "SELLER_123",
+"campaignId": "TEMPLATE_CAMPAIGN_456",
+"suspendedSince": "2026-04-28T10:00:00Z",
+"suspensionReasons": ["NoMoreDailyBudget"]
+}
+```
+
+<br />
+
+* If `suspendedSince` is `null` and `suspensionReasons` is empty → the campaign is active.
+* If `suspendedSince` is set and one or more reasons are present → the campaign is currently suspended.
+
+## Suspending and resuming a Single-Seller campaign
+
+You do **not** pause Single-Seller campaigns directly via a campaign-level endpoint. Instead, you control campaign run state by suspending or resuming the associated **budget**.
+
+### Suspend (pause) a campaign
+
+To stop spend for a seller, set `isSuspended: true` on the active budget:
 
 <CodeGroup>
-  ```bash bash
-  [{
-      "id": "1.10001",
-      "suspendedSince": "2018-07-30T18:00:13.333",
-      "suspensionReasons": ["NoMoreBudget"],
-      "sellerId": "1",
-      "campaignId": 10001,
-      "bid": null
-  },{
-      "id": "2.10001",
-      "suspendedSince": "2018-09-03T09:00:23.8",
-      "suspensionReasons": ["ManuallyStopped"],
-      "sellerId": "2",
-      "campaignId": 10001,
-      "bid": null
-  },{
-      "id": "3.10001",
-      "suspendedSince": "2018-09-03T09:00:23.8",
-      "suspensionReasons": ["NoCpcDefined"], 
-      "sellerId": "3",
-      "campaignId": 10001,
-      "bid": null
-  }]
-  ```
+
+```text Text
+POST  https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets/{budgetId}
+Content-Type: application/json
+```
+
+```text json
+{
+"budgetId": "789",
+"isSuspended": true
+}
+```
 </CodeGroup>
 
-***
+**Expected behavior:**
 
-## Get specific Seller-campaign
+* The budget becomes inactive and the associated Single-Seller campaign stops serving.
+* The budget remains present in the API for auditing and historical purposes.
 
-You can also fetch the details of a single Seller-campaign using the following request:
+### Resume a campaign
 
-![](/images/marketing-solutions/docs/8a6bfd9-get.png)
-
-```
-/marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}
-```
-
-**Sample response**
+To resume spend, set `isSuspended: false`:
 
 <CodeGroup>
-  ```bash bash
-  {
-    "id": "543210.123456",
-    "sellerId": "543210",
-    "campaignId": 123456,
-    "bid": 1.55,
-    "suspendedSince": "2018-07-30T15:15:24.813",
-    "suspensionReasons": [
-      "NoMoreBudget"
-    ]
-  }
-  ```
+
+```text Text
+POST  https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets/{budgetId}
+Content-Type: application/json
+```
+
+```text json
+json
+{
+"budgetId": "789",
+"isSuspended": false
+}
+```
 </CodeGroup>
 
-An active seller campaign meets these conditions:
+**Guidance:**
 
-* The `suspendedSince` field is `null`.
-* The `bid` value is greater than zero.
-* The bid currency matches the `bidCurrency` of the related campaign.
+* If the `endDate` is in the past, resuming will **not** restart delivery; you may need to create a new budget with a future period.
+* If there is a future budget scheduled for the same `(sellerId, templateCampaignId)`, the campaign will automatically resume when that future budget’s `startDate` is reached (assuming that future budget is not itself suspended).
 
-Additionally, an active seller campaign must have an active total budget (capped or uncapped). It may also have an active daily budget to further restrict spending.
+### Cancel a scheduled future budget
 
-<Info>
-  **Suspension reasons**
-
-  * `ManuallyStopped`: The campaign has been manually paused, independent of other suspension causes.
-  * `NoBudgetDefined`: No valid budget is linked to the campaign.
-  * `NoCpcDefined`: No cost-per-click (CPC) has been set for the campaign.
-  * `NoMoreBudget`: The current budget of the campaign has been fully used.
-  * `RemovedFromCatalog`: All products in the campaign have been removed from the catalog.
-  * `NotYetStarted`: The campaign is newly created and has not yet been processed.
-</Info>
-
-***
-
-## Get a collection of budgets for selected Seller-Campaign
-
-The following endpoint retrieves a list of budgets for the specified seller campaign, applying any optional filters provided.
-
-If no filters are set, it returns all accessible budgets except those with an `endDate` in the past. When multiple filters are applied, only budgets meeting all criteria are included.
-
-![](/images/marketing-solutions/docs/8a6bfd9-get.png)
-
-```
-/marketplace-performance-outcomes/seller-campaigns/{sellerCampaignId}/budgets
-```
-
-**Sample response**
+To logically cancel a future, not-yet-active budget:
 
 <CodeGroup>
-  ```bash bash
-  [
-    {
-      "id": "6907877",
-      "sellerId": "10624700",
-      "campaignIds": [
-        225662
-      ],
-      "budgetType": "Daily",
-      "amount": 12.0000,
-      "startDate": "2021-02-25",
-      "endDate": "Never",
-      "spend": null,
-      "status": "Current",
-      "isSuspended": false
-    }
-  ]
-  ```
-</CodeGroup>
 
-You can apply the following query parameters to the endpoint to specify filters:
-
-| Parameter          | Definition                                                                                                              | Type      | Required? |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------- | --------- | --------- |
-| `sellerCampaignId` | Filters budgets belonging to the specified seller campaign.                                                             | `string`  | Yes       |
-| `endAfterDate`     | Returns budgets ending after the specified date (`yyyy-MM-DD`). Defaults to only active (not ended) budgets if omitted. | `string`  | No        |
-| `startBeforeDate`  | Returns budgets starting on or before the specified date (`yyyy-MM-DD`).                                                | `string`  | No        |
-| `status`           | Filters budgets by their status. Possible values: **Archived**, **Current**, **Scheduled**.                             | `string`  | No        |
-| `type`             | Filters budgets by the specified budget type.                                                                           | `string`  | No        |
-| `withBalance`      | Returns only budgets with a positive balance.                                                                           | `boolean` | No        |
-| `withSpend`        | Returns budgets with a positive spend amount.                                                                           | `boolean` | No        |
-
-***
-
-## Starting Seller-Campaigns
-
-In order to start delivering ads for a Seller in a Campaign, the Seller-Campaign needs to:
-
-* be part of a running Campaign,
-* have a bid (see "[Setting the Bid for a given Seller-Campaign](doc:managing-campaigns#setting-the-bids-of-seller-campaigns)" section),
-* have an active budget (see "[Managing Budgets](doc:managing-budgets)" section),
-
-When a Seller-Campaign becomes inactive, the `suspendedSince` flag is null.
-
-***
-
-## Stopping Seller-Campaigns
-
-In order to stop delivering ads for a Seller in a Campaign, you can do one of the following actions:
-
-* set the bid of the Seller-Campaign to null (see "[Setting the Bid for a given Seller-Campaign](doc:managing-campaigns#setting-the-bids-of-seller-campaigns)" section),
-* suspend the current budget (see "[Suspend a Budget](doc:managing-budgets#suspending-budgets)" section),
-* remove products of this Seller from the feed (if you have several MPO-Campaigns, this will also stop the Seller in the other MPO-Campaigns).
-
-When a Seller-Campaign becomes inactive, the `suspendedSince` flag is set to the current date.
-
-***
-
-## Setting the Bids of Seller-Campaigns
-
-In order to have a Sellers active in the campaign, you have to specify the bids that will be used for these Sellers in the given Campaign.
-
-![](/images/marketing-solutions/docs/04a928f-patch.png)
-
-```
-/marketplace-performance-outcomes/seller-campaigns
+```text Text
+POST  https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets/{budgetId}
+Content-Type: application/json
 ```
 
-**Sample response**
-
-<CodeGroup>
-  ```bash bash
-  [{
-      "id": "1.10001",
-      "bid": 0.3
-  },{
-      "id": "2.10001",
-      "bid": 0.6
-  },{
-      "id": "3.10001",
-      "bid": 0.5
-  }]
-  ```
+```text json
+{
+"budgetId": "FUTURE_BUDGET_1011",
+"isSuspended": true
+}
+```
 </CodeGroup>
 
-<Warning>
-  Note that the ID is defined by “seller ID” dot “campaign ID” (e.g 1.10001 for seller ID 1 and campaign 10001).
-</Warning>
+After suspension:
+
+* Treat the budget as **canceled**.
+* You can create a new budget covering the same period if needed; suspended budgets do **not** block new ones for the same dates.
+
+## productSet for Single-Seller campaigns
+
+The `productSet` feature lets you restrict a Single-Seller campaign to a specific list of product IDs from the seller’s catalog.
+
+### Overview
+
+A `productSet` is a **whitelist of product IDs**:
+
+* Only products whose external item IDs are in the `productSet` are eligible to be advertised by that Single-Seller campaign.
+
+The `productSet`:
+
+* Is configured at the **seller-campaign** level.
+* Applies to **all ads** served by that campaign.
+* Is **optional**; if no `productSet` is configured, the campaign can use all eligible products from the seller’s catalog (subject to other targeting and policy constraints).
+* There is at most **one** `productSet` per Single-Seller campaign at any given time.
+
+> `productSet` configuration is only supported for Single-Seller campaigns associated with a Single-Seller template. Do not attempt to use `productSet` on legacy multi-seller campaigns or other campaign types.
+
+## Inspecting the current productSet
+
+When you retrieve a Single-Seller campaign, the response will:
+
+* Return no `productSet` or `productSet: null` if no `productSet` has ever been configured.
+* Return a structured rule when a `productSet` is configured.
+
+**Example response fragment:**
+
+```text json
+{
+"data": [
+{
+"id": "SELLER_123.TEMPLATE_CAMPAIGN_456",
+"sellerId": "SELLER_123",
+"campaignId": "TEMPLATE_CAMPAIGN_456",
+"productSet": {
+"rules": [
+{
+"operator": "IsIn",
+"field": "ExternalItemId",
+"values": [
+"SKU_1",
+"SKU_2",
+"SKU_3"
+]
+}
+],
+"productSetStatus": "Valid",
+"productSetNumberOfProducts": 3
+}
+}
+]
+}
+```
+
+**Interpretation:**
+
+* `productSet.rules` contains an array of rules; in Single-Seller mode, only a **single rule** is supported.
+* Each rule:
+  * `operator: "IsIn"` — inclusion list.
+  * `field: "ExternalItemId"` — field in the seller’s catalog feed.
+  * `values` — list of product IDs (strings).
+* If `productSet` is `null` or omitted, no additional product-ID filter is applied.
+
+## Create / Update: Attaching a productSet
+
+To create or update the `productSet` for a Single-Seller campaign, call the seller-campaign update endpoint with a `productSet` object.
+
+```text
+PATCH  https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/seller-campaigns
+Content-Type: application/json
+```
+
+**Example request body:**
+
+```text json
+[
+{
+"id": "SELLER_123.TEMPLATE_CAMPAIGN_456",
+"productSet": {
+"value": [
+{
+"operator": "IsIn",
+"field": "ExternalItemId",
+"values": [
+"SKU_001", "SKU_002", "SKU_003", "SKU_004", "SKU_005",
+"SKU_006", "SKU_007", "SKU_008", "SKU_009", "SKU_010", "SKU_011"
+]
+}
+]
+}
+}
+]
+```
+
+**Behavior:**
+
+* If the Single-Seller campaign had no `productSet` before, this **creates and attaches** a new `productSet`.
+* If a `productSet` already existed, this **replaces** the existing rule with the new one (it is not additive).
+* After a successful update, subsequent GETs for this campaign will return the new `productSet` configuration.
+
+**Constraints:**
+
+* Only:
+  * `operator = "IsIn"` or `operator = "IsNotIn"`, with
+  * `field = "ExternalItemId"`  
+    is supported for Single-Seller usage.
+* A **minimum number of product IDs per `productSet`** may be enforced per advertiser (default: 20). Providing fewer IDs than configured will return a **4xx** error.
+
+## Delete / Unset: Removing the productSet
+
+To remove the `productSet` and revert to no additional product filter, set `productSet.value` to `null`:
+
+```text json
+[
+{
+"id": "SELLER_123.TEMPLATE_CAMPAIGN_456",
+"productSet": {
+"value": null
+}
+}
+]
+```
+
+**Expected behavior:**
+
+* The Single-Seller campaign stops using a `productSet` to filter products.
+* A subsequent GET for this campaign will show `productSet: null` (or omit the field, depending on the schema).
+* Products are once again selected from the seller’s catalog without additional ID whitelisting, subject to other targeting rules and policies.
+
+## Supported productSet patterns
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Pattern
+    </p>
+   </th>
+   <th>
+    <p>
+     Supported?
+    </p>
+   </th>
+   <th>
+    <p>
+     Notes
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     Single-Seller + no productSet (default)
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     All eligible products from the seller are used.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Single-Seller + one
+     <code>
+      IsIn
+     </code>
+     rule on
+     <code>
+      ExternalItemId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Recommended pattern for SKU restriction.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Multiple
+     <code>
+      productSet
+     </code>
+     rules per Single-Seller
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Updates replace the existing rule.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productSet
+     </code>
+     on a multi-seller campaign
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
-What’s Next
+## Workflow: Restrict products for a seller
 
-* [Managing Budgets](/marketing-solutions/docs/managing-budgets)
-* [Getting statistics](/marketing-solutions/docs/getting-statistics)
-* [Validation Errors](/marketing-solutions/docs/validation-errors)
+1. **Obtain product IDs** from your catalog or internal systems for the seller.
+2. **Attach `productSet`** via:
+
+```text
+PATCH /marketplace-performance-outcomes/seller-campaigns
+```
+
+with:
+
+* `operator: "IsIn"`
+* `field: "ExternalItemId"`
+* `values: ["SKU_1", "SKU_2", ...]`
+
+3. **Update or remove later as needed:**
+
+   * Update the `values` list to change the whitelist.
+   * Set `productSet.value` to `null` to remove the filter entirely.

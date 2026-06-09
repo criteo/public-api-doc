@@ -1,0 +1,315 @@
+---
+title: Audience Targeting
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2025_07/docs/Guides for Retail Media API/onsite-display-line-items/audience-targeting.md
+hidden: true
+---
+
+* This endpoint and its underlying capabilities only apply to Onsite Display Line items.
+* Audience targeting allows you to restrict Onsite Display line items to serve only users belonging to some predefined audience.
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoints
+    </p>
+   </th>
+   <th>
+    <p>
+     Descriptoin
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      GET
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /preferred-line-items/&#123;line-item-id&#125;/targeting/audiences
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get All targeted Audiences on a specific Line Item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      PUT
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /preferred-line-items/&#123;line-item-id&#125;/targeting/audiences
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Initialize or Override Audiences targeting on a specific Line Item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      POST
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /preferred-line-items/&#123;line-item-id&#125;/targeting/audiences/append
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Add targeted Audiences to a Specific Line Item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      POST
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /preferred-line-items/&#123;line-item-id&#125;/targeting/audiences/delete
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Remove targeted Audiences from a Specific Line Item
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+When using the feature, the PUT endpoint must be used to first initialize it, defining its `scope`. POST endpoints can only alter the list of audiences.
+
+## Audience Attributes
+
+<ParamField path="scope" type="enum" required>
+  *Required on PUT endpoint.*
+
+  Whether listed audiences should be included or excluded from the line item
+
+  **Values:** `include`,`exclude`
+</ParamField>
+
+<ParamField path="audienceIds" type="string array">
+  List of all audiences
+
+  **Values:** -
+</ParamField>
+
+## List all targeted Audiences on an Onsite Display Line Item
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{line-item-id}/targeting/audiences
+```
+
+**Sample Request**
+
+```bash
+curl -X GET "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188/targeting/audiences" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaAudienceTarget",
+        "attributes": {
+            "scope": "include",
+            "audienceIds": [
+                "266154384519348224",
+                "266154384519348225"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+## Initiate targeted Audiences list and scope on a Line item
+
+* This endpoint initializes the feature on an Onsite Display Line item.
+* If targeted Audiences were already defined, those will be overridden
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{line-item-id}/targeting/audiences
+```
+
+**Sample Request**
+
+```bash
+curl -X PUT "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188/targeting/audiences" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaAudienceTarget",
+                "attributes": {
+                    "scope": "exclude",
+                    "audienceIds": [
+                        "266154384519348224",
+                        "266154384519348225"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaAudienceTarget",
+        "attributes": {
+            "scope": "exclude",
+            "audienceIds": [
+                "266154384519348224",
+                "266154384519348225"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+## Add targeted Audiences on a Line item
+
+* This endpoint adds target audiences to an Onsite Display Line item.  
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{line-item-id}/targeting/audiences/append
+```
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188/targeting/audiences/append" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaAudienceTarget",
+                "attributes": {
+                    "audienceIds": [
+                        "266154384519348226"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaAudienceTarget",
+        "attributes": {
+            "scope": "include",
+            "audienceIds": [
+                "266154384519348224",
+                "266154384519348225",
+                "266154384519348226"
+            ]
+        }
+    },
+    "errors": [],
+    "warnings": []
+}
+```
+
+## Remove targeted Audiences on a line item
+
+* This endpoint removes previously targeted Audiences
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/preferred-line-items/{line-item-id}/targeting/audiences/delete
+```
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/{version}/retail-media/preferred-line-items/2465695028166499188/targeting/audiences/delete" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaAudienceTarget",
+                "attributes": {
+                    "audienceIds": [
+                        "266154384519348226"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```bash
+{
+    "data": {
+        "type": "RetailMediaAudienceTarget",
+        "attributes": {
+            "scope": "include",
+            "audienceIds": [
+                "266154384519348224",
+                "266154384519348225"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```

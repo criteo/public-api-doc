@@ -1,12 +1,10 @@
 ---
-title: "Async Reports"
+title: Async Reports
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026-preview/docs/Preview Endpoints/analytics/async-reports.md
 ---
 
-1. Preview Endpoints
-2. [Analytics](/marketing-solutions/v2026-preview/docs/analytics)
-
 <Info>
-  ### Reporting Asynchronous Workflow: Step 1 of 3
+  **Reporting Asynchronous Workflow: Step 1 of 3**
 
   * First, create a request from one of the async endpoints with the desired attributes
   * This generates a `reportId` representing the report
@@ -14,66 +12,62 @@ title: "Async Reports"
 
 ## Create a Report Request
 
-This endpoint creates a request for [Campaign Statistics](doc:campaign-statistics) or [Audience Performance](doc:async-audience-performance) report:
+This endpoint creates a request for [Campaign Statistics](/marketing-solutions/v2026-preview/docs/campaign-statistics) or [Audience Performance](/marketing-solutions/docs/async-audience-performance) report:
 
-![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/preview/reports/async-statistics
 ```
 
-![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/preview/reports/async-audience-performance
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -X POST "https://api.criteo.com/preview/reports/async-statistics" \
-      -H "Authorization: Bearer myaccesstoken" \
-      -H "Content-Type: application/json" \
-      -d '{
-         "data": {
-             "type": "StatisticsReport",
-             "attributes": {
-                  "startDate": "2022-01-01",
-                  "endDate": "2022-01-02",
-                  "dimensions": ["CampaignId", "Campaign", "Day"],
-                  "metrics": ["Clicks", "Displays", "AdvertiserCost"],
-                  "advertiserIds": ["1111", "2222"],
-                  "currency": "EUR",
-                  "timezone": "Europe/Paris",
-                  "adSetNames": ["myAdSet1", "myAdSet2"],
-                  "adSetIds": ["789", "456"],
-                  "adSetStatus": ["Active", "NotRunning"]
-              }
-          }
-      }'
-  ```
-</CodeGroup>
+```bash
+curl -X POST "https://api.criteo.com/preview/reports/async-statistics" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+       "data": {
+           "type": "StatisticsReport",
+           "attributes": {
+                "startDate": "2022-01-01",
+                "endDate": "2022-01-02",
+                "dimensions": ["CampaignId", "Campaign", "Day"],
+                "metrics": ["Clicks", "Displays", "AdvertiserCost"],
+                "advertiserIds": ["1111", "2222"],
+                "currency": "EUR",
+                "timezone": "Europe/Paris",
+                "adSetNames": ["myAdSet1", "myAdSet2"],
+                "adSetIds": ["789", "456"],
+                "adSetStatus": ["Active", "NotRunning"]
+            }
+        }
+    }'
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "MarketingSolutionsReportStatus",
-          "id": "OWVmNDE3OTMtYTZlZC00YjQ4LThiNjUtYjZkOTE1OGViYjIzfEVVUnxFdXJvcGUvUGFyaXM=",
-          "attributes": {
-              "status": "pending",
-              "message": null
-          }
-      }
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "type": "MarketingSolutionsReportStatus",
+        "id": "OWVmNDE3OTMtYTZlZC00YjQ4LThiNjUtYjZkOTE1OGViYjIzfEVVUnxFdXJvcGUvUGFyaXM=",
+        "attributes": {
+            "status": "pending",
+            "message": null
+        }
+    }
+}
+```
 
 <Info>
-  ### Reporting Asynchronous Workflow: Step 2 of 3
+  **Reporting Asynchronous Workflow: Step 2 of 3**
 
   * Next, use the reportId to poll the report status endpoint until one is successfully computed
 </Info>
@@ -82,42 +76,38 @@ https://api.criteo.com/preview/reports/async-audience-performance
 
 This endpoint retrieves the status of a specific report. Status can be `pending`, `done`, `failure`, or `expired`
 
-![](/images/marketing-solutions/v2026-preview/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/preview/reports/{reportId}/status
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -X GET "https://api.criteo.com/preview/reports/ZWQ1ZDYxY2EtUWNlNy00Nyk0LWFkN1ktY2Q5ZWGyMzA0ZTU0fEzVUnxFdXMvcGZvUGFaaXM=/status" \
-      -H "Authorization: Bearer myaccesstoken"
-  ```
-</CodeGroup>
+```bash cURL
+curl -X GET "https://api.criteo.com/preview/reports/ZWQ1ZDYxY2EtUWNlNy00Nyk0LWFkN1ktY2Q5ZWGyMzA0ZTU0fEzVUnxFdXMvcGZvUGFaaXM=/status" \
+    -H "Authorization: Bearer myaccesstoken"
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": {
-      "type": "MarketingSolutionsReportStatus",
-      "id": "OWVmNDE3OTMtYTZlZC00YjQ4LThiNjUtYjZkOTE1OGViYjIzfEVVUnxFdXJvcGUvUGFyaXM=",
-      "attributes": {
-        "status": "Done",
-        "message": rows_count=123
-      }
-    },
-    "errors": [],
-    "warnings": []
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+  "data": {
+    "type": "MarketingSolutionsReportStatus",
+    "id": "OWVmNDE3OTMtYTZlZC00YjQ4LThiNjUtYjZkOTE1OGViYjIzfEVVUnxFdXJvcGUvUGFyaXM=",
+    "attributes": {
+      "status": "Done",
+      "message": rows_count=123
+    }
+  },
+  "errors": [],
+  "warnings": []
+}
+```
 
 <Info>
-  ### Reporting Asynchronous Workflow: Step 3 of 3
+  **Reporting Asynchronous Workflow: Step 3 of 3**
 
   * Finally, download the report using the report output endpoint
 </Info>
@@ -126,47 +116,43 @@ https://api.criteo.com/preview/reports/{reportId}/status
 
 This endpoint returns the specific report in the requested format
 
-![](/images/marketing-solutions/v2026-preview/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/preview/reports/{reportId}/output
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -X GET "https://api.criteo.com/preview/reports/ZWQ1ZDYxY2EtUWNlNy00Nyk0LWFkN1ktY2Q5ZWGyMzA0ZTU0fEzVUnxFdXMvcGZvUGFaaXM=/output" \
-      -H "Authorization: Bearer myaccesstoken"
-  ```
-</CodeGroup>
+```bash cURL
+curl -X GET "https://api.criteo.com/preview/reports/ZWQ1ZDYxY2EtUWNlNy00Nyk0LWFkN1ktY2Q5ZWGyMzA0ZTU0fEzVUnxFdXMvcGZvUGFaaXM=/output" \
+    -H "Authorization: Bearer myaccesstoken"
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": {
-      "metaData": {
-        "columns": [
-          { "name": "CampaignId", "type": "String", "role": "Dimension" },
-          { "name": "Campaign", "type": "String", "role": "Property", "relatedTo": "CampaignId" },
-          { "name": "Day", "type": "String", "role": "Interval", "timezone": "Europe/Paris"},
-          { "name": "Clicks", "type": "Number", "role": "Metric" },
-          { "name": "Displays", "type": "Number", "role": "Metric" },
-          { "name": "AdvertiserCost", "type": "Money", "role": "Metric", "currency": "EUR" }
-        ],
-        "rows": 4
-      },
-      "data": [
-        [ 1111, "CampaignName1", "2022-01-01", 876, 1234, 20 ],
-        // ....
-        [ 2222, "CampaignName2", "2022-01-02", 678, 4321, 22 ]
-      ]
-    }
+```json JSON
+{
+  "data": {
+    "metaData": {
+      "columns": [
+        { "name": "CampaignId", "type": "String", "role": "Dimension" },
+        { "name": "Campaign", "type": "String", "role": "Property", "relatedTo": "CampaignId" },
+        { "name": "Day", "type": "String", "role": "Interval", "timezone": "Europe/Paris"},
+        { "name": "Clicks", "type": "Number", "role": "Metric" },
+        { "name": "Displays", "type": "Number", "role": "Metric" },
+        { "name": "AdvertiserCost", "type": "Money", "role": "Metric", "currency": "EUR" }
+      ],
+      "rows": 4
+    },
+    "data": [
+      [ 1111, "CampaignName1", "2022-01-01", 876, 1234, 20 ],
+      // ....
+      [ 2222, "CampaignName2", "2022-01-02", 678, 4321, 22 ]
+    ]
   }
-  ```
-</CodeGroup>
+}
+```
 
 ## Insights on Data Latency and Storage
 
@@ -175,9 +161,3 @@ https://api.criteo.com/preview/reports/{reportId}/output
 * Data is processed in batches every hour, and some data from the same day may only be partially available.
 
 * Reports are stored in cache for a minimum of 1 hour before they expire.
-
-***
-
-[Audience Performance](/marketing-solutions/v2026-preview/docs/audience-performance)
-
-[Real Time Statistics](/marketing-solutions/v2026-preview/docs/real-time-statistics)

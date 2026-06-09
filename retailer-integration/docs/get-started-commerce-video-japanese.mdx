@@ -1,0 +1,114 @@
+---
+title: Commerce Onsite Video の利用方法
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Commerce video (japanese)/get-started-commerce-video-japanese.md
+description: This is a translated version of the Commerce Onsite Video documentation
+hidden: true
+---
+
+このドキュメントでは、**Commerce Onsite Video のフォーマット**に関連する開発のガイドラインを示します。
+
+また、このセクションでは、以下を行うための詳細なガイドラインを提供します。
+
+* [API レスポンス](/retailer-integration/docs/api-response-structure-japanese)を使用して、Commerce Onsite Video のフォーマットを取得してレンダリング
+* [ビデオプレーヤー仕様全文](/retailer-integration/docs/video-player-specifications-japanese)の解説
+* [Commerce Onsite Video のフォーマットに関する広告関連のアクティビティの追跡](/retailer-integration/docs/tracking-ad-related-activity-japanese)
+* [ビデオプレーヤーの実装（デスクトップとモバイル）](/retailer-integration/docs/video-player-implementation-guide-desktopmobile-japanese)
+* [ビデオプレーヤー（アプリ）実装（アンドロイド）](https://dash.readme.com/project/retail-media-delivery/v1.1/docs/video-player-implementation-appandroid-japanese)
+* [ビデオプレーヤー（アプリ）実装（iOS)](/retailer-integration/docs/video-player-implementation-app-ios-japanese)
+
+<Warning>
+  **前提条件**
+
+  次の Commerce Onsite Video 統合プロセスに進む前に、Criteo Retail Media の広告の呼び出しを実装している必要があります。 サポートが必要な場合は、[こちらのページにアクセスしてください。](/retailer-integration/docs/integration-process)
+</Warning>
+
+***
+
+## オンサイト動画シーケンス図
+
+![b3e5b44e16975f1f8a4624cc1c2509641150f98c1f8363d7025f69c277cb5643 Onsite_Video_JAPANESE](https://files.readme.io/b3e5b44e16975f1f8a4624cc1c2509641150f98c1f8363d7025f69c277cb5643-Onsite_Video_JAPANESE.png)
+
+***
+
+## 動画固有の定義
+
+### VAST ビデオプレーヤー
+
+VAST ビデオプレーヤーは、動画広告をビデオプレーヤーに配信するために Interactive Advertising Bureau (IAB) によって開発された XML スキーマである Video Ad Serving Template (VAST) をサポートするビデオプレーヤーです。
+
+VAST は、広告サーバーがビデオプレーヤーに広告の詳細を伝達する方法を標準化します。
+
+VAST ビデオプレーヤーは、VAST XML レスポンスを解析し、VAST ドキュメントに含まれる指示に従って動画広告を表示できます。 これらのプレーヤーは、リニア広告とノンリニア広告、クリックスルー URL、トラッキング・イベント（インプレッション、クリック、クォータイル・トラッキングなど）、コンパニオン広告など、VAST 標準で定義されているさまざまな機能をサポートしています。
+
+#### 長所
+
+VAST の主な利点は、インプレッション、ビュー、インタラクションなどの広告パフォーマンスに関する詳細な追跡データを提供して、キャンペーンを最適化するための貴重な洞察をユーザーに提供できることです。 また、VAST はさまざまな動画フォーマットと環境をサポートしているため、小売業者や広告主の多様なニーズを満たすことができ、多目的なソリューションとなっています。
+
+#### 短所
+
+VAST は上記のように高度な機能を提供しますが、特にモバイルアプリでの実装において技術的な課題が生じる可能性があると弊社では認識しています。 シームレスな広告配信と追跡を確保するには適切な構成が必要であり、セットアップ中にさらなる注意とサポートが必要になる場合があります。
+
+<Info>
+  VAST ビデオプレーヤーの詳細については、[ビデオ プレーヤー実装ガイド](/retailer-integration/docs/video-player-implementation-guide-desktopmobile-japanese)で説明します。
+</Info>
+
+***
+
+### レンダリング
+
+レンダリングは、動画広告のデータを画像で表示するプロセスです。 リテールメディア広告への動画の統合においては、以下が含まれます。
+
+* 指定されたフォーマットとレイアウトに基づいて、広告のさまざまな要素（動画、画像、テキストなど）を統合する。
+* 広告の視覚的要素とインタラクティブ要素がユーザーのブラウザまたはアプリケーション内で適切に表示され、機能することを確認する。
+* カスタム ラベル、色、画像アセットなどのフォーマット固有のプロパティを適用して、広告として表示させる要素を完成させる。
+
+リテールメディアに動画広告を統合する場合、レンダリングには、動画コンテンツの取得、画像やボタンなどの関連アセットの読み込み、定義されたフォーマットとユーザー・エクスペリエンス・ガイドラインに準拠したすべての要素が正しくインタラクティブに表示されるようにすることなどが含まれます。
+
+***
+
+### ビューポート
+
+ビューポートは、ユーザーがデバイスの画面上で見ることができる長方形の領域であり、 デバイス（デスクトップ、タブレット、モバイルなど）やブラウザウィンドウのサイズによって異なります。 最大限の視認性とエンゲージメントを確保するには、広告をビューポート内に戦略的に配置する必要があります。
+
+***
+
+### 動画用ビーコン
+
+ビーコンとは、広告に対する特定のイベントやインタラクションを追跡するために使用される小さなコードまたは URL を指します。 ビーコンは、広告の表示、クリック、読み込みなどの特定のアクションが発生したときに呼び出しすることで、分析とレポート作成を目的としてデータを広告サーバーに送り返します。 弊社の立場からすると、ビーコンは Criteo のサーバーに送信されるネットワーク リクエスト（URL）であり、これにより URL のパラメータに保存されている情報をログとして記録することができます。
+
+ビーコンは、広告リクエストが行われるときに Criteo の配信によって生成され、商品とともに API レスポンスで返されます。 ビーコンは `//b.criteo.com.` で始まる URL です。
+
+リテールメディアへの動画の統合におけるビーコンの用途には以下が含まれます。
+
+* \*\*インプレッション・トラッキング：\*\*動画広告が読み込まれてユーザーに表示されたタイミングを追跡し、インプレッションを記録するビーコンです。
+* \*\*インタラクション・トラッキング：\*\*広告のクリックや広告内のボタンなど、ユーザーによるインタラクションを監視し、ユーザー・エンゲージメントに関する分析情報を提供するビーコンです。
+* \*\*パフォーマンス指標：\*\*ビーコンによって収集されたデータは、広告パフォーマンスに関するレポートを生成するために使用され、広告主がキャンペーンを最適化するのに役立ちます。
+
+ビーコンについては、[広告関連アクティビティの追跡ページ](/retailer-integration/docs/tracking-ad-related-activity-japanese)で説明します。
+
+***
+
+### フォーマット
+
+フォーマットとは、動画広告の特定のタイプと構成を指します。 これには、リテールメディア環境内で動画広告がどのように表示され、ユーザーとどのように関り合うかを定義するレイアウト、スタイル、機能コンポーネントが含まれます。
+
+これにより、特定のデザイン要素、インタラクション・ポイント、データ要件など、広告で動画コンテンツを構造的に表示できます。 フォーマットの目的は、さまざまなプラットフォームやデバイス間で動画広告の表示と機能の一貫性を確保することです。
+
+***
+
+### OMID（Open Measurement Interface Definition）
+
+Open Measurement Interface Definition（OMID）は、さまざまなプラットフォームやデバイスにわたるデジタル広告、特に動画広告のビューアビリティを測定および検証するために IAB が提供する標準化されたテクノロジーです。 広告主、パブリッシャー、広告技術プロバイダーにとって、広告がユーザーに確実に表示されるようにすることは不可欠です。
+
+OMID は、業界標準に準拠した、**視認可能なインプレッションや視認可能な動画再生などのビューアビリティ指標を測定するための一貫したフレームワーク**を提供します。 OMID を実装すると、広告のパフォーマンスとユーザー・エンゲージメントに関する正確な分析情報が得られ、キャンペーンの効果と透明性が向上します。
+
+また、OMID により、Criteo は、**世界中のすべての小売業者にわたって一貫した動画のビューアビリティ測定を維持**できるため、広告主には広告を掲載する Web サイトに関係なく一貫したパフォーマンス体験を提供できます。
+
+他の検証スクリプトを組み込む方法については、[こちらのページ](/retailer-integration/docs/video-player-implementation-guide-desktopmobile-japanese)で説明します。
+## What's next
+
+* [API response structure (Japanese)](/retailer-integration/docs/api-response-structure-japanese)
+* [Video Player Specification (Japanese)](/retailer-integration/docs/video-player-specification-japanese)
+* [Tracking Ad-related Activity (Japanese)](/retailer-integration/docs/tracking-ad-related-activity-japanese)
+* [Video Player Implementation (desktop/mobile)(Japanese)](/retailer-integration/docs/video-player-implementation-desktopmobile-japanese)
+* [Video Player Implementation (App: iOS)(Japanese)](/retailer-integration/docs/video-player-implementation-app-ios-japanese)

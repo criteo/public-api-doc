@@ -1,0 +1,993 @@
+---
+title: Creative Product SKU Collections
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/creatives/creative-product-sku-collections.md
+hidden: true
+---
+
+<Note>
+  ### Getting Started
+
+  * Preferred Deals Line Items have an associated Creative and Creative Template that defines the requirements for **SkuCollections**. 
+
+  * SkuCollections, also known as **Product Buttons**, is a many-to-one relationship with the LineItem. Each SKU Collection has some attributes including one or more SKUs.
+
+  * **NOTE:** In this documentation, we will refer to these endpoints as **Product SKU Collections**
+</Note>
+
+## **Endpoints**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;line-item-id&#125;/product-buttons/&#123;product-button-id&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get a single Product SKU collection (product button)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      PUT
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;line-item-id&#125;/product-buttons/&#123;product-button-id&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Update a Product SKU collection (product button)
+    </p>
+    <p>
+     Note: calls replaces all fields
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      DELETE
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      line-items/&#123;line-item-id&#125;/product-buttons/&#123;product-button-id&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Delete a Product SKU collection (Product Button)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;line-item-id&#125;/product-buttons
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get all the Product SKU collection (product buttons) associated with a line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;line-item-id&#125;/product-buttons/create
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a new Product SKU collections (product buttons) on a line item
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+ 
+
+## **Product SKU Collections Parameters**
+
+<ParamField path="line-item-id" type="string">
+  **Value:** int64
+
+  **Is Nullable?** No
+
+  Long external id of the associated line item
+</ParamField>
+
+<ParamField path="product-button-id" type="integer">
+  **Value:** int32
+
+  **Is Nullable?** No
+
+  Sequential id of the product button
+</ParamField>
+
+## **Product SKU Collections Attributes**
+
+<ParamField path="id" type="string" required>
+  *Required for PUT/POST calls.*
+
+  **Value:** -
+
+  **Is Nullable?** computed
+
+  Sequence id of the Product Button
+</ParamField>
+
+<ParamField path="type" type="string">
+  **Value:** -
+
+  **Is Nullable?** computed
+
+  Type of entity
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  **Value:** -
+
+  **Is Nullable?** No
+
+  Product Button Display Name
+</ParamField>
+
+<ParamField path="backgroundImageUrl" type="string" required>
+  **Value:** -
+
+  **Is Nullable?** No
+
+  URL to the SKU background image
+</ParamField>
+
+<ParamField path="rank" type="integer" required>
+  **Value:** int32
+
+  **Is Nullable?** No
+
+  Rank of the Product Button
+</ParamField>
+
+<ParamField path="isMandatory" type="boolean" required>
+  **Value:** `true`, `false`
+
+  **Is Nullable?** No
+
+  If the Product Button Is Mandatory for the ad to serve
+</ParamField>
+
+<ParamField path="skus" type="string" required>
+  **Value:** -
+
+  **Is Nullable?** No
+
+  List of SKUs on the product button
+</ParamField>
+
+## **Get Products SKUs by Line-Item-Id**
+
+Retrieves a list of product SKU collections belonging to a specific line item
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/line-items/{line-item-id}/product-buttons
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons"
+
+payload={}
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons")
+  .method("GET", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json JSON
+{
+    "data": [
+        {
+            "attributes": {
+                "name": "",
+                "backgroundImage": "",
+                "rank": 0,
+                "isMandatory": 0,
+                "skus": [
+                    "299-1-6000202733197"
+                ],
+                "id": "61642"
+            },
+            "id": "61642",
+            "type": "ProductButtonResponse"
+        },
+        {
+            "attributes": {
+                "name": "",
+                "backgroundImage": "",
+                "rank": 1,
+                "isMandatory": 0,
+                "skus": [
+                    "299-1-6000198362869",
+                    "299-1-6000201892165"
+                ],
+                "id": "61644"
+            },
+            "id": "61644",
+            "type": "ProductButtonResponse"
+        },
+        {
+            "attributes": {
+                "name": "",
+                "backgroundImage": "",
+                "rank": 2,
+                "isMandatory": 0,
+                "skus": [
+                    "299-1-6000202735104",
+                    "299-1-926097",
+                    "299-1233844-0004e0f225544666a087d18998cb4054"
+                ],
+                "id": "61645"
+            },
+            "id": "61645",
+            "type": "ProductButtonResponse"
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+## **Get Product SKU's by Line Item Id and Product SKU Collection Id**
+
+Get Product SKU Collection detail for a specific collection belonging to a line item
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/line-items/{line-item-id}/product-buttons/{product-button-id}
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63456' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/61645"
+
+payload={}
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/61645")
+  .method("GET", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/61645');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "attributes": {
+                "name": "",
+                "backgroundImage": "",
+                "rank": 0,
+                "isMandatory": 0,
+                "skus": [
+                    "299-1-6000202735104",
+                    "299-1-926097",
+                    "299-1233844-0004e0f225544666a087d18998cb4054"
+                ],
+                "id": "61645"
+            },
+            "id": "61645",
+            "type": "ProductButtonResponse"
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+## **Create Product SKU Collection to Line Item**
+
+Create a new product SKU collection on a line item
+
+<Info>
+  **Initializing Product SKU on Line Item**
+
+  Before creating a new SKU collection, make sure that the SKU has been added to the line item using the [**Add Products to a Specific Line Item**](/retail-media/docs/promoted-products#add-products-to-a-specific-line-item-or-update-a-bid-override) endpoint
+</Info>
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/line-items/{line-item-id}/product-buttons/create
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/create' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-H 'Content-Type: application/json' \
+--data-raw '{
+    "data": [
+        {
+            "attributes": {
+                "name": "BTF",
+                "BackgroundImage": "33c47071e9e113f01b689b6d5349ba181daa79e0a158902902849311c4dbf5be",
+                "isMandatory": 0,
+                "skus": [
+                    "37038bfd85ba4bafa50e32270f14f35b",
+                    "b3b3e8886ba3413d9382eec23c5b3f39"
+                ]
+            },
+            "id": "",
+            "type": "ProductButtonResponse"
+        }     
+    ]
+}'
+```
+
+```python Python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": [
+    {
+      "attributes": {
+        "name": "BTF",
+        "BackgroundImage": "33c47071e9e113f01b689b6d5349ba181daa79e0a158902902849311c4dbf5be",
+        "isMandatory": 0,
+        "skus": [
+          "37038bfd85ba4bafa50e32270f14f35b",
+          "b3b3e8886ba3413d9382eec23c5b3f39"
+        ]
+      },
+      "id": "",
+      "type": "ProductButtonResponse"
+    }
+  ]
+})
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+  'Content-Type': 'application/json'
+}
+conn.request("POST", "/{version}/retail-media/line-items/368455689827958784/product-buttons/create", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\r\n    \"data\": [\r\n        {\r\n            \"attributes\": {\r\n                \"name\": \"BTF\",\r\n                \"BackgroundImage\": \"33c47071e9e113f01b689b6d5349ba181daa79e0a158902902849311c4dbf5be\",\r\n                \"isMandatory\": 0,\r\n                \"skus\": [\r\n                    \"37038bfd85ba4bafa50e32270f14f35b\",\r\n                    \"b3b3e8886ba3413d9382eec23c5b3f39\"\r\n                ]\r\n            },\r\n            \"id\": \"\",\r\n            \"type\": \"ProductButtonResponse\"\r\n        }     \r\n    ]\r\n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/create")
+  .method("POST", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .addHeader("Content-Type", "application/json")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/create');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+  'Content-Type' => 'application/json'
+));
+$request->setBody('{
+\n    "data": [
+\n        {
+\n            "attributes": {
+\n                "name": "BTF",
+\n                "BackgroundImage": "33c47071e9e113f01b689b6d5349ba181daa79e0a158902902849311c4dbf5be",
+\n                "isMandatory": 0,
+\n                "skus": [
+\n                    "37038bfd85ba4bafa50e32270f14f35b",
+\n                    "b3b3e8886ba3413d9382eec23c5b3f39"
+\n                ]
+\n            },
+\n            "id": "",
+\n            "type": "ProductButtonResponse"
+\n        }     
+\n    ]
+\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "attributes": {
+                "name": "BTF",
+                "backgroundImage": "33c47071e9e113f01b689b6d5349ba181daa79e0a158902902849311c4dbf5be",
+                "rank": 0,
+                "isMandatory": 0,
+                "skus": [
+                    "41f1070076ef488ebe04650ccf8f6181",
+                    "41f1070076ef488ebe04650ccf8f6181"
+                ],
+                "id": "67244"
+            },
+            "id": "67244",
+            "type": "ProductButtonResponse"
+        },
+        {
+            "attributes": {
+                "name": "BTF",
+                "backgroundImage": "33c47071e9e113f01b689b6d5349ba181daa79e0a158902902849311c4dbf5be",
+                "rank": 1,
+                "isMandatory": 0,
+                "skus": [
+                    "41f1070076ef488ebe04650ccf8f6181",
+                    "5074f304b3124b4e93a89ef03bee1897"
+                ],
+                "id": "67245"
+            },
+            "id": "67245",
+            "type": "ProductButtonResponse"
+        },
+        {
+            "attributes": {
+                "name": "BTF",
+                "backgroundImage": "33c47071e9e113f01b689b6d5349ba181daa79e0a158902902849311c4dbf5be",
+                "rank": 2,
+                "isMandatory": 0,
+                "skus": [
+                    "37038bfd85ba4bafa50e32270f14f35b",
+                    "b3b3e8886ba3413d9382eec23c5b3f39"
+                ],
+                "id": "67804"
+            },
+            "id": "67804",
+            "type": "ProductButtonResponse"
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+## **Update Line Item Product SKU Collection**
+
+Updates the product SKU collection associated with a line item. 
+
+<Info>
+  **When Adding New SKUs to an Existing Collection**
+
+  The **PUT** method updates all data in the resources. When updating an existing collection to add new SKUs, make sure to also include the list of the existing SKUs if you wish to avoid overriding previously added SKUs to the collection.
+</Info>
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/line-items/{line-Item-Id}/product-buttons/{product-button-id}
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X PUT 'https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63456' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-H 'Content-Type: application/json' \
+--data-raw '{
+    "data": {
+        "attributes": {
+            "name": "",
+            "backgroundImage": "",
+            "isMandatory": 0,
+            "skus": [
+                "299-1-10271953"
+            ]
+        },
+        "id": "63456",
+        "type": "ProductButtonResponse"
+    }
+}'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63456"
+
+payload = json.dumps({
+  "data": {
+    "attributes": {
+      "name": "",
+      "backgroundImage": "",
+      "isMandatory": 0,
+      "skus": [
+        "299-1-10271953"
+      ]
+    },
+    "id": "63456",
+    "type": "ProductButtonResponse"
+  }
+})
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+  'Content-Type': 'application/json'
+}
+
+response = requests.request("PUT", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\r\n    \"data\": {\r\n        \"attributes\": {\r\n            \"name\": \"\",\r\n            \"backgroundImage\": \"\",\r\n            \"isMandatory\": 0,\r\n            \"skus\": [\r\n                \"299-1-10271953\"\r\n            ]\r\n        },\r\n        \"id\": \"63456\",\r\n        \"type\": \"ProductButtonResponse\"\r\n    }\r\n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63456")
+  .method("PUT", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .addHeader("Content-Type", "application/json")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63456');
+$request->setMethod(HTTP_Request2::METHOD_PUT);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+  'Content-Type' => 'application/json'
+));
+$request->setBody('{
+\n    "data": {
+\n        "attributes": {
+\n            "name": "",
+\n            "backgroundImage": "",
+\n            "isMandatory": 0,
+\n            "skus": [
+\n                "299-1-10271953"
+\n            ]
+\n        },
+\n        "id": "63456",
+\n        "type": "ProductButtonResponse"
+\n    }
+\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": [
+        {
+            "attributes": {
+                "name": "",
+                "backgroundImage": "",
+                "rank": 0,
+                "isMandatory": 0,
+                "skus": [
+                    "299-1-10271953"
+                ],
+                "id": "63456"
+            },
+            "id": "63456",
+            "type": "ProductButtonResponse"
+        },
+        {
+            "attributes": {
+                "name": "",
+                "backgroundImage": "",
+                "rank": 1,
+                "isMandatory": 0,
+                "skus": [
+                    "299-1-10271953",
+                    "299-1-108448653"
+                ],
+                "id": "63484"
+            },
+            "id": "63484",
+            "type": "ProductButtonResponse"
+        },
+        {
+            "attributes": {
+                "name": "",
+                "backgroundImage": "",
+                "rank": 2,
+                "isMandatory": 0,
+                "skus": [
+                    "299-1-108448653"
+                ],
+                "id": "63485"
+            },
+            "id": "63485",
+            "type": "ProductButtonResponse"
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+## **Delete Product SKU Collection from a Line Item Id**
+
+<Badge color="purple" size="sm" shape="pill">DELETE</Badge>
+
+```text
+https://api.criteo.com/{version}/line-items/{line-item-id}/product-buttons/{product-button-id}
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X DELETE 'https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63485' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```java Java
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63485"
+
+payload={}
+headers = {
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("DELETE", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63485")
+  .method("DELETE", body)
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/368455689827958784/product-buttons/63485');
+$request->setMethod(HTTP_Request2::METHOD_DELETE);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "attributes": {
+                "name": "",
+                "backgroundImage": "",
+                "rank": 0,
+                "isMandatory": 0,
+                "skus": [
+                    "299-1-6000187665095",
+                    "299-1-6000201934040"
+                ],
+                "id": "61642"
+            },
+            "id": "61642",
+            "type": "ProductButtonResponse"
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+## **Responses**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      500
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     PUT Update SKU Collection missing required field:
+    </p>
+    <ul>
+     <li>
+      product-button-id is missing from the body
+      <code>
+       id
+      </code>
+      field
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>

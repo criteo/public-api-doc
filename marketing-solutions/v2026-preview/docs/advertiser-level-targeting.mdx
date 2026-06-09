@@ -1,528 +1,498 @@
 ---
-title: "Advertiser-Level Targeting"
+title: Advertiser-Level Targeting
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026-preview/docs/Preview Endpoints/campaigns/advertiser-level-targeting.md
 ---
-
-1. Preview Endpoints
-2. [Campaigns](/marketing-solutions/v2026-preview/docs/campaigns)
 
 ## **Domain Blocking**
 
 <Warning>
-  ### Please Note
+  **Please Note**
 
-  In the examples below, we will use \{advertiserId} as a placeholder. Please replace this placeholder with your advertiser id.
+  In the examples below, we will use \{advertiserId} as a placeholder.  Please replace this placeholder with your advertiser id.
 </Warning>
 
 ### **Retrieve Targeting List**
 
-Use this call to retrieve a list of of blocked or allowed domains for your advertiser.  
+Use this call to retrieve a list of of blocked or allowed domains for your advertiser.\
+ 
 
-![](/images/marketing-solutions/v2026-preview/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/preview/advertisers/{advertiserId}/targeting/domain-rules
 ```
 
-The API will return the type, mode and a corresponding array containing 3 parameters. The array parameters are "value", "readonly" and "active".
+The API will return the type, mode and a corresponding array containing 3 parameters.  The array parameters are "value", "readonly" and "active".
 
-* The **value** parameter contains the domain.
-* The **readonly** flag indicates if you can change the rule. Rules added by Criteo are not editable and will always return true.
-* The **active** flag indicates if the rule is activated and currently being taken into account. Please note that there is a delay between setting-up the rule and this field changing.
+* The  **value** parameter contains the domain. 
+* The **readonly** flag indicates if you can change the rule.  Rules added by Criteo are not editable and will always return true.
+* The **active** flag indicates if the rule is activated and currently being taken into account.  Please note that there is a delay between setting-up the rule and this field changing.
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": {
-      "type": "DomainTargetingRule",
-      "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
-      "attributes": {
-        "type": "DOMAIN",
-        "mode": "BLOCKLIST",
-        "data": [
-          {
-            "value": "first.com",
-            "readonly": true,
-            "active": false
-          },
-          {
-            "value": "second.com",
-            "readonly": false,
-            "active": false
-          },
-          {
-            "value": "third.com",
-            "readonly": true,
-            "active": true
-          }
-        ]
-      }
+```json Sample Return Body
+{
+  "data": {
+    "type": "DomainTargetingRule",
+    "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
+    "attributes": {
+      "type": "DOMAIN",
+      "mode": "BLOCKLIST",
+      "data": [
+        {
+          "value": "first.com",
+          "readonly": true,
+          "active": false
+        },
+        {
+          "value": "second.com",
+          "readonly": false,
+          "active": false
+        },
+        {
+          "value": "third.com",
+          "readonly": true,
+          "active": true
+        }
+      ]
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
  
 
 ### **Add A New Targeting List**
 
-Use this endpoint to create a list for the given advertiser. You can specify either a "BLOCKLIST" or "ALLOWLIST" in the payload.
+Use this endpoint to create a list for the given advertiser.  You can specify either a "BLOCKLIST" or "ALLOWLIST" in the payload. 
 
 <Warning>
-  ### Warning
+  **Warning**
 
-  If there is already a **domain** list defined for the advertiser, it will overwrite it. It will not affect the **bundle** list.
+  If there is already a **domain** list defined for the advertiser, it will overwrite it.  It will not affect the **bundle** list.
 </Warning>
 
-![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/preview/advertisers/{advertiserId}/targeting/domain-rules
 ```
 
-The request body should contain the "mode" and an array of objects containing the domains to block/allow.
+The request body should contain the "mode" and an array of objects containing the domains to block/allow.  
 
 * The **mode** parameter can be "BLOCKLIST" or "ALLOWLIST".
 
 Please reference the below for a sample payload.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "DomainTargetingRule",
-          "attributes": {
-              "mode": "BLOCKLIST", // BLOCKLIST or ALLOWLIST
-              "type": "domain",
-              "data": [
-                  {
-                      "value": "first.com"
-                  },
-                  {
-                      "value": "second.com"
-                  }
-              ]
-          }
-      }
-  }
-  ```
-</CodeGroup>
-
-A successful response will return a similar payload to the get request above. Please reference the below for a sample returned payload.
-
-<CodeGroup>
-  ```bash bash
-  {
+```json Sample Request Body
+{
     "data": {
-      "type": "DomainTargetingRule",
-      "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
-      "attributes": {
-        "mode": "BLOCKLIST",
-        "data": [
-          {
-            "value": "first.com",
-            "readonly": false,
-            "active": false
-          },
-          {
-            "value": "second.com",
-            "readonly": false,
-            "active": false
-          },
-        ],
-      }
+        "type": "DomainTargetingRule",
+        "attributes": {
+            "mode": "BLOCKLIST", // BLOCKLIST or ALLOWLIST
+            "type": "domain",
+            "data": [
+                {
+                    "value": "first.com"
+                },
+                {
+                    "value": "second.com"
+                }
+            ]
+        }
+    }
+}
+```
+
+A successful response will return a similar payload to the get request above.  Please reference the below for a sample returned payload.
+
+```json Sample Success Response
+{
+  "data": {
+    "type": "DomainTargetingRule",
+    "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
+    "attributes": {
+      "mode": "BLOCKLIST",
+      "data": [
+        {
+          "value": "first.com",
+          "readonly": false,
+          "active": false
+        },
+        {
+          "value": "second.com",
+          "readonly": false,
+          "active": false
+        },
+      ],
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
  
 
 ### **Add Domains To An Existing List**
 
-Use this call to add a domain(s) to the existing list.  
+Use this call to add a domain(s) to the existing list.\
+ 
 
-![](/images/marketing-solutions/v2026-preview/docs/1ee76cc-put.png)
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
 
-```
+```text
 https://api.criteo.com/preview/advertisers/{advertiserId}/targeting/domain-rules
 ```
 
-The request body should contain an array of objects containing the domain(s) that you want to add.
+The request body should contain an array of objects containing the domain(s) that you want to add.  
 
 Please reference the below for a sample payload.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "DomainTargetingRule",
-          "attributes": {
-              "data": [
-                  {
-                      "value": "first.com"
-                  },
-                  {
-                      "value": "second.com"
-                  }
-              ]
-          }
-      }
-  }
-  ```
-</CodeGroup>
-
-A successful response will return a similar payload to the get request above. Please reference the below for a sample returned payload.
-
-<CodeGroup>
-  ```bash bash
-  {
+```json Sample Request Body
+{
     "data": {
-      "type": "DomainTargetingRule",
-      "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
-      "attributes": {
-        "mode": "BLOCKLIST",
-        "data": [
-          {
-            "value": "first.com",
-            "readonly": false,
-            "active": false
-          },
-          {
-            "value": "second.com",
-            "readonly": false,
-            "active": false
-          },
-        ],
-      }
+        "type": "DomainTargetingRule",
+        "attributes": {
+            "data": [
+                {
+                    "value": "first.com"
+                },
+                {
+                    "value": "second.com"
+                }
+            ]
+        }
+    }
+}
+```
+
+A successful response will return a similar payload to the get request above.  Please reference the below for a sample returned payload.
+
+```json Sample Response Body
+{
+  "data": {
+    "type": "DomainTargetingRule",
+    "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
+    "attributes": {
+      "mode": "BLOCKLIST",
+      "data": [
+        {
+          "value": "first.com",
+          "readonly": false,
+          "active": false
+        },
+        {
+          "value": "second.com",
+          "readonly": false,
+          "active": false
+        },
+      ],
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
  
 
 ### **Remove Domains From An Existing List**
 
-Use this call remove a domain(s) from an existing list.  
+Use this call remove a domain(s) from an existing list.\
+ 
 
-![](/images/marketing-solutions/v2026-preview/docs/1e25c4c-delete.png)
+<Badge color="purple" size="sm" shape="pill">DELETE</Badge>
 
-```
+```text
 https://api.criteo.com/preview/advertisers/{advertiserId}/targeting/domain-rules
 ```
 
-The request body should contain an array of objects containing the domain(s) that you want to remove.
+The request body should contain an array of objects containing the domain(s) that you want to remove.  
 
 Please reference the below for a sample payload.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "DomainTargetingRule",
-          "attributes": {
-              "data": [
-                  {
-                      "value": "first.com"
-                  },
-                  {
-                      "value": "second.com"
-                  }
-              ]
-          }
-      }
-  }
-  ```
-</CodeGroup>
-
-A successful response will return a similar payload to the get request above. Please reference the below for a sample returned payload.
-
-<CodeGroup>
-  ```bash bash
-  {
+```json Sample Request Body
+{
     "data": {
-      "type": "DomainTargetingRule",
-      "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
-      "attributes": {
-        "mode": "BLOCKLIST",
-        "data": [
-          {
-            "value": "first.com",
-            "readonly": false,
-            "active": false
-          },
-          {
-            "value": "second.com",
-            "readonly": false,
-            "active": false
-          },
-        ],
-      }
+        "type": "DomainTargetingRule",
+        "attributes": {
+            "data": [
+                {
+                    "value": "first.com"
+                },
+                {
+                    "value": "second.com"
+                }
+            ]
+        }
+    }
+}
+```
+
+A successful response will return a similar payload to the get request above.  Please reference the below for a sample returned payload.
+
+```json Sample Response Body
+{
+  "data": {
+    "type": "DomainTargetingRule",
+    "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
+    "attributes": {
+      "mode": "BLOCKLIST",
+      "data": [
+        {
+          "value": "first.com",
+          "readonly": false,
+          "active": false
+        },
+        {
+          "value": "second.com",
+          "readonly": false,
+          "active": false
+        },
+      ],
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
 ## **App Bundle Blocking**
 
 <Warning>
-  ### Please Note
+  **Please Note**
 
-  In the examples below, we will use \{advertiserId} as a placeholder. Please replace this placeholder with your advertiser id.
+  In the examples below, we will use \{advertiserId} as a placeholder.  Please replace this placeholder with your advertiser id.
 </Warning>
 
 ### **Retrieve Targeting List**
 
-Use this call to retrieve a list of of blocked or allowed app bundles for your advertiser.  
+Use this call to retrieve a list of of blocked or allowed app bundles for your advertiser.\
+ 
 
-![](/images/marketing-solutions/v2026-preview/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/preview/advertisers/{advertiserId}/targeting/bundle-rules
 ```
 
-The API will return the type, mode and a corresponding array containing 3 parameters. The array parameters are "value", "readonly" and "active".
+The API will return the type, mode and a corresponding array containing 3 parameters.  The array parameters are "value", "readonly" and "active".
 
-* The **value** parameter contains the app bundle.
-* The **readonly** flag indicates if you can change the rule. Rules added by Criteo are not editable and will always return true.
-* The **active** flag indicates if the rule is activated and currently being taken into account. Please note that there is a delay between setting-up the rule and this field changing.
+* The  **value** parameter contains the app bundle. 
+* The **readonly** flag indicates if you can change the rule.  Rules added by Criteo are not editable and will always return true.
+* The **active** flag indicates if the rule is activated and currently being taken into account.  Please note that there is a delay between setting-up the rule and this field changing.
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": {
-      "type": "BundleTargetingRule",
-      "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
-      "attributes": {
-        "type": "BUNDLE",
-        "mode": "BLOCKLIST",
-        "data": [
-          {
-            "value": "com.first",
-            "readonly": true,
-            "active": false
-          },
-          {
-            "value": "com.second",
-            "readonly": true,
-            "active": false
-          },
-          {
-            "value": "com.third",
-            "readonly": true,
-            "active": true
-          }
-        ]
-      }
+```json Sample Return Body
+{
+  "data": {
+    "type": "BundleTargetingRule",
+    "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
+    "attributes": {
+      "type": "BUNDLE",
+      "mode": "BLOCKLIST",
+      "data": [
+        {
+          "value": "com.first",
+          "readonly": true,
+          "active": false
+        },
+        {
+          "value": "com.second",
+          "readonly": true,
+          "active": false
+        },
+        {
+          "value": "com.third",
+          "readonly": true,
+          "active": true
+        }
+      ]
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
  
 
 ### **Add A New Targeting List**
 
-Use this endpoint to create a list for the given advertiser. You can specify either a "BLOCKLIST" or "ALLOWLIST" in the payload.
+Use this endpoint to create a list for the given advertiser.  You can specify either a "BLOCKLIST" or "ALLOWLIST" in the payload. 
 
 <Warning>
-  ### Warning
+  **Warning**
 
-  If there is already a **app bundle** list defined for the advertiser, it will overwrite it. It will not affect the **domain** list.
+  If there is already a **app bundle** list defined for the advertiser, it will overwrite it.  It will not affect the **domain** list.
 </Warning>
 
-![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/preview/advertisers/{advertiserId}/targeting/bundle-rules
 ```
 
-The request body should contain the "mode" and an array of objects containing the app bundles to block/allow.
+The request body should contain the "mode" and an array of objects containing the app bundles to block/allow.  
 
 * The **mode** parameter can be "BLOCKLIST" or "ALLOWLIST".
 
 Please reference the below for a sample payload.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "BundleTargetingRule",
-          "attributes": {
-              "mode": "BLOCKLIST", // BLOCKLIST or ALLOWLIST
-              "data": [
-                  {
-                      "value": "com.first"
-                  },
-                  {
-                      "value": "com.second"
-                  }
-              ]
-          }
-      }
-  }
-  ```
-</CodeGroup>
-
-A successful response will return a similar payload to the get request above. Please reference the below for a sample returned payload.
-
-<CodeGroup>
-  ```bash bash
-  {
+```json Sample Request Body
+{
     "data": {
-      "type": "BundleTargetingRule",
-      "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
-      "attributes": {
-        "type": "BUNDLE",
-        "mode": "BLOCKLIST",
-        "data": [
-          {
-            "value": "com.first",
-            "readonly": false,
-            "active": false
-          },
-          {
-            "value": "com.second",
-            "readonly": false,
-            "active": false
-          },
-        ]
-      }
+        "type": "BundleTargetingRule",
+        "attributes": {
+            "mode": "BLOCKLIST", // BLOCKLIST or ALLOWLIST
+            "data": [
+                {
+                    "value": "com.first"
+                },
+                {
+                    "value": "com.second"
+                }
+            ]
+        }
+    }
+}
+```
+
+A successful response will return a similar payload to the get request above.  Please reference the below for a sample returned payload.
+
+```json Sample Request Response
+{
+  "data": {
+    "type": "BundleTargetingRule",
+    "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
+    "attributes": {
+      "type": "BUNDLE",
+      "mode": "BLOCKLIST",
+      "data": [
+        {
+          "value": "com.first",
+          "readonly": false,
+          "active": false
+        },
+        {
+          "value": "com.second",
+          "readonly": false,
+          "active": false
+        },
+      ]
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
  
 
 ### **Add App Bundles To An Existing List**
 
-Use this call to add a bundle(s) to the existing list.  
+Use this call to add a bundle(s) to the existing list.\
+ 
 
-![](/images/marketing-solutions/v2026-preview/docs/1ee76cc-put.png)
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
 
-```
+```text
 https://api.criteo.com/preview/advertisers/{advertiserId}/targeting/bundle-rules
 ```
 
-The request body should contain an array of objects containing the app bundle(s) that you want to add.
+The request body should contain an array of objects containing the app bundle(s) that you want to add.  
 
 Please reference the below for a sample payload.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "BundleTargetingRule",
-          "attributes": {
-              "data": [
-                  {
-                      "value": "com.first"
-                  },
-                  {
-                      "value": "com.second"
-                  }
-              ]
-          }
-      }
-  }
-  ```
-</CodeGroup>
-
-A successful response will return a similar payload to the get request above. Please reference the below for a sample returned payload.
-
-<CodeGroup>
-  ```bash bash
-  {
+```json Sample Request Body
+{
     "data": {
-      "type": "BundleTargetingRule",
-      "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
-      "attributes": {
-        "mode": "BLOCKLIST",
-        "data": [
-          {
-            "value": "com.first",
-            "readonly": false,
-            "active": false
-          },
-          {
-            "value": "com.second",
-            "readonly": false,
-            "active": false
-          },
-        ],
-      }
+        "type": "BundleTargetingRule",
+        "attributes": {
+            "data": [
+                {
+                    "value": "com.first"
+                },
+                {
+                    "value": "com.second"
+                }
+            ]
+        }
+    }
+}
+```
+
+A successful response will return a similar payload to the get request above.  Please reference the below for a sample returned payload.
+
+```json Sample Response Body
+{
+  "data": {
+    "type": "BundleTargetingRule",
+    "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
+    "attributes": {
+      "mode": "BLOCKLIST",
+      "data": [
+        {
+          "value": "com.first",
+          "readonly": false,
+          "active": false
+        },
+        {
+          "value": "com.second",
+          "readonly": false,
+          "active": false
+        },
+      ],
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
  
 
 ### **Remove App Bundles From An Existing List**
 
-Use this call remove a bundle(s) from an existing list.  
+Use this call remove a bundle(s) from an existing list.\
+ 
 
-![](/images/marketing-solutions/v2026-preview/docs/1e25c4c-delete.png)
+<Badge color="purple" size="sm" shape="pill">DELETE</Badge>
 
-```
+```text
 https://api.criteo.com/preview/advertisers/{advertiserId}/targeting/bundle-rules
 ```
 
-The request body should contain an array of objects containing the bundle(s) that you want to remove.
+The request body should contain an array of objects containing the bundle(s) that you want to remove.  
 
 Please reference the below for a sample payload.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "BundleTargetingRule",
-          "attributes": {
-              "data": [
-                  {
-                      "value": "com.first"
-                  },
-                  {
-                      "value": "com.second"
-                  }
-              ]
-          }
-      }
-  }
-  ```
-</CodeGroup>
-
-A successful response will return a similar payload to the get request above. Please reference the below for a sample returned payload.
-
-<CodeGroup>
-  ```bash bash
-  {
+```json Sample Request Body
+{
     "data": {
-      "type": "BundleTargetingRule",
-      "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
-      "attributes": {
-        "mode": "BLOCKLIST",
-        "data": [
-          {
-            "value": "com.first",
-            "readonly": false,
-            "active": false
-          },
-          {
-            "value": "com.second",
-            "readonly": false,
-            "active": false
-          },
-        ],
-      }
+        "type": "BundleTargetingRule",
+        "attributes": {
+            "data": [
+                {
+                    "value": "com.first"
+                },
+                {
+                    "value": "com.second"
+                }
+            ]
+        }
+    }
+}
+```
+
+A successful response will return a similar payload to the get request above.  Please reference the below for a sample returned payload.
+
+```json Sample Response Body
+{
+  "data": {
+    "type": "BundleTargetingRule",
+    "id": "f4dc0549-e464-46f4-a5e5-6622912ddd07",
+    "attributes": {
+      "mode": "BLOCKLIST",
+      "data": [
+        {
+          "value": "com.first",
+          "readonly": false,
+          "active": false
+        },
+        {
+          "value": "com.second",
+          "readonly": false,
+          "active": false
+        },
+      ],
     }
   }
-  ```
-</CodeGroup>
-
-***
-
-[Ad Set-Level Targeting](/marketing-solutions/v2026-preview/docs/ad-set-level-targeting)
-
-[Catalog](/marketing-solutions/v2026-preview/docs/catalog-1)
+}
+```

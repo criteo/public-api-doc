@@ -1,0 +1,130 @@
+---
+title: 비디오 플레이어 사양
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Commerce video (korean)/video-player-specification-korean.md
+description: This is a translated version of the Commerce Onsite Video documentation
+hidden: true
+---
+
+## VAST 소개
+
+Interactive Advertising Bureau(IAB)에서 만든 [<u>VAST</u>](https://www.iab.com/guidelines/vast/)는 인터넷의 비디오 플레이어에 광고를 게재하는 광고 태그 구성을 위한 비디오 광고 게재 템플릿입니다. VAST는 XML 스키마를 사용하여 광고에 대한 중요한 메타데이터를 광고 서버에서 비디오 플레이어로 전송합니다.
+
+<Info>
+  크리테오가 커머스 비디오 광고를 렌더링하기 위해 VAST 프레임워크를 사용하는 이유는\*\* VAST가 시장 표준이기 때문입니다.\*\* 이는 서드파티 측정 파트너와의 상호 운용성을 지원하며 모든 추적 요구 사항을 충족합니다.
+</Info>
+
+***
+
+## 비디오 플레이어 규격:
+
+<Warning>
+  **모든 beacons는 한 번만 실행되어야 합니다.**
+
+  단, 사용자가 이러한 동작(클릭, 음소거, 음소거 해제, 재개, 일시 중지)과 상호 작용할 **때마다** 실행되어야 하는 상호 작용 비콘은 제외됩니다. 자세한 내용은 광고 관련 활동 트래킹 섹션을 참조하세요.
+</Warning>
+
+### 주요 요구 사항
+
+VAST video player는 다음 요구 사항을 지원해야 합니다.
+
+* 비디오는 뷰포트에 없더라도 페이지가 로드될 때 로드되어야 합니다.
+
+* 플레이어가 뷰포트의 50% 이상에 있을 때만 비디오가 자동으로 재생되어야 합니다.
+
+* 플레이어가 뷰포트의 50% 미만에 있을 때만 비디오가 자동으로 일시 중지되어야 합니다.
+  * 이 경우에는 "pause" 비콘이 실행되어서는 **안 됩니다**.
+
+* 플레이어가 뷰포트의 50% 이상으로 돌아올 때만 비디오가 자동으로 재개되어야 합니다.
+  * 이 경우에는 "resume" 비콘이 실행되어서는 **안 됩니다**.
+
+* 비디오는 무한 반복되어야 합니다.
+
+* 비디오는 시작 시 자동으로 음소거됩니다.
+  * `mute` 비콘은 실행되어서는 안 됩니다. 이 음소거 동작은 사용자와의 상호작용으로 인한 것이 아니기 때문입니다.
+  * 음소거를 해제하려면 제어 버튼을 사용할 수 있어야 합니다.
+
+* 비디오를 `일시 중지/다시 시작`하는 또 다른 제어 버튼을 사용할 수 있어야 합니다.
+  * `일시 중지/재개` 버튼은 VAST XML에 리디렉션 링크가 있는지 여부와 관계없이 선택 사항입니다. 이는 비디오가 뷰포트에 있을 때는 자동으로 재생되고 뷰포트에 없을 때는 일시 중지되어야 하기 때문이며, 비디오에서 추가 공간만 차지하기 때문입니다.
+  * 다른 제어 버튼은 숨겨져야 합니다.
+
+* 비디오를 전체화면으로 볼 수 없습니다.
+
+* 비디오는 **리디렉션 링크가 있는 경우에만** 클릭이 가능하고 해당 페이지로 리디렉션됩니다(VAST XML에 `&lt;VideoClicks&gt;`가 존재).
+
+* 클라이언트가 사용하는 비디오 플레이어는 **VAST XML 파일을 읽을 수 있어야 합니다** (예: Google Interactive Media Ads 플레이어 또는 VAST XML 파일을 처리할 수 있는 추가 JavaScript 계층이 있는 기본 HTML 플레이어). 자세한 내용은 [비디오 플레이어 구현 페이지](/retailer-integration/docs/video-player-implementation-guide-desktopmobile)를 방문하세요.
+
+***
+
+### 리다이렉션 링크 있음/없음
+
+#### 리다이렉션 링크 없음
+
+<Info>
+  리디렉션 링크가 제공되지 않으면 `&lt;VideoClicks&gt;` 섹션은 존재하지 않습니다. `ClickThrough` URL과 관련 `ClickTracking` 비콘은 나타나지 않습니다.
+</Info>
+
+* 비디오를 클릭하면 비디오가 일시 중지됩니다.
+  * `pause` 비콘이 실행되어야 합니다.
+* 비디오를 클릭하면 비디오가 재개됩니다.
+  * `Resume` 비콘이 실행되어야 합니다.
+
+#### 리다이렉션 링크 있음
+
+VAST XML에 리디렉션 링크가 제공된 경우:
+
+* 비디오를 클릭하면 사용자를 `클릭스루` URL로 리디렉션해야 합니다.
+  * `Clicktracking` 비콘이 실행되어야 합니다.
+  * `Pause` 비콘은 실행되면 안 됩니다.
+
+<Warning>
+  Pause 비콘은 사용자가 비디오를 일시 중지하고 싶어하는 수동 동작이 있는 경우에만 사용해야 합니다.
+</Warning>
+
+* 비디오를 수동으로 일시 중지한 경우(`일시 중지` 버튼을 클릭한 후 또는 리디렉션 URL이 없는 경우 비디오를 클릭하여 일시 중지) 뷰포트의 50% 미만으로 들어갔다가 50% 이상으로 돌아온 후에 비디오가 다시 재생되어야 합니다.
+  * 그러나 `Resume` 비콘은 사용자의 수동 동작이 아니기 때문에 실행되어서는 안 됩니다.
+
+***
+
+### 사용자가 일시 중지/재개 버튼을 클릭하면
+
+사용자가 일시 중지를 클릭하면 `pause` 비콘이 실행됩니다.
+
+* `Clicktracking` 비콘은 비디오 자체가 아니라 일시 중지 버튼을 클릭하는 것이므로 실행되어서는 안 됩니다.
+* 버튼이 ⏸️에서 ▶️로 바뀌어야 합니다.
+* `pause` 비콘은 사용자가 `일시 중지` 버튼을 클릭하거나 재생 시 리디렉션 링크가 제공되지 않은 경우 비디오를 클릭할 때만 실행되어야 합니다.
+* 사용자가 비디오를 일시 중지한 후 `재생/다시 시작`을 클릭하면 `Resume` 비콘이 실행되어야 합니다.
+  * `Clicktracking` 비콘은 비디오 자체가 아니라 일시 중지 버튼을 클릭하는 것이므로 실행되어서는 안 됩니다.
+  * 버튼이 ▶️에서 ⏸️로 바뀌어야 합니다.
+  * `Resume` 비콘은 사용자가 `재개` 버튼을 클릭하거나 리디렉션 링크가 제공되지 않고 비디오가 일시 중지된 경우 비디오를 클릭할 때만 실행되어야 합니다.
+
+***
+
+### 다수의 비디오 파일
+
+* 크리테오는 여러 비디오 파일(`MediaFiles`)을 동일한 VAST XML로 반환할 수 있지만, VAST XML당 하나의 파일만 렌더링해야 합니다. 비디오 파일의 비율은 다를 수 있습니다. 지원되는 비디오 비율은 16:9, 9:16, 1:1입니다.
+  * VAST XML로 단일 비디오가 반환되는 경우 기본적으로 선택되어야 합니다.
+  * 여러 개의 비디오가 제공되는 경우, 가장 가까운 비디오 비율(광고 게재위치의 비디오 비율과 비교)을 선택해야 합니다.
+
+***
+
+### 자막
+
+접근성 요구 사항을 충족하기 위해 크리테오는 VAST XML로 `자막` 파일을 제공할 수 있습니다.
+
+* 자막 파일이 있는 경우:
+  * 비디오 플레이어로 렌더링해야 합니다.
+  * 다른 제어 버튼(음소거/일시 중지) 옆에 `자막` 제어 버튼이 있어야 합니다.
+* VAST XML에 자막 파일이 제공되지 않으면 `자막` 제어 버튼은 숨겨져야 합니다.
+* 비디오를 시작할 때, '자막'이 자동으로 활성화되어야 합니다.
+* VAST XML에서는 최대 하나의 자막 파일을 제공할 수 있으므로 단일 언어 지원이 보장됩니다.
+
+<Info>
+  자막을 위해 지원되는 유일한 파일 포맷은 `.vtt` 입니다.\
+  자막 파일은 자동으로 생성되어 VAST XML로 제공됩니다.
+</Info>
+## What's next
+
+* [Tracking Ad-related Activity (Korean)](/retailer-integration/docs/tracking-ad-related-activity-korean)
+* [Video player implementation (desktop/mobile) (Korean)](/retailer-integration/docs/video-player-implementation-desktopmobile-korean)
+* [Video player implementation (App: Android)(Korean)](/retailer-integration/docs/video-player-implementation-app-androidkorean)
+* [Video player implementation (App: iOS)(Korean)](/retailer-integration/docs/video-player-implementation-app-ioskorean)

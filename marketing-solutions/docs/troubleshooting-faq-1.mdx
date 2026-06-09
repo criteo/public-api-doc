@@ -1,0 +1,472 @@
+---
+title: Troubleshooting & FAQ
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/singleseller/troubleshooting-faq-1.md
+---
+
+For common questions between Single-seller and Multi-seller documentation, refer to the [shared documentation](/marketing-solutions/docs/troubleshooting-faq).
+
+## Campaigns
+
+### 1. What is a Single-Seller campaign and how is it created?
+
+A Single-Seller campaign (identified by `sellerCampaignId`) is a per-seller campaign derived from a template campaign configured by Criteo. You do not create it directly via the API. Instead, Criteo automatically creates the campaign when the first valid budget is submitted for a (`sellerId`, `templateCampaignId`).
+
+After the first budget is accepted, allow for a short asynchronous provisioning delay before impressions begin.
+
+### 2. What is the template campaign and how do I get one?
+
+A template campaign is a non-delivering campaign configuration managed by Criteo. It acts as the blueprint used to generate Single-Seller campaigns.
+
+The template defines settings such as:
+
+* optimization goal
+* bidding strategy
+* audiences
+* creatives
+* delivery configuration
+
+Template campaigns cannot be created via the API.
+
+### 3. Where do I get the template campaign ID?
+
+The `templateCampaignId` is provided to you directly by Criteo when your Single-Seller template is configured. It is not retrievable via a self-serve API endpoint.
+
+### 4. What is the difference between a campaign, a template campaign, and a seller-campaign?
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Entity
+    </p>
+   </th>
+   <th>
+    <p>
+     Who creates it
+    </p>
+   </th>
+   <th>
+    <p>
+     What it does
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     Campaign
+    </p>
+   </td>
+   <td>
+    <p>
+     Criteo
+    </p>
+   </td>
+   <td>
+    <p>
+     Top-level ad configuration; not managed via MPO API
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Template campaign (
+     <code>
+      templateCampaignId
+     </code>
+     )
+    </p>
+   </td>
+   <td>
+    <p>
+     Criteo
+    </p>
+   </td>
+   <td>
+    <p>
+     Single-Seller blueprint; defines shared settings for all derived seller-campaigns
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Seller-campaign (
+     <code>
+      sellerCampaignId
+     </code>
+     )
+    </p>
+   </td>
+   <td>
+    <p>
+     Created implicitly by Criteo on first budget
+     <code>
+      POST
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Per-seller delivery campaign; managed via budgets and
+     <code>
+      productSet
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### 5. How do I pause or resume a Single-Seller campaign?
+
+You do not pause seller-campaigns directly. Instead, suspend or resume the associated budget.
+
+**Pause:**
+
+```text http
+PATCH /marketplace-performance-outcomes/budgets
+{ "budgetId": "789", "isSuspended": true }
+```
+
+**Resume:**
+
+```text http
+PATCH /marketplace-performance-outcomes/budgets
+{ "budgetId": "789", "isSuspended": false }
+```
+
+If the budget's `endDate` is in the past, resuming will not restart delivery. Create a new budget with a future period instead.
+
+### 6. Why is my seller-campaign not delivering even though it looks active?
+
+Check the `suspendedSince` and `suspensionReasons` fields on the seller-campaign. If `suspendedSince` is `null` and `suspensionReasons` is null, the campaign appears active to the API but may still not be delivering. Check that the template campaign is active and the budget meets the minimum per-seller threshold.
+
+If `suspensionReasons` contains a value, refer to the table below:
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Reason
+    </p>
+   </th>
+   <th>
+    <p>
+     Meaning
+    </p>
+   </th>
+   <th>
+    <p>
+     Action
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      ManuallyStopped
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Budget manually suspended
+    </p>
+   </td>
+   <td>
+    <p>
+     Resume via budget
+     <code>
+      PATCH
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      NoBudgetDefined
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No active budget exists
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a valid budget
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      NoMoreBudget
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Budget fully spent
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a new budget for a future period
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      RemovedFromCatalog
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     All products removed
+    </p>
+   </td>
+   <td>
+    <p>
+     Restore products in the catalog
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      NotYetStarted
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Newly created, not yet processed
+    </p>
+   </td>
+   <td>
+    <p>
+     Wait for provisioning
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      NoMoreDailyBudget
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Daily spend limit reached
+    </p>
+   </td>
+   <td>
+    <p>
+     No action needed; resets the next day
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Other
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Internal error
+    </p>
+   </td>
+   <td>
+    <p>
+     Contact Criteo Product or R&amp;D
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### 7. What does the `Other` suspension reason mean?
+
+`Other` indicates that an internal issue is preventing the campaign from delivering, for example, a click spike prevention mechanism. This is not a client-side configuration error and cannot be resolved through API calls alone. Surface this to your operations team and notify your Criteo Product or R&D contact for investigation.
+
+### 8. Can I configure which products a seller-campaign advertises?
+
+Yes. Use the `productSet` feature to attach a whitelist of product IDs (by `ExternalItemId`) to a seller-campaign:
+
+```text
+PATCH /marketplace-performance-outcomes/seller-campaigns
+[{
+  "id": "SELLER_123.TEMPLATE_CAMPAIGN_456",
+  "productSet": {
+    "value": [{ "operator": "IsIn", "field": "ExternalItemId", "values": ["SKU_1", "SKU_2"] }]
+  }
+}]
+```
+
+**Notes:**
+
+* `productSet` is optional; without one, all eligible products from the seller's catalog are used.
+* A minimum number of product IDs is required per `productSet` (default: 20). Providing fewer will return a `4xx` error.
+* `productSet` is only supported on Single-Seller campaigns. It cannot be used on multi-seller campaigns.
+* To remove the `productSet` and revert to all eligible products, set `productSet.value` to `null`.
+
+## Budgets
+
+### 9. What budget types are available in Single-Seller?
+
+Only capped total budgets over a fixed date range are supported. Daily and uncapped budget types are not available in Single-Seller mode.
+
+If your use case requires always-on or short-duration delivery, the following patterns are supported as workarounds:
+
+**Always-on delivery**  
+Schedule a sequence of consecutive, non-overlapping capped budgets — for example, monthly budgets submitted in advance. Each budget covers a fixed period and the next begins where the previous ends.
+
+**Short-duration budgets**  
+Submit individual capped budgets for the desired interval (daily, weekly, or monthly). Each must be a separate non-overlapping request for the same (`sellerId`, `templateCampaignId`) pair.
+
+### 10. How does pacing work?
+
+Daily pacing is automatic. The system distributes the total budget evenly across the budget period, computing a daily target. Under-delivery or over-delivery on a given day is compensated across the remaining days, as long as the budget period is active.
+
+### 11. How do I check the remaining budget?
+
+There is no dedicated endpoint for remaining budget. Calculate it using:
+
+```text
+remaining budget = amount − spend
+```
+
+Both `amount` and `spend` are available from:
+
+* `GET /marketplace-performance-outcomes/budgets`
+* `GET /marketplace-performance-outcomes/budgets/{budgetId}`
+
+### 12. Can budget periods overlap for the same seller?
+
+No. For a given (`sellerId`, `templateCampaignId`) pair, budget periods must not overlap. Suspended budgets are treated as logically canceled and do not block new budgets for the same dates.
+
+### 13. Can I schedule future budgets?
+
+Yes. You can create budgets with future `startDate` values as long as their date ranges do not overlap with any existing active budgets for the same (`sellerId`, `templateCampaignId`) pair.
+
+### 14. How do I calculate the minimum budget amount for a request?
+
+The minimum budget amount for a given period is:
+
+```text
+minimum amount = minimum daily budget per seller (provided by Criteo) × number of days in the period
+```
+
+If the amount is below this threshold, the API will return a `4xx` error.
+
+## Statistics
+
+### 15. Which stats endpoints do I use for Single-Seller?
+
+Single-Seller performance uses the same stats APIs as multi-seller. Choose the endpoint based on the granularity you need:
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Use case
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      GET /marketplace-performance-outcomes/stats/campaigns
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Aggregated across all sellers for a template
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      GET /marketplace-performance-outcomes/stats/sellers
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Per-seller aggregation
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      GET /marketplace-performance-outcomes/stats/seller-campaigns
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Per seller-campaign (most granular)
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### 16. Are statistics available in local time zones?
+
+Statistics data defaults to UTC. However, a timezone parameter is available in the Stats API request to retrieve data in a specific time zone.
+
+### 17. What is the data latency for statistics?
+
+Statistics are typically available with a latency of a few hours. Refer to the [Getting Statistics](/marketing-solutions/docs/getting-statistics) page for current SLA guidance.
+
+### 18. I just created a seller's first budget but I'm seeing no impressions. What's wrong?
+
+This is expected immediately after the first budget creation. Criteo creates the underlying seller-campaign synchronously when the first budget is accepted, but there is a short asynchronous provisioning delay before delivery begins.
+
+If impressions do not appear after a reasonable wait, check:
+
+* The template campaign is active (not paused or archived).
+* The budget amount meets the minimum per-seller threshold.
+* The budget `isSuspended` is `false`.
+* The seller has eligible products in the catalog (no `RemovedFromCatalog` suspension reason).
+* If a `productSet` is configured, the product IDs are valid and active in the seller's catalog.
+
+<br />

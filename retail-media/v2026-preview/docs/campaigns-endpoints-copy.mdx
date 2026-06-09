@@ -1,0 +1,1089 @@
+---
+title: Campaigns Endpoints (COPY)
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Private market (target Only)/campaigns-endpoints-copy.md
+hidden: true
+---
+
+<Note>
+  ### A FEW THINGS TO KNOW
+
+  Learn more about campaign management with our API [**here**](/retail-media/v2026-preview/docs/campaigns)!
+</Note>
+
+ 
+
+## **Endpoints**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/campaigns
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a Campaign
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/campaigns
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get All Campaigns
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /campaigns/&#123;campaignId&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get a Specific Campaign
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      PUT
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /campaigns/&#123;campaignId&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Update a Specific Campaign
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+ 
+
+<Info>
+  **Info**
+
+  * Create operations using the `POST` method expect every ***Required*** field; omitting ***Optional*** fields will set those fields to **Default** values
+  * Update operations using the `PUT` method except for every **Write** field; omitting these fields is equivalent to setting them to `null`, if possible
+</Info>
+
+ 
+
+ 
+
+## **Campaign Attributes**
+
+<ParamField path="id" type="string">
+  **Is Nullable?** No
+
+  Campaign ID
+
+  **Values:** int64
+
+  **Default Values:** None
+
+  **Write?** No
+</ParamField>
+
+<ParamField path="accountId" type="string" required>
+  **Is Nullable?** No
+
+  Account ID
+
+  **Values:** int64
+
+  **Default Value:** None
+
+  **Write?** No
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  **Is Nullable?** No
+
+  Campaign name; must be unique within an [account](/retail-media/docs/account)
+
+  **Values:** 255 char limit
+
+  **Default Value:** None
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="type" type="enum">
+  *Optional.*
+
+  **Is Nullable?** No - if attribute is passed in the call, a value must be specified
+
+  Campaing type
+
+  **Values:** `auction`,`preferred`
+
+  **Default Value:** `auction`
+
+  **Write?** None other than the accepted values
+</ParamField>
+
+<ParamField path="budget" type="number">
+  *Optional.*
+
+  **Is Nullable?** Yes
+
+  Campaign lifetime spend cap; uncapped if omitted or set to null. Note that preferred campaign types cannot have budgets as these campaings types must be uncapped.
+
+  **Values:** at least 0
+
+  **Default Value:** `null`
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="budgetSpent" type="number">
+  *Optional.*
+
+  **Is Nullable?** No
+
+  Amount the campaign has already spent
+
+  **Values:** at least 0
+
+  **Default Value:** `0.0`
+
+  **Write?** No
+</ParamField>
+
+<ParamField path="budgetRemaining" type="number">
+  **Is Nullable?** Yes
+
+  Amount the campaign has remaining until cap is hit; `null` if budget is uncapped
+
+  **Values:** between 0 and `budget` Amount
+
+  **Default Value:** `null`
+
+  **Write?** No
+</ParamField>
+
+<ParamField path="clickAttributionWindow" type="enum" required>
+  **Is Nullable?** No
+
+  Post-click attribution window
+
+  **Values:** `7D`,`14D`, `30D`,`unknown`
+
+  **Default Value:** `30D`
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="viewAttributionWindow" type="enum" required>
+  **Is Nullable?** No
+
+  Post-view attribution window
+
+  **Values:** `None`,`7D`,`14D`, `30D`,`unknown`
+
+  **Default Value:** `None`
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="clickAttributionScope" type="enum">
+  **Is Nullable?** No
+
+  Post-click attribution scope
+
+  **Values:** `samesku`, `sameskucategory`, `sameskucategorybrand`,`unknown`
+
+  **Default Value:** `sameskucategory`
+
+  **Write?** None other than the accepted values
+</ParamField>
+
+<ParamField path="viewAttributionScope" type="enum">
+  **Is Nullable?** No
+
+  Post-view attribution scope
+
+  **Values:** `samesku`, `sameskucategory`, `sameskucategorybrand`
+
+  **Default Value:** `sameskucategory`
+
+  **Write?** None other than the accepted values
+</ParamField>
+
+<ParamField path="promotedBrandIds" type="string array">
+  **Is Nullable?** No
+
+  Set of [brands](/retail-media/docs/brands) represented in line items of the campaign; note this set is append only
+
+  **Values:** list of `brandId`
+
+  **Default Value:** `[ ]`
+
+  **Write?** No
+</ParamField>
+
+<ParamField path="drawableBalanceIds" type="string array">
+  **Is Nullable?** No
+
+  List of [balances](/retail-media/docs/balances) the campaign is able to draw from; at least one balance is required for a campaign to begin
+
+  **Values:** list of `balanceId`
+
+  **Default Value:** `[ ]`
+
+  **Write?** No
+</ParamField>
+
+<ParamField path="status" type="enum">
+  **Is Nullable?** No
+
+  Campaign status, derived from the status of [line items](/retail-media/docs/line-items) it holds; active if at least one line item is active. To understand the conditions that will cause a status to change, check out our [status page](/retail-media/docs/status)
+
+  **Values:** `active`, `inactive`
+
+  **Default Value:** `inactive`
+
+  **Write?** No
+</ParamField>
+
+<ParamField path="monthlyPacing" type="decimal">
+  *Optional.*
+
+  **Is Nullable?** Yes
+
+  The maximum monthly spend allowed for the campaign in the currency of the account. The spend is constrained by remaining account balance and total budget of the campaign. Monthly budget spend reset monthly at the start of the month based on the account timezone.
+
+  **Values:** `null` or a value that is greater or equal to 0.01
+
+  **Default Value:** `null`
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="dailyPacing" type="decimal">
+  *Optional.*
+
+  **Is Nullable?** Yes
+
+  The maximum daily spend allowed for the campaign in the currency of the account. As long as the parameter is not set to `null` and auto daily pacing is not set to `true` then monthly pacing will be applied to the campaign.
+
+  - If monthly pacing is set to `null` and auto daily pacing is set to `false`, then no daily spend limit will be enforced.
+
+  - The maximum daily spend allowed for the campaign in the currency of the account.
+
+  **Values:** `null` or a value that is greater or equal to 0.01
+
+  **Default Value:** `null`
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="isAutoDailyPacing" type="boolean" required>
+  **Is Nullable?** No
+
+  Auto daily pacing flag for the campaign budget. The daily pacing value is automatically calculated with respect to the days left in the month for the account. The campaign's remaining account balance, total budget, and monthly pacing value is constrained by the account timezone and the campaign status. If auto daily pacing is enabled, dailyPacing value should be left empty (null). Note the value may be affected by budget override. Daily budget spend is reset daily at the start of the day based on the account timezone.
+
+  **Values:** `true`, `false`
+
+  **Default Value:** N/A
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="startDate" type="date-time">
+  *Optional.*
+
+  **Is Nullable?** Yes
+
+  Campaign start date. The campaign start inactive if invalid start date is not today or end date is in previous day.
+
+  **Values:** YYYY-MM-DD
+
+  **Default Value:** `Null`
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="endDate" type="date-time">
+  *Optional.*
+
+  **Is Nullable?** Yes
+
+  Campaign end date
+
+  **Values:** YYYY-MM-DD
+
+  **Default Value:** `Null`
+
+  **Write?** Yes
+</ParamField>
+
+<ParamField path="createdAt" type="timestamp">
+  **Is Nullable?** No
+
+  Timestamp in UTC of campaign creation
+
+  **Values:** ISO-8601
+
+  **Default Value:** N/A
+
+  **Write?** No
+</ParamField>
+
+<ParamField path="updatedAt" type="timestamp">
+  **Is Nullable?** No
+
+  Timestamp in UTC of last campaign update
+
+  **Values:** ISO-8601
+
+  **Default Value:** N/A
+
+  **Write?** No
+</ParamField>
+
+ 
+
+ 
+
+## **Create a Campaign**
+
+This endpoint creates a new campaign in the specified account.
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/campaigns
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/4/campaigns' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+--data-raw '{
+	"data": {
+		"type": "RetailMediaCampaignv202301",
+		"attributes": {
+			"name": "API Campaign New ",
+			"isAutoDailyPacing": "false",
+			"startDate": "2023-01-23",
+			"endDate": "2023-01-31",
+			"type": "auction",
+			"drawableBalanceIds": [
+				"18"
+			],
+			"clickAttributionWindow": "30D",
+			"viewAttributionWindow": "None",
+			"budget": "100",
+			"monthlyPacing": "30",
+			"dailyPacing": "1",
+			"clickAttributionScope": "sameSkuCategory",
+			"viewAttributionScope": "sameSkuCategory"
+		}
+	}
+}'
+```
+
+```python Python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaCampaignv202301",
+    "attributes": {
+      "name": "API Campaign New ",
+      "isAutoDailyPacing": "false",
+      "startDate": "2023-01-23",
+      "endDate": "2023-01-31",
+      "type": "auction",
+      "drawableBalanceIds": [
+        "18"
+      ],
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "None",
+      "budget": "100",
+      "monthlyPacing": "30",
+      "dailyPacing": "1",
+      "clickAttributionScope": "sameSkuCategory",
+      "viewAttributionScope": "sameSkuCategory"
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/preview/retail-media/accounts/4/campaigns", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\n\t\"data\": {\n\t\t\"type\": \"RetailMediaCampaignv202301\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"API Campaign New \",\n\t\t\t\"isAutoDailyPacing\": \"false\",\n\t\t\t\"startDate\": \"2023-01-23\",\n\t\t\t\"endDate\": \"2023-01-31\",\n\t\t\t\"type\": \"auction\",\n\t\t\t\"drawableBalanceIds\": [\n\t\t\t\t\"18\"\n\t\t\t],\n\t\t\t\"clickAttributionWindow\": \"30D\",\n\t\t\t\"viewAttributionWindow\": \"None\",\n\t\t\t\"budget\": \"100\",\n\t\t\t\"monthlyPacing\": \"30\",\n\t\t\t\"dailyPacing\": \"1\",\n\t\t\t\"clickAttributionScope\": \"sameSkuCategory\",\n\t\t\t\"viewAttributionScope\": \"sameSkuCategory\"\n\t\t}\n\t}\n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts/4/campaigns")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts/4/campaigns');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{\n	"data": {\n		"type": "RetailMediaCampaignv202301",\n		"attributes": {\n			"name": "API Campaign New ",\n			"isAutoDailyPacing": "false",\n			"startDate": "2023-01-23",\n			"endDate": "2023-01-31",\n			"type": "auction",\n			"drawableBalanceIds": [\n				"18"\n			],\n			"clickAttributionWindow": "30D",\n			"viewAttributionWindow": "None",\n			"budget": "100",\n			"monthlyPacing": "30",\n			"dailyPacing": "1",\n			"clickAttributionScope": "sameSkuCategory",\n			"viewAttributionScope": "sameSkuCategory"\n		}\n	}\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "id": "405429491681951744",
+        "type": "RetailMediaCampaignV202301",
+        "attributes": {
+            "accountId": "4",
+            "promotedBrandIds": [],
+            "budgetSpent": 0.00000000,
+            "budgetRemaining": 100.00000000,
+            "status": "inactive",
+            "createdAt": "2023-01-23T18:32:03+00:00",
+            "updatedAt": "2023-01-23T18:32:03+00:00",
+            "type": "auction",
+            "drawableBalanceIds": [
+                "18"
+            ],
+            "clickAttributionWindow": "30D",
+            "viewAttributionWindow": "1D",
+            "name": "API Campaign New ",
+            "budget": 100.00000000,
+            "monthlyPacing": 30.00000000,
+            "dailyPacing": 1.00000000,
+            "isAutoDailyPacing": false,
+            "startDate": "2023-01-23T00:00:00+00:00",
+            "endDate": "2023-01-31T00:00:00+00:00",
+            "clickAttributionScope": "sameSkuCategory",
+            "viewAttributionScope": "sameSkuCategory"
+        }
+    }
+}
+```
+
+## **Get All Campaigns By Account Id**
+
+This endpoint lists all campaigns in the specified account.  Results are paginated.
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/campaigns
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/preview/retail-media/accounts/5/campaigns' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/preview/retail-media/accounts/4/campaigns"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts/4/campaigns")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts/4/campaigns');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "metadata": {
+        "totalItemsAcrossAllPages": 886,
+        "currentPageSize": 2,
+        "currentPageIndex": 0,
+        "totalPages": 443,
+        "nextPage": "https://api.criteo.com/preview/retail-media/accounts/4/campaigns?pageSize=2&pageIndex=1"
+    },
+    "data": [
+        {
+            "id": "1240",
+            "type": "RetailMediaCampaignV202301",
+            "attributes": {
+                "accountId": "4",
+                "promotedBrandIds": [],
+                "budgetSpent": 0.00000000,
+                "budgetRemaining": null,
+                "status": "inactive",
+                "createdAt": "2020-02-25T15:10:14+00:00",
+                "updatedAt": "2020-02-25T15:10:14+00:00",
+                "type": "auction",
+                "drawableBalanceIds": [],
+                "clickAttributionWindow": "30D",
+                "viewAttributionWindow": "14D",
+                "name": "test api campaign",
+                "budget": null,
+                "monthlyPacing": null,
+                "dailyPacing": null,
+                "isAutoDailyPacing": false,
+                "startDate": null,
+                "endDate": null,
+                "clickAttributionScope": "sameSkuCategory",
+                "viewAttributionScope": "sameSkuCategory"
+            }
+        },
+        {
+            "id": "1243",
+            "type": "RetailMediaCampaignV202301",
+            "attributes": {
+                "accountId": "4",
+                "promotedBrandIds": [
+                    "40040"
+                ],
+                "budgetSpent": 0.00000000,
+                "budgetRemaining": null,
+                "status": "inactive",
+                "createdAt": "2020-02-26T18:22:03+00:00",
+                "updatedAt": "2020-02-26T18:22:03+00:00",
+                "type": "auction",
+                "drawableBalanceIds": [
+                    "13"
+                ],
+                "clickAttributionWindow": "30D",
+                "viewAttributionWindow": "14D",
+                "name": "test api campaing 2",
+                "budget": null,
+                "monthlyPacing": null,
+                "dailyPacing": null,
+                "isAutoDailyPacing": false,
+                "startDate": null,
+                "endDate": null,
+                "clickAttributionScope": "sameSkuCategory",
+                "viewAttributionScope": "sameSkuCategory"
+            }
+        }
+    ]
+}
+```
+
+## **Get a Specific Campaign**
+
+This endpoint retrieves the specified campaign.
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/campaigns/{campaignId}
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/preview/retail-media/campaigns/1240' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import http.client
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = ''
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("GET", "/preview/retail-media/campaigns/1240", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/campaigns/1240")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/campaigns/1240');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "id": "1240",
+        "type": "RetailMediaCampaignV202301",
+        "attributes": {
+            "accountId": "4",
+            "promotedBrandIds": [],
+            "budgetSpent": 0.00000000,
+            "budgetRemaining": null,
+            "status": "inactive",
+            "createdAt": "2020-02-25T15:10:14+00:00",
+            "updatedAt": "2020-02-25T15:10:14+00:00",
+            "type": "auction",
+            "drawableBalanceIds": [],
+            "clickAttributionWindow": "30D",
+            "viewAttributionWindow": "14D",
+            "name": "test api campaign",
+            "budget": null,
+            "monthlyPacing": null,
+            "dailyPacing": null,
+            "isAutoDailyPacing": false,
+            "startDate": "2020-02-25T15:10:14+00:00",
+            "endDate": null,
+            "clickAttributionScope": "sameSkuCategory",
+            "viewAttributionScope": "sameSkuCategory"
+        }
+    }
+}
+```
+
+## **Update a Specific Campaign**
+
+This endpoint updates the specified campaign.  In this example, we switch to an uncapped campaign budget and update the post-view attribution window.
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/campaigns/{campaignId}
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X PUT 'https://api.criteo.com/preview/retail-media/campaigns/405429491681951744' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+--data-raw '{
+	"data": {
+		"id": "405429491681951744",
+		"type": "RetailMediaCampaignv2023001",
+		"attributes": {
+			"name": "API Campaign New ",
+			"isAutoDailyPacing": "true",
+			"startDate": "2023-01-23",
+			"endDate": "2023-01-31",
+			"type": "auction",
+			"drawableBalanceIds": [
+				"18"
+			],
+			"clickAttributionWindow": "30D",
+			"viewAttributionWindow": "30D",
+			"budget": "150",
+			"monthlyPacing": "10",
+			"dailyPacing": null,
+			"clickAttributionScope": "sameSkuCategory",
+			"viewAttributionScope": "sameSkuCategory"
+		}
+	}
+}'
+```
+
+```python Python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "id": "405429491681951744",
+    "type": "RetailMediaCampaignv2023001",
+    "attributes": {
+      "name": "API Campaign New ",
+      "isAutoDailyPacing": "true",
+      "startDate": "2023-01-23",
+      "endDate": "2023-01-31",
+      "type": "auction",
+      "drawableBalanceIds": [
+        "18"
+      ],
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "30D",
+      "budget": "150",
+      "monthlyPacing": "10",
+      "dailyPacing": None,
+      "clickAttributionScope": "sameSkuCategory",
+      "viewAttributionScope": "sameSkuCategory"
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("PUT", "/preview/retail-media/campaigns/405429491681951744", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\n\t\"data\": {\n\t\t\"id\": \"405429491681951744\",\n\t\t\"type\": \"RetailMediaCampaignv2023001\",\n\t\t\"attributes\": {\n\t\t\t\"name\": \"API Campaign New \",\n\t\t\t\"isAutoDailyPacing\": \"true\",\n\t\t\t\"startDate\": \"2023-01-23\",\n\t\t\t\"endDate\": \"2023-01-31\",\n\t\t\t\"type\": \"auction\",\n\t\t\t\"drawableBalanceIds\": [\n\t\t\t\t\"18\"\n\t\t\t],\n\t\t\t\"clickAttributionWindow\": \"30D\",\n\t\t\t\"viewAttributionWindow\": \"30D\",\n\t\t\t\"budget\": \"150\",\n\t\t\t\"monthlyPacing\": \"10\",\n\t\t\t\"dailyPacing\": null,\n\t\t\t\"clickAttributionScope\": \"sameSkuCategory\",\n\t\t\t\"viewAttributionScope\": \"sameSkuCategory\"\n\t\t}\n\t}\n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/campaigns/405429491681951744")
+  .method("PUT", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/campaigns/405429491681951744');
+$request->setMethod(HTTP_Request2::METHOD_PUT);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{\n	"data": {\n		"id": "405429491681951744",\n		"type": "RetailMediaCampaignv2023001",\n		"attributes": {\n			"name": "API Campaign New ",\n			"isAutoDailyPacing": "true",\n			"startDate": "2023-01-23",\n			"endDate": "2023-01-31",\n			"type": "auction",\n			"drawableBalanceIds": [\n				"18"\n			],\n			"clickAttributionWindow": "30D",\n			"viewAttributionWindow": "30D",\n			"budget": "150",\n			"monthlyPacing": "10",\n			"dailyPacing": null,\n			"clickAttributionScope": "sameSkuCategory",\n			"viewAttributionScope": "sameSkuCategory"\n		}\n	}\n}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "id": "405429491681951744",
+        "type": "RetailMediaCampaignV202301",
+        "attributes": {
+            "accountId": "4",
+            "promotedBrandIds": [],
+            "budgetSpent": 0.00000000,
+            "budgetRemaining": 150.00000000,
+            "status": "inactive",
+            "createdAt": "2023-01-23T18:32:03+00:00",
+            "updatedAt": "2023-01-23T18:55:56+00:00",
+            "type": "auction",
+            "drawableBalanceIds": [
+                "18"
+            ],
+            "clickAttributionWindow": "30D",
+            "viewAttributionWindow": "30D",
+            "name": "API Campaign New ",
+            "budget": 150.00000000,
+            "monthlyPacing": 10.00000000,
+            "dailyPacing": 1.25000000,
+            "isAutoDailyPacing": true,
+            "startDate": "2023-01-23T00:00:00+00:00",
+            "endDate": "2023-01-31T00:00:00+00:00",
+            "clickAttributionScope": "sameSkuCategory",
+            "viewAttributionScope": "sameSkuCategory"
+        }
+    }
+}
+```
+
+## **Responses**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call completed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      201
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign was created successfully
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Validation Error - one or more required field was not found. Confirm if all required fields are present in the API call
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Invalid isautodailypacing
+      </strong>
+      - *Cannot turn on IsAutoDailyPacing and add a DailyPacing value*
+     </li>
+     <li>
+      IsAutoDailyPacing and Daily Pacing can not be active at the same time. Passing this in the call will return a 400 error
+      <strong>
+       Invalid budget
+      </strong>
+      - *Budget is not allowed for the Preferred campaign.*
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>

@@ -1,0 +1,955 @@
+---
+title: DSP Real-Time Performance API
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/demand-side-analytics/real-time-performance-api.md
+---
+
+<Info>
+  For more information about our DSP endpoints in Stable, please visit [this page](/retail-media/docs/demand-side-analytics-get-started). The Real-Time Performance API endpoint is currently available only in `preview`.
+</Info>
+
+## Introduction
+
+The Retail Media Real-Time Performance API is a synchronous reporting endpoint that exposes **near real-time campaign performance data from the Retail Media reporting platform**.
+
+This API is designed for:
+
+* Demand Side users accessing through a Commerce Yield Private Market account,
+* Demand Side users accessing through a Commerce Max Network account.
+
+Typical use-cases for this endpoint include, for example:
+
+* Real-time monitoring during major retail events (for example, Black Friday, Prime Day, etc.),
+* Live optimization dashboards for trading teams,
+* Alerting systems reacting to sudden performance changes (spend drops/spikes, click anomalies, etc.).
+
+<Info>
+  This endpoint provides:
+
+  * about **15 minute latency** from impression/click to availability in the API,
+  * a maximum **7-day look back window,**
+  * **Onsite campaign** coverage only,
+  * A focused set of billable metrics: `billableImpressions`, `billableClicks`, `spend`.
+</Info>
+
+***
+
+## Endpoints Overview
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /reports/sync/real-time-performance
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieves real-time Retail Media performance metrics
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     Start date (YYYY-MM-DD) for the reporting window. Must be no more than 7 days in the past in the requested timezone.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     End date (YYYY-MM-DD) for the reporting window. Optional
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array of strings
+    </p>
+   </td>
+   <td>
+    <p>
+     Single retailer ID filter. Optional
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array of strings
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter by account IDs. Max 5 IDs.
+    </p>
+    <p>
+     Choose
+     <strong>
+      one
+     </strong>
+     of:
+     <code>
+      accountIds
+     </code>
+     ,
+     <code>
+      campaignIds
+     </code>
+     , or
+     <code>
+      lineItemIds
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array of strings
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter by campaign IDs. Max 50 IDs.
+    </p>
+    <p>
+     Choose
+     <strong>
+      one
+     </strong>
+     of:
+     <code>
+      accountIds
+     </code>
+     ,
+     <code>
+      campaignIds
+     </code>
+     , or
+     <code>
+      lineItemIds
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lineItemIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array of strings
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter by line item IDs. Max 50 IDs.
+    </p>
+    <p>
+     Choose
+     <strong>
+      one
+     </strong>
+     of:
+     <code>
+      accountIds
+     </code>
+     ,
+     <code>
+      campaignIds
+     </code>
+     , or
+     <code>
+      lineItemIds
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      dimensions
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     array of strings
+    </p>
+   </td>
+   <td>
+    <p>
+     Grouping dimensions. Must contain at least
+     <strong>
+      one
+     </strong>
+     value.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      metrics
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     array of strings
+    </p>
+   </td>
+   <td>
+    <p>
+     Requested metrics. Must contain at least
+     <strong>
+      one
+     </strong>
+     value.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timezone
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Time zone identifier. Defaults to UTC if not provided.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+(*) - _Required_
+
+<Warning>
+  At least **one of `dimensions`** and at least **one of `metrics`** must be provided.
+
+  For **entity filters**: only one of `accountIds` or `campaignIds` or `lineItemIds` must be provided. This prevents unbounded queries on the full dataset.
+</Warning>
+
+### Supported Dimensions
+
+Values in the `dimensions` array must be selected from:
+
+* `accountId`,
+* `campaignId`,
+* `lineItemId`,
+* `retailerId`,
+* `accountName`,
+* `campaignName`,
+* `lineItemName`,
+* `retailerName`,
+* `date`,
+* `hour`.
+
+### Supported Metrics
+
+Values in the `metrics` array must be selected from:
+
+* `billableImpressions`,
+* `billableClicks`,
+* `spend`.
+
+### Behavioral Notes
+
+* **Optional end date parameter**: The endpoint accepts an optional `endDate` parameter. If omitted, it will return data from `startDate` up to the current hour in the requested timezone.
+* **Look back limit**: The look back window is limited to 7 days relative to “now” in the requested timezone.  
+  Requests with `startDate` older than this limit are rejected with a 400 Bad Request.
+* **Time zone handling**: All date/hour-based dimensions (date, hour) are computed in the requested timezone.  
+  If timezone is omitted, UTC is used.
+
+***
+
+## Real-Time Performance Endpoint
+
+This endpoint retrieves real-time Retail Media performance metrics.
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/reports/sync/real-time-performance
+```
+
+***
+
+### **Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/reports/sync/real-time-performance' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' -d '{
+  "data": {
+    "attributes": {
+      "startDate": "2026-03-01",
+      "timezone": "America/New_York",
+      "campaignIds": ["561627568743333888"],
+      "dimensions": ["date", "hour", "campaignId", "campaignName"],
+      "metrics": ["billableImpressions", "billableClicks", "spend"]
+    }
+  }
+}'
+```
+
+```python Python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+
+payload = json.dumps({
+  "data": {
+    "attributes": {
+      "startDate": "2026-03-01",
+      "timezone": "America/New_York",
+      "campaignIds": ["561627568743333888"],
+      "dimensions": ["date", "hour", "campaignId", "campaignName"],
+      "metrics": ["billableImpressions", "billableClicks", "spend"]
+    }
+  }
+})
+
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+
+conn.request("POST", "/{version}/reports/sync/real-time-performance", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder().build();
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"ReportDataResponse\",\"attributes\":{\"startDate\":\"2026-03-01\",\"timezone\":\"America/New_York\",\"campaignIds\":[\"561627568743333888\"],\"dimensions\":[\"date\",\"hour\",\"campaignId\",\"campaignName\"],\"metrics\":[\"billableImpressions\",\"billableClicks\",\"spend\"]}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/reports/sync/real-time-performance")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/reports/sync/real-time-performance');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":{"type":"ReportDataResponse","attributes":{"startDate":"2026-03-01","timezone":"America/New_York","campaignIds":["561627568743333888"],"dimensions":["date","hour","campaignId","campaignName"],"metrics":["billableImpressions","billableClicks","spend"]}}}');
+$response = $request->send();
+echo $response->getBody();
+?>
+```
+</CodeGroup>
+
+***
+
+### **Sample Response**
+
+```json
+{
+  "meta": {
+    "dataCompleteThrough": {
+      "dateTime": "2026-03-01 15:45:00",
+      "timezone": "America/New_York"
+    },
+    "columns": [
+      {
+        "name": "date",
+        "type": "Date",
+        "role": "Dimension",
+        "timezone": "America/New_York"
+      },
+      {
+        "name": "hour",
+        "type": "Number",
+        "role": "Dimension",
+        "timezone": "America/New_York"
+      },
+      {
+        "name": "billableImpressions",
+        "type": "Number",
+        "role": "Metric"
+      }
+    ],
+    "rows": 50
+  },
+  "data": {
+    "type": "ReportDataResponse",
+    "attributes": [
+      ["2026-03-01", 13, 536],
+      ["2026-03-01", 14, 563],
+      ["2026-03-01", 15, 641]
+    ]
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Title
+    </p>
+   </th>
+   <th>
+    <p>
+     Detail
+    </p>
+   </th>
+   <th>
+    <p>
+     Troubleshooting
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Success
+    </p>
+   </td>
+   <td>
+    <p>
+     Data returned successfully
+    </p>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Validation Error
+    </p>
+   </td>
+   <td>
+    <p>
+     Invalid request (timezone, filters, dimensions, metrics, look back, etc.)
+    </p>
+   </td>
+   <td>
+    <p>
+     Review request parameters
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Missing Entity Filters
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+     <code>
+      accountIds
+     </code>
+     ,
+     <code>
+      campaignIds
+     </code>
+     , or
+     <code>
+      lineItemIds
+     </code>
+     provided
+    </p>
+   </td>
+   <td>
+    <p>
+     Provide exactly one entity filter
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Entity Filter Limit Exceeded
+    </p>
+   </td>
+   <td>
+    <p>
+     Too many IDs provided
+    </p>
+   </td>
+   <td>
+    <p>
+     Respect max limits
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Missing Metrics
+    </p>
+   </td>
+   <td>
+    <p>
+     metrics is missing or empty
+    </p>
+   </td>
+   <td>
+    <p>
+     Provide at least one metric
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Missing Dimensions
+    </p>
+   </td>
+   <td>
+    <p>
+     dimensions is missing or empty
+    </p>
+   </td>
+   <td>
+    <p>
+     Provide at least one dimension
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Look back Window Exceeded
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+     too old
+    </p>
+   </td>
+   <td>
+    <p>
+     Ensure ≤ 7 days
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Invalid Timezone
+    </p>
+   </td>
+   <td>
+    <p>
+     Unsupported timezone
+    </p>
+   </td>
+   <td>
+    <p>
+     Use valid timezone
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Deserialization Error
+    </p>
+   </td>
+   <td>
+    <p>
+     Invalid format or type
+    </p>
+   </td>
+   <td>
+    <p>
+     Fix payload format
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      403
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Forbidden
+    </p>
+   </td>
+   <td>
+    <p>
+     Unauthorized access to resources
+    </p>
+   </td>
+   <td>
+    <p>
+     Check permissions
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Error Examples
+
+### Validation Error (Invalid Timezone)
+
+```json
+{
+  "warnings": [],
+  "errors": [
+    {
+      "traceId": "0b396e92adef8703a22dd5a5898e05b7",
+      "traceIdentifier": "0b396e92adef8703a22dd5a5898e05b7",
+      "type": "validation",
+      "code": "invalid",
+      "instance": "/reports/sync/real-time-performance",
+      "title": "Time zone America/Paris is not valid. See criteo developer portal for supported time zones",
+      "source": {
+        "Data.Attributes.Timezone": "Data.Attributes.Timezone"
+      }
+    }
+  ]
+}
+```
+
+### Missing Entity Filters
+
+```json
+{
+  "errors": [
+    {
+      "type": "validation",
+      "code": "invalid",
+      "instance": "/reports/sync/real-time-performance",
+      "title": "Exactly one of accountIds, campaignIds, or lineItemIds must be provided"
+    }
+  ]
+}
+```
+
+### Entity Filter Limit Exceeded
+
+```json
+{
+  "errors": [
+    {
+      "type": "validation",
+      "code": "invalid",
+      "instance": "/reports/sync/real-time-performance",
+      "title": "You must provide at most 50 ids in 'CampaignIds', 73 were provided."
+    }
+  ]
+}
+```
+
+### Missing Metrics
+
+```json
+{
+  "errors": [
+    {
+      "type": "validation",
+      "code": "invalid",
+      "instance": "/reports/sync/real-time-performance",
+      "title": "At least one metric must be specified"
+    }
+  ]
+}
+```
+
+### Missing Dimensions
+
+```json
+{
+  "errors": [
+    {
+      "type": "validation",
+      "code": "invalid",
+      "instance": "/reports/sync/real-time-performance",
+      "title": "At least one dimension must be specified"
+    }
+  ]
+}
+```
+
+### Look back Window Exceeded
+
+```json
+{
+  "errors": [
+    {
+      "type": "validation",
+      "code": "invalid",
+      "instance": "/reports/sync/real-time-performance",
+      "title": "startDate cannot be more than 7 days in the past"
+    }
+  ]
+}
+```
+
+### Deserialization Error
+
+```json
+{
+  "errors": [
+    {
+      "type": "validation",
+      "code": "deserialization-error",
+      "instance": "/reports/sync/real-time-performance",
+      "title": "Deserialization error"
+    }
+  ]
+}
+```
+
+### Forbidden
+
+```json
+{
+  "errors": [
+    {
+      "type": "Authorization",
+      "code": "forbidden",
+      "instance": "/reports/sync/real-time-performance",
+      "title": "You are not authorized to access some of the requested resources.",
+      "detail": "Please make sure you have the necessary permissions."
+    }
+  ]
+}
+```

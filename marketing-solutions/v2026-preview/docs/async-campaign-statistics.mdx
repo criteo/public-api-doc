@@ -1,0 +1,1023 @@
+---
+title: Async Campaign Statistics
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026-preview/docs/Preview Endpoints/analytics/async-campaign-statistics.md
+hidden: true
+---
+
+## Introduction
+
+The Statistics endpoint offers the capability to obtain performance-related data for your campaigns. The data can be tailored to reflect the desired metrics and dimensions for analysis.
+
+This feature integrates Criteo data with other sources, allowing for the creation of business alerts and programmatic management of ad expenditures based on campaign performance.
+
+By offering detailed and adjustable insights, the Async Statistics endpoint assists in enhancing campaign optimization and provides a clearer understanding of campaign results.
+
+<Info>
+  **Difference between async and sync statistics endpoint**
+
+  The async endpoint can provide an accurate representation of the data, but the response time may fluctuate depending on the complexity of the information requested.
+</Info>
+
+## Creating a Report Request
+
+Access to the Statistics report can be obtained through the designated endpoint:
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/reports/async-statistics
+```
+
+A sample representation of the POST request body is provided below.
+
+```json Example POST body
+{
+  "data": {
+    "type": "StatisticsReport",
+    "attributes": {
+      "startDate": "2022-01-01",
+      "endDate": "2022-01-02",
+      "dimensions": ["CampaignId", "Campaign", "Day"],
+      "metrics": ["Clicks", "Displays", "AdvertiserCost"],
+      "advertiserIds": ["1111", "2222"],
+      "currency": "EUR",
+      "timezone": "Europe/Paris",
+      "adSetNames": ["myAdSet1", "myAdSet2"],
+      "adSetIds": ["789", "456"],
+      "adSetStatus": ["Active", "NotRunning"]
+    }
+  }
+}
+```
+
+When making a call, five attributes are mandatory:  *startDate*, *endDate*, *dimensions*, *metrics*, and *advertiserIds*. 
+
+The result of the POST call will be presented in the form of a JSON document. The following is a sample response:
+
+```json JSON
+{
+    "data": {
+        "type": "MarketingSolutionsReportStatus",
+        "id": "OWVmNDE3OTMtYTZlZC00YjQ4LThiNjUtYjZkOTE1OGViYjIzfEVVUnxFdXJvcGUvUGFyaXM=",
+        "attributes": {
+            "status": "pending",
+            "message": null
+        }
+    }
+}
+```
+
+<Danger>
+  **Get Output of a Specific Report**
+
+  * After making the report request, it is necessary to follow the Asynchronous Reporting Workflow to obtain the report's output. Please refer to the following steps in the [Async Reports](https://developers.criteo.com/criteo-preprod/v2/docs/get-report) guide.
+</Danger>
+
+## Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Default Value
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     adSetIds
+    </p>
+   </td>
+   <td>
+    <p>
+     string\[]
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Report only on the specified adSet ids
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     adSetNames
+    </p>
+   </td>
+   <td>
+    <p>
+     string\[]
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Report only on the specified adSet names
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     adSetStatus
+    </p>
+   </td>
+   <td>
+    <p>
+     string\[]
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Report only on the specified adSet status
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     advertiserIds
+    </p>
+   </td>
+   <td>
+    <p>
+     string\[]
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Ids of the advertisers
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     currency
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     EUR
+    </p>
+   </td>
+   <td>
+    <p>
+     Currency used for money related metrics
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     dimensions
+    </p>
+   </td>
+   <td>
+    <p>
+     string\[]
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     List of dimensions to retrieve
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     endDate
+    </p>
+   </td>
+   <td>
+    <p>
+     DateTime
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     End of the report in YY-MM-DD format
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     metrics
+    </p>
+   </td>
+   <td>
+    <p>
+     string\[]
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     List of metrics to retrieve
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     startDate
+    </p>
+   </td>
+   <td>
+    <p>
+     DateTime
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Start of the report in YY-MM-DD format
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     timezone
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     UTC
+    </p>
+   </td>
+   <td>
+    <p>
+     Timezone used for dates
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Dimensions
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Value
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     AdSetId
+    </p>
+   </td>
+   <td>
+    <p>
+     List of the Top 30 Brands by Displays
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     AdSet
+    </p>
+   </td>
+   <td>
+    <p>
+     List of the Top 30 Brands by Clicks
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     AdvertiserId
+    </p>
+   </td>
+   <td>
+    <p>
+     List of the Top 30 Brands by Sales
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Advertiser
+    </p>
+   </td>
+   <td>
+    <p>
+     List of the Top 30 Interests by Displays
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     CategoryId
+    </p>
+   </td>
+   <td>
+    <p>
+     List of the Top 30 Interests by Clicks
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Category
+    </p>
+   </td>
+   <td>
+    <p>
+     List of the Top 30 Interests by Sales
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Hour
+    </p>
+   </td>
+   <td>
+    <p>
+     Id of the client
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Day
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the client
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Week
+    </p>
+   </td>
+   <td>
+    <p>
+     Weekly aggregations in datetime format YYYY-MM-DD where the first day is Monday
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Month
+    </p>
+   </td>
+   <td>
+    <p>
+     Monthly aggregations in datetime format YYYY-MM-01
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Year
+    </p>
+   </td>
+   <td>
+    <p>
+     Yearly aggregations in datetime format YYYY-01-01
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Os
+    </p>
+   </td>
+   <td>
+    <p>
+     Os used to acces the Ad
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Device
+    </p>
+   </td>
+   <td>
+    <p>
+     Device used to acces the Ad
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     CampaignId
+    </p>
+   </td>
+   <td>
+    <p>
+     Id of the marketing campaign
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Campaign
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the marketing campaign
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     AdId
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the ad
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Ad
+    </p>
+   </td>
+   <td>
+    <p>
+     Id of the ad
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     CouponId
+    </p>
+   </td>
+   <td>
+    <p>
+     Id of the coupon
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Coupon
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the coupon
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     ChannelId
+    </p>
+   </td>
+   <td>
+    <p>
+     Id of the channel
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Channel
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the channel
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     MarketingCampaignGoal
+    </p>
+   </td>
+   <td>
+    <p>
+     Objective of a marketing campaign
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     VideoPlayerSize
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimensions of the video player
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     VideoPlacement
+    </p>
+   </td>
+   <td>
+    <p>
+     Location where video ad is displayed
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     VideoPlaybackMethod
+    </p>
+   </td>
+   <td>
+    <p>
+     Manner in which the video ad is played
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     SSP
+    </p>
+   </td>
+   <td>
+    <p>
+     Supply-side platform, a technology platform for managing and selling digital ad inventory.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     VideoDurationInSeconds
+    </p>
+   </td>
+   <td>
+    <p>
+     Length of a video ad in seconds
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     MediaType
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of media, such as video, audio, or image
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     AdFormat
+    </p>
+   </td>
+   <td>
+    <p>
+     Format in which an advertisement is presented
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     DisplaySize
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimensions of the advertisement on a webpage
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     VideoPlayerRatio
+    </p>
+   </td>
+   <td>
+    <p>
+     Aspect ratio of the video player
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Country
+    </p>
+   </td>
+   <td>
+    <p>
+     Geographic location of a user
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Region
+    </p>
+   </td>
+   <td>
+    <p>
+     Geographic area within a country
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     PostalCode
+    </p>
+   </td>
+   <td>
+    <p>
+     Numeric code for a geographic area
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     UserBehavior
+    </p>
+   </td>
+   <td>
+    <p>
+     Actions of a user, such as clicks or purchases.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Metrics
+
+### **Naming Convention**
+
+Metrics are created with a common structure, such as:  `SalesAllPc30d`
+
+The naming follows the following pattern:\
+`[Measurement][Devices][AttributionModel][LookbackWindow] `
+
+ \
+   
+
+**Measurement**\
+What you would like to measure in your report.\
+`Clicks`, `Displays`, `AdvertiserCost`, etc. (see full metrics list)
+
+**Devices**\
+Cross-device sales are sales that occurred on a different device than the one where the click occurred.  Specifying `All` includes cross-device sales.\
+`All`
+
+**Attribution Model**\
+A sale is attributed when your customer sees or clicks an ad and converts within a specified window of time. It could be post-click, post-view or your custom attribution if you send us your attribution data for sales.\
+`Pc`,`Pv`, `ClientAttribution`
+
+**Lookback Window**\
+The time between a sale and the view or click of an ad.\
+`30D`, `7D`, `1D`, `24H`
+
+ \
+   
+
+### **Full List of Metrics**
+
+Metrics refer to measurements such as **clicks**, **revenue**, or **cost per visit**. 
+
+All metrics available in Criteo Commerce Growth are available through the Statistics API v2.   
+
+The following is a list of available metrics in Criteo Commerce Growth (**bolded**) and their corresponding metric names for the `metrics` array of your request.
+
+<Info>
+  **A note about percentages**
+
+  Percentages will be returned as decimal values between 0 and 1. For example, 99.99% will be returned as .9999
+</Info>
+
+ \
+   
+
+**Clicks**\
+The number of clicks driven by your ads.\
+`Clicks`
+
+**Displays**\
+The number of ad impressions served on publishers via Criteo.\
+`Displays`
+
+**Viewed displays**\
+The number of ads that have been viewed. A display is considered viewed if at least 50% of the ad appears on the screen for at least one second.\
+`ViewableDisplays`
+
+**Unviewed displays**\
+The number of ads that have not been viewed. A display that doesn't meet the viewed displays' criteria is considered unviewed.\
+`NonViewableDisplays`
+
+**Untracked displays**\
+This is the number of untracked displays. Some displays cannot be tracked because of the display environment (for instance, native banner)\
+`UntrackableDisplays`
+
+**Cost**\
+Total money spent on Criteo advertising.\
+`AdvertiserCost`
+
+**Qualified Visits**\
+The number of users on the target website or app for which at least two events or one sale event occurred within the hour following a click.\
+`QualifiedVisits`
+
+**Visits**\
+The number of users on the target website or app for which at least one event occurred within the hour following a click.\
+`Visits`
+
+**Cost per Visit**\
+The amount of money spent per visit to your website or app.\
+`CostPerVisit`
+
+**Bounce Rate**\
+The proportion of website visitors leaving after only viewing one page.\
+`BounceRate`
+
+**Potential Displays**\
+The number of display opportunities, or the number of bid requests received.\
+`PotentialDisplays`
+
+**Win Rate**\
+The number of displays divided by the total number of display opportunities.\
+`OverallCompetitionWin`
+
+**Sales**\
+The number of transactions or conversions resulting from Criteo ads.\
+`SalesClientAttribution`,`SalesAllClientAttribution`,`SalesPc30d`,`SalesAllPc30d`,`SalesPv24h`,`SalesAllPv24h`,`SalesPc30dPv24h`,`SalesAllPc30dPv24h`,`SalesPc1d`,`SalesAllPc1d`,`SalesPc7d`,`SalesAllPc7d`
+
+**Revenue**\
+The amount of money generated by online sales.\
+`RevenueGeneratedClientAttribution`,`RevenueGeneratedAllClientAttribution`,`RevenueGeneratedPc30d`,`RevenueGeneratedAllPc30d`,`RevenueGeneratedPv24h`,`RevenueGeneratedAllPv24h`,`RevenueGeneratedPc30dPv24h`,`RevenueGeneratedAllPc30dPv24h`,`RevenueGeneratedPc1d`,`RevenueGeneratedAllPc1d`,`RevenueGeneratedPc7d`,`RevenueGeneratedAllPc7d`
+
+**Exposed Users**\
+The number of users who have been served an ad.\
+`ExposedUsers`
+
+**Audience**\
+Potential users who could be served an ad.\
+`Audience`
+
+**Reach**\
+Share of potential users who have been served an ad.\
+`Reach`
+
+<Info>
+  **A Note about Audience and Reach with the Category Dimension**
+
+  The algorithm used for merging audience count across categories is non-commutative (by design).
+
+  It is expected that Audience and Reach metrics produce slightly different results when queried with and without the category dimension.
+</Info>
+
+   
+
+**Average Cart**\
+Average revenue generated by a conversion or sale.\
+`AverageCartClientAttribution`, `AverageCartAllClientAttribution`, `AverageCartPc30d`, `AverageCartAllPc30d`, `AverageCartPv24h`, `AverageCartAllPv24h`, `AverageCartPc30dPv24h`, `AverageCartAllPc30dPv24h`, `AverageCartPc1d`, `AverageCartAllPc1d`, `AverageCartPc7d`, `AverageCartAllPc7d` 
+
+**CTR (Click Through Rate)**\
+Percentage of users served an ad who clicked.\
+`ClickThroughRate`
+
+**CVR (Conversion Rate)**\
+Percentage of conversions or sales compared to the clicks that occurred.\
+`ConversionRateClientAttribution`,`ConversionRateAllClientAttribution`,`ConversionRatePc30d`,`ConversionRateAllPc30d`,`ConversionRatePv24h`,`ConversionRateAllPv24h`,`ConversionRatePc30dPv24h`,`ConversionRateAllPc30dPv24h`, `ConversionRatePc1d`,`ConversionRateAllPc1d`,`ConversionRatePc7d`,`ConversionRateAllPc7d`
+
+**COS (Cost of Sale)**\
+Advertising cost per conversion or sale.\
+`ECosClientAttribution`,`ECosAllClientAttribution`,`ECosPc30d`,`ECosAllPc30d`,`ECosPv24h`,`ECosAllPv24h`,`ECosPc30dPv24h`,`ECosAllPc30dPv24h`,`ECosPc1d`,`ECosAllPc1d`,`ECosPc7d`,`ECosAllPc7d`
+
+**CPO (Cost perOrder)**\
+The price you pay for each order. Calculated as total cost divided by the total number of orders.\
+`CostPerOrderClientAttribution`,`CostPerOrderAllClientAttribution`,`CostPerOrderPc30d`,`CostPerOrderAllPc30d`,`CostPerOrderPv24h`,`CostPerOrderAllPv24h`,`CostPerOrderPc30dPv24h`,`CostPerOrderAllPc30dPv24h`,`CostPerOrderPc1d`,`CostPerOrderAllPc1d`,`CostPerOrderPc7d`,`CostPerOrderAllPc7d`
+
+**CPC (Cost per Click)**\
+Cost per click.\
+`Cpc`
+
+**CPM (Cost per Mille)**\
+Cost per 1000 Impressions.\
+`ECpm`
+
+**ROAS (Return on Ad Spend)**\
+The ratio between revenue generated and the cost.\
+`RoasClientAttribution`,`RoasAllClientAttribution`,`RoasPc30d`,`RoasAllPc30d`,`RoasPv24h`,`RoasAllPv24h`,`RoasPc30dPv24h`,`RoasAllPc30dPv24h`,`RoasPc1d`,`RoasAllPc1d`,`RoasPc7d`,`RoasAllPc7d`
+
+**Advertiser Value**\
+The revenue generated by each product, considering margin (if provided in your product catalog).\
+`AdvertiserValue`,`AdvertiserAllValue`
+
+**COV (Cost of Advertiser Value)**\
+The ratio between the advertiser value generated by sales and the cost of the campaign(s), given as a percentage.\
+`CostOfAdvertiserValue`,CostOfAdvertiserValueAll\`
+
+**Post-Install Sales**\
+The number of your completed events after an app install.\
+`PostInstallSales`
+
+**App Installs**\
+The number of installations of your app.\
+`AppInstalls`
+
+**Post-Install CVR (Conversion Rate)**\
+Percentage of post-install sales compared to the clicks that occurred.\
+`PostInstallConversionRate`
+
+**Post-Install COS (Cost of Sale)**\
+The cost of sale for app install campaigns.\
+`PostInstallCostOfSale`
+
+**Post-Install Order Value**\
+The amount of money generated by sales after an app install.\
+`PostInstallOrderValue`
+
+**Cost per Install**\
+The ad cost per app install.\
+`CostPerInstall`
+
+**Install Rate**\
+The percentage of completed app installs compared to the number of clicks.\
+`InstallRate`
+
+**Post-Install CPO (Cost per Order)**\
+ The cost per order for sales after an app install.\
+`PostInstallCostPerOrder`
+
+**Post-Install ROAS**\
+The return on ad spend for sales after an app install.\
+`PostInstallRoas`
+
+**Omnichannel ROAS (Return on Ad Spend)**\
+The ratio between revenue generated online and offline, and the cost.\
+`OmnichannelRoasClientAttribution`,`OmnichannelRoasPc30d`,`OmnichannelRoasAllPc30d`,`OmnichannelRoasPv24h`,`OmnichannelRoasAllPv24h`
+
+**Omnichannel Revenue**\
+The revenue generated by online and offline sales.\
+`OmnichannelRevenueClientAttribution`,`OmnichannelRevenuePc30d`,`OmnichannelRevenueAllPc30d`,`OmnichannelRevenuePv24h`,`OmnichannelRevenueAllPv24h`
+
+**Omnichannel Sales**\
+The number of online and offline transactions or conversions resulting from Criteo ads.\
+`OmnichannelsalesClientAttribution`,`OmnichannelSalesPc30d`,`OmnichannelSalesAllPc30d`,`OmnichannelSalesPv24h`,`OmnichannelSalesAllPv24h`
+
+**Store ROAS**\
+The ratio between the revenue generated offline and the cost.\
+`RoasOfflinePc30d`,`RoasOfflinePv24h`
+
+**Store Sales**\
+The number of completed in-store transactions or purchases.\
+`SalesOfflinePc30d`,`SalesOfflinePv24h`
+
+**Store Revenue**\
+The amount of revenue generated by in-store sales.\
+`RevenueGeneratedOfflinePc30d`,`RevenueGeneratedOfflinePv24h`

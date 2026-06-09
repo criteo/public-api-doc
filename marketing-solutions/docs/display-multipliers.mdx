@@ -1,15 +1,14 @@
 ---
-title: "Display Multipliers"
+title: Display Multipliers
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/campaigns/display-multipliers.md
 ---
-
-1. Marketing Solutions Endpoints
-2. [Campaigns](/marketing-solutions/docs/campaigns)
 
 ## Introduction
 
 Criteo has historically permitted **bid customization for each category** of products associated with your Ad Set.
 
-Previously, each product category had its own separate, absolute bid level. For example, an Ad Set with a bid level of `$2.00 USD` might have a bid level of `$1.00 USD` set for **Category A** and `$4.00 USD` for **Category B**.
+Previously, each product category had its own separate, absolute bid level.   
+For example, an Ad Set with a bid level of `$2.00 USD` might have a bid level of `$1.00 USD` set for **Category A** and `$4.00 USD` for **Category B**.
 
 With the Criteo API, this bidding behavior can be achieved with **display multipliers**.
 
@@ -23,9 +22,9 @@ In the example above, **Category A** would have a display multiplier value of `0
 
 The display multipliers associated with a specific Ad Set can be retrieved via a `GET` request to the `/ad-sets` endpoint, with the Ad Set ID as a URL parameter and `/display-multipliers` specified.
 
-![](/images/marketing-solutions/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/2026-01/marketing-solutions/ad-sets/{adSetId}/display-multipliers
 ```
 
@@ -33,31 +32,29 @@ https://api.criteo.com/2026-01/marketing-solutions/ad-sets/{adSetId}/display-mul
 
 The API will return an array of categories associated with the campaign:
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "ReadAdSetDisplayMultiplier",
-              "attributes": {
-                  "id": "12345|1",
-                  "categoryName": "Shoes",
-                  "displayMultiplier": 1.2
-              }
-          },
-          {
-              "type": "ReadAdSetDisplayMultiplier",
-              "attributes": {
-                  "id": "12345|2",
-                  "categoryName": "Scarves",
-                  "displayMultiplier": 0.8
-              }
-          }
-      ],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+    "data": [
+        {
+            "type": "ReadAdSetDisplayMultiplier",
+            "attributes": {
+                "id": "12345|1",
+                "categoryName": "Shoes",
+                "displayMultiplier": 1.2
+            }
+        },
+        {
+            "type": "ReadAdSetDisplayMultiplier",
+            "attributes": {
+                "id": "12345|2",
+                "categoryName": "Scarves",
+                "displayMultiplier": 0.8
+            }
+        }
+    ],
+    "errors": []
+}
+```
 
 ***
 
@@ -67,65 +64,61 @@ The fields of one or more of an Ad Set's display multipliers can be updated by m
 
 For example, the following call would update the `displayMultiplier` values for the category IDs `1` and `2`: 
 
-![](/images/marketing-solutions/docs/04a928f-patch.png)
+<Badge color="yellow" size="sm" shape="pill">PATCH</Badge>
 
-```
+```text
 https://api.criteo.com/2026-01/marketing-solutions/ad-sets/{adSetId}/display-multipliers
 ```
 
 **Sample request**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "WriteAdSetDisplayMultipliers",
-              "attributes": {
-                  "id": "12345|1",
-                  "displayMultiplier": 2.0
-              }
-          }, 
-          {
-              "type": "WriteAdSetDisplayMultiplier",
-              "attributes": {
-                  "id": "12345|2",
-                  "displayMultiplier": 1.1
-              }
-          }
-      ]
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+    "data": [
+        {
+            "type": "WriteAdSetDisplayMultipliers",
+            "attributes": {
+                "id": "12345|1",
+                "displayMultiplier": 2.0
+            }
+        }, 
+        {
+            "type": "WriteAdSetDisplayMultiplier",
+            "attributes": {
+                "id": "12345|2",
+                "displayMultiplier": 1.1
+            }
+        }
+    ]
+}
+```
 
  **Sample response**
 
 The API will return an array of Ad Sets that have been updated successfully in the response `data`. These will contain only two parameters, `type` and `id`.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "ReadAdSetDisplayMultiplier",
-              "id": "12345|1"
-          },
-          {
-              "type": "ReadAdSetDisplayMultiplier",
-              "id": "12345|2"
-          }
-      ],
-      "errors": [],
-      "warnings": []
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+    "data": [
+        {
+            "type": "ReadAdSetDisplayMultiplier",
+            "id": "12345|1"
+        },
+        {
+            "type": "ReadAdSetDisplayMultiplier",
+            "id": "12345|2"
+        }
+    ],
+    "errors": [],
+    "warnings": []
+}
+```
 
-<Warning>
+<Danger>
   **Updating Multiple Display Multiplayers**
 
-  This endpoint allows you to update several display multipliers within a single call. Thus it\`s important to understand the [partial success behavior](/marketing-solutions/docs/partial-success-for-bulk-operations).
-</Warning>
+  This endpoint allows you to update several display multipliers within a single call. Thus it`s important to understand the [partial success behavior](/marketing-solutions/docs/partial-success-for-bulk-operations).
+</Danger>
 
 ***
 
@@ -133,14 +126,13 @@ The API will return an array of Ad Sets that have been updated successfully in t
 
 In addition to [general API errors](/marketing-solutions/docs/api-error-types), you may encounter validation errors when updating a display multiplier.
 
-Below is a list of error codes for display multiplier validation and a more detailed description of their meaning.
+Below is a list of error codes for display multiplier validation and a more detailed description of their meaning.  
 
-**`campaign--display-multiplier-update-check--category-not-enabled`** The category targeted by the display multiplier is not enabled.
+**`campaign--display-multiplier-update-check--category-not-enabled`**  
+The category targeted by the display multiplier is not enabled.  
 
-**`campaign--display-multiplier-update-check--invalid-display-multiplier`** The value provided in the display multiplier field is not valid. Expected values are between 0.5 and 2.0, inclusive.
-
-***
-
-What’s Next
+**`campaign--display-multiplier-update-check--invalid-display-multiplier`**  
+The value provided in the display multiplier field is not valid. Expected values are between 0.5 and 2.0, inclusive.
+## What's next
 
 * [Category Bids](/marketing-solutions/docs/category-bids)

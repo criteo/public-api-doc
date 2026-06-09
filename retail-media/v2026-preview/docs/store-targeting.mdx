@@ -1,0 +1,276 @@
+---
+title: Store targeting
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/preferred-deals-line-items/store-targeting.md
+hidden: true
+---
+
+- This endpoint and its underlying capabilities only apply Preferred Deals Line items.
+- Store targeting allows you to restrict a Preferred Deals line items to serve only for users shopping in a limited list of stores
+
+# Endpoints
+
+- `GET /preferred-line-items/`{line-item-id}`/targeting/stores` Get All targeted Stores on a specific Line Item
+- `PUT /preferred-line-items/`{line-item-id}`/targeting/stores` Initialize or Override Stores targeting on a specific Line Item
+- `POST /preferred-line-items/`{line-item-id}`/targeting/stores/append` Add targeted Stores to a Specific Line Item
+- `POST /preferred-line-items/`{line-item-id}`/targeting/stores/delete` Remove targeted Stores from a Specific Line Item
+
+When using the feature, the PUT endpoint must be used to first initialize it, defining its `scope`. POST endpoints can only alter the list of stores.
+
+# Store Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Values
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      scope
+     </code>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Whether listed stores should be included or excluded from the line item
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      include
+     </code>
+     ,
+     <code>
+      exclude
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Required on PUT endpoint
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      storeIds
+     </code>
+     string array
+    </p>
+   </td>
+   <td>
+    <p>
+     List of all stores
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+# List all targeted Stores on a Preferred Deals Line Item
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/preferred-line-items/`{line-item-id}`/targeting/stores
+```
+
+**Sample Request**
+
+```bash
+curl -X GET "https://api.criteo.com/preview/retail-media/preferred-line-items/2465695028166499188/targeting/stores" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaStoreTarget",
+        "attributes": {
+            "scope": "include",
+            "storeIds": [
+                "store3",
+                "store4"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+# Initiate targeted Stores list and scope on a Line item
+
+- This endpoint initializes the feature on a Preferred Deals Line item.
+- If targeted Stores were already defined, those will be overridden
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/preferred-line-items/`{line-item-id}`/targeting/stores
+```
+
+**Sample Response**
+
+```bash
+curl -X PUT "https://api.criteo.com/preview/retail-media/preferred-line-items/2465695028166499188/targeting/stores" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaStoreTarget",
+                "attributes": {
+                    "scope": "exclude",
+                    "storeIds": [
+                        "store1",
+                        "store2"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Request**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaStoreTarget",
+        "attributes": {
+            "scope": "exclude",
+            "storeIds": [
+                "store1",
+                "store2"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+# Add targeted Stores on a Line item
+
+- This endpoint adds target stores to a Preferred Deals Line item
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/preferred-line-items/`{line-item-id}`/targeting/stores/append
+```
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/preview/retail-media/preferred-line-items/2465695028166499188/targeting/stores/append" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaStoreTarget",
+                "attributes": {
+                    "storeIds": [
+                        "store1",
+                        "store2"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaStoreTarget",
+        "attributes": {
+            "scope": "include",
+            "storeIds": [
+                "store1",
+                "store2"
+            ]
+        }
+    },
+    "errors": [],
+    "warnings": []
+}
+```
+
+# Remove targeted Stores on a line item
+
+- This endpoint removes previously targeted Stores
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/preferred-line-items/`{line-item-id}`/targeting/stores/delete
+```
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/preview/retail-media/preferred-line-items/2465695028166499188/targeting/stores/delete" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaStoreTarget",
+                "attributes": {
+                    "storeIds": [
+                        "store2"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaStoreTarget",
+        "attributes": {
+            "scope": "include",
+            "storeIds": [
+                "store1"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```

@@ -1,0 +1,729 @@
+---
+title: Aggregated Reporting
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2025_10/docs/Guides for Retail Media API/supply-side-reporting-ssp/aggregated-reporting.md
+description: Generate an aggregated campaign or line-item report based on specific private market account IDs
+hidden: true
+---
+
+<Info>
+  **Get Started**
+
+  **Available versions**: Preview only
+
+  * ❗Supply accounts looking to use the endpoint will need to be added to our allowed list. ***Please reach out to your account representative to request access. Provide us with the API application organization ID and the app ID that is requesting access***.
+</Info>
+
+<Note>
+  ### Overview
+
+  * The reporting accounts endpoint offers an `accountId []` array, accommodating up to 10 private market demand accounts. Depending on the chosen aggregation level, the report will compile a comprehensive list of all line items or campaigns associated with each specified private market account ID
+  * By utilizing the `aggregationLevel` attribute, you can precisely determine whether the report should aggregate data at the campaign or line-item level
+  * Furthermore, the endpoint grants flexibility with a selectable interval of 31 days between the designated start and end dates
+</Note>
+
+## **Endpoint**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /reports/async/accounts
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a report of all existing campaigns or line-items within an account
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## **Report Request Attributes**
+
+<ParamField path="accountIds" type="string" required>
+  List private market demand account Ids to generate the desired report
+
+  **Accepted Values** A list of account ids, with a maximum of 10 ids per call
+</ParamField>
+
+<ParamField path="aggregationLevel" type="string">
+  Level of aggregation, if no dimensions/metrics are provided, falls back to campaign aggregationLevel
+
+  **Accepted Values** `campaign`, `lineItem`
+</ParamField>
+
+<ParamField path="metrics" type="string">
+  Quantitative values associated to the campaign or line item
+
+  **Values:**
+
+  - Campaign Report
+
+  - Line-item report
+
+  `impressions`,
+
+  `clicks`,
+
+  `spend`,
+
+  `attributedSales`,
+
+  `attributedUnits`,
+
+  `attributedOrders`,
+
+  `ctr`,
+
+  `cpc`,
+
+  `cpo`,
+
+  `cpm`,
+
+  `roas`,
+
+  `uniqueVisitors`,
+
+  `frequency`,
+
+  `assistedUnits`,
+
+  `assistedSales`
+
+  `impressions`,
+
+  `clicks`,
+
+  `spend`,
+
+  `attributedSales`,
+
+  `attributedUnits`,
+
+  `attributedOrders`,
+
+  `ctr`,
+
+  `cpc`,
+
+  `cpo`,
+
+  `roas`,
+
+  `assistedUnits`,
+
+  `assistedSales`,
+
+  `uniqueVisitors`,
+
+  `frequency`
+</ParamField>
+
+<ParamField path="dimensions" type="string">
+  Attributes of your campaign or line item data
+
+  **Values:**
+
+  - Campaign Report
+
+  - Line-item Report
+
+  `date`,
+
+  `campaignId`,
+
+  `campaignName`,
+
+  `campaignTypeName`,
+
+  `advProductCategory`,
+
+  `advProductId`,
+
+  `advProductName`,
+
+  `brandId`,
+
+  `brandName`,
+
+  `pageTypeName`,
+
+  `environment`,
+
+  `keyword`,
+
+  `salesChannel`,
+
+  `retailerId`,
+
+  `retailerName`
+
+  `date`,
+
+  `campaignId`,
+
+  `campaignName`,
+
+  `campaignTypeName`,
+
+  `advProductCategory`,
+
+  `advProductId`,
+
+  `advProductName`,
+
+  `brandId`,
+
+  `brandName`,
+
+  `lineItemId`,
+
+  `lineItemName`,
+
+  `retailerId`,
+
+  `retailerName`,
+
+  `keyword`,
+
+  `pageTypeName`,
+
+  `salesChannel`,
+
+  `environment`
+</ParamField>
+
+<ParamField path="reportType" type="string">
+  Type of report requested
+
+  **Accepted Values** `summary`, `pageType`, `keyword`, `productCategory`, `product`, `attributedTransactions`, `servedCategory`, `environment`
+</ParamField>
+
+<ParamField path="startDate" type="date" required>
+  Earliest day to report; inclusive. Allows an inernval of 31 days from the end date
+
+  **Values:** YYYY-MM-DD
+</ParamField>
+
+<ParamField path="endDate" type="date" required>
+  Latest day to report; inclusive. Allows an inernval of 31 days from the start date
+
+  **Values:** YYYY-MM-DD
+</ParamField>
+
+<ParamField path="campaignType" type="enum">
+  The campaign type
+
+  **Values:** `sponsoredProducts`, `onSiteDisplays`
+</ParamField>
+
+<ParamField path="timeZone" type="string" required>
+  Time zone for the report
+
+  **Values:** database tz syntax, eg. `America/New_York`, `Europe/Paris`, `UTC`
+</ParamField>
+
+<ParamField path="clickAttributionWindow" type="string" required>
+  The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if `viewAttributionWindow` is one of the accepted values.
+
+  **Values:** `7D`, `14D`,`30D`
+</ParamField>
+
+<ParamField path="viewAttributionWindow" type="string" required>
+  The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values.
+
+  **Values:** none, `1D`,`7D`, `14D`, `30D`
+</ParamField>
+
+<ParamField path="salesChannel" type="string">
+  Filter on specific sales channel: offline or online
+
+  **Values:** `offline`, `online`
+</ParamField>
+
+<ParamField path="format" type="string">
+  *Optional.*
+
+  Format of the report data returned
+
+  **Values:** json-compact, json-newline, json (default), csv
+</ParamField>
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 1 of 3**
+
+  * First, create a request for the campaign or line item report with the desired attributes
+  * This generates a `reportId` representing the report
+</Info>
+
+## **Create a Report Request**
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/reports/async/accounts
+```
+
+**Sample Request** 
+
+```bash
+curl -X 'POST' \
+  'https://api.criteo.com/{version}/retail-media/reports/accounts' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer &lt;TOKEN&gt;' \
+  -d '{
+  "data": {
+    "type": "Reporting",
+    "attributes": {
+      "accountIds": ["449584817843912704","451708028784234496","452114665261600768", 
+      "454939415980695552","455008664277487616","456032104520957952","456794723642474496", 
+      "456794968072671232","456795173615796224","456795380471586816"
+      ],
+      "aggregationLevel": "campaign",
+      "campaignType": "sponsoredProducts",
+      "salesChannel": "offline",
+      "format": "json-compact",
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "7D",
+      "dimensions": [
+        "date", "campaignId", "accountId", "accountName","lineItemId","lineItemName"
+      ],
+      "metrics": [
+        "impressions"
+      ],
+      "startDate": "2024-01-01",
+      "endDate": "2024-02-01",
+      "timezone": "UTC"
+    }
+  }
+}'
+```
+
+**Sample Response** 
+
+```json
+{
+    "data": {
+        "type": "RetailMediaReportStatus",
+        "id": "2e733b8c-9983-4237-aab9-17a42f4267cb",
+        "attributes": {
+            "status": "pending",
+            "rowCount": null,
+            "fileSizeBytes": null,
+            "md5Checksum": null,
+            "createdAt": null,
+            "expiresAt": null,
+            "message": null
+        }
+    }
+}
+```
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 2 of 3**
+
+  * Next, use the `reportId` to poll the report status endpoint until one is successfully computed
+</Info>
+
+## **Get Status of a Specific Report**
+
+This endpoint retrieves the status of a specific report.  Status can be `pending`, `success`, `failure`, or `expired`
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/reports/{reportId}/status
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/status" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/status');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "attributes": {
+            "status": "success",
+            "rowCount": 50,
+            "fileSizeBytes": 9711,
+            "md5CheckSum": "b92bf24cd899f172907f8b001b8a5edb",
+            "createdAt": "2023-07-19T19:40:27.000Z",
+            "expiresAt": "2023-07-26T19:40:30.000Z",
+            "message": "rows_count=50",
+            "id": "16d70ce4-6917-48b8-8a55-184809dd59b5"
+        },
+        "id": "16d70ce4-6917-48b8-8a55-184809dd59b5",
+        "type": "StatusResponse"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 3 of 3**
+
+  * Finally, download the report using the report output endpoint
+  * Report outputs are cached for at least 1 hour before expiration
+  * Exact expiration is indicated by the `expiresAt` field in the /status response
+</Info>
+
+## **Download Output of a Specific Report**
+
+This endpoint returns the specific report in the requested format
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/reports/{reportId}/output
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/output" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output"
+
+payload={}
+headers = {
+  'Accept': 'application/octet-stream',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output")
+  .method("GET", body)
+  .addHeader("Accept", "application/octet-stream")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/reports/73fb7859-301f-4371-be91-3e4ad00964aa/output');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/octet-stream',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+Example of report using multi-dimensions and selecting the line-item aggregation
+
+```json
+{
+    "rows":393,
+    "columns":[
+        "accountId",
+        "accountName",
+        "campaignId",
+        "lineItemId",
+        "lineItemName",
+        "date",
+        "impressions"
+    ],
+    "data":[
+        [
+            "456032104520957952",
+            "Advertiser A",
+            "482496924085891072",
+            "484693321382445056",
+            "Line Item Name C",
+            "2024-01-10",
+            169
+        ],
+        [
+            "456794723642474496",
+            "Adidas",
+            "535772678205673472",
+            "535774156483923968",
+            "Line Item Name B",
+            "2024-01-21",
+            26094
+        ],
+        // ...
+        [
+            "456032104520957952",
+            "Advertiser A",
+            "482496924085891072",
+            "484691154964115456",
+            "Line Item Name A",
+            "2024-01-17",
+            2281
+        ],
+        [
+            "456032104520957952",
+            "Advertiser A",
+            "482496924085891072",
+            "484691154964115456",
+            "Line Item Name A",
+            "2024-01-01",
+            1861
+        ]
+    ]
+}
+```
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Type has been ignored
+      </strong>
+      - Report Type has been ignored since Dimensions and Metrics has been provided. Please remove them if you want to use one of the templates.
+     </li>
+    </ul>
+    <p>
+     When generating a report type using the
+     <code>
+      metrics
+     </code>
+     and
+     <code>
+      dimensions
+     </code>
+     filters for multi dimension reporting, a warning message will be presented in the
+     <code>
+      200
+     </code>
+     to inform that
+     <code>
+      reportType
+     </code>
+     is ignored. This is because multi dimension takes priority in this scenario.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Common Validation Errors
+    </p>
+    <ul>
+     <li>
+      <strong>
+       You must provide at most 10 ids in 'AccountIds', 11 were provided
+      </strong>
+      - the
+      <code>
+       accountId
+      </code>
+      array supports up to 10 accounts per API call
+     </li>
+     <li>
+      <strong>
+       Please select an interval under 31 days
+      </strong>
+      - Endpoint supports a start and end date interval of 31 days per API call
+     </li>
+     <li>
+      <strong>
+       reportType invalid
+      </strong>
+      - calling an unsupported
+      <code>
+       reportType
+      </code>
+      will throw a 400 error
+     </li>
+     <li>
+      <strong>
+       timeZone must be a valid timezone
+      </strong>
+      - using a time zone value that is not listed in the list tz database time zones
+     </li>
+     <li>
+      <strong>
+       format invalid
+      </strong>
+      - using an unsupported file format
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>

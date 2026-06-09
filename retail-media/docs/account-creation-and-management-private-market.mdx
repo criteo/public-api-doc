@@ -1,9 +1,9 @@
 ---
-title: "Account Creation and Management (Private Market)"
+title: Account Creation and Management (Private Market)
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/account/account-creation-and-management-private-market.md
 ---
 
-1. Guides for Retail Media API
-2. [Account](/retail-media/docs/account)
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
 
 Account creation endpoints enable private market retailers to create both demand brand and marketplace seller accounts within the private market. The following endpoints will also provide access to manage the brand and seller mappings for each account types.
 
@@ -17,40 +17,631 @@ Account creation endpoints enable private market retailers to create both demand
 
 ## Endpoints
 
-| Verb     | Endpoint                                                                       | Description                                                                                   |
-| -------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| **GET**  | `/accounts`                                                                    | Get all Accounts                                                                              |
-| **GET**  | `/account-management/accounts/{parentAccountId}/private-market-child-accounts` | Get all PM Demand Child (brand or seller) Accounts under the parent Supply Account (Retailer) |
-| **POST** | `/account-management/accounts/{parentAccountId}/create-brand-account`          | Create a PM Demand-Brand Account under the Parent Supply Account                              |
-| **POST** | `/account-management/accounts/{parentAccountId}/create-seller-account`         | Create a PM Demand-Seller Account under the Parent Supply Account                             |
-| **POST** | `/account-management/accounts/{accountId}/brands/add`                          | Map brands to a demand brand account                                                          |
-| **POST** | `/account-management/accounts/{accountId}/brands/remove`                       | Remove brand from a demand brand account                                                      |
-| **PUT**  | `/account-management/accounts/{accountId}/sellers`                             | Map or remove sellers from demand seller account.                                             |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get all Accounts
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /account-management/accounts/&#123;parentAccountId&#125;/private-market-child-accounts
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get all PM Demand Child (brand or seller) Accounts under the parent Supply Account (Retailer)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /account-management/accounts/&#123;parentAccountId&#125;/create-brand-account
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a PM Demand-Brand Account under the Parent Supply Account
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /account-management/accounts/&#123;parentAccountId&#125;/create-seller-account
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a PM Demand-Seller Account under the Parent Supply Account
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /account-management/accounts/&#123;accountId&#125;/brands/add
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Map brands to a demand brand account
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /account-management/accounts/&#123;accountId&#125;/brands/remove
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Remove brand from a demand brand account
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      PUT
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /account-management/accounts/&#123;accountId&#125;/sellers
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Map or remove sellers from demand seller account.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
 ## Account Attributes
 
-| Attribute                  | Data Type      | Description                                                                                                                                                                                                                                                                                                     |
-| -------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                       | string         | Account ID, from a demand or supply account, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                          |
-| `name`                     | string         | Account name, arbitrary and defined at account creationAccepted values: up to 510-chars string Writeable? Y / Nullable? N                                                                                                                                                                                       |
-| `type`                     | enum           | Account type, with `supply` being the account type for [Retailers](doc:retailers) and `demand` the account type for the different types of advertisers (brand, marketplace sellers, agencies, etc)Accepted values: `demand`, `supply` Writeable? N / Nullable? N                                                |
-| `subtype`                  | enum           | Account sub-type, specific for demand accountsAccepted values: `brand`, `seller` Writeable? N / Nullable? Y                                                                                                                                                                                                     |
-| `brandId`                  | list`<string>` | List of [Brand](doc:brands) IDs associated with a demand brand account. Required in the demand brand account creation.Accepted values: list of string of int64 Writeable? Y / Nullable? N                                                                                                                       |
-| `sellerId`                 | string         | Seller ID from Retailer's [Catalog](doc:catalogs), associated with a demand seller account. Required in the demand seller account creation.Accepted values: string of int64 Writeable? Y / Nullable? N                                                                                                          |
-| `retailerId`               | string         | [Retailer](doc:retailers) ID, associated with the demand seller account, generated internally by Criteo. Required in the demand seller account creation.Accepted values: string of int64 Writeable? N / Nullable? N                                                                                             |
-| `companyName`              | string         | This optional field, exclusively accessible to marketplaces within the European Union (in compliance with the Digital Service Act - DSA), will display the name of the company associated with the advertisement.Accepted values: up to 255-chars string Writeable? Y / Nullable? Y                             |
-| `onBehalfCompanyName`      | string         | This optional field, exclusively accessible to marketplaces within the European Union (in compliance with the Digital Service Act - DSA), will display the name of the company (on behalf of `companyName`) associated with the advertisementAccepted values: up to 255-chars string Writeable? Y / Nullable? Y |
-| `countries` / `countryIds` | list`<string>` | Countries associated with the accountAccepted values: 2-chars country code (in [ISO-3166](https://www.iso.org/iso-3166-country-codes.html) alpha-2 code; e.g. `US`, `FR`) Writeable? N / Nullable? N                                                                                                            |
-| `currency` / `currencyId`  | string         | Default currency for bulling, budgeting, bid settings & campaign performance metricsAccepted values: 3-chars currency code (in [ISO-4217](https://www.iso.org/iso-4217-currency-codes.html); e.g. `USD`, `EUR`) Writeable? N / Nullable? N                                                                      |
-| `parentAccountLabel`       | string         | Label used to associate multiple accountsAccepted values: up to 510-chars string Default: same as `name` Writeable? Y / Nullable? N                                                                                                                                                                             |
-| `timeZone`                 | string         | Account time zoneAccepted values: time zone identifiers from [IANA (TZ database)](https://www.iana.org/time-zones) (e.g. `America/New_York`, `Europe/Paris`, `Asia/Tokyo`, `UTC`) Writeable? N / Nullable? N                                                                                                    |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Account ID, from a demand or supply account, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      name
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Account name, arbitrary and defined at account creation
+    </p>
+    <p>
+     Accepted values: up to 510-chars string
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      type
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Account type, with
+     <code>
+      supply
+     </code>
+     being the account type for
+     <a href="/retail-media/v2025.07/docs/retailers">
+      Retailers
+     </a>
+     and
+     <code>
+      demand
+     </code>
+     the account type for the different types of advertisers (brand, marketplace sellers, agencies, etc)
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      demand
+     </code>
+     ,
+     <code>
+      supply
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      subtype
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Account sub-type, specific for demand accounts
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      brand
+     </code>
+     ,
+     <code>
+      seller
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      brandId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     list``
+    </p>
+   </td>
+   <td>
+    <p>
+     List of
+     <a href="/retail-media/docs/brands">
+      Brand
+     </a>
+     IDs associated with a demand brand account. Required in the demand brand account creation.
+    </p>
+    <p>
+     Accepted values: list of string of int64
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      sellerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Seller ID from Retailer's
+     <a href="/retail-media/docs/catalogs">
+      Catalog
+     </a>
+     , associated with a demand seller account. Required in the demand seller account creation.
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.07/docs/retailers">
+      Retailer
+     </a>
+     ID, associated with the demand seller account, generated internally by Criteo. Required in the demand seller account creation.
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      companyName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     This optional field, exclusively accessible to marketplaces within the European Union (in compliance with the Digital Service Act - DSA), will display the name of the company associated with the advertisement.
+    </p>
+    <p>
+     Accepted values: up to 255-chars string
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onBehalfCompanyName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     This optional field, exclusively accessible to marketplaces within the European Union (in compliance with the Digital Service Act - DSA), will display the name of the company (on behalf of
+     <code>
+      companyName
+     </code>
+     ) associated with the advertisement
+    </p>
+    <p>
+     Accepted values: up to 255-chars string
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      countries
+     </code>
+     /
+     <code>
+      countryIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     list``
+    </p>
+   </td>
+   <td>
+    <p>
+     Countries associated with the account
+    </p>
+    <p>
+     Accepted values: 2-chars country code (in
+     <a href="https://www.iso.org/iso-3166-country-codes.html">
+      ISO-3166
+     </a>
+     alpha-2 code; e.g.
+     <code>
+      US
+     </code>
+     ,
+     <code>
+      FR
+     </code>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      currency
+     </code>
+     /
+     <code>
+      currencyId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Default currency for bulling, budgeting, bid settings &amp; campaign performance metrics
+    </p>
+    <p>
+     Accepted values: 3-chars currency code (in
+     <a href="https://www.iso.org/iso-4217-currency-codes.html">
+      ISO-4217
+     </a>
+     ; e.g.
+     <code>
+      USD
+     </code>
+     ,
+     <code>
+      EUR
+     </code>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      parentAccountLabel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Label used to associate multiple accounts
+    </p>
+    <p>
+     Accepted values: up to 510-chars string
+    </p>
+    <p>
+     Default: same as
+     <code>
+      name
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timeZone
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Account time zone
+    </p>
+    <p>
+     Accepted values: time zone identifiers from
+     <a href="https://www.iana.org/time-zones">
+      IANA (TZ database)
+     </a>
+     (e.g.
+     <code>
+      America/New_York
+     </code>
+     ,
+     <code>
+      Europe/Paris
+     </code>
+     ,
+     <code>
+      Asia/Tokyo
+     </code>
+     ,
+     <code>
+      UTC
+     </code>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 <Info>
-  ### **Digital Service Act (DSA)**
-
-  In compliance with the Digital Services Act (DSA), marketplaces within the European Union will receive information about the company name associated with each advertisement.
+  This content relates to Digital Services Act requirements.
 </Info>
 
 ***
@@ -59,11 +650,11 @@ Account creation endpoints enable private market retailers to create both demand
 
 This endpoint lists all accounts accessible via your API credentials.
 
-Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively - see [API Response](#/pagination)
+Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively. See [API Response](/retail-media/docs/api-response#pagination).
 
-![](/images/retail-media/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/accounts?pageIndex={pageIndex}&pageSize={pageSize}
 ```
 
@@ -75,160 +666,152 @@ https://api.criteo.com/{version}/retail-media/accounts?pageIndex={pageIndex}&pag
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -L -X GET 'https://api.criteo.com/{version}/retail-media/accounts?pageIndex=0&pageSize=25' \
-      -H 'Accept: application/json' \
-      -H 'Authorization: Bearer <ACCESS_TOKEN>'
-  ```
-</CodeGroup>
+```bash
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/accounts?pageIndex=0&pageSize=25' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <ACCESS_TOKEN>'
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "metadata": {
-          "totalItemsAcrossAllPages": 4,
-          "currentPageSize": 25,
-          "currentPageIndex": 0,
-          "totalPages": 1
-      },
-      "data": [
-          {
-              "id": "425730879617900544",
-              "type": "RetailMediaAccount",
-              "attributes": {
-                  "name": "Supply Private Market TEST Account",
-                  "type": "supply",
-                  "subtype": null,
-                  "countries": [
-                      "US"
-                  ],
-                  "currency": "USD",
-                  "parentAccountLabel": "Supply Private Market TEST Account",
-                  "timeZone": "America/New_York",
-                  "companyName": "Supply Private Market TEST Account",
-                  "onBehalfCompanyName": "Supply Private Market TEST Account"
-              }
-          },
-          {
-              "id": "568182612169883648",
-              "type": "RetailMediaAccount",
-              "attributes": {
-                  "name": "Demand Brand Account US",
-                  "type": "demand",
-                  "subtype": "brand",
-                  "countries": [
-                      "US"
-                  ],
-                  "currency": "USD",
-                  "parentAccountLabel": "Supply Private Market TEST Account",
-                  "timeZone": "America/New_York",
-                  "companyName": "Brand ABC Corp.",
-                  "onBehalfCompanyName": "Brand ABC Corp."
-              }
-          },
-          
-          // ...
-          
-          {
-              "id": "569185968379719680",
-              "type": "RetailMediaAccount",
-              "attributes": {
-                  "name": "Town Supplies (seller)",
-                  "type": "demand",
-                  "subtype": "seller",
-                  "countries": [
-                      "US"
-                  ],
-                  "currency": "USD",
-                  "parentAccountLabel": "Supply Private Market TEST Account",
-                  "timeZone": "America/New_York",
-                  "companyName": "Seller Test",
-                  "onBehalfCompanyName": "Seller Test LLC"
-              }
-          }
-      ]
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+    "metadata": {
+        "totalItemsAcrossAllPages": 4,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 1
+    },
+    "data": [
+        {
+            "id": "425730879617900544",
+            "type": "RetailMediaAccount",
+            "attributes": {
+                "name": "Supply Private Market TEST Account",
+                "type": "supply",
+                "subtype": null,
+                "countries": [
+                    "US"
+                ],
+                "currency": "USD",
+                "parentAccountLabel": "Supply Private Market TEST Account",
+                "timeZone": "America/New_York",
+                "companyName": "Supply Private Market TEST Account",
+                "onBehalfCompanyName": "Supply Private Market TEST Account"
+            }
+        },
+        {
+            "id": "568182612169883648",
+            "type": "RetailMediaAccount",
+            "attributes": {
+                "name": "Demand Brand Account US",
+                "type": "demand",
+                "subtype": "brand",
+                "countries": [
+                    "US"
+                ],
+                "currency": "USD",
+                "parentAccountLabel": "Supply Private Market TEST Account",
+                "timeZone": "America/New_York",
+                "companyName": "Brand ABC Corp.",
+                "onBehalfCompanyName": "Brand ABC Corp."
+            }
+        },
+        
+        // ...
+        
+        {
+            "id": "569185968379719680",
+            "type": "RetailMediaAccount",
+            "attributes": {
+                "name": "Town Supplies (seller)",
+                "type": "demand",
+                "subtype": "seller",
+                "countries": [
+                    "US"
+                ],
+                "currency": "USD",
+                "parentAccountLabel": "Supply Private Market TEST Account",
+                "timeZone": "America/New_York",
+                "companyName": "Seller Test",
+                "onBehalfCompanyName": "Seller Test LLC"
+            }
+        }
+    ]
+}
+```
 
 ***
 
 ## Get Private Market Child Accounts
 
-This endpoint lists all Private Market child accounts (brand or marketplace seller accounts) that are associated with the given Retailer account. Response results will be provided in paginated form
+This endpoint lists all Private Market child accounts (brand or marketplace seller accounts) that are associated with the given Retailer account.  Response results will be provided in paginated form
 
-Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `500`, respectively - see [API Response](https://developers.criteo.com/retail-media/docs/api-response#/pagination)
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `500`, respectively. See [API Response](/retail-media/docs/api-response#pagination).
 
-![](/images/retail-media/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/account-management/accounts/{parentAccountId}/private-market-child-accounts?offset={offset}&limit={limit)
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -L 'https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/private-market-child-accounts?offset=0&limit=25' \
-      -H 'Accept: application/json' \
-      -H 'Authorization: Bearer <ACCESS_TOKEN>'
-  ```
-</CodeGroup>
+```bash
+curl -L 'https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/private-market-child-accounts?offset=0&limit=25' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <ACCESS_TOKEN>'
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "metadata": {
-          "count": 4,
-          "offset": 0,
-          "limit": 25
-      },
-      "data": [
-          {
-              "id": "568182612169883648",
-              "type": "RetailMediaChildAccount",
-              "attributes": {
-                  "name": "Demand Brand Account US",
-                  "type": "demand",
-                  "subtype": "brand",
-                  "countryIds": [
-                      "US"
-                  ],
-                  "currencyId": "USD",
-                  "timeZone": "America/New_York",
-                  "companyName": "Brand ABC Corp.",
-                  "onBehalfCompanyName": "Brand ABC Corp."
-              }
-          },
-          
-          // ...
-          
-          {
-              "id": "569185968379719680",
-              "type": "RetailMediaChildAccount",
-              "attributes": {
-                  "name": "Town Supplies (seller)",
-                  "type": "demand",
-                  "subtype": "seller",
-                  "countryIds": [
-                      "US"
-                  ],
-                  "currencyId": "USD",
-                  "parentAccountLabel": "Supply Private Market TEST Account",
-                  "timeZone": "America/New_York",
-                  "companyName": "Seller Test",
-                  "onBehalfCompanyName": "Seller Test LLC"
-              }
-          }
-      ]
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+    "metadata": {
+        "count": 4,
+        "offset": 0,
+        "limit": 25
+    },
+    "data": [
+        {
+            "id": "568182612169883648",
+            "type": "RetailMediaChildAccount",
+            "attributes": {
+                "name": "Demand Brand Account US",
+                "type": "demand",
+                "subtype": "brand",
+                "countryIds": [
+                    "US"
+                ],
+                "currencyId": "USD",
+                "timeZone": "America/New_York",
+                "companyName": "Brand ABC Corp.",
+                "onBehalfCompanyName": "Brand ABC Corp."
+            }
+        },
+        
+        // ...
+        
+        {
+            "id": "569185968379719680",
+            "type": "RetailMediaChildAccount",
+            "attributes": {
+                "name": "Town Supplies (seller)",
+                "type": "demand",
+                "subtype": "seller",
+                "countryIds": [
+                    "US"
+                ],
+                "currencyId": "USD",
+                "parentAccountLabel": "Supply Private Market TEST Account",
+                "timeZone": "America/New_York",
+                "companyName": "Seller Test",
+                "onBehalfCompanyName": "Seller Test LLC"
+            }
+        }
+    ]
+}
+```
 
 ***
 
@@ -236,169 +819,168 @@ https://api.criteo.com/{version}/retail-media/account-management/accounts/{paren
 
 This endpoint creates a new child Demand-Brand account under the provided parent Private Market account.
 
-![](/images/retail-media/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/account-management/accounts/{parentAccountId}/create-brand-account
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X POST "https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/create-brand-account" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-      -H "Content-Type: application/json" \
-      -H "Accept: application/json" \
-      -d '{
-              "data": {
-                  "type": "AccountCreationDemandBrand",
-                  "attributes": {
-                      "name": "Demand Brand Account US",
-                      "companyName": "Brand ABC Corp.",
-                      "onBehalfCompanyName": "Brand ABC Corp.",
-                      "brands": [
-                          "2151767311"
-                      ]
-                  }
-              }
-          }'
-  ```
 
-  ```bash bash
-  import http.client
-  import json
+```bash cURL
+curl -L -X POST "https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/create-brand-account" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{
+            "data": {
+                "type": "AccountCreationDemandBrand",
+                "attributes": {
+                    "name": "Demand Brand Account US",
+                    "companyName": "Brand ABC Corp.",
+                    "onBehalfCompanyName": "Brand ABC Corp.",
+                    "brands": [
+                        "2151767311"
+                    ]
+                }
+            }
+        }'
+```
 
-  conn = http.client.HTTPSConnection("api.criteo.com")
-  payload = json.dumps({
-      "data": {
-          "type": "AccountCreationDemandBrand",
-          "attributes": {
-              "name": "Demand Brand Account US",
-              "companyName": "Brand ABC Corp.",
-              "onBehalfCompanyName": "Brand ABC Corp.",
-              "brands": [
-                  "2151767311"
-              ]
-          }
-      }
-  })
+```python Python
+import http.client
+import json
 
-  headers = {
-      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-  }
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+    "data": {
+        "type": "AccountCreationDemandBrand",
+        "attributes": {
+            "name": "Demand Brand Account US",
+            "companyName": "Brand ABC Corp.",
+            "onBehalfCompanyName": "Brand ABC Corp.",
+            "brands": [
+                "2151767311"
+            ]
+        }
+    }
+})
 
-  conn.request("POST", "/{version}/retail-media/account-management/accounts/425730879617900544/create-brand-account", payload, headers)
+headers = {
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}
 
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
+conn.request("POST", "/{version}/retail-media/account-management/accounts/425730879617900544/create-brand-account", payload, headers)
 
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-      .build();
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
 
-  MediaType mediaType = MediaType.parse("application/json");
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
 
-  RequestBody body = RequestBody.create(mediaType, """
-  {
-      "data": {
-          "type": "AccountCreationDemandBrand",
-          "attributes": {
-              "name": "Demand Brand Account US",
-              "companyName": "Brand ABC Corp.",
-              "onBehalfCompanyName": "Brand ABC Corp.",
-              "brands": [
-                  "2151767311"
-              ]
-          }
-      }
-  }
-  """);
+MediaType mediaType = MediaType.parse("application/json");
 
-  Request request = new Request.Builder()
-      .url("https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/create-brand-account")
-      .method("POST", body)
-      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-      .addHeader("Content-Type", "application/json")
-      .addHeader("Accept", "application/json")
-      .build();
+RequestBody body = RequestBody.create(mediaType, """
+{
+    "data": {
+        "type": "AccountCreationDemandBrand",
+        "attributes": {
+            "name": "Demand Brand Account US",
+            "companyName": "Brand ABC Corp.",
+            "onBehalfCompanyName": "Brand ABC Corp.",
+            "brands": [
+                "2151767311"
+            ]
+        }
+    }
+}
+""");
 
-  Response response = client.newCall(request).execute();
-  ```
+Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/create-brand-account")
+    .method("POST", body)
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .build();
 
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/create-brand-account');
-  $request->setMethod(HTTP_Request2::METHOD_POST);
-  $request->setConfig([
-      'follow_redirects' => TRUE
-  ]);
-  $request->setHeader([
-      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
-      'Content-Type' => 'application/json',
-      'Accept' => 'application/json'
-  ]);
+Response response = client.newCall(request).execute();
+```
 
-  $request->setBody(json_encode([
-      "data" => [
-          "type" => "AccountCreationDemandBrand",
-          "attributes" => [
-              "name" => "Demand Brand Account US",
-              "companyName" => "Brand ABC Corp.",
-              "onBehalfCompanyName" => "Brand ABC Corp.",
-              "brands" => [
-                  "2151767311"
-              ]
-          ]
-      ]
-  ], JSON_PRETTY_PRINT));
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/create-brand-account');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig([
+    'follow_redirects' => TRUE
+]);
+$request->setHeader([
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json'
+]);
 
-  try {
-      $response = $request->send();
-      if ($response->getStatus() == 200) {
-          echo $response->getBody();
-      } else {
-          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
-      }
-  } catch(HTTP_Request2_Exception $e) {
-      echo 'Error: ' . $e->getMessage();
-  }
-  ```
+$request->setBody(json_encode([
+    "data" => [
+        "type" => "AccountCreationDemandBrand",
+        "attributes" => [
+            "name" => "Demand Brand Account US",
+            "companyName" => "Brand ABC Corp.",
+            "onBehalfCompanyName" => "Brand ABC Corp.",
+            "brands" => [
+                "2151767311"
+            ]
+        ]
+    ]
+], JSON_PRETTY_PRINT));
+
+try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+        echo $response->getBody();
+    } else {
+        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+    }
+} catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "attributes": {
-              "name": "Demand Brand Account US",
-              "companyName": "Brand ABC Corp.",
-              "onBehalfCompanyName": "Brand ABC Corp.",
-              "type": "Demand",
-              "subType": "Brand",
-              "countryIds": [
-                  "US"
-              ],
-              "currencyId": "USD",
-              "parentAccountLabel": "Supply Private Market TEST Account",
-              "timeZone": "America/New_York"
-          },
-          "id": "569225726270857216",
-          "type": "RetailMediaAccount"
-      },
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "attributes": {
+            "name": "Demand Brand Account US",
+            "companyName": "Brand ABC Corp.",
+            "onBehalfCompanyName": "Brand ABC Corp.",
+            "type": "Demand",
+            "subType": "Brand",
+            "countryIds": [
+                "US"
+            ],
+            "currencyId": "USD",
+            "parentAccountLabel": "Supply Private Market TEST Account",
+            "timeZone": "America/New_York"
+        },
+        "id": "569225726270857216",
+        "type": "RetailMediaAccount"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
 
 ***
 
@@ -406,66 +988,62 @@ https://api.criteo.com/{version}/retail-media/account-management/accounts/{paren
 
 This endpoint creates a new child Demand-Seller account under the provided parent Private Market account.
 
-![](/images/retail-media/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/account-management/accounts/{parentAccountId}/create-seller-account
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/create-seller-account' \
-      -H 'Content-Type: application/json' \
-      -H 'Accept: application/json' \
-      -H 'Authorization: Bearer <ACCESS TOKEN>' \
-      -d '{
-              "data": {
-                  "type": "Demand",
-                  "attributes": {
-                      "name": "Town Supplies (seller)",
-                      "companyName": "Seller Test",
-                      "onBehalfCompanyName": "Seller Test LLC",
-                      "sellers": [
-                          {
-                              "sellerId": "62a0871ffad67c541xxxxxxxxx",
-                              "retailerId": "1141"
-                          }
-                      ]
-                  }
-              }
-          }'
-  ```
-</CodeGroup>
+```bash
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/account-management/accounts/425730879617900544/create-seller-account' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer &lt;ACCESS TOKEN&gt;' \
+    -d '{
+            "data": {
+                "type": "Demand",
+                "attributes": {
+                    "name": "Town Supplies (seller)",
+                    "companyName": "Seller Test",
+                    "onBehalfCompanyName": "Seller Test LLC",
+                    "sellers": [
+                        {
+                            "sellerId": "62a0871ffad67c541xxxxxxxxx",
+                            "retailerId": "1141"
+                        }
+                    ]
+                }
+            }
+        }'
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "attributes": {
-              "name": "Town Supplies (seller)",
-              "type": "Demand",
-              "subType": "Seller",
-              "countryIds": [
-                  "US"
-              ],
-              "currencyId": "USD",
-              "parentAccountLabel": "Supply Private Market TEST Account",
-              "timeZone": "America/New_York",
-              "companyName": "Seller Test",
-              "onBehalfCompanyName": "Seller Test LLC"
-          },
-          "id": "569185968379719680",
-          "type": "RetailMediaAccount"
-      },
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "attributes": {
+            "name": "Town Supplies (seller)",
+            "type": "Demand",
+            "subType": "Seller",
+            "countryIds": [
+                "US"
+            ],
+            "currencyId": "USD",
+            "parentAccountLabel": "Supply Private Market TEST Account",
+            "timeZone": "America/New_York",
+            "companyName": "Seller Test",
+            "onBehalfCompanyName": "Seller Test LLC"
+        },
+        "id": "569185968379719680",
+        "type": "RetailMediaAccount"
+    },
+    "warnings": [],
+    "errors": []
+}
+```
 
 ***
 
@@ -473,52 +1051,48 @@ https://api.criteo.com/{version}/retail-media/account-management/accounts/{paren
 
 This endpoint adds a brand to a Private Market Demand-Brand account.
 
-![](/images/retail-media/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/account-management/accounts/{accountId}/brands/add
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/account-management/accounts/568182612169883648/brands/add' \
-      -H 'Content-Type: application/json' \
-      -H 'Accept: application/json' \
-      -H 'Authorization: Bearer <ACCESS_TOKEN>' \
-      -d '{
-              "data": {
-                  "type": "MapBrandstoDemandAccount",
-                  "attributes": {
-                      "brandIds": [
-                          "2151768660"
-                      ]
-                  }
-              }
-          }'
-  ```
-</CodeGroup>
+```bash
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/account-management/accounts/568182612169883648/brands/add' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <ACCESS_TOKEN>' \
+    -d '{
+            "data": {
+                "type": "MapBrandstoDemandAccount",
+                "attributes": {
+                    "brandIds": [
+                        "2151768660"
+                    ]
+                }
+            }
+        }'
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "RetailMediaBrands",
-          "attributes": {
-              "brandIds": [
-                  2149947741,
-                  2151768660
-              ]
-          }
-      },
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "type": "RetailMediaBrands",
+        "attributes": {
+            "brandIds": [
+                2149947741,
+                2151768660
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
 
 ***
 
@@ -530,51 +1104,47 @@ This endpoint removes a brand from a Private Market Demand-Brand account.
   Although `brandIds` is an array format, as of now, only one brand can be removed from an account at a time, this parameter should contain only one id per request.
 </Warning>
 
-![](/images/retail-media/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/account-management/accounts/{accountId}/brands/remove
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/account-management/accounts/568182612169883648/brands/remove' \
-      -H 'Content-Type: application/json' \
-      -H 'Accept: application/json' \
-      -H 'Authorization: Bearer <ACCESS_TOKEN>' \
-      -d '{
-              "data": {
-                  "type": "RemoveBrandfromDemandAccount",
-                  "attributes": {
-                      "brandIds": [
-                          "2151768660"
-                      ]
-                  }
-              }
-          }'
-  ```
-</CodeGroup>
+```bash
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/account-management/accounts/568182612169883648/brands/remove' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <ACCESS_TOKEN>' \
+    -d '{
+            "data": {
+                "type": "RemoveBrandfromDemandAccount",
+                "attributes": {
+                    "brandIds": [
+                        "2151768660"
+                    ]
+                }
+            }
+        }'
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "RetailMediaBrands",
-          "attributes": {
-              "brandIds": [
-                  2149947741
-              ]
-          }
-      },
-      "warnings": [],
-      "errors": []
-  }  
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "type": "RetailMediaBrands",
+        "attributes": {
+            "brandIds": [
+                2149947741
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}  
+```
 
 ***
 
@@ -582,89 +1152,146 @@ https://api.criteo.com/{version}/retail-media/account-management/accounts/{accou
 
 The endpoint map or removes sellers from a private market seller account. Note that PUT calls overrides existing values. Only the `sellerId` mapped in the payload will be the ones associated with the account.
 
-![](/images/retail-media/docs/1ee76cc-put.png)
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/account-management/accounts/{accountId}/sellers
 ```
 
 **Sample Request**
 
-<CodeGroup>
-  ```bash bash
-  curl -L -X PUT 'https://api.criteo.com/{version}/retail-media/account-management/accounts/569185968379719680/sellers' \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <ACCESS_TOKEN>' \
-  -d '{
-  	"data": [
-  		{
-  			"type": "MapSellertoAccount",
-  			"attributes": {
-  				"sellerId": "5ed6ad7b0b2a9xxxxxxxxxxx",
-  				"retailerId": "1141"
-  			}
-  		},
-  		{
-  			"type": "MapSellertoAccount",
-  			"attributes": {
-  				"sellerId": "640a20bbc63745xxxxxxxxxxx",
-  				"retailerId": "1141"
-  			}
-  		}
-  	]
-  }'
-  ```
-</CodeGroup>
+```bash
+curl -L -X PUT 'https://api.criteo.com/{version}/retail-media/account-management/accounts/569185968379719680/sellers' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <ACCESS_TOKEN>' \
+-d '{
+	"data": [
+		{
+			"type": "MapSellertoAccount",
+			"attributes": {
+				"sellerId": "5ed6ad7b0b2a9xxxxxxxxxxx",
+				"retailerId": "1141"
+			}
+		},
+		{
+			"type": "MapSellertoAccount",
+			"attributes": {
+				"sellerId": "640a20bbc63745xxxxxxxxxxx",
+				"retailerId": "1141"
+			}
+		}
+	]
+}'
+```
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "RetailMediaSeller",
-              "attributes": {
-                  "sellerId": "5ed6ad7b0b2a995f0427858e",
-                  "retailerId": 1141
-              }
-          },
-          {
-              "type": "RetailMediaSeller",
-              "attributes": {
-                  "sellerId": "640a20bbc637455565a5c4a3",
-                  "retailerId": 1141
-              }
-          }
-      ],
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": [
+        {
+            "type": "RetailMediaSeller",
+            "attributes": {
+                "sellerId": "5ed6ad7b0b2a995f0427858e",
+                "retailerId": 1141
+            }
+        },
+        {
+            "type": "RetailMediaSeller",
+            "attributes": {
+                "sellerId": "640a20bbc637455565a5c4a3",
+                "retailerId": 1141
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
 
 ***
 
 ## Responses
 
-| Response | Description                                                                                                                |
-| -------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 🔵`200`  | Call completed successfully                                                                                                |
-| 🔵`201`  | Account created successfully                                                                                               |
-| 🔴`400`  | Validation Error - one or more required fields was not found. Confirm that all required fields are present in the API call |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+    </p>
+    <p>
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call completed successfully
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔵
+    </p>
+    <p>
+     <code>
+      201
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Account created successfully
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Validation Error - one or more required fields was not found. Confirm that all required fields are present in the API call
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-What’s Next
+<SendFeedback />
+## What's next
 
 * [Account Fees (Private Market)](/retail-media/docs/account-fees)
 * [Brands](/retail-media/docs/brands)
 * [Sellers](/retail-media/docs/sellers)
-* [Retailers](/retail-media/docs/retailers)
+* [Retailers](/retail-media/v2025.07/docs/retailers)

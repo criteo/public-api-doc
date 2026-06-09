@@ -1,0 +1,515 @@
+---
+title: OneTag Retail Media upgrade for existing Performance Marketing clients
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/OneTag JavaScript/onetag-for-existing-cms-retailer.md
+description: If you use an other product then Retail Media, you probably already have implemented Onetag and are sending feeds on a daily basis. It means that to integrate Retail Media only a few changes are needed. A few extra fields will be needed for both onetag and the feed.
+hidden: true
+---
+
+# Process for existing PM clients
+
+If you're an existing Performance Marketing (retargeting) client with OneTag already implemented and daily feeds in place, upgrading your integration to support Retail Media requires a few additional steps. This includes adding specific fields to both OneTag and your feed to meet Retail Media data requirements.
+
+<Info>
+  **Retail Media OneTag for on-site ads**
+
+  In addition to the below upgrades that are outlined specifically, please visit [this page](/retailer-integration/docs/onetag) for a holistic overview of the Retail Media OneTag setup.
+</Info>
+
+***
+
+# Dynamic loader
+
+To leverage Retail Media, update your library loader to use Criteo's dynamic endpoint. This change loads a specialized version of the library, enabling dedicated ad placements on your site. Make sure all tags are updated with your unique partner ID (XXXXX):
+
+```javascript
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=XXXXX" async="true"></script>
+```
+
+***
+
+# New parameters
+
+## `RetailerVisitorId` and `CustomerId`
+
+To measure Return-on-Ad-Spend (ROAS), Criteo requires 1P identifiers for user navigation:
+
+* **Retailer Visitor ID:** An unauthenticated user ID, consistent across sessions on the same device and valid for at least 30 days. A first-party cookie is recommended.
+* **Customer ID:** An ID for authenticated users, consistent across all logged-in sessions, typically a hashed internal user ID.
+
+***
+
+## `page_id`
+
+In order to serve ads on dedicated page types, we must add a new parameter titled `page_id`. The naming convention should follow the pattern below:
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Page type
+    </p>
+   </th>
+   <th>
+    <p>
+     page-ids
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     Home
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      AMER:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewHome_desktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewHome_mobile
+     </code>
+    </p>
+    <p>
+     <strong>
+      EMEA:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewHomeDesktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewHomeMobile
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Category
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      AMER:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewCategory_desktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewCategory_mobile
+     </code>
+    </p>
+    <p>
+     <strong>
+      EMEA:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewCategoryDesktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewCategoryMobile
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Merchandising
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      AMER:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewMerchandising_desktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewMerchandising_mobile
+     </code>
+    </p>
+    <p>
+     <strong>
+      EMEA:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewMerchandisingDesktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewMerchandisingMobile
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Search
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      AMER:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewSearchResult_desktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewSearchResult_mobile
+     </code>
+    </p>
+    <p>
+     <strong>
+      EMEA:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewSearchResultDesktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewSearchResultMobile
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Null Search
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      AMER:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewNullSearchResult_desktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewNullSearchResult_mobile
+     </code>
+    </p>
+    <p>
+     <strong>
+      EMEA:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewNullSearchResultDesktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewNullSearchResultMobile
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Product detail
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      AMER:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewItem_desktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewItem_mobile
+     </code>
+    </p>
+    <p>
+     <strong>
+      EMEA:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewItemDesktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewItemMobile
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Basket
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      AMER:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewBasket_desktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewBasket_mobile
+     </code>
+    </p>
+    <p>
+     <strong>
+      EMEA:
+     </strong>
+    </p>
+    <p>
+     <code>
+      viewBasketDesktop
+     </code>
+    </p>
+    <p>
+     <code>
+      viewBasketMobile
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Order confirmation
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      AMER:
+     </strong>
+    </p>
+    <p>
+     <code>
+      trackTransaction_desktop
+     </code>
+    </p>
+    <p>
+     <code>
+      trackTransaction_mobile
+     </code>
+    </p>
+    <p>
+     <strong>
+      EMEA:
+     </strong>
+    </p>
+    <p>
+     <code>
+      trackTransactionDesktop
+     </code>
+    </p>
+    <p>
+     <code>
+      trackTransactionMobile
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+# Tag adjustments by page type
+
+## Listing pages
+
+Modify the listing event based on page type:
+
+* **Category page:** Change listing to `viewCategory` and include a `category ID`
+* **Search page:** Change listing to `viewSearchResult` and include a `keyword`.
+* **Product page:** Add `price` and `availability` fields to enable real-time updates.
+
+***
+
+### Examples
+
+#### viewCategory
+
+```javascript
+<!-- ##### is the partner ID provided by Criteo -->
+
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { event: "setEmail", email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" }, // User's SHA-256 hashed email
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewCategory",
+      item: ["123", "321", "456"], // All organic products in order
+      page_id: "viewCategory_desktop", // Platform-specific page ID
+      page_number: "2", // Page number of the grid
+      category: "21>45732>23568553", // Category breadcrumb of the browse page
+      filters: [
+        {
+          name: "brand",
+          operator: "eq",
+          value: "Nike" // Filters set by the user
+        },
+        // Add a line for each filter set on the page
+      ],
+      ,
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
+
+#### viewSearchResult
+
+```javascript
+<!-- ##### is the partner ID provided by Criteo -->
+
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewSearchResult",
+      item: ["123", "321", "456"], // All organic products in order
+      page_id: "viewSearchResultMobile", // Platform-specific page ID
+      page_number: "2", // Page number of the grid
+      keywords: "running shoes", // User's entered keyword
+      filters: [
+        {
+          name: "brand",
+          operator: "eq",
+          value: "Nike" // Filters set by the user
+        }
+        // Add a line for each filter set on the page
+      ],
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
+
+#### viewItem
+
+```javascript
+<!-- ##### is the partner ID provided by Criteo -->
+
+<script type="text/javascript" src="//dynamic.criteo.com/js/ld/ld.js?a=#####" async></script>
+<script type="text/javascript">
+  window.criteo_q = window.criteo_q || [];
+  window.criteo_q.push(
+    { event: "setAccount", account: "12345" }, // Your partner ID
+    { event: "setRetailerVisitorId", id: "0193553C0A39937F23FC" }, // User's guest ID
+    { event: "setCustomerId", id: "1SDFJI435FH12HFK2" }, // User's logged-in ID
+    { 
+      event: "setEmail", 
+      email: "d9c378bb0369ee148f7700fc296165d4e8dc356b90ac318be3701ee76f00c588" // User's SHA-256 hashed email
+    },
+    { event: "setSiteType", type: "d" }, // User's device type
+    { 
+      event: "viewItem",
+      page_id: "viewItem_mobile", // Platform-specific page ID
+      item: "1573236", // Viewed item's SKU ID
+      parent_item: "P64388324", // Viewed item's parent ID
+      price: "5.99", // Viewed item's current unitary price
+      availability: "1", // Viewed item's availability status
+      store_id: "1537" // User's store ID
+    }
+  );
+</script>
+```
+
+***
+
+## Feed
+
+If you already send Criteo a feed for your performance marketing program, you can use it as long as all Retail Media parameters are added.
+
+<Info>
+  **Feed parameters**
+
+  For a full list of Retail Media parameters, visit [Feed Parameters](/retailer-integration/docs/feed-parameters)
+</Info>
+
+Essential parameters for Retail Media that may not be in a standard feed include:
+
+* `GTIN`
+* `product_type`
+* `product_type_key`
+* `filters`
+* Any `custom parameters` needed for ad rendering, such as sales labels/badges or shipping costs
+## What's next
+
+* [OneTag for Offsite](/retailer-integration/docs/onetag-for-offsite)

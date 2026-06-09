@@ -1,0 +1,130 @@
+---
+title: ビデオプレーヤーの仕様
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Commerce video (japanese)/video-player-specification-japanese.md
+description: This is a translated version of the Commerce Onsite Video documentation
+hidden: true
+---
+
+## VAST について
+
+Interactive Advertising Bureau (IAB) によって作成された [<u>VAST</u>](https://www.iab.com/guidelines/vast/) は、インターネット上のビデオ プレーヤーに広告を配信する広告タグを構成するための動画広告配信テンプレートです。 VAST は XML スキーマを使用して、広告に関する重要なメタデータを広告サーバーからビデオプレーヤーに転送します。
+
+<Info>
+  **VASTは動画広告における標準規格**であるため、弊社では、Commerce Video 広告のレンダリングに VASTフレームワークを採用しています。 VAST は、サードパーティ測定パートナーとの相互運用を可能にし、追跡に必要な全ての要件を満たしています。
+</Info>
+
+***
+
+## ビデオプレーヤーの要件
+
+<Warning>
+  **すべてのビーコン>>の呼び出しは1回まで**
+
+  ユーザーがアクション（クリック、ミュート、ミュート解除、再開、一時停止）を行うたびに**毎回**呼び出されるインタラクションビーコンは除きます。 詳細については、「広告関連アクティビティのトラッキング」セクションを参照してください。
+</Warning>
+
+### 主な要件
+
+VAST video playerは次の要件をサポートする必要があります。
+
+* 広告掲載枠がビューポート外であっても、ページの読み込み時に動画が読み込まれる。
+
+* プレーヤーがビューポートの50%以上を占めている場合にのみ、動画が自動的に再生される。
+
+* プレーヤーがビューポートの50%を占めない場合、動画は自動的に一時停止される。
+  * この場合、"pause" ビーコンが**呼び出されない**ようにする必要があります。
+
+* プレーヤーが再びビューポートの50%以上を占めると、動画が自動的に再開される。
+  * この場合、"resume" ビーコンは**呼び出されない**ようにする必要があります。
+
+* 動画は無限に繰り返される。
+
+* 動画の起動時は自動的にミュートになる。
+  * このミュートアクションはユーザーからのインタラクションを示すものではないため、`mute`ビーコンが呼び出されないようにする必要があります。
+  * ミュートを解除するためのコントロールボタンを設置する必要があります。
+
+* 動画を `pause/resume` するための別のコントロールボタンを設置する。
+  * VAST XML にリダイレクトリンクが存在するかどうかに関係なく、`pause/resume` ボタンの設置は任意です。 動画はビューポート内にあるときは自動的に再生され、ビューポート外にあるときは一時停止されます。動画上で余分なスペースを占有しないよう、このボタンの設置は任意となっています。
+  * その他のコントロールは非表示にする必要があります。
+
+* 動画を全画面表示にすることはできない。
+
+* リダイレクトリンクが存在する場合（VAST XML に `&lt;VideoClicks&gt;` が存在）**のみ**、動画をクリックしてページにリダイレクトできる。
+
+* クライアントが使用するビデオプレーヤーは、**VAST XML ファイルを読み取ることができる**（例：Google Interactive Media Ads プレーヤー、または VAST XML ファイルを処理できる追加の JavaScript レイヤーを備えたネイティブ HTML プレーヤー）。 詳細については、[ビデオプレーヤー実装ページ](/retailer-integration/docs/video-player-implementation-guide-desktopmobile-japanese)を参照してください。
+
+***
+
+### リダイレクトリンクあり/なし
+
+#### リダイレクトリンクなし
+
+<Info>
+  リダイレクトリンクが提供されていない場合、`&lt;VideoClicks&gt;` セクションは存在しません。 また、`ClickThrough`URL と関連する `ClickTracking` ビーコンは表示されません。
+</Info>
+
+* 動画をクリックすると動画が一時停止し、
+  * `Pause` ビーコンが呼び出される
+* 動画をもう一度クリックすると動画が再開され、。
+  * `Resume` ビーコンが呼び出される
+
+#### リダイレクトリンクあり
+
+VAST XML でリダイレクトリンクが提供されている場合：
+
+* 動画をクリックすると、ユーザーは `Clickthrough` URL にリダイレクトされ、
+  * `Clicktracking` ビーコンが呼び出される
+  * `Pause` ビーコンは呼び出されない
+
+<Warning>
+  Pause ビーコンは、**ユーザーによる動画を一時停止する手動アクション**があった場合にのみ呼び出してください。
+</Warning>
+
+* 動画が手動で一時停止され（`Pause` ボタンをクリックした後、またはリダイレクト URL がない場合は動画をクリックした後）、ビューポートが50%未満になった上で、ビューポートが50%以上に戻った場合、動画は再開されます。
+  * ただし、これはユーザーによる手動アクションではないため、`Resume` ビーコンは呼び出されません。
+
+***
+
+### ユーザーが「一時停止/再開」をクリックした場合
+
+ユーザーが「一時停止」をクリックした場合、`Pause` ビーコンが呼び出されます。
+
+* これは動画自体ではなく「一時停止」ボタンのクリックであるため、`Clicktracking` ビーコンは**呼び出さない**でください。
+* ボタンが⏸️から▶️に変わります。
+* `pause` ビーコンは、ユーザーが `pause` ボタンをクリックしたとき、または再生時にリダイレクトリンクが提供されていないときに動画をクリックした場合にのみ呼び出してください。
+* ユーザーが動画を一時停止した後に `Play/Resume` をクリックした場合、`Resume` ビーコンが呼び出されます。
+  * これは動画自体ではなく `pause` ボタンのクリックであるため、`Clicktracking` ビーコンは**呼び出さない**でください。
+  * ボタンが▶️から⏸️に変わります。
+  * `Resume` ビーコンは、ユーザーが `Resume` ボタンをクリックしたとき、またはリダイレクト リンクが提供されておらず動画が一時停止されているときに動画をクリックしたときにのみ呼び出してください。
+
+***
+
+### 複数の動画ファイル
+
+* Criteo では、同じ VAST XML で複数の動画ファイル（`MediaFiles`）を返すことができますが、VAST XML ごとにレンダリングできるのはそのうちの1つだけです。 動画ファイルの比率は異なる場合があり、サポートされている動画比率は16:9、9:16、1:1です。
+  * VAST XML で1つの動画が返される場合は、デフォルトでその動画が選択されている必要があります。
+  * 複数の動画が提供されている場合は、（広告配信面の動画比率と比較して）最も近い動画比率を選択する必要があります。
+
+***
+
+### クローズドキャプション（CC）
+
+アクセシビリティ要件に対応するため、VAST XMLの一部として `Closed Caption (CC)` のファイル提供が可能です。
+
+* CC ファイルが存在する場合：
+  * ビデオプレーヤーでレンダリングする必要があります。
+  * 他のコントロールボタン（ミュート/一時停止）の横に `CC` コントロールボタンの設置が必要です。
+* VAST XML に CC ファイルが提供されていない場合、`CC` コントロールボタンは非表示にしてください。
+* 動画の起動時に、`Closed Captioning` を自動で有効にする必要があります。
+* VAST XML で提供できる CC ファイルは1つのみなので、単一の言語だけがサポートされます。
+
+<Info>
+  CC でサポートされているファイル形式は `.vtt` のみです。\
+  CC ファイルは自動的に生成され、VAST XML で提供されます。
+</Info>
+## What's next
+
+* [Tracking Ad-related Activity (Japanese)](/retailer-integration/docs/tracking-ad-related-activity-japanese)
+* [Video Player Implementation (desktop/mobile)(Japanese)](/retailer-integration/docs/video-player-implementation-desktopmobile-japanese)
+* [Video Player implementation (App:Android)(Japanese)](/retailer-integration/docs/video-player-implementation-appandroid-japanese)
+* [Video Player Implementation (App: iOS)(Japanese)](/retailer-integration/docs/video-player-implementation-app-ios-japanese)

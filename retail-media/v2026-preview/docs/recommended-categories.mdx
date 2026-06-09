@@ -1,0 +1,367 @@
+---
+title: Recommended Categories
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Migrated to Stable (2025.10)/recommended-categories.md
+hidden: true
+---
+
+## Introduction
+
+The Recommended Categories endpoint helps you discover the most relevant product categories for your advertising campaigns by leveraging a retailer's taxonomy structure. This endpoint analyzes your specified products and returns up to 50 recommended categories that align with where your products naturally fit within the retailer's inventory organization.
+
+Recommended categories are pulled directly from the retailer's taxonomy, with each product having a category that indicates its position within the retailer's inventory hierarchy. The endpoint uses the pages and child pages where products are already positioned to generate recommendations, ensuring that the suggestions are inherently relevant to the products associated with your line items.
+
+This data-driven approach is particularly valuable for **campaign targeting optimization**, **category expansion strategies**, and understanding how your products align with the retailer's organizational structure. By using these recommendations, you can improve campaign performance by targeting the most appropriate product categories and reaching shoppers who are browsing relevant product sections.
+
+<Warning>
+  This content is available in preview only.
+</Warning>
+
+***
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Method
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /preview/retail-media/retailers/&#123;retailerId&#125;/recommend-categories
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Gets the top 50 recommended categories for specified products
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Attributes table
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique identifier for the retailer. Found using the
+     <code>
+      GET
+     </code>
+     retailers endpoint.
+    </p>
+    <p>
+     Required in URL path.
+    </p>
+    <p>
+     Writable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productIds
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     array
+    </p>
+   </td>
+   <td>
+    <p>
+     Array of product ID strings for category recommendations.
+    </p>
+    <p>
+     Min: 1 item, Max: 1000 items.
+    </p>
+    <p>
+     Required field.
+    </p>
+    <p>
+     Writable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+*_Required_
+
+<Info>
+  **Field Definitions**
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Get Recommended Categories
+
+This endpoint retrieves the top 50 recommended categories for specified products based on the retailer's taxonomy structure. Categories are determined by the pages and child pages where products are currently positioned within the retailer's inventory.
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/retailers/{retailerId}/recommend-categories
+```
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/preview/retail-media/retailers/12345/recommend-categories' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+          "data": {
+            "attributes": {
+              "productIds": [
+                "PROD123",
+                "PROD456",
+                "PROD789"
+              ]
+            },
+            "type": "RecommendedCategoriesRequestV1"
+          }
+      }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "id": "520020",
+            "type": "CategoryV1",
+            "attributes": {
+                "text": "Electronics|Audio|Headphones|Wireless",
+                "name": "Wireless Headphones",
+                "parentId": "522931"
+            }
+        },
+        {
+            "id": "810902",
+            "type": "CategoryV1",
+            "attributes": {
+                "text": "Electronics|Audio|Headphones",
+                "name": "Headphones",
+                "parentId": "2816897"
+            }
+        },
+        {
+            "id": "2802692",
+            "type": "CategoryV1",
+            "attributes": {
+                "text": "Electronics|Audio",
+                "name": "Audio Equipment",
+                "parentId": "13772216"
+            }
+        }
+    ],
+    "warnings": [
+        {
+            "traceId": "7eaa128c7ef3417ddb40654d40006773",
+            "type": "validation",
+            "code": "not-all-skus-available",
+            "title": "Partial result",
+            "detail": "Sku ids 8110729593111,8110728872215 are not available."
+        }
+    ],
+    "errors": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Code
+    </p>
+   </th>
+   <th>
+    <p>
+     Meaning
+    </p>
+   </th>
+   <th>
+    <p>
+     Troubleshooting Hint
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢 200
+    </p>
+   </td>
+   <td>
+    <p>
+     Success
+    </p>
+   </td>
+   <td>
+    <p>
+     Request processed successfully, returns up to 50 recommended categories.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴 400
+    </p>
+   </td>
+   <td>
+    <p>
+     Bad Request
+    </p>
+   </td>
+   <td>
+    <p>
+     Check that
+     <code>
+      productIds
+     </code>
+     array is provided with 1-1000 items, and
+     <code>
+      retailerId
+     </code>
+     is valid in URL path.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴 403
+    </p>
+   </td>
+   <td>
+    <p>
+     Forbidden
+    </p>
+   </td>
+   <td>
+    <p>
+     Verify authorization and retailer access permissions.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+### Common Error Scenarios
+
+**Missing or Empty Product IDs**
+
+```json
+{
+    "warnings": [],
+    "errors": [
+        {
+            "traceId": "6f7fcf70d8b024627481b771c79656f6",
+            "type": "validation",
+            "code": "model-validation-error",
+            "title": "Model validation error",
+            "detail": "Required property 'skuIds' not found in JSON. Path 'data.attributes', line 7, position 5."
+        }
+    ]
+}
+```
+
+**Invalid Retailer ID**
+
+```json
+{
+    "warnings": [],
+    "errors": [
+        {
+            "traceId": "ea6343210d0922cd1217b99448e98839",
+            "type": "validation",
+            "code": "model-validation-error",
+            "title": "Model validation error",
+            "detail": "The value ':retailerId' is not valid."
+        }
+    ]
+}
+```

@@ -1,7 +1,10 @@
 ---
-title: "Server-Side Beacons"
-description: "This guides covers how to implement server-side beacons."
+title: Server-Side Beacons
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/AD TRACKING/server-side-beacons.md
+description: This guides covers how to implement server-side beacons.
 ---
+
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
 
 ## Overview
 
@@ -9,11 +12,86 @@ In most cases, client-side beacons (from the browser or app) are the preferred a
 
 However, in cases where this is not possible — such as on the server side, inside a mobile app, or within privacy-constrained environments, a **server-side beacon** can be used as a fallback.
 
-| Header            | Required    | Purpose                          |
-| ----------------- | ----------- | -------------------------------- |
-| `X-Forwarded-For` | Yes         | Includes original user IP        |
-| `User-Agent`      | Yes         | Identifies client device/browser |
-| `Referer`         | Recommended | Provides page context            |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Header
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Purpose
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      X-Forwarded-For
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Includes original user IP
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      User-Agent
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Identifies client device/browser
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Referer
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Recommended
+    </p>
+   </td>
+   <td>
+    <p>
+     Provides page context
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 <Warning>
   Server-side beacons should be treated as a last resort. The [IAB guidelines](https://www.iab.com/wp-content/uploads/2024/01/IAB_Retail_Media_Measurement_Guidelines_January2024.pdf) state that tracking should happen "as close as possible to the final delivery of an ad to the client." We follow this best practice.
@@ -47,11 +125,9 @@ Provide the actual user agent string from the browser or app where the event ori
 
 **Example:**
 
-<CodeGroup>
-  ```bash bash
-  User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36
-  ```
-</CodeGroup>
+```text http
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36
+```
 
 <Info>
   Read more on `User-Agent` [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) (Mozilla Developer documentation).
@@ -71,7 +147,7 @@ Provide the actual user agent string from the browser or app where the event ori
 
 ## Alignment with Ad Delivery API Requirements
 
-These header requirements are consistent with those enforced by [Criteo's Retail Media Ad Delivery API](https://developers.criteo.com/retailer-integration/docs/integration-process#general-ad-server-requirements). In both cases, proper client metadata (`IP`, `User-Agent`, `Referer`) must be preserved in server-side requests to ensure accurate attribution and filter out invalid traffic.
+These header requirements are consistent with those enforced by [Criteo's Retail Media Ad Delivery API](/retailer-integration/docs/integration-process#general-ad-server-requirements). In both cases, proper client metadata (`IP`, `User-Agent`, `Referer`) must be preserved in server-side requests to ensure accurate attribution and filter out invalid traffic.
 
 If you're implementing both ad delivery and beacon tracking server-side, ensure that your integration includes:
 
@@ -80,7 +156,7 @@ If you're implementing both ad delivery and beacon tracking server-side, ensure 
 * A valid `Referer` indicating the origin page or context.
 
 <Info>
-  ### Mobile developers
+  **Mobile developers**
 
   Make sure to avoid using default agents like `okhttp/x.y.z`, as these are considered invalid under IAB rules. Customize your User-Agent string to include OS and app version, e.g. `app_android 1.2.3`.
 </Info>
@@ -91,26 +167,21 @@ If you're implementing both ad delivery and beacon tracking server-side, ensure 
 
 Here is an API call example including the `X-Forwarded-For`, a `User-Agent` and a `Referer` in the header.
 
-<CodeGroup>
-  ```bash bash
-  curl -X POST \
-    "https://b.us5.us.criteo.com/rm?rm_e=Gd_ceALPvoRY3bVY9-28TDhyVYwW5MUBgE8qBLTqDRORt4q1N7hHDiVm8KO4W-qG2bdCV9GvhNO1wySddekW7j7CF6Z8qIE3ihszU3ZJjFkfKxnmD7_8fhkzmLnZMmjFALzDlUgAyrXYhHx1tArrrLxMuzgOjBdk84q1VXthksSJufRof3a4cj1zqUY9c4PF2pF4kkDfqrOD1Z91UnzdaeLLzI_Hm7Zw47iL8p3_SEcDxCOD9Q4MBpjbE7YTRbNEt1Tr5fbLpY4v-raBDn33yQQzJS3F7tl5cedSJ0XK07f_iQHA2I_XGlVGPvubbmGQqDKlkT2USrc2BwqYb4kImQ&ev=4" \
-    -H "X-Forwarded-For: 185.235.84.0,187.44.99.113" \
-    -H "User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1" \
-    -H "Referer: https://www.example.com" 
-  ```
-</CodeGroup>
+```bash
+curl -X POST \
+  "https://b.us5.us.criteo.com/rm?rm_e=Gd_ceALPvoRY3bVY9-28TDhyVYwW5MUBgE8qBLTqDRORt4q1N7hHDiVm8KO4W-qG2bdCV9GvhNO1wySddekW7j7CF6Z8qIE3ihszU3ZJjFkfKxnmD7_8fhkzmLnZMmjFALzDlUgAyrXYhHx1tArrrLxMuzgOjBdk84q1VXthksSJufRof3a4cj1zqUY9c4PF2pF4kkDfqrOD1Z91UnzdaeLLzI_Hm7Zw47iL8p3_SEcDxCOD9Q4MBpjbE7YTRbNEt1Tr5fbLpY4v-raBDn33yQQzJS3F7tl5cedSJ0XK07f_iQHA2I_XGlVGPvubbmGQqDKlkT2USrc2BwqYb4kImQ&ev=4" \
+  -H "X-Forwarded-For: 185.235.84.0,187.44.99.113" \
+  -H "User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1" \
+  -H "Referer: https://www.example.com" 
+```
 
-![](/images/retailer-integration/docs/50978b61305298ed04b303dbf7aef9d3455e1c8ce2687d6a85592d9f1463b97b-image.png)
+![50978b61305298ed04b303dbf7aef9d3455e1c8ce2687d6a85592d9f1463b97b image](/images/retailer-integration/docs/50978b61305298ed04b303dbf7aef9d3455e1c8ce2687d6a85592d9f1463b97b-image.png)
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-What’s Next
+<SendFeedback />
+## What's next
 
 * [Ad Tracking Best Practices](/retailer-integration/docs/ad-tracking-best-practices)

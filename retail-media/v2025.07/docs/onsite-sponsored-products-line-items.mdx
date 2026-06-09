@@ -1,29 +1,128 @@
 ---
-title: "Onsite Sponsored Products Line Items"
+title: Onsite Sponsored Products Line Items
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2025_07/docs/Guides for Retail Media API/onsite-sponsored-products/onsite-sponsored-products-line-items.md
 ---
 
-1. Guides for Retail Media API
-2. [Onsite Sponsored Products](/retail-media/v2025.07/docs/onsite-sponsored-products)
-
-<Info>
+<Note>
   ### Getting Started
 
-  Learn more about how open auction line items work with our API in [Onsite Sponsored Products](doc:onsite-sponsored-products)
-</Info>
+  Learn more about how open auction line items work with our API in [Onsite Sponsored Products](/retail-media/v2025.07/docs/onsite-sponsored-products)
+</Note>
 
  
 
 ## **Endpoints**
 
-| Verb     | Endpoint                                     | Description                                              |
-| -------- | -------------------------------------------- | -------------------------------------------------------- |
-| **GET**  | `/campaigns/{campaignId}/auction-line-items` | Get all Open Auction Line items from a specific Campaign |
-| **POST** | `/campaigns/{campaignId}/auction-line-items` | Create an Open Auction Line item                         |
-| **GET**  | `/auction-line-items/{lineItemId}`           | Get a specific Open Auction Line item                    |
-| **PUT**  | `/auction-line-items/{lineItemId}`           | Update a specific Open Auction Line item                 |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /campaigns/&#123;campaignId&#125;/auction-line-items
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get all Open Auction Line items from a specific Campaign
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /campaigns/&#123;campaignId&#125;/auction-line-items
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create an Open Auction Line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /auction-line-items/&#123;lineItemId&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get a specific Open Auction Line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      PUT
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /auction-line-items/&#123;lineItemId&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Update a specific Open Auction Line item
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 <Info>
-  ### Info
+  **Info**
 
   * Create operations using the `POST` method expect every **Required** field; omitting **Optional** fields will set those fields to **Default** values
   * Update operations using the `PUT` method expect every **Writeable** field; omitting these fields is equivalent to setting them to `null`, if possible
@@ -33,635 +132,1454 @@ title: "Onsite Sponsored Products Line Items"
 
 ## **Line Item Attributes**
 
-| Attribute             | Data Type | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| --------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                  | string    | Auction line item ID, generated internally by CriteoAcceptable values: int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `name`\*              | string    | Line item name, must be unique within the [Campaign](doc:campaign)Accepted values: between 2 and 255-chars string Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `campaignId`\*        | string    | [Campaign](doc:campaign) ID, in which the respective line item belongs and generated internally by CriteoAcceptable values: int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `targetRetailerId`\*  | string    | [Retailer](doc:retailers) ID where the line item will serve ads onAccepted values: int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `startDate`\*         | date      | Line item start date, in the [Account](doc:account) timezoneAccepted values: `YYYY-MM-DD` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `endDate`             | date      | Line item end date (optional), in the [Account](doc:account) timezoneAccepted values: `YYYY-MM-DD` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `budget`              | decimal   | Lifetime spend cap of line item (optional), uncapped if omitted or set to `null`Accepted values: `budget` ≥ 0.0 Default: `null` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `budgetSpent`         | decimal   | Amount the line item has already sentAccepted values: `budgetSpent` ≥ 0.0 Default: `0.0` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `budgetRemaining`     | decimal   | Amount the line item has remaining until cap is hit; `null` if budget is uncappedAccepted values: 0 ≤ `budgetRemaining` ≤ `budget` Default: `0.0` Writeable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                         |
-| `monthlyPacing`       | decimal   | Amount the line item can spend per calendar month (optional), in the [Account](doc:account) timezoneAccepted values: `null` or greater than zero Default: `null` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                          |
-| `dailyPacing`         | decimal   | Amount the line item can spend per calendar month (optional), in the [Account](doc:account) timezone It resets each day overwritten by calculation if `isAutoDailyPacing` is enabled; uncapped if omitted of set to `null`Accepted values: `null` or greater than zero Default: `null` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                    |
-| `isAutoDailyPacing`\* | boolean   | To activate, either line item `endDate` and budget, or `monthlyPace`, must be specified; overwrites `dailyPacing` with calculation if not set priorAccepted values: `true`, `false` Default: `false` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                      |
-| `bidStrategy`         | enum      | Bid algorithm optimizing for sales conversions, sales revenue or clicksAccepted values: `conversion`, `revenue`, `clicks` Default: `conversion` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                           |
-| `targetBid`\*         | decimal   | If optimizing for `conversion` or `revenue`, a target average amount to bid (as each bid is modulated up/down by our optimization algorithm); else bids stay constant, if optimizing for `clicks` Bidding is uncapped if omitted or set to `null`ℹ️ Note:- Must meet `minBid` for line item to deliver ads, which depends on selected products (available through the [Catalog](doc:catalogs))
-- Input excludes platform feesAccepted values: at least the greatest value of `minBid` across all products in the line item Default: `0.3` Writeable? Y / Nullable? N |
-| `maxBid`              | decimal   | If optimizing for `conversion` or `revenue`, the maximum amount allowed to bid for each display (respected regardless of `targetBid`). Does not apply if optimizing for `clicks` Bidding is uncapped if omitted or set to `null`ℹ️ Note:- Must meet `minBid` for line item to deliver ads, which depends on selected products (available through the [Catalog](doc:catalogs))
-- Input excludes platform feesAccepted values: at least `0.1` Writeable? Y / Nullable? Y                                                                                               |
-| `status`              | enum      | Line item status, can only be updated by user to `active` or `paused` Other values are applied automatically depending start/end dates, financials or missing attributes required for line item to deliver ads. To understand the conditions that cause status changes, check out [Campaign & Line Item Status](doc:campaign-lineitem-status)Accepted values: `active`, `paused`, `scheduled`, `ended`, `budgetHit`, `noFunds`, `draft`, `archived` Writeable? N / Nullable? N                                                                                       |
-| `createdAt`           | timestamp | Timestamp of line item creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                               |
-| `updatedAt`           | timestamp | Timestamp of last line item update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) ) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                           |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Auction line item ID, generated internally by Criteo
+    </p>
+    <p>
+     Acceptable values: int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      name
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item name, must be unique within the
+     <a href="/retail-media/v2025.07/docs/campaign">
+      Campaign
+     </a>
+    </p>
+    <p>
+     Accepted values: between 2 and 255-chars string
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignId
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.07/docs/campaign">
+      Campaign
+     </a>
+     ID, in which the respective line item belongs and generated internally by Criteo
+    </p>
+    <p>
+     Acceptable values: int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      targetRetailerId
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.07/docs/retailers">
+      Retailer
+     </a>
+     ID where the line item will serve ads on
+    </p>
+    <p>
+     Accepted values: int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item start date, in the
+     <a href="/retail-media/v2025.07/docs/account">
+      Account
+     </a>
+     timezone
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      YYYY-MM-DD
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item end date (optional), in the
+     <a href="/retail-media/v2025.07/docs/account">
+      Account
+     </a>
+     timezone
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      YYYY-MM-DD
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budget
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Lifetime spend cap of line item (optional), uncapped if omitted or set to
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      budget
+     </code>
+     ≥ 0.0
+    </p>
+    <p>
+     Default:
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budgetSpent
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Amount the line item has already sent
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      budgetSpent
+     </code>
+     ≥ 0.0
+    </p>
+    <p>
+     Default:
+     <code>
+      0.0
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budgetRemaining
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Amount the line item has remaining until cap is hit;
+     <code>
+      null
+     </code>
+     if budget is uncapped
+    </p>
+    <p>
+     Accepted values: 0 ≤
+     <code>
+      budgetRemaining
+     </code>
+     ≤
+     <code>
+      budget
+     </code>
+    </p>
+    <p>
+     Default:
+     <code>
+      0.0
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      monthlyPacing
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Amount the line item can spend per calendar month (optional), in the
+     <a href="/retail-media/v2025.07/docs/account">
+      Account
+     </a>
+     timezone
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      null
+     </code>
+     or greater than zero
+    </p>
+    <p>
+     Default:
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      dailyPacing
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Amount the line item can spend per calendar month (optional), in the
+     <a href="/retail-media/v2025.07/docs/account">
+      Account
+     </a>
+     timezone
+    </p>
+    <p>
+     It resets each day overwritten by calculation if
+     <code>
+      isAutoDailyPacing
+     </code>
+     is enabled; uncapped if omitted of set to
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      null
+     </code>
+     or greater than zero
+    </p>
+    <p>
+     Default:
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      isAutoDailyPacing
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     boolean
+    </p>
+   </td>
+   <td>
+    <p>
+     To activate, either line item
+     <code>
+      endDate
+     </code>
+     and budget, or
+     <code>
+      monthlyPace
+     </code>
+     , must be specified; overwrites
+     <code>
+      dailyPacing
+     </code>
+     with calculation if not set prior
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      true
+     </code>
+     ,
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Default:
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      bidStrategy
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Bid algorithm optimizing for sales conversions, sales revenue or clicks
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      conversion
+     </code>
+     ,
+     <code>
+      revenue
+     </code>
+     ,
+     <code>
+      clicks
+     </code>
+    </p>
+    <p>
+     Default:
+     <code>
+      conversion
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      targetBid
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     If optimizing for
+     <code>
+      conversion
+     </code>
+     or
+     <code>
+      revenue
+     </code>
+     , a target average amount to bid (as each bid is modulated up/down by our optimization algorithm); else bids stay constant, if optimizing for
+     <code>
+      clicks
+     </code>
+    </p>
+    <p>
+     Bidding is uncapped if omitted or set to
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     ℹ️ Note:
+    </p>
+    <ul>
+     <li>
+      Must meet
+      <code>
+       minBid
+      </code>
+      for line item to deliver ads, which depends on selected products (available through the
+      <a href="/retail-media/v2025.07/docs/catalogs">
+       Catalog
+      </a>
+      )
+     </li>
+     <li>
+      Input excludes platform fees
+     </li>
+    </ul>
+    <p>
+     Accepted values: at least the greatest value of
+     <code>
+      minBid
+     </code>
+     across all products in the line item
+    </p>
+    <p>
+     Default:
+     <code>
+      0.3
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      maxBid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     If optimizing for
+     <code>
+      conversion
+     </code>
+     or
+     <code>
+      revenue
+     </code>
+     , the maximum amount allowed to bid for each display (respected regardless of
+     <code>
+      targetBid
+     </code>
+     ). Does not apply if optimizing for
+     <code>
+      clicks
+     </code>
+    </p>
+    <p>
+     Bidding is uncapped if omitted or set to
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     ℹ️ Note:
+    </p>
+    <ul>
+     <li>
+      Must meet
+      <code>
+       minBid
+      </code>
+      for line item to deliver ads, which depends on selected products (available through the
+      <a href="/retail-media/v2025.07/docs/catalogs">
+       Catalog
+      </a>
+      )
+     </li>
+     <li>
+      Input excludes platform fees
+     </li>
+    </ul>
+    <p>
+     Accepted values: at least
+     <code>
+      0.1
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      status
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item status, can only be updated by user to
+     <code>
+      active
+     </code>
+     or
+     <code>
+      paused
+     </code>
+    </p>
+    <p>
+     Other values are applied automatically depending start/end dates, financials or missing attributes required for line item to deliver ads. To understand the conditions that cause status changes, check out
+     <a href="/retail-media/v2025.07/docs/campaign-lineitem-status">
+      Campaign &amp; Line Item Status
+     </a>
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      active
+     </code>
+     ,
+     <code>
+      paused
+     </code>
+     ,
+     <code>
+      scheduled
+     </code>
+     ,
+     <code>
+      ended
+     </code>
+     ,
+     <code>
+      budgetHit
+     </code>
+     ,
+     <code>
+      noFunds
+     </code>
+     ,
+     <code>
+      draft
+     </code>
+     ,
+     <code>
+      archived
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      createdAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of line item creation, in UTC
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss±hh:mm
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      updatedAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of last line item update, in UTC
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss±hh:mm
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 *\*Required*
 
 <Info>
-  ### Field Definitions
+  **Field Definitions**
 
   * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
   * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
   * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
 </Info>
 
+<br />
+
 ## **Create an Onsite Sponsored Products Line Item**
 
 This endpoint creates a new Onsite Sponsored Products line item in the specified campaign.
 
-![](/images/retail-media/v2025.07/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}/auction-line-items
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X POST 'https://api.criteo.com/{version}/retail-media/campaigns/405429491681951744/auction-line-items' \
-    -H 'Content-Type: application/json' \
-    -H 'Accept: application/json' \
-    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-    -d '{
-          "data": {
-            "type": "RetailMediaAuctionLineItem",
-            "attributes": {
-              "name": "API Campaign",
-              "startDate": "2023-01-23",
-              "targetRetailerId": "299",
-              "endDate": "2023-01-31",
-              "status": "active",
-              "budget": "1.00",
-              "targetBid": "5",
-              "maxBid": "5",
-              "monthlyPacing": "50",
-              "dailyPacing": "5",
-              "isAutoDailyPacing": false,
-              "bidStrategy": "conversion"
-            }
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/campaigns/405429491681951744/auction-line-items' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+        "data": {
+          "type": "RetailMediaAuctionLineItem",
+          "attributes": {
+            "name": "API Campaign",
+            "startDate": "2023-01-23",
+            "targetRetailerId": "299",
+            "endDate": "2023-01-31",
+            "status": "active",
+            "budget": "1.00",
+            "targetBid": "5",
+            "maxBid": "5",
+            "monthlyPacing": "50",
+            "dailyPacing": "5",
+            "isAutoDailyPacing": false,
+            "bidStrategy": "conversion"
           }
-        }'
-  ```
+        }
+      }'
+```
 
-  ```bash bash
-  import http.client
-  import json
+```python Python
+import http.client
+import json
 
-  conn = http.client.HTTPSConnection("api.criteo.com")
-  payload = json.dumps({
-    "data": {
-      "type": "RetailMediaAuctionLineItem",
-      "attributes": {
-        "name": "API Campaing",
-        "startDate": "2023-01-23",
-        "targetRetailerId": "299",
-        "endDate": "2023-01-31",
-        "status": "active",
-        "budget": "1.00",
-        "targetBid": "5",
-        "maxBid": "5",
-        "monthlyPacing": "50",
-        "dailyPacing": "5",
-        "isAutoDailyPacing": False,
-        "bidStrategy": "conversion"
-      }
-    }
-  })
-  headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-  }
-  conn.request("POST", "/{version}/retail-media/campaigns/405429491681951744/auction-line-items", payload, headers)
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-  MediaType mediaType = MediaType.parse("application/json");
-  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"RetailMediaAuctionLineItem\",\"attributes\":{\"name\":\"API Campaing\",\"startDate\":\"2023-01-23\",\"targetRetailerId\":\"299\",\"endDate\":\"2023-01-31\",\"status\":\"active\",\"budget\":\"1.00\",\"targetBid\":\"5\",\"maxBid\":\"5\",\"monthlyPacing\":\"50\",\"dailyPacing\":\"5\",\"isAutoDailyPacing\":false,\"bidStrategy\":\"conversion\"}}\n}");
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/campaigns/405429491681951744/auction-line-items")
-    .method("POST", body)
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/405429491681951744/auction-line-items');
-  $request->setMethod(HTTP_Request2::METHOD_POST);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Content-Type' => 'application/json',
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-  $request->setBody('{"data":{"type":"RetailMediaAuctionLineItem","attributes":{"name":"API Campaing","startDate":"2023-01-23","targetRetailerId":"299","endDate":"2023-01-31","status":"active","budget":"1.00","targetBid":"5","maxBid":"5","monthlyPacing":"50","dailyPacing":"5","isAutoDailyPacing":false,"bidStrategy":"conversion"}}}');
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    else {
-      echo 'Unexpected HTTP status:' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "type": "RetailMediaAuctionLineItem",
+    "attributes": {
+      "name": "API Campaing",
+      "startDate": "2023-01-23",
+      "targetRetailerId": "299",
+      "endDate": "2023-01-31",
+      "status": "active",
+      "budget": "1.00",
+      "targetBid": "5",
+      "maxBid": "5",
+      "monthlyPacing": "50",
+      "dailyPacing": "5",
+      "isAutoDailyPacing": False,
+      "bidStrategy": "conversion"
     }
   }
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error:' . $e->getMessage();
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/{version}/retail-media/campaigns/405429491681951744/auction-line-items", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"RetailMediaAuctionLineItem\",\"attributes\":{\"name\":\"API Campaing\",\"startDate\":\"2023-01-23\",\"targetRetailerId\":\"299\",\"endDate\":\"2023-01-31\",\"status\":\"active\",\"budget\":\"1.00\",\"targetBid\":\"5\",\"maxBid\":\"5\",\"monthlyPacing\":\"50\",\"dailyPacing\":\"5\",\"isAutoDailyPacing\":false,\"bidStrategy\":\"conversion\"}}\n}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/campaigns/405429491681951744/auction-line-items")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/405429491681951744/auction-line-items');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{"data":{"type":"RetailMediaAuctionLineItem","attributes":{"name":"API Campaing","startDate":"2023-01-23","targetRetailerId":"299","endDate":"2023-01-31","status":"active","budget":"1.00","targetBid":"5","maxBid":"5","monthlyPacing":"50","dailyPacing":"5","isAutoDailyPacing":false,"bidStrategy":"conversion"}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-  ```
+  else {
+    echo 'Unexpected HTTP status:' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error:' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "id": "405482503263227904",
-          "type": "RetailMediaAuctionLineItem",
-          "attributes": {
-              "id": "405482503263227904",
-              "name": "API Line Item",
-              "startDate": "2023-01-23",
-              "endDate": "2023-01-31",
-              "maxBid": 5.00000000,
-              "budget": 1.00000000,
-              "monthlyPacing": 50.00000000,
-              "dailyPacing": 5.00000000,
-              "bidStrategy": "conversion",
-              "targetRetailerId": "299",
-              "status": "draft",
-              "targetBid": 5.00000000,
-              "isAutoDailyPacing": false,
-              "campaignId": "405429491681951744",
-              "budgetSpent": 0.00000000,
-              "budgetRemaining": 1.00000000,
-              "createdAt": "2023-01-23T22:02:42+00:00",
-              "updatedAt": "2023-01-23T22:02:42+00:00"
-          }
-      },
-      "warnings": [],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "id": "405482503263227904",
+        "type": "RetailMediaAuctionLineItem",
+        "attributes": {
+            "id": "405482503263227904",
+            "name": "API Line Item",
+            "startDate": "2023-01-23",
+            "endDate": "2023-01-31",
+            "maxBid": 5.00000000,
+            "budget": 1.00000000,
+            "monthlyPacing": 50.00000000,
+            "dailyPacing": 5.00000000,
+            "bidStrategy": "conversion",
+            "targetRetailerId": "299",
+            "status": "draft",
+            "targetBid": 5.00000000,
+            "isAutoDailyPacing": false,
+            "campaignId": "405429491681951744",
+            "budgetSpent": 0.00000000,
+            "budgetRemaining": 1.00000000,
+            "createdAt": "2023-01-23T22:02:42+00:00",
+            "updatedAt": "2023-01-23T22:02:42+00:00"
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
 
 ## **Get all Onsite Sponsored Products Line Items**
 
 This endpoint lists all Onsite Sponsored Products line items in the specified campaign.
 
-Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively - see [API Response](#/pagination)
+Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively. See [API Response](/retail-media/v2025.07/docs/api-response#pagination).
 
-![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}/auction-line-items?pageIndex={pageIndex}&pageSize={pageSize}
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -X GET "https://api.criteo.com/{version}/retail-media/campaigns/8343086999167541140/auction-line-items?pageIndex=0&pageSize=25" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
-  ```
 
-  ```bash bash
-  import requests
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/campaigns/8343086999167541140/auction-line-items?pageIndex=0&pageSize=25" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
 
-  url = "https://api.criteo.com/{version}/retail-media/campaigns/76216196459831296/auction-line-items?pageIndex=0&pageSize=25"
+```python Python
+import requests
 
-  payload={}
-  headers = {
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+url = "https://api.criteo.com/{version}/retail-media/campaigns/76216196459831296/auction-line-items?pageIndex=0&pageSize=25"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/campaigns/76216196459831296/auction-line-items?pageIndex=0&pageSize=25")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/76216196459831296/auction-line-items?pageIndex=0&pageSize=25');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-
-  response = requests.request("GET", url, headers=headers, data=payload)
-
-  print(response.text)
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-  MediaType mediaType = MediaType.parse("text/plain");
-
-  RequestBody body = RequestBody.create(mediaType, "");
-
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/campaigns/76216196459831296/auction-line-items?pageIndex=0&pageSize=25")
-    .method("GET", body)
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/76216196459831296/auction-line-items?pageIndex=0&pageSize=25');
-  $request->setMethod(HTTP_Request2::METHOD_GET);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-
-  $request->setHeader(array(
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
-    }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
+}
 
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
-  }
-  ```
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "id": "9979917896105882144",
-              "type": "RetailMediaLineItem",
-              "attributes": {
-                  "campaignId": "8343086999167541140",
-                  "name": "Line Item 123",
-                  "targetRetailerId": "3239117063738827231",
-                  "startDate": "2020-04-06",
-                  "endDate": null,
-                  "budget": null,
-                  "budgetSpent": 2383.87,
-                  "budgetRemaining": null,
-                  "monthlyPacing": null,
-                  "dailyPacing": null,
-                  "isAutoDailyPacing": false,
-                  "bidStrategy": "conversion",
-                  "targetBid": 1.50,
-                  "maxBid": 2.50,
-                  "status": "active",
-                  "createdAt": "2020-04-06T17:29:11+00:00",
-                  "updatedAt": "2020-04-06T17:29:11+00:00"
-              }
-          },
-          // ...
-          {
-              "id": "6854840188706902009",
-              "type": "RetailMediaLineItem",
-              "attributes": {
-                  "campaignId": "8343086999167541140",
-                  "name": "Line Item 789",
-                  "targetRetailerId": "18159942378514859684",
-                  "startDate": "2020-04-08",
-                  "endDate": null,
-                  "budget": 8000.00,
-                  "budgetSpent": 1921.23,
-                  "budgetRemaining": 6078.77,
-                  "monthlyPacing": 1000.00,
-                  "dailyPacing": 33.33,
-                  "isAutoDailyPacing": true,
-                  "bidStrategy": "conversion",
-                  "targetBid": 0.75,
-                  "maxBid": 1.25,
-                  "status": "paused",
-                  "createdAt": "2020-04-06T23:42:47+00:00",
-                  "updatedAt": "2020-06-03T03:01:52+00:00"       
-              }
-          }
-      ],
-      "metadata": {
-          "totalItemsAcrossAllPages": 105,
-          "currentPageSize": 25,
-          "currentPageIndex": 0,
-          "totalPages": 5,
-          "nextPage": "https://api.criteo.com/{version}/retail-media/campaigns/8343086999167541140/line-items?pageIndex=1&pageSize=25",
-          "previousPage": null
-      }
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": [
+        {
+            "id": "9979917896105882144",
+            "type": "RetailMediaLineItem",
+            "attributes": {
+                "campaignId": "8343086999167541140",
+                "name": "Line Item 123",
+                "targetRetailerId": "3239117063738827231",
+                "startDate": "2020-04-06",
+                "endDate": null,
+                "budget": null,
+                "budgetSpent": 2383.87,
+                "budgetRemaining": null,
+                "monthlyPacing": null,
+                "dailyPacing": null,
+                "isAutoDailyPacing": false,
+                "bidStrategy": "conversion",
+                "targetBid": 1.50,
+                "maxBid": 2.50,
+                "status": "active",
+                "createdAt": "2020-04-06T17:29:11+00:00",
+                "updatedAt": "2020-04-06T17:29:11+00:00"
+            }
+        },
+        // ...
+        {
+            "id": "6854840188706902009",
+            "type": "RetailMediaLineItem",
+            "attributes": {
+                "campaignId": "8343086999167541140",
+                "name": "Line Item 789",
+                "targetRetailerId": "18159942378514859684",
+                "startDate": "2020-04-08",
+                "endDate": null,
+                "budget": 8000.00,
+                "budgetSpent": 1921.23,
+                "budgetRemaining": 6078.77,
+                "monthlyPacing": 1000.00,
+                "dailyPacing": 33.33,
+                "isAutoDailyPacing": true,
+                "bidStrategy": "conversion",
+                "targetBid": 0.75,
+                "maxBid": 1.25,
+                "status": "paused",
+                "createdAt": "2020-04-06T23:42:47+00:00",
+                "updatedAt": "2020-06-03T03:01:52+00:00"       
+            }
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 105,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 5,
+        "nextPage": "https://api.criteo.com/{version}/retail-media/campaigns/8343086999167541140/line-items?pageIndex=1&pageSize=25",
+        "previousPage": null
+    }
+}
+```
 
 ## **Get a specific Onsite Sponsored Products Line Item**
 
 This endpoint retrieves the specified Onsite Sponsored Products line item
 
-![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/auction-line-items/{lineItemId}
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -X GET "https://api.criteo.com/{version}/retail-media/auction-line-items/2465695028166499188" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
-  ```
 
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/auction-line-items/2465695028166499188" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
 
-  MediaType mediaType = MediaType.parse("text/plain");
+```python Python
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
 
-  RequestBody body = RequestBody.create(mediaType, "");
+MediaType mediaType = MediaType.parse("text/plain");
 
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760")
-    .method("GET", body)
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
+RequestBody body = RequestBody.create(mediaType, "");
 
-  Response response = client.newCall(request).execute();
-  ```
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
 
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
+Response response = client.newCall(request).execute();
+```
 
-  MediaType mediaType = MediaType.parse("text/plain");
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
 
-  RequestBody body = RequestBody.create(mediaType, "");
+MediaType mediaType = MediaType.parse("text/plain");
 
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760")
-    .method("GET", body)
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
+RequestBody body = RequestBody.create(mediaType, "");
 
-  Response response = client.newCall(request).execute();
-  ```
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
 
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760');
-  $request->setMethod(HTTP_Request2::METHOD_GET);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
+Response response = client.newCall(request).execute();
+```
 
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
-    }
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
   }
-  ```
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": { 
-          "id": "2465695028166499188",
-          "type": "RetailMediaLineItem",
-          "attributes": {
-              "campaignId": "8343086999167541140",
-              "name": "My New Line Item",
-              "targetRetailerId": "18159942378514859684",
-              "startDate": "2020-04-06",
-              "endDate": null,
-              "budget": null,
-              "budgetSpent": 0.00,
-              "budgetRemaining": null,
-              "monthlyPacing": null,
-              "dailyPacing": null,
-              "isAutoDailyPacing": false,
-              "bidStrategy": "conversion",
-              "targetBid": 0.30,
-              "maxBid": null,
-              "status": "draft",
-              "createdAt": "2020-04-06T06:11:23+00:00",
-              "updatedAt": "2020-04-06T06:11:23+00:00"
-          }
-      }
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": { 
+        "id": "2465695028166499188",
+        "type": "RetailMediaLineItem",
+        "attributes": {
+            "campaignId": "8343086999167541140",
+            "name": "My New Line Item",
+            "targetRetailerId": "18159942378514859684",
+            "startDate": "2020-04-06",
+            "endDate": null,
+            "budget": null,
+            "budgetSpent": 0.00,
+            "budgetRemaining": null,
+            "monthlyPacing": null,
+            "dailyPacing": null,
+            "isAutoDailyPacing": false,
+            "bidStrategy": "conversion",
+            "targetBid": 0.30,
+            "maxBid": null,
+            "status": "draft",
+            "createdAt": "2020-04-06T06:11:23+00:00",
+            "updatedAt": "2020-04-06T06:11:23+00:00"
+        }
+    }
+}
+```
 
 ## **Update a specific Onsite Sponsored Products Line Item**
 
-This endpoint updates the specified Onsite Sponsored Products line item. In this example, we enable auto daily pacing by setting a monthly pace simultaneously. Note that with auto daily pacing enabled, daily pacing is automatically calculated and overwrites its previous value, if any. Also, note the draft state of the line item because products to be promoted have not yet been added.
+This endpoint updates the specified Onsite Sponsored Products line item.  In this example, we enable auto daily pacing by setting a monthly pace simultaneously.  Note that with auto daily pacing enabled, daily pacing is automatically calculated and overwrites its previous value, if any.  Also, note the draft state of the line item because products to be promoted have not yet been added.
 
-![](/images/retail-media/v2025.07/docs/1ee76cc-put.png)
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/auction-line-items/{lineItemId}
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -X PUT "https://api.criteo.com/{version}/retail-media/auction-line-items/2465695028166499188" \
-    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-    -H "Content-Type: application/json" \
-    -d '{
-          "data": {
-            "id": "2465695028166499188",
-            "type": "RetailMediaLineItem",
-            "attributes": {
-              "name": "My New Line Item",
-              "startDate": "2020-04-06",
-              "endDate": null,
-              "budget": null,
-              "monthlyPacing": 30.00,
-              "dailyPacing": null,
-              "isAutoDailyPacing": true,
-              "bidStrategy": "conversion",
-              "targetBid": 0.30,
-              "maxBid": null,
-              "status": "active"
-            }
+
+```bash cURL
+curl -X PUT "https://api.criteo.com/{version}/retail-media/auction-line-items/2465695028166499188" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "data": {
+          "id": "2465695028166499188",
+          "type": "RetailMediaLineItem",
+          "attributes": {
+            "name": "My New Line Item",
+            "startDate": "2020-04-06",
+            "endDate": null,
+            "budget": null,
+            "monthlyPacing": 30.00,
+            "dailyPacing": null,
+            "isAutoDailyPacing": true,
+            "bidStrategy": "conversion",
+            "targetBid": 0.30,
+            "maxBid": null,
+            "status": "active"
           }
-        }'
-  ```
+        }
+      }'
+```
 
-  ```bash bash
-  import requests
-  import json
+```python Python
+import requests
+import json
 
-  url = "https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760"
+url = "https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760"
 
-  payload = json.dumps({
-    "data": {
-      "id": "2465695028166499188",
-      "type": "RetailMediaLineItem",
-      "attributes": {
-        "name": "My New Line Item",
-        "startDate": "2020-04-06",
-        "endDate": None,
-        "budget": None,
-        "monthlyPacing": 30.00,
-        "dailyPacing": None,
-        "isAutoDailyPacing": True,
-        "bidStrategy": "conversion",
-        "targetBid": 0.30,
-        "maxBid": None,
-        "status": "active"
-      }
-    }
-  })
-  headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-  }
-
-  response = requests.request("PUT", url, headers=headers, data=payload)
-
-  print(response.text)
-  ```
-
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-  MediaType mediaType = MediaType.parse("application/json");
-
-  RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"id\":\"2465695028166499188\",\"type\":\"RetailMediaLineItem\",\"attributes\":{\"name\":\"My New Line Item\",\"startDate\":\"2020-04-06\",\"endDate\":null,\"budget\":null,\"monthlyPacing\":30.00,\"dailyPacing\":null,\"isAutoDailyPacing\":true,\"bidStrategy\":\"conversion\",\"targetBid\":0.30,\"maxBid\":null,\"status\":\"active\"}}}");
-
-  Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760")
-    .method("PUT", body)
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Accept", "application/json")
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .build();
-  Response response = client.newCall(request).execute();
-  ```
-
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760');
-  $request->setMethod(HTTP_Request2::METHOD_PUT);
-  $request->setConfig(array(
-    'follow_redirects' => TRUE
-  ));
-
-  $request->setHeader(array(
-    'Content-Type' => 'application/json',
-    'Accept' => 'application/json',
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
-
-  $request->setBody('{"data":{"id":"2465695028166499188","type":"RetailMediaLineItem","attributes":{"name":"My New Line Item","startDate":"2020-04-06","endDate":null,"budget":null,"monthlyPacing":30.00,"dailyPacing":null,"isAutoDailyPacing":true,"bidStrategy":"conversion","targetBid":0.30,"maxBid":null,"status":"active"}}}');
-
-  try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-      echo $response->getBody();
-    }
-    
-    else {
-      echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-      $response->getReasonPhrase();
+payload = json.dumps({
+  "data": {
+    "id": "2465695028166499188",
+    "type": "RetailMediaLineItem",
+    "attributes": {
+      "name": "My New Line Item",
+      "startDate": "2020-04-06",
+      "endDate": None,
+      "budget": None,
+      "monthlyPacing": 30.00,
+      "dailyPacing": None,
+      "isAutoDailyPacing": True,
+      "bidStrategy": "conversion",
+      "targetBid": 0.30,
+      "maxBid": None,
+      "status": "active"
     }
   }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
 
-  catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
+response = requests.request("PUT", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"id\":\"2465695028166499188\",\"type\":\"RetailMediaLineItem\",\"attributes\":{\"name\":\"My New Line Item\",\"startDate\":\"2020-04-06\",\"endDate\":null,\"budget\":null,\"monthlyPacing\":30.00,\"dailyPacing\":null,\"isAutoDailyPacing\":true,\"bidStrategy\":\"conversion\",\"targetBid\":0.30,\"maxBid\":null,\"status\":\"active\"}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760")
+  .method("PUT", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/auction-line-items/358669652976373760');
+$request->setMethod(HTTP_Request2::METHOD_PUT);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{"data":{"id":"2465695028166499188","type":"RetailMediaLineItem","attributes":{"name":"My New Line Item","startDate":"2020-04-06","endDate":null,"budget":null,"monthlyPacing":30.00,"dailyPacing":null,"isAutoDailyPacing":true,"bidStrategy":"conversion","targetBid":0.30,"maxBid":null,"status":"active"}}}');
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
   }
-  ```
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": { 
-          "id": "2465695028166499188",
-          "type": "RetailMediaLineItem",
-          "attributes": {
-              "campaignId": "8343086999167541140",
-              "name": "My New Line Item",
-              "targetRetailerId": "18159942378514859684",
-              "startDate": "2020-04-06",
-              "endDate": null,
-              "budget": null,
-              "budgetSpent": 0.00,
-              "budgetRemaining": null,
-              "monthlyPacing": 3000.00,
-              "dailyPacing": 120.00,
-              "isAutoDailyPacing": true,
-              "bidStrategy": "conversion",
-              "targetBid": 0.30,
-              "maxBid": null,
-              "status": "draft",
-              "createdAt": "2020-04-06T06:11:23+00:00",
-              "updatedAt": "2020-04-06T06:17:48+00:00"
-          }
-      }
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": { 
+        "id": "2465695028166499188",
+        "type": "RetailMediaLineItem",
+        "attributes": {
+            "campaignId": "8343086999167541140",
+            "name": "My New Line Item",
+            "targetRetailerId": "18159942378514859684",
+            "startDate": "2020-04-06",
+            "endDate": null,
+            "budget": null,
+            "budgetSpent": 0.00,
+            "budgetRemaining": null,
+            "monthlyPacing": 3000.00,
+            "dailyPacing": 120.00,
+            "isAutoDailyPacing": true,
+            "bidStrategy": "conversion",
+            "targetBid": 0.30,
+            "maxBid": null,
+            "status": "draft",
+            "createdAt": "2020-04-06T06:11:23+00:00",
+            "updatedAt": "2020-04-06T06:17:48+00:00"
+        }
+    }
+}
+```
 
 ## **Responses**
 
-| Responses | Description                                                                                                                                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 🔵 `200`  | Call completed with success                                                                                                                                                                                  |
-| 🔵 `201`  | Line item created with success                                                                                                                                                                               |
-| 🔴 `400`  | Bad request leading to a validation error*Common validation errors*- Invalid `isAutoDailyPacing` - Cannot turn on `IsAutoDailyPacing` and add a `dailyPacing` value. Only one of the two options can be used |
-
-***
-
-[Onsite Sponsored Products](/retail-media/v2025.07/docs/onsite-sponsored-products)
-
-[Keywords](/retail-media/v2025.07/docs/keywords)
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Responses
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call completed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      201
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item created with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Bad request leading to a validation error
+    </p>
+    <p>
+     *Common validation errors*
+    </p>
+    <ul>
+     <li>
+      Invalid
+      <code>
+       isAutoDailyPacing
+      </code>
+      - Cannot turn on
+      <code>
+       IsAutoDailyPacing
+      </code>
+      and add a
+      <code>
+       dailyPacing
+      </code>
+      value. Only one of the two options can be used
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>

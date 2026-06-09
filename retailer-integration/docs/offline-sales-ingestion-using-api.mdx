@@ -1,0 +1,698 @@
+---
+title: Offline Sales Ingestion using API
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Custom Retailer guide/api-documentation-rmcms/offline-sales-ingestion-using-api.md
+description: Guide for Integrating Retailers Offline Sales Data with Commerce Yield Retail using an API Endpoint
+hidden: true
+---
+
+# Introduction
+
+Offline sales refer to purchases made in retail stores that can be attributed to an ad clicked or viewed online by the buyer. This document aims to provide all the necessary information needed to onboard on to this solution. Integration through Criteo’s offline sales onboarding API offers an automated way to upload your offline sales data.
+
+**Measure Impact**: Understand how digital campaigns influence in-store purchases and provide brands with a holistic view.
+
+**Boost Revenue**: Offer brands the value of combined online and in-store attribution to maximize campaign performance and budget allocation.
+
+<Note>
+  Learn more about what Offline sales are in [our Help Center](https://help.retailmedia.criteo.com/kb/guide/en/offline-sales-reporting-LTjBTYw7r3/Steps/3511218?1650461144505&lang=en).
+</Note>
+
+***
+
+# Sales Ingestion using API Implementation Guide
+
+The API endpoint is a writing REST API which uses a POST method with JSON Request body.
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text Endpoint
+https://widget.criteo.com/m/event?apiKey={unique_name_logs}
+```
+
+Here, `unique_name_logs` is only used for logging and is recommended to be in the format `clientname_offlinesales`
+
+***
+
+## Event Parameters
+
+### Account and Event Identifiers
+
+Identifiers must be explicitly provided in all data payloads when sending offline sales. There are three user IDs that are accepted, and it is required to include at least one of them:
+
+1. `retailer_visitor_id`
+2. `customer_id`
+3. `sha256 email `(Criteo accepts emails hashed with `SHA256`)
+
+You can choose to include more than one if necessary.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Example
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      account
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     The Criteo Account ID of the account you are sending the data to. Please reach out to your Criteo representative if you do not have this value.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      "account": 1234
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      ip
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The IP address of the user or
+     <code>
+      127.0.0.1
+     </code>
+     if not applicable.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      "ip": "127.0.0.1"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      site_type
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     It is mandatory to set this to
+     <code>
+      in-store
+     </code>
+     for this implementation
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      "site_type": "instore"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      user_segment
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Set value to 19 for in-store data
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      "user_segment": 19
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailer_visitor_id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     A unique unauthenticated User ID that is persistent across sessions on the same device
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      "retailer_visitor_id":"395733503"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Only 1 User ID is required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      customer_id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The ID of the authenticated user that is consistent in all logged sessions
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      "customer_id": "1a2b3c4d"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Only 1 User ID is required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id.email.sha256
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The hashed SHA256 email of the user whose offline sales we're receiving
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      "id": &#123;     "email": &#123;       "sha256": "3193sftf1a51ec93f1840e4570095b263a"           &#125; &#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Only 1 User ID is required
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+### Events
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      event
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of offline event that is being passed. Set the type to
+     <code>
+      trackTransaction
+     </code>
+     .
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timestamp
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The timestamp of when the event happened for the user.
+    </p>
+    <p>
+     Valid formats:
+    </p>
+    <p>
+     UNIX timestamp
+    </p>
+    <p>
+     <code>
+      yyyy'-'MM'-'dd'T'HH':'mm':'ssZ
+     </code>
+    </p>
+    <p>
+     <code>
+      yyyy'-'MM'-'dd'T'HH':'mm':'ssz
+     </code>
+    </p>
+    <p>
+     <code>
+      yyyy'-'MM'-'dd'T'HH':'mm':'sszzz
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The corresponding transaction ID. This will be used for deduplication and debugging.
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      store_id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the store where the sale occurred.
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      currency
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Currency of the transaction. This must follow the 3-letters ISO 4217 code. If blank, the transaction amount will be considered in the currency defined at the account level within Criteo.
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      item
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array
+    </p>
+   </td>
+   <td>
+    <p>
+     Array of products that were purchased in the
+     <code>
+      trackTransaction
+     </code>
+     event.
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      item.id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The unique identifier (Product ID) for each product purchased. This must match with your online product feed.
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      item.price
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     The product unit price in the correct currency.
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      item.quantity
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     The number of products purchased in the transaction.
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+### Example
+
+With Email as ID:
+
+```json
+
+{
+    "id": {
+        "email": {
+            "sha256": "000e3171a5110c35c69d060112bd0ba55d9631c7c2ec93f1840e4570095b263a"
+        }
+    },
+    "ip": "127.0.0.1",
+    "account": 11532,
+    "site_type": "instore",
+    "user_segment": 19,
+    "retailer_visitor_id": "", 
+    "customer_id": "",
+    "events": [
+        {
+            "event": "trackTransaction",
+            "id": "tr123456",
+            "store_id": "ID_STORE",
+            "timestamp": "2017-06-02T12:24:10Z",
+            "currency": "USD",
+            "item": [
+                {
+                    "id": "prod12345",
+                    "price": 23,
+                    "quantity": 1
+                },
+                {
+                    "id": "otherprod5436",
+                    "price": 102,
+                    "quantity": 3
+                }
+            ]
+        }
+    ]
+}
+```
+
+***
+
+## Attribution, UI Availability and Reporting
+
+<Warning>
+  Retailers need to send orders no later than **2 days after the transaction to allow for processing within a 1-day window before attribution**. Submissions of data older than 2 days will be rejected due to outdated timestamps, preventing proper integration.
+</Warning>
+
+It is recommended to send the data in real time. In this case, the latency of processing these orders is the same as online sales. You will be able to see data in the UI **within 8 hours of sale timestamp**.
+
+However, if this is not possible, and the sales are sent a few hours after they occur, it will take approximately +3 days (74 hours) to make offline sales available in the UI after ingestion.
+
+The process goes as follows:
+
+<Frame caption="Offline sales data attribution timeline">
+  <img src="https://files.readme.io/75293e91cf05a63a22d1bf2426bed203356ed0ab1a17244419698f833746a4ab-image.png" alt="Offline sales data attribution timeline" />
+</Frame>
+
+***
+
+## Reporting
+
+Offline attribution results will be accessible within the Commerce Yield Supply Metrics, and Commerce Max Demand-Brand Activity Dashboard and Attributed Transaction log.
+
+Offline results can be filtered through the offline sales channel filter.
+
+Currently, Offline Sales is being used for Attribution – it will impact Assisted Sales, Assisted Units, Units, Sales and ROAS. By looking at omnichannel sales, we gain a comprehensive view of ROAS across all touchpoints.
+
+<Note>
+  Learn more about where the Offline Sales appear in [our Help Center](https://help.retailmedia.criteo.com/kb/guide/en/offline-sales-reporting-LTjBTYw7r3/Steps/3511218,3511253).
+</Note>
+
+***
+
+## Hashing best practices
+
+1. Before hashing, all users' email addresses must be:
+   * **Trimmed**: all spaces before and after the user's email address must be removed
+   * **Cleaned**: removing comma, semicolon, quotes or double quotes
+   * **Converted to lowercase**
+   * **Encoded in UTF-8**
+2. To achieve high and consistent match rates, it is imperative to follow the **same hashing guidelines** when sending emails through the beacons for online events.
+3. Verify that the Product IDs in offline sales are consistent with the Retailer's Online Catalog.
+
+***
+
+# FAQs
+
+**What attribution settings are supported for store sales?**  
+Within Criteo CYield Platform, the standard attribution settings will still be available and will apply to all transactions (online & in-store). This includes any combination of the following: 7, 14, or 30-day click; zero, 1, 7, 14, and 30-day view-through.
+
+**Are store sales included as part of bidding or other optimizer models for Sponsored Product?**  
+Upon rollout, bidding and optimizer models are only taking online conversions and attributions into account.
+
+**What percentage of sales occur in-store? How much do cash transactions account for percentage-wise?**  
+Generally, over 80-90% of transactions occur in stores. Less than 15% of in-store transactions are made with cash.
+
+**Why is it crucial to share data within 2 days?**  
+Timely submission of offline sales data within 2 days of the transaction is critical for accurate attribution and reporting. Submissions of data older than 2 days will be rejected due to outdated timestamps, preventing proper integration. By adhering to the 2-day window, we ensure the highest standards of accuracy and reliability in our reporting.
+
+Delays require extensive recalculations, disrupting our ability to provide timely and reliable data, which can impact your service level agreements and reporting accuracy. Consistent, up-to-date data is essential for maintaining brand trust and delivering a seamless user experience.
+
+**When can we consider the results significant?**  
+We recommend waiting 30 days from the last ingestion issue to ensure it hasn’t affected our attribution numbers. Sales cannot be attributed to events that occurred more than 30 days ago.
+
+**Why is offline sales reporting not available for Offsite campaigns today? This is very important to drive adoption on Offsite campaigns, and closed loop measurement is a key need.**  
+The challenge lies in attributing offline sales to offsite campaigns, considering the impending deprecation of third-party cookies. With cookies becoming obsolete, tracking offline sales from online campaigns becomes increasingly complex. However, our product team is actively addressing this challenge by developing solutions to support offline sales attribution in a cookie-less environment. These solutions will enable retailers to track and attribute offline sales to offsite campaigns using alternative identifiers such as loyalty card IDs, hashed emails, and first-party cookie IDs. While this functionality is not available today, we are actively working on implementing it to provide a comprehensive solution for our clients.
+
+**How often is in-store sales attribution updated?**  
+Store sales data is ingested as soon as the API is called; However, due to processing times, there is a maximum of 3-day delay between a store sale and when conversion would be attributed and displayed in the UI. Store sales data is updated in the UI overnight.

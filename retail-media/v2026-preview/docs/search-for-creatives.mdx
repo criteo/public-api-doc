@@ -1,0 +1,552 @@
+---
+title: Search for Creatives
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/creatives/search-for-creatives.md
+description: This guide describes the endpoint that allows to search for creatives by account ID.
+---
+
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
+
+## Introduction
+
+In our stable versions, we currently offer three different endpoints to fetch information on creatives:
+
+* `/retail-media/accounts/:account-id/creatives`documented [here](https://developers.criteo.com/retail-media/reference/createcreative),
+* `/retail-media/accounts/:account-id/creatives/:creative-id`documented [here](https://developers.criteo.com/retail-media/reference/getcreative),
+* `/retail-media/accounts/:account-id/creatives/search?creative-ids=<string>&creative-ids=<string>`documented [here](https://developers.criteo.com/retail-media/reference/searchaccountcreatives).
+
+To modernize pagination and make creative retrieval more efficient, we are consolidating these endpoints into a single endpoint, described on this page. This simplifies the workflow by reducing both the number of API calls and the steps needed to reach the desired result.
+
+***
+
+## Endpoint
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      POST
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /retail-media/accounts/&#123;externalAccountId&#125;/creatives/search
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Search for creatives by external account ID
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      creativeName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The name of the creative.
+    </p>
+    <p>
+     Accepted values: string
+    </p>
+    <p>
+     Default: all
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      creativeIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Creative ID, generated internally by Criteo.
+    </p>
+    <p>
+     Accepted values: int64
+    </p>
+    <p>
+     Default: all
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      creativeTypes
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The types of creatives available, there are four acceptable values that can be used in combination or a single one if desired:
+    </p>
+    <ul>
+     <li>
+      <code>
+       Commerce Video
+      </code>
+      - When the ad unit contains a video &amp; SKUs.
+     </li>
+     <li>
+      <code>
+       Standard Video
+      </code>
+      - When the ad unit contains a video only
+     </li>
+     <li>
+      <code>
+       Commerce Display
+      </code>
+      - When the ad unit contains a static image &amp; SKUs.
+     </li>
+     <li>
+      <code>
+       Standard Display
+      </code>
+      - When the ad unit contains a static image only.
+     </li>
+    </ul>
+    <p>
+     Accepted values are case-insensitive.
+    </p>
+    <p>
+     Accepted values: string
+    </p>
+    <p>
+     Default: all
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      brandIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Brand ID, generated internally by Criteo and originated from brand name provided in retailer's Catalog
+    </p>
+    <p>
+     Accepted values: int64
+    </p>
+    <p>
+     Default: all
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      templateIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The unique ID of the Creative template.
+    </p>
+    <p>
+     Accepted values: int64
+    </p>
+    <p>
+     Default: all
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     List of Retailer IDs, to use as filter in the search or returned as containing the specific brand
+    </p>
+    <p>
+     Accepted values: list of strings of int32
+    </p>
+    <p>
+     Default: all
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageTypes
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Type page type the creative is designed for. There are eleven acceptable values that can be used in combination or a single one if desired:
+    </p>
+    <ul>
+     <li>
+      <code>
+       Search
+      </code>
+     </li>
+     <li>
+      <code>
+       Home
+      </code>
+     </li>
+     <li>
+      <code>
+       Checkout
+      </code>
+     </li>
+     <li>
+      <code>
+       Category
+      </code>
+     </li>
+     <li>
+      <code>
+       ProductDetail
+      </code>
+     </li>
+     <li>
+      <code>
+       Confirmation
+      </code>
+     </li>
+     <li>
+      <code>
+       Merchandising
+      </code>
+     </li>
+     <li>
+      <code>
+       Deals
+      </code>
+     </li>
+     <li>
+      <code>
+       Favorites
+      </code>
+     </li>
+     <li>
+      <code>
+       SearchBar
+      </code>
+     </li>
+     <li>
+      <code>
+       CategoryMenu
+      </code>
+     </li>
+    </ul>
+    <p>
+     Accepted values are case-insensitive
+    </p>
+    <p>
+     Accepted Values: string
+    </p>
+    <p>
+     Default: all
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<Info>
+  All of the filters are _optional_ and do not need to be input to run a successful request.
+  In the query parameter there is a limit that can be applied as well:
+
+  * The default limit is 50 if it is not included in the request.
+  * The maximum that a user can input is 500 in the request. A user will run into a 400 error in the event they attempt to go beyond this limit.
+</Info>
+
+<Info>
+  **Field Definitions**
+
+  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
+  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
+  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
+</Info>
+
+***
+
+## Search for Creatives
+
+This endpoint returns a list of creatives based on the provided filters. When more than one filter is supplied, all filters must be satisfied (logical AND expression). You can also search for creatives by external account ID.
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/retail-media/accounts/{externalAccountId}/creatives/search
+```
+
+**Request example**
+
+```json
+{
+    "data": {
+        "attributes": {
+            "CreativeName": "test"
+            "CreativeIds": ["758332652442947584","641313640540434432"],
+            "CreativeTypes":["CommerceVideo","StandardVideo","CommerceDisplay","StandardDisplay"],
+            "BrandIds": [88092],
+            "TemplateIds": [7,357],
+            "RetailerIds": [1209,1290],
+            "PageTypes": ["Search","Home","Browse","Checkout","Category","ProductDetail","Confirmation","Merchandising","Deals","Favorites","SearchBar","CategoryMenu"]                    
+        }
+    }
+}
+```
+
+**Response example**
+
+```json
+{
+    "metadata": {
+        "count": 1,
+        "offset": 0,
+        "limit": 50
+    },
+    "data": [
+        {
+            "id": "773514522353370000",
+            "type": "CreativeSearchResponse",
+            "attributes": {
+                "name": "test",
+                "status": "Ready",
+                "lineItems": [],
+                "retailerId": "1234",
+                "modifiedAt": "2025-11-04T11:50:33.3237295+00:00",
+                "createdAt": "2025-11-04T11:50:33.3237295+00:00",
+                "brandId": "900",
+                "creativeType": "CommerceVideo",
+                "pageType": [],
+                "preview": "https://retailmedia-static.criteo.com/creativeassets-live/cd8d6ef2de9407b2c5721425e938e7c715dfafca12eaff932fd9f7e38a632789.jpg",
+                "templateId": "123"
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Code
+    </p>
+   </th>
+   <th>
+    <p>
+     Reason
+    </p>
+   </th>
+   <th>
+    <p>
+     Client Exposed Message
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Validation issue: provided invalid offset and limit (either negative numbers or limit above the maximum).
+    </p>
+   </td>
+   <td>
+    <p>
+     Offset and limit should be non-negative
+    </p>
+    <p>
+     OR
+    </p>
+    <p>
+     Limit exceeds the maximum
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      403
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      access forbidden
+     </code>
+     : the user doesn’t have access to the account they are searching for.
+    </p>
+   </td>
+   <td>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+<br />
+
+<SendFeedback />

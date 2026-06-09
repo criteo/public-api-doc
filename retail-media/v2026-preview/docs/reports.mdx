@@ -1,0 +1,1970 @@
+---
+title: Reports
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/reports.md
+hidden: true
+---
+
+* Reports are requested & retrieved through asynchronous endpoints
+
+* All reports are at the daily granularity except for the Attributed Transactions report, which is hourly
+
+* Currently, reports are only available for any single campaign or any single line item
+
+* The report date window has a max of 100 days; data is retained for up to 3 years
+
+* Report attribution windows and timezone are fully configurable
+
+* Data latency is typically 2-8 hours but may have minor adjustments through the 120th hour before finalization
+
+* Data is batched per hour, and same-day data may be partially available\
+  Reports are cached for at least 1 hour before expiration
+
+* Exact expiration is indicated by the `expiresAt` field in the [/status](#get-status-of-a-specific-report) response
+
+* Learn more about our Attribution Rules in [CMax Help Center](https://help.retailmedia.criteo.com/kb/guide/en/about-attribution-sZH1iCyq5L/Steps/1034909)
+
+<Info>
+  **New Metrics**
+
+  * We intend to introduce new metrics periodically; these new columns will always be appended at the end of table outputs
+</Info>
+
+## Report Types
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      summary
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Daily metrics aggregated for any single campaign or line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageType
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Daily metrics segmented by the type of retailer web page an ad creative rendered on, such as home page, browse pages, search pages, product detail pages, checkout pages etc.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keyword
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Daily metrics segmented by the keyword or phrase used to land on the search page where an ad creative rendered; non-search pages are not associated with keywords
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productCategory
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Daily metrics segmented by the category of product advertised in the ad creative; categories are standardized across brands and retailers, which may differ from retailer-specific categories
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      product
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Daily metrics segmented by the product being advertised in the ad creative
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributedTransactions
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Hourly logs of each transaction attributable to an impression or a click; includes advanced dimensions such as the specific attribution rule used to match the impression or click to a sale
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Report Metrics
+
+* Most metrics are available for every report type, with some exceptions to `assistedSales` and `assistedUnits` which apply only to Line Item reports
+
+* Attributed Transactions report only has two metrics: `attributedSales` and `attributedUnits` 
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Metric
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      impressions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Measured when an ad creative renders on a page; an ad creative may display products from one or more campaigns; each unique campaign is counted once; used in all report types except for Product and Product Category reports
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Campaign reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      impressions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Measured when an ad creative renders on a page; an ad creative may display products from one or more line items; each unique line item is counted once; used in all report types except for Product and Product Category reports
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Line Item reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      impressions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Measured when a promoted product is rendered on the page, whether as a single ad creative or as one of many products in an ad creative; each product is counted once separately
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Product and Product Category reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clicks
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Measured when an ad creative is clicked on, which incurs a cost to the advertiser for open auction campaigns
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      spend
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     For open auctions campaigns, the total cost of clicks for the advertiser; inclusive of platform fees
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributedSales
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Sales revenue attributed to a click or impression; exclusive of
+     <code>
+      assistedSales
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributedUnits
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Units sold attributed to a click or impression; exclusive of
+     <code>
+      assistedUnits
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributedOrders
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Orders (or transactions) attributed to a click or impression
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      ctr
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Click-through-rate (CTR), calculated by dividing
+     <code>
+      clicks
+     </code>
+     by
+     <code>
+      productImpressions
+     </code>
+     for Product and Product Category report types; for all other report types, the appropriate
+     <code>
+      placementImpressions
+     </code>
+     is used instead
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      cpc
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Cost-per-click (CPC), calculated by dividing
+     <code>
+      spend
+     </code>
+     by
+     <code>
+      clicks
+     </code>
+     ; inclusive of platform fees
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      roas
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Return-on-ad-spend (ROAS), calculated by dividing
+     <code>
+      attributedSales
+     </code>
+     by
+     <code>
+      spend
+     </code>
+     ; inclusive of platform fees
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      cpo
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Cost-per-order (CPO), calculated by dividing
+     <code>
+      spend
+     </code>
+     by
+     <code>
+      attributedOrders
+     </code>
+     ; inclusive of platform fees
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      assistedSales
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Sales revenue attributed to a click or impression on the path to purchase leading to the sale; exclusive of
+     <code>
+      attributedSales
+     </code>
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Line Item reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      assistedUnits
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Units sold attributed to a click or impression on the path to purchase leading to the sale;
+     <code>
+      attributedUnits
+     </code>
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Line Item reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      uniqueVisitors
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Number of unique visitors an impression painted for
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Campaign, Line Item and Summary reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      frequency
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     An average representing how often an impression has painted for the same user
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Campaign, Line Item and Summary reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Report Dimensions
+
+* Available dimensions vary by report type
+
+* The Attributed Transactions report is documented separately below
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Dimension
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      date
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Date based on the requested time zone
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign ID of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign name of the request report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignTypeName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of campaign configured
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lineItemId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item ID of the requested report
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Line Item reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lineItemName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item name of the requested report
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Line Item reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer ID of the retailer the line item served on
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Line Item reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer name of the retailer the line item served on
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Line Item reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageTypeName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of retailer web page an ad creative rendered on, such as home page, browse pages, search pages, product detail pages, checkout pages etc.
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Page Type reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keyword
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Keyword or phrase used to land on the search page where an ad creative rendered
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Keyword reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advProductCategory
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Category of product advertised; categories are standardized across brands and retailers, which may differ from retailer-specific categories
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Product &amp; Product Category reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advProductId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product ID; this references the same ID used in
+     <a href="/retail-media/v2026-preview/docs/catalogs#catalog-product-attributes">
+      Catalogs
+     </a>
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Product reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advProductName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product name
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Product reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      brandId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product brand ID
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Product reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      brandName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product brand name; names are standardized across retailers
+    </p>
+    <ul>
+     <li>
+      <strong>
+       Report Types
+      </strong>
+      : Product reports only
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Attributed Transactions Report Dimensions & Metrics
+
+* Note this report contains historical data, so you can always determine how each sale was attributed according to the data and rules enforced at the time.
+
+* Keep this in mind when comparing data against other reports - properties such as `advProductCategory` could drift as product categories may evolve.
+
+* Learn more about our Attribution Rules in [CMax Help Center](https://help.retailmedia.criteo.com/kb/guide/en/about-attribution-sZH1iCyq5L/Steps/1034909)
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Column Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Column Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Date of advertisement
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advHour
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Hour of advertisement
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      purchasedDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Date of the attributed product purchase
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      purchasedHour
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Hour of the attributed product purchase
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      daysDifference
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Days between advertisement and purchase
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign ID of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign name of the request report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lineItemId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item ID of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lineItemName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item name of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer name of the retailer the line item served on
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageTypeName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of retailer web page an ad creative rendered on, such as home page, browse pages, search pages, product detail pages, checkout pages etc.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keyword
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Keyword or phrase used to land on the search page where an ad creative rendered
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advProductId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product ID; this references the same ID used in
+     <a href="/retail-media/v2026-preview/docs/catalogs#catalog-product-attributes">
+      Catalogs
+     </a>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advProductName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product name
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advProductCategory
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Category of product advertised; categories are standardized across brands and retailers, which may differ from retailer-specific categories
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advProductGtin
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product Global Trade Item Number (GTIN), if available; also known as European Article Number (EAN) or Universal Product Code (UPC)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advProductMpn
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product Manufacturer Part Number (MPN), if available
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      purchasedProductId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Purchased product ID; this references the same ID used in
+     <a href="/retail-media/v2026-preview/docs/catalogs#catalog-product-attributes">
+      Catalogs
+     </a>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      purchasedProductName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Purchased product name
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      purchasedProductCategory
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Category of product purchased; categories are standardized across brands and retailers, which may differ from retailer-specific categories
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      purchasedProductGtin
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Purchased product Global Trade Item Number (GTIN), if available; also known as European Article Number (EAN) or Universal Product Code (UPC)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      purchasedProductMpn
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Purchased product Manufacturer Part Number (MPN), if available
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advEngagement
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of ad engagement the purchase was attributed to
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advToPurchasedProductRelationship
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Attribution rule used to match the impression or click to a sale
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      salesChannel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Sales channel the attributed purchase was made through
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributionWindow
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimension
+    </p>
+   </td>
+   <td>
+    <p>
+     Click and view attribution window of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributedSales
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Metric
+    </p>
+   </td>
+   <td>
+    <p>
+     Sales revenue attributed to a click or impression
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributedUnits
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Metric
+    </p>
+   </td>
+   <td>
+    <p>
+     Units sold attributed to a click or impression
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Endpoints
+
+* `POST /reports/campaigns` Create a Campaign Report Request
+
+* `POST /reports/line-items` Create a Line Item Report Request
+
+* `GET /reports/{reportId}/status` Get Status of a Specific Report
+
+* `GET /reports/{reportId}/output` Download Output of a Specific Report 
+
+## Report Request Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Values
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+     or
+     <code>
+      ids
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign or Line Item ID of the desired report
+    </p>
+    <p>
+     Use
+     <code>
+      id
+     </code>
+     when requesting a single Campaign or Line item ID; use
+     <code>
+      ids
+     </code>
+     otherwise
+    </p>
+   </td>
+   <td>
+    <p>
+     a single or a group of
+     <code>
+      campaignId
+     </code>
+     or
+     <code>
+      lineItemId
+     </code>
+    </p>
+    <p>
+     e.g.
+    </p>
+    <p>
+     <code>
+      id
+     </code>
+     :
+     <code>
+      CampaignId
+     </code>
+     , OR
+    </p>
+    <p>
+     <code>
+      ids
+     </code>
+     : ly granularity except for the Att, (maximum 50 ids per call)
+    </p>
+   </td>
+   <td>
+    <p>
+     Required
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      reportType
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of report requested
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      summary
+     </code>
+     ,
+     <code>
+      pageType
+     </code>
+     ,
+     <code>
+      keyword
+     </code>
+     ,
+     <code>
+      productCategory
+     </code>
+     ,
+     <code>
+      product
+     </code>
+     ,
+     <code>
+      attributedTransactions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     R
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     Earliest day to report; inclusive
+    </p>
+   </td>
+   <td>
+    <p>
+     YYYY-MM-DD
+    </p>
+   </td>
+   <td>
+    <p>
+     R
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+     date
+    </p>
+   </td>
+   <td>
+    <p>
+     Latest day to report; inclusive
+    </p>
+   </td>
+   <td>
+    <p>
+     YYYY-MM-DD
+    </p>
+   </td>
+   <td>
+    <p>
+     R
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timeZone
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Time zone for the report
+    </p>
+   </td>
+   <td>
+    <p>
+     database tz syntax, eg.
+     <code>
+      America/New_York
+     </code>
+     ,
+     <code>
+      Europe/Paris
+     </code>
+     ,
+     <code>
+      UTC
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     R
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clickAttributionWindow
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if
+     <code>
+      viewAttributionWindow
+     </code>
+     is
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      7D
+     </code>
+     ,
+     <code>
+      14D
+     </code>
+     ,
+     <code>
+      30D
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     R
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      viewAttributionWindow
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to
+     <code>
+      clickAttributionWindow
+     </code>
+     ; must be specified if
+     <code>
+      clickAttributionWindow
+     </code>
+     is
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      none
+     </code>
+     ,
+     <code>
+      1D
+     </code>
+     ,
+     <code>
+      7D
+     </code>
+     ,
+     <code>
+      14D
+     </code>
+     ,
+     <code>
+      30D
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     R
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      format
+     </code>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Format of the report data returned
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      json-compact
+     </code>
+     (default),
+     <code>
+      json-newline
+     </code>
+     ,
+     <code>
+      json
+     </code>
+     ,
+     <code>
+      csv
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 1 of 3**
+
+  * First, create a request for the campaign or line item report with the desired attributes
+  * This generates a `reportId` representing the report
+</Info>
+
+## Create a Report Request
+
+This endpoint creates a request for a campaign or line item report
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+**Sample Request** - *Campaign Report*
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.criteo.com/preview/retail-media/reports/campaigns" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaReportRequest",
+                "attributes": {
+                    "id": "8343086999167541140",
+                    "metrics": ["impressions"],
+      						  "dimensions": ["date"],
+                    "reportType": "summary",
+                    "startDate": "2020-04-06",
+                    "endDate": "2020-06-04",
+                    "timeZone": "America/New_York",
+                    "campaignType": "sponsoredProducts",
+      						  "salesChannel": "offline"
+                }
+            }
+        }'
+```
+
+```text Text
+https://api.criteo.com/preview/retail-media/reports/campaigns
+```
+</CodeGroup>
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/reports/line-items
+```
+
+**Sample Request** - *Line Item Report*
+
+```bash
+curl -X POST "https://api.criteo.com/preview/retail-media/reports/line-items" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaReportRequest",
+                "attributes": {
+                    "id": "8343086999167541140",
+                    "metrics": [
+                        "impressions"
+                    ],
+      						  "dimensions": [
+                        "date"
+                    ],
+                    "reportType": "summary",
+                    "startDate": "2020-04-06",
+                    "endDate": "2020-06-04",
+                    "timeZone": "America/New_York",
+                    "campaignType": "sponsoredProducts",
+      						  "salesChannel": "offline"
+                }
+            }
+        }'
+```
+
+**Sample Response** - *Both*
+
+```json
+{
+    "data": {
+        "type": "RetailMediaReportStatus",
+        "id": "2e733b8c-9983-4237-aab9-17a42f4267cb",
+        "attributes": {
+            "status": "pending",
+            "rowCount": null,
+            "fileSizeBytes": null,
+            "md5Checksum": null,
+            "createdAt": null,
+            "expiresAt": null,
+            "message": null
+        }
+    }
+}
+```
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 2 of 3**
+
+  * Next, use the `reportId` to poll the report status endpoint until one is successfully computed
+</Info>
+
+## Get Status of a Specific Report
+
+This endpoint retrieves the status of a specific report.  Status can be `pending`, `success`, `failure`, or `expired`
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/reports/{reportId}/status
+```
+
+**Sample Request**
+
+```bash
+curl -X GET "https://api.criteo.com/preview/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/status" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaReportStatus",
+        "id": "2e733b8c-9983-4237-aab9-17a42f4267cb",
+        "attributes": {
+            "status": "success",
+            "rowCount": null,
+            "fileSizeBytes": null,
+            "md5Checksum": null,
+            "createdAt": null,
+            "expiresAt": null,
+            "message": null
+        }
+    }
+}
+```
+
+**Sample Request**
+
+```bash
+curl -X GET "https://api.criteo.com/preview/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/status" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaReportStatus",
+        "id": "2e733b8c-9983-4237-aab9-17a42f4267cb",
+        "attributes": {
+            "status": "success",
+            "rowCount": 60,
+            "fileSizeBytes": 28967,
+            "md5Checksum": "2c15b77740028435ca476823df7fb4f8",
+            "createdAt": "2020-07-18T04:27:59.658Z",
+            "expiresAt": "2020-07-25T04:27:59.658Z",
+            "message": null
+        }
+    }
+}
+```
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 3 of 3**
+
+  * Finally, download the report using the report output endpoint
+  * Report outputs are cached for at least 1 hour before expiration
+  * Exact expiration is indicated by the `expiresAt` field in the /status response
+</Info>
+
+## Download Output of a Specific Report
+
+This endpoint returns the specific report in the requested format
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/reports/{reportId}/output
+```
+
+**Sample Request**
+
+```bash
+curl -X GET "https://api.criteo.com/preview/retail-media/reports/2e733b8c-9983-4237-aab9-17a42f4267cb/output" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json
+{
+    "columns": ["campaignId", "campaignName", "campaignType", "date", "impressions", "clicks", "ctr", "spend", "cpc", "attributedSales", "attributedUnits", "roas", "orders", "cpo"],
+    "data": [
+        ["8343086999167541140", "Campaign 123", "auction", "2020-04-06", 832400, 10066, 0.01209227439, 17816.82, 1.77, 315891.44, 6162, 17.7299562997, 5877, 3.0316181725],
+        ["8343086999167541140", "Campaign 123", "auction", "2020-04-07", 903520, 10129, 0.0112105985, 17827.04, 1.76, 244618.1, 4550, 13.7217451691, 4236, 4.2084608121],
+ 
+        // ...
+ 
+        ["8343086999167541140", "Campaign 123", "auction", "2020-06-03", 320477, 4733, 0.0147686105, 8472.07, 1.79, 217790, 5671, 25.7068225357, 5242, 1.6161903853],
+        ["8343086999167541140", "Campaign 123", "auction", "2020-06-04", 402933, 4908, 0.0121806851, 8638.08, 1.76, 195345.03, 5112, 22.6144038953, 4815, 1.7939937695]
+    ],
+    "rows": 60
+}
+```

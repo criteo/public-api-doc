@@ -1,6 +1,9 @@
 ---
-title: "Overview"
+title: Google Ad Manager (GAM) - Criteo Onsite Display
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Google Ad Manager (GAM)/gam-overview.md
 ---
+
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
 
 # Introduction
 
@@ -25,7 +28,7 @@ The GAM integration allows Criteo to serve display ads via creatives trafficked 
 # GAM Workflow
 
 <Frame caption="Overview of the GAM workflow">
-  <img src="/images/retailer-integration/docs/d6baeb7e397209e0fdac34b74ed3d9ae0833fb744a5146bedc34e74358d76b91-image.png" />
+  <img src="/images/retailer-integration/docs/d6baeb7e397209e0fdac34b74ed3d9ae0833fb744a5146bedc34e74358d76b91-image.png" alt="Overview of the GAM workflow" />
 </Frame>
 
 <Info>
@@ -42,7 +45,7 @@ On each page load, the retailer’s site triggers a GAM ad request using the GPT
 
 The retailer sets up a new line item in GAM for the placement to be monetized with Criteo demand. This line item includes the Criteo Standalone JavaScript Tag as creative.
 
-GAM will collect all relevant targeting parameters server-side via the Google macro : `%%PATTERN:TARGETINGMAP%%`, to feed the Criteo tag and substitute all relevant targeting infos.
+GAM will collect all relevant targeting parameters server-side via the Google macro :  `%%PATTERN:TARGETINGMAP%%`, to feed the Criteo tag and substitute all relevant targeting infos.
 
 ### Step 3: Criteo Tag Execution
 
@@ -69,34 +72,32 @@ The example below demonstrates the modification of a **Google Publisher Tag (GPT
 
 In order to pass all relevant targeting infos, the **Google Publisher Tag** will need to be modified. The `.setTargeting` invocations in the example below show an example with hard-coded values. In practice, the `rvid `and `context` values would have to be populated dynamically with real user data.
 
-<CodeGroup>
-  ```bash bash
-  <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+```javascript
+<script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+<script>
+  window.googletag = window.googletag || {cmd: []};
+  googletag.cmd.push(function() {
+    googletag.defineSlot('/2729856/BEN_TEST', [1024, 768], 'div-gpt-ad-1720721740722-0').addService(googletag.pubads())
+    
+    // RETAILER VISITOR ID = "TUoQPO58Wkr1dIYn234Eao"
+    .setTargeting("rvid","TUoQPO58Wkr1dIYn234Eao")
+    // CONTEXT (Keyword) = "laptop"
+    .setTargeting("context","laptop")
+    // Extra parameter example with the language : lang == "french"
+    .setTargeting("lang","french")
+
+    googletag.pubads().enableSingleRequest();
+    googletag.enableServices();
+  });
+</script>
+
+<!-- /2729856/BEN_TEST -->
+<div id='div-gpt-ad-1720721740722-0' style='min-width: 1024px; min-height: 768px;'>
   <script>
-    window.googletag = window.googletag || {cmd: []};
-    googletag.cmd.push(function() {
-      googletag.defineSlot('/2729856/BEN_TEST', [1024, 768], 'div-gpt-ad-1720721740722-0').addService(googletag.pubads())
-      
-      // RETAILER VISITOR ID = "TUoQPO58Wkr1dIYn234Eao"
-      .setTargeting("rvid","TUoQPO58Wkr1dIYn234Eao")
-      // CONTEXT (Keyword) = "laptop"
-      .setTargeting("context","laptop")
-      // Extra parameter example with the language : lang == "french"
-      .setTargeting("lang","french")
-
-      googletag.pubads().enableSingleRequest();
-      googletag.enableServices();
-    });
+    googletag.cmd.push(function() { googletag.display('div-gpt-ad-1720721740722-0'); });
   </script>
-
-  <!-- /2729856/BEN_TEST -->
-  <div id='div-gpt-ad-1720721740722-0' style='min-width: 1024px; min-height: 768px;'>
-    <script>
-      googletag.cmd.push(function() { googletag.display('div-gpt-ad-1720721740722-0'); });
-    </script>
-  </div>
-  ```
-</CodeGroup>
+</div>
+```
 
 ***
 
@@ -113,7 +114,7 @@ To be able to see those newly created parameter on your ad call, you must examin
 
 On the “Payload” tab of this request, find the `prev_scp` (slot level) and/or `cust_params` (page level) query string parameters.
 
-Those two parameters (`prev_scp` and/or `cust_params`) will carry all relevant parameters that our newly created standalone tag needs. Both `cust_params` (page level) and/or `prev_scp` (slot level) are going to be passed to the GAM Ad Server, and any information inside will be accessible via a macro.
+Those two parameters (`prev_scp` and/or `cust_params`) will carry all relevant parameters that our newly created standalone tag needs.  Both `cust_params` (page level) and/or `prev_scp` (slot level) are going to be passed to the GAM Ad Server, and any information inside will be accessible via a macro.
 
 ***
 
@@ -125,93 +126,89 @@ A modified version of the following tag needs to be uploaded in your GAM Ad Serv
 
 ### Criteo Tag (Copy & Modify)
 
-<CodeGroup>
-  ```bash bash
-  <script src="https://d.us.criteo.com/Delivery/ClientPaths/Library/rm.js?a=[TO_BE_REPLACED]"></script>
-  <script>
-    var targeting = %%PATTERN:TARGETINGMAP%%;
-    var criteoPartnerId = "[TO_BE_REPLACED]";
-    var pageId = "[TO_BE_REPLACED]";
-    var placementId = "[TO_BE_REPLACED]";
-    var context = targeting.[TO_BE_REPLACED][0];
-    var retailerVisitorId = targeting.[TO_BE_REPLACED][0];
-    var cacheBuster = %%CACHEBUSTER%%;
+```javascript
+<script src="https://d.us.criteo.com/Delivery/ClientPaths/Library/rm.js?a=[TO_BE_REPLACED]"></script>
+<script>
+  var targeting = %%PATTERN:TARGETINGMAP%%;
+  var criteoPartnerId = "[TO_BE_REPLACED]";
+  var pageId = "[TO_BE_REPLACED]";
+  var placementId = "[TO_BE_REPLACED]";
+  var context = targeting.[TO_BE_REPLACED][0];
+  var retailerVisitorId = targeting.[TO_BE_REPLACED][0];
+  var cacheBuster = %%CACHEBUSTER%%;
 
-    var passbackData = { [TO_BE_REPLACED] };
-    var renderData = { [TO_BE_REPLACED] };
+  var passbackData = { [TO_BE_REPLACED] };
+  var renderData = { [TO_BE_REPLACED] };
 
-    var scriptSrc = "https://d.us.criteo.com/delivery/v2/rmgam"
-      + "?criteo-partner-id=" + criteoPartnerId
-      + "&page-id=" + pageId
-      + "&placement-id=" + placementId
-      + "&context=" + context
-      + "&retailer-visitor-id=" + retailerVisitorId
-      + "&passbackData=" + encodeURIComponent(JSON.stringify(passbackData))
-      + "&renderData=" + encodeURIComponent(JSON.stringify(renderData))
-      + "&cb=" + cacheBuster;
+  var scriptSrc = "https://d.us.criteo.com/delivery/v2/rmgam"
+    + "?criteo-partner-id=" + criteoPartnerId
+    + "&page-id=" + pageId
+    + "&placement-id=" + placementId
+    + "&context=" + context
+    + "&retailer-visitor-id=" + retailerVisitorId
+    + "&passbackData=" + encodeURIComponent(JSON.stringify(passbackData))
+    + "&renderData=" + encodeURIComponent(JSON.stringify(renderData))
+    + "&cb=" + cacheBuster;
 
-    document.write('<scr' + 'ipt type="text/javascript" src="' + scriptSrc + '"></scr' + 'ipt>');
-  </script>
-  ```
-</CodeGroup>
+  document.write('<scr' + 'ipt type="text/javascript" src="' + scriptSrc + '"></scr' + 'ipt>');
+</script>
+```
 
 ***
 
 ### Detailed Criteo Tag (Example)
 
-<CodeGroup>
-  ```bash bash
-  // "345123" is the Retailer dedicated Criteo Partner ID
-  <script src="https://d.us.criteo.com/Delivery/ClientPaths/Library/rm.js?a=345123"></script>
-  <script>
+```javascript
+// "345123" is the Retailer dedicated Criteo Partner ID
+<script src="https://d.us.criteo.com/Delivery/ClientPaths/Library/rm.js?a=345123"></script>
+<script>
 
-  // %%PATTERN:TARGETINGMAP%% is used to collect all targeting infos from the GAM ad call
-  // In this example, it will contain: ("rvid","TUoQPO58Wkr1dIYn234Eao") and ("context","laptop") and ("lang","french")
-  var targeting = %%PATTERN:TARGETINGMAP%%;
+// %%PATTERN:TARGETINGMAP%% is used to collect all targeting infos from the GAM ad call
+// In this example, it will contain: ("rvid","TUoQPO58Wkr1dIYn234Eao") and ("context","laptop") and ("lang","french")
+var targeting = %%PATTERN:TARGETINGMAP%%;
 
-  // "345123" is the Retailer dedicated Criteo Partner ID
-  var criteoPartnerId = "345123";
+// "345123" is the Retailer dedicated Criteo Partner ID
+var criteoPartnerId = "345123";
 
-  // "pageId" is the page name as exposed in the Criteo configuration 
-  var pageId = "viewSearchResult_GAM_desktop";
+// "pageId" is the page name as exposed in the Criteo configuration 
+var pageId = "viewSearchResult_GAM_desktop";
 
-  // "placementId" is the placement name as exposed in the Criteo configuration 
-  var placementId = "search_bigbox_1_1_300x250";
+// "placementId" is the placement name as exposed in the Criteo configuration 
+var placementId = "search_bigbox_1_1_300x250";
 
-  // "context" can be a keyword, a category, a SKU ID. Criteo will use the page type to determine how to use this context
-  // In this example, context == "laptop" is inferred dynamically from the GPT tag: .setTargeting("context","laptop")
-  var context = targeting.context[0];
+// "context" can be a keyword, a category, a SKU ID. Criteo will use the page type to determine how to use this context
+// In this example, context == "laptop" is inferred dynamically from the GPT tag: .setTargeting("context","laptop")
+var context = targeting.context[0];
 
-  // "retailerVisitorId" is a unique `UserID` that is persistent across sessions on the same device
-  // In this example, retailerVisitorId == "TUoQPO58Wkr1dIYn234Eao" is inferred dynamically from the GPT tag: .setTargeting("rvid","TUoQPO58Wkr1dIYn234Eao")
-  var retailerVisitorId = targeting.rvid[0];
+// "retailerVisitorId" is a unique `UserID` that is persistent across sessions on the same device
+// In this example, retailerVisitorId == "TUoQPO58Wkr1dIYn234Eao" is inferred dynamically from the GPT tag: .setTargeting("rvid","TUoQPO58Wkr1dIYn234Eao")
+var retailerVisitorId = targeting.rvid[0];
 
-  // %%CACHEBUSTER%%\ is a macro generating a random number to prevent caching
-  var cacheBuster = %%CACHEBUSTER%%;
+// %%CACHEBUSTER%%\ is a macro generating a random number to prevent caching
+var cacheBuster = %%CACHEBUSTER%%;
 
-  // "passbackData" is used to pass extra data to populate dynamically the passback tag only.
-  // In this example, "passbackData" == {"targetingMap":{"rvid":["TUoQPO58Wkr1dIYn234Eao"],"context":["laptop"],"lang":["french"]}}
-  var passbackData = { targetingMap: targeting };
+// "passbackData" is used to pass extra data to populate dynamically the passback tag only.
+// In this example, "passbackData" == {"targetingMap":{"rvid":["TUoQPO58Wkr1dIYn234Eao"],"context":["laptop"],"lang":["french"]}}
+var passbackData = { targetingMap: targeting };
 
-  // "renderData" is used to pass extra data for to populate dynamically the ad only.
-  // In this example, "renderData" == {"rendering":"french"}, so that the library can select only French descriptions for example
-    var renderData = { rendering: targeting.lang };
+// "renderData" is used to pass extra data for to populate dynamically the ad only.
+// In this example, "renderData" == {"rendering":"french"}, so that the library can select only French descriptions for example
+  var renderData = { rendering: targeting.lang };
 
-  // The Criteo ad call is built here
-    var scriptSrc = "https://d.us.criteo.com/delivery/v2/rmgam"
-      + "?criteo-partner-id=" + criteoPartnerId
-      + "&page-id=" + pageId
-      + "&placement-id=" + placementId
-      + "&context=" + context
-      + "&retailer-visitor-id=" + retailerVisitorId
-      + "&passbackData=" + encodeURIComponent(JSON.stringify(passbackData))
-      + "&renderData=" + encodeURIComponent(JSON.stringify(renderData))
-      + "&cb=" + cacheBuster;
+// The Criteo ad call is built here
+  var scriptSrc = "https://d.us.criteo.com/delivery/v2/rmgam"
+    + "?criteo-partner-id=" + criteoPartnerId
+    + "&page-id=" + pageId
+    + "&placement-id=" + placementId
+    + "&context=" + context
+    + "&retailer-visitor-id=" + retailerVisitorId
+    + "&passbackData=" + encodeURIComponent(JSON.stringify(passbackData))
+    + "&renderData=" + encodeURIComponent(JSON.stringify(renderData))
+    + "&cb=" + cacheBuster;
 
-    document.write('<scr' + 'ipt type="text/javascript" src="' + scriptSrc + '"></scr' + 'ipt>');
-  </script>
-  ```
-</CodeGroup>
+  document.write('<scr' + 'ipt type="text/javascript" src="' + scriptSrc + '"></scr' + 'ipt>');
+</script>
+```
 
 ***
 
@@ -219,28 +216,26 @@ A modified version of the following tag needs to be uploaded in your GAM Ad Serv
 
 In the event Criteo does not have any ads to serve, Criteo needs to give the hand back to GAM in order to serve another ad. For this reason, you need to provide a **GAM passback tag** to Criteo so that Criteo can call back GAM. This tag looks like the following:
 
-<CodeGroup>
-  ```bash bash
-  <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" crossorigin="anonymous"></script>
-  <div id="gpt-passback">
-    <script>
-      window.googletag = window.googletag || {cmd: []};
-      googletag.cmd.push(function() {
-      googletag.defineSlot('/2729856/BEN_TEST', [1024, 768], 'gpt-passback').addService(googletag.pubads())
+```javascript
+<script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" crossorigin="anonymous"></script>
+<div id="gpt-passback">
+  <script>
+    window.googletag = window.googletag || {cmd: []};
+    googletag.cmd.push(function() {
+    googletag.defineSlot('/2729856/BEN_TEST', [1024, 768], 'gpt-passback').addService(googletag.pubads())
 
-      // To avoid calling the same line item if no ad and create an infinite loop, add an exclusion targeting keyword to your newly created line items and in your passback tag
-      .setTargeting("exclusionTargeting","CRITEO")
+    // To avoid calling the same line item if no ad and create an infinite loop, add an exclusion targeting keyword to your newly created line items and in your passback tag
+    .setTargeting("exclusionTargeting","CRITEO")
 
-      // To dynamically inject all the targeting to your passback tag, you can use "passbackData.targetingMap"
-      .updateTargetingFromMap(passbackData.targetingMap);
+    // To dynamically inject all the targeting to your passback tag, you can use "passbackData.targetingMap"
+    .updateTargetingFromMap(passbackData.targetingMap);
 
-      googletag.enableServices();
-      googletag.display('gpt-passback');
-      });
-    </script>
-  </div>
-  ```
-</CodeGroup>
+    googletag.enableServices();
+    googletag.display('gpt-passback');
+    });
+  </script>
+</div>
+```
 
 In this example, to avoid infinite loop, an exclusion targeting keyword ("exclusionTargeting = CRITEO") has been added to the passback tag and in the line item so that this specific line item will not serve again.
 
@@ -250,27 +245,457 @@ Also, you have the option to dynamically populate your passback tag, in this exa
 
 ## Criteo Ad call Parameters
 
-| Parameter             | Type             | Example(s)                                                                                                                                                                                                                                                                        | Description                                                                                                                                                                                                                     | Required                                                           |
-| --------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `criteo-partner-id`   | int              | `1234567`                                                                                                                                                                                                                                                                         | The key that corresponds with your specific partner ID within Criteo. Please reach out to your Technical Account Manager to set up if needed.                                                                                   | Yes                                                                |
-| `page-id`             | string           | `viewSearchResult_API_desktop`                                                                                                                                                                                                                                                    | The page name as exposed in the Criteo configuration. Please reach out to your Technical Account Manager to set up if needed.                                                                                                   | Yes (can be hardcoded)                                             |
-| `placement-id`        | string           | `InGrid`                                                                                                                                                                                                                                                                          | The placement name as exposed in the Criteo configuration. Please reach out to your Technical Account Manager to set up if needed.                                                                                              | Yes (can be hardcoded)                                             |
-| `retailer-visitor-id` | string           | `TUoQPO58Wkr1dIYn234Eao`                                                                                                                                                                                                                                                          | A unique `UserID` that is persistent across sessions on the same device.                                                                                                                                                        | Yes                                                                |
-| `context`             | string           | `laptop or Beverages>Beverages>Soda, or 1000068949`                                                                                                                                                                                                                               | Contextual data that can be any of: A keyword, A category, A SKU ID. Delivery will use the page type to determine how to use this context data to look up ads.                                                                  | Required for all page types except homepage                        |
-| `renderData`          | URL encoded JSON | URL Encoded: `%7B%22lang%22%3A%22french%22%7D` URL Decoded: `{"lang":"french"}`                                                                                                                                                                                                   | Used to pass extra data for rendering purpose only. In this example, the lang parameter would be used to select the ad language to render. It can be accessed from the creative response using: `renderData.lang` for example   | No (optional)                                                      |
-| `passbackData`        | URL encoded JSON | URL Encoded: `%7B%22targetingMap%22%3A%7B%22rvid%22%3A%5B%22TUoQPO58Wkr1dIYn234Eao%22%5D%2C%22context%22%3A%5B%22laptop%22%5D%2C%22lang%22%3A%5B%22french%22%5D%7D%7D` URL Decoded: `{"targetingMap":{"rvid":["TUoQPO58Wkr1dIYn234Eao"],"context":["laptop"],"lang":["french"]}}` | Used to pass extra data for to populate dynamically the passback tag only. It can be accessed from the Passback tag using: `passbackData.targetingMap` for example                                                              | No (optional)                                                      |
-| `cb`                  | string           | `2032430748`                                                                                                                                                                                                                                                                      | `cb` should be populated via the`%%CACHEBUSTER%%` macro that will generate a random number to prevent caching                                                                                                                   | No (optional)                                                      |
-| `regionId`            | string           | `42`                                                                                                                                                                                                                                                                              | Store ID selected by the user when browsing the retailer’s site. It should match the store IDs in the product feed. See more details [here](https://developers.criteo.com/retailer-integration/docs/api-parameters-1#regionid). | Yes, if Store IDs are defined in the product feed                  |
-| `gdpr`                | string           | `1, 2`                                                                                                                                                                                                                                                                            | Indicates if GDPR applies to this user. (1: yes, the user is in Europe and GDPR applies; 2: no, the user is outside Europe).                                                                                                    | Yes, if using TCFv2 standard                                       |
-| `gdpr_consent`        | string           | `CAGgAagBEADEAIQAfoB...`                                                                                                                                                                                                                                                          | The encoded TCFv2 consent string.                                                                                                                                                                                               | Yes, if using TCFv2 standard                                       |
-| `block`               | bit              | `1, 0`                                                                                                                                                                                                                                                                            | Value '1' is for opt-out users. (Value '0' can also be passed for opt-in users.)                                                                                                                                                | No, only when the user is opt-out and not using the TCFv2 standard |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Parameter
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Example(s)
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      criteo-partner-id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     int
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      1234567
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The key that corresponds with your specific partner ID within Criteo. Please reach out to your Technical Account Manager to set up if needed.
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      page-id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      viewSearchResult_API_desktop
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The page name as exposed in the Criteo configuration. Please reach out to your Technical Account Manager to set up if needed.
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes (can be hardcoded)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      placement-id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      InGrid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The placement name as exposed in the Criteo configuration. Please reach out to your Technical Account Manager to set up if needed.
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes (can be hardcoded)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailer-visitor-id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      TUoQPO58Wkr1dIYn234Eao
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     A unique
+     <code>
+      UserID
+     </code>
+     that is persistent across sessions on the same device.
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      context
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      laptop or Beverages&gt;Beverages&gt;Soda, or 1000068949
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Contextual data that can be any of: A keyword, A category, A SKU ID. Delivery will use the page type to determine how to use this context data to look up ads.
+    </p>
+   </td>
+   <td>
+    <p>
+     Required for all page types except homepage
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      renderData
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     URL encoded JSON
+    </p>
+   </td>
+   <td>
+    <p>
+     URL Encoded:
+     <code>
+      %7B%22lang%22%3A%22french%22%7D
+     </code>
+    </p>
+    <p>
+     URL Decoded:
+     <code>
+      &#123;"lang":"french"&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Used to pass extra data for rendering purpose only. In this example, the lang parameter would be used to select the ad language to render.
+    </p>
+    <p>
+     It can be accessed from the creative response using:
+     <code>
+      renderData.lang
+     </code>
+     for example
+    </p>
+   </td>
+   <td>
+    <p>
+     No (optional)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      passbackData
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     URL encoded JSON
+    </p>
+   </td>
+   <td>
+    <p>
+     URL Encoded:
+     <code>
+      %7B%22targetingMap%22%3A%7B%22rvid%22%3A%5B%22TUoQPO58Wkr1dIYn234Eao%22%5D%2C%22context%22%3A%5B%22laptop%22%5D%2C%22lang%22%3A%5B%22french%22%5D%7D%7D
+     </code>
+    </p>
+    <p>
+     URL Decoded:
+     <code>
+      &#123;"targetingMap":&#123;"rvid":["TUoQPO58Wkr1dIYn234Eao"],"context":["laptop"],"lang":["french"]&#125;&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Used to pass extra data for to populate dynamically the passback tag only.
+    </p>
+    <p>
+     It can be accessed from the Passback tag using:
+     <code>
+      passbackData.targetingMap
+     </code>
+     for example
+    </p>
+   </td>
+   <td>
+    <p>
+     No (optional)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      cb
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      2032430748
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      cb
+     </code>
+     should be populated via the
+     <code>
+      %%CACHEBUSTER%%
+     </code>
+     macro that will generate a random number to prevent caching
+    </p>
+   </td>
+   <td>
+    <p>
+     No (optional)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      regionId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      42
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Store ID selected by the user when browsing the retailer’s site. It should match the store IDs in the product feed. See more details
+     <a href="https://developers.criteo.com/retailer-integration/docs/api-parameters-1#regionid">
+      here
+     </a>
+     .
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes, if Store IDs are defined in the product feed
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      gdpr
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      1, 2
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates if GDPR applies to this user. (1: yes, the user is in Europe and GDPR applies; 2: no, the user is outside Europe).
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes, if using TCFv2 standard
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      gdpr_consent
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      CAGgAagBEADEAIQAfoB...
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The encoded TCFv2 consent string.
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes, if using TCFv2 standard
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      block
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     bit
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      1, 0
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Value '1' is for opt-out users. (Value '0' can also be passed for opt-in users.)
+    </p>
+   </td>
+   <td>
+    <p>
+     No, only when the user is opt-out and not using the TCFv2 standard
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-[OneTag for Offsite - Hybrid Apps](/retailer-integration/docs/onetag-offsite-for-hybrid-apps)
+<SendFeedback />

@@ -1,0 +1,568 @@
+---
+title: Mediamarkt Belgium
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Custom Retailer guide/mediamarkt-belgium.md
+hidden: true
+---
+
+<Info>
+  **This is a custom Feed documentation for Mediamarkt Belgium**
+
+  The full feed documentation can be found at: [Feed definition](/retailer-integration/docs/feed-definition)
+</Info>
+
+# Current feed
+
+We are currently already getting two feeds from Mediamarkt. They are provided by channable.com. We are getting one for French and a second one for Flemish. Those are a great start if we can use them in the future.
+
+## Current feed excerpt
+
+```xml
+<?xml version='1.0' encoding='utf-8'?>
+<rss xmlns:g="http://base.google.com/ns/1.0" xmlns:c="http://base.google.com/cns/1.0" version="2.0">
+    <channel>
+        <title>
+        CRITEO
+    </title>
+        <description>
+        CRITEO
+    </description>
+        <link>
+        https://files.channable.com/XXX.xml
+    </link>
+        <pubDate>
+        Thu, 22 Apr 2021 10:05:00 -0000
+    </pubDate>
+        <item>
+            &lt;Category&gt;Gaming, Entertainment &amp; Speelgoed&gt;Films &amp; Series&gt;Blu-ray Films&lt;/Category&gt;
+            <description>RITE</description>
+            <g:availability>2</g:availability>
+            <g:brand>WARNER HOME VIDEO</g:brand>
+            <g:condition>new</g:condition>
+            <g:google_product_category>Gaming, Entertainment &amp; Speelgoed&gt;Films &amp; Series&gt;Blu-ray Films</g:google_product_category>
+            <g:gtin>5051888079928</g:gtin>
+            <g:id>9444518</g:id>
+            <g:image_link>https://assets.mmsrg.com/isr/166325/c1/-/pixelboxx-mss-78592432/fee_786_587_png</g:image_link>
+            <g:price>12.99 EUR</g:price>
+            <g:sale_price>12.99 EUR</g:sale_price>
+            <g:shipping>
+                <g:country>BE</g:country>
+            </g:shipping>
+            <link>https://www.mediamarkt.be/nl/product/_warner-home-video-the-rite-blu-ray-9444518.html</link>
+            <title>The Rite - Blu-ray</title>
+        </item>
+    </channel>
+</rss>
+```
+
+# New feed setup
+
+We have different ways of handling multiple language with one retailer. In the case of Mediamarkt we propose to follow the proven Walmart Canada integration as example. For this to work we will still need two feeds but it will be one primary and one secondary one ( MMS choice to which one). Those feeds can be used by all criteo products and will be up to specs for all retail media products.
+
+## Primary feed
+
+The primary feed should contain all the fields that can be found at: [Feed parameters](/retailer-integration/docs/feed-parameters). It will be the feed considered as the source of truth and data with no cultural impact will be neglected if present in the secondary feed.  
+
+The Current feed can be used but we will need some extra fields to be able too function correctly
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Name
+    </p>
+   </th>
+   <th>
+    <p>
+     example
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      specifications
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      "Beeldschermgrootte (cm/inch)=16.5 cm / 6.5 inch, Processor= Octa Core, Geheugencapaciteit=128 GB, Geheugengrootte (RAM)=4 GB, SAT-Categorie=Categorie B: 0.4 tot 0.8 W/kg,Geheugenkaartlezer=Ja"
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      shipping_cost
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Gratis levering
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      shipping_information
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Voor 22u uur besteld, morgen geleverd
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      data-modelnumber
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      1885314
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      storeId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      98952
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      langlId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      -29
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      categoryId_0
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      666514
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      catEntryId_0
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      6843375
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Specifications field
+
+To be able to show the correct specs we need them to be in the feed. For that we think that a list of key value pairs would be best. As an example there is a Samsung phone below but if you prefer we can handle any other format that you can embed in the XML.
+
+### Shipping
+
+We need to show some extra shipping information on the ad : `shipping_cost` and `shipping_information`. Those will give us the possibility to show the correct information on the ad. Those should exactly show what we should print.
+
+### Mediamarkt internal ID's
+
+To be able to recreate some features such as the add to basket we saw that we would need some extra ID's. The following ID's will be needed if they are not identical then other provided information :
+
+* `data-modelnumber`
+* `storeId`
+* `langlId`
+* `categoryId_0`
+* `catEntryId_0`
+
+Those have been found by reverse engineering the add to cart button. If you think information is needed to recreate the buttons feel free to reach out
+
+### Samsung example
+
+<CodeGroup>
+
+```text Specifications
+"Beeldschermgrootte (cm/inch)=16.5 cm / 6.5 inch, Processor= Octa Core, Geheugencapaciteit=128 GB, Geheugengrootte (RAM)=4 GB, SAT-Categorie=Categorie B: 0.4 tot 0.8 W/kg,Geheugenkaartlezer=Ja"
+```
+
+```xml shipping
+<g:shipping_cost>Gratis levering</g:shipping_cost>
+<g:shipping_information>Voor 22u uur besteld, morgen geleverd</g:shipping_information>
+```
+</CodeGroup>
+
+<Info>
+  *** Red: specifications* Green: shipping cost* Blue: shipping information**
+</Info>
+
+![968](https://files.readme.io/5f8f291-MediamarktSpecs.PNG "MediamarktSpecs.PNG")
+
+## Secondary feed
+
+The secondary feed is only there to translate fields with visible text to the secondary language. It is a slimmed down version of the primary feed. For this feed it is important that the `id` exactly match the one in the primary feed.
+
+The current feed can be used but it can be slimmed down if needed because most fields will be neglected. Here is a list of fields that need to stay and the one that need too be added.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Specifications
+    </p>
+   </th>
+   <th>
+    <p>
+     Example
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+    <p>
+     Unique Identifier for the SKU
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      id, must match with the data shared in OneTag/API
+     </li>
+     <li>
+      240 char max
+     </li>
+     <li>
+      Quotation marks and non-ASCII characters are not supported
+     </li>
+     <li>
+      Case insensitive
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     <code>
+      9444518
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      title
+     </code>
+    </p>
+    <p>
+     Descriptive Name for the sku
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      500 char max
+     </li>
+     <li>
+      If multiple titles are possible then choose the longest
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     <code>
+      The Rite - Blu-ray
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      brand
+     </code>
+    </p>
+    <p>
+     Brand of the sku
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      70 char max
+     </li>
+     <li>
+      must start with either a letter or number
+     </li>
+     <li>
+      Recommended: only ASCII characters
+     </li>
+     <li>
+      (non-ASCII version of the brand can be added as extra parameter)
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     <code>
+      WARNER HOME VIDEO
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      description
+     </code>
+    </p>
+    <p>
+     description of the SKU
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      must start with either a letter or number
+     </li>
+     <li>
+      5000 char max
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     <code>
+      RITE
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      specifications
+     </code>
+    </p>
+    <p>
+     This is a specific field for Mediamarkt and is not present yet in the current feed
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      5000 char max
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     <code>
+      "Taille de l'affichage (cm/pouce)=16.5 cm / 6.5 pouces, Processeur= Octa Core, Capacité de la mémoire=128 GB, Taille de la mémoire (RAM)=4 GB, Catégorie DAS=Categorie B: 0.4 tot 0.8 W/kg, Fente pour cartes mémoire=Ja"
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      shipping_cost
+     </code>
+    </p>
+    <p>
+     This is a specific field for Mediamarkt and is not present yet in the current feed
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      5000 char max
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     <code>
+      Livraison gratuite
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      shipping_information
+     </code>
+    </p>
+    <p>
+     This is a specific field for Mediamarkt and is not present yet in the current feed
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      5000 char max
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     <code>
+      Commandé avant 22h, livré demain
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## New feed example
+
+<CodeGroup>
+
+```xml Primary
+<?xml version='1.0' encoding='utf-8'?>
+<rss xmlns:g="http://base.google.com/ns/1.0" xmlns:c="http://base.google.com/cns/1.0" version="2.0">
+    <channel>
+        <title>
+        CRITEO
+    </title>
+        <description>
+        CRITEO
+    </description>
+        <link>
+        https://files.channable.com/XXX.xml
+    </link>
+        <pubDate>
+        Thu, 22 Apr 2021 10:05:00 -0000
+    </pubDate>
+        <item>
+            &lt;Category&gt;Gaming, Entertainment &amp; Speelgoed&gt;Films &amp; Series&gt;Blu-ray Films&lt;/Category&gt;
+            <description>RITE</description>
+            <g:availability>2</g:availability>
+            <g:brand>WARNER HOME VIDEO</g:brand>
+            <g:condition>new</g:condition>
+            <g:google_product_category>Gaming, Entertainment &amp; Speelgoed&gt;Films &amp; Series&gt;Blu-ray Films</g:google_product_category>
+            <g:gtin>5051888079928</g:gtin>
+            <g:id>9444518</g:id>
+            <g:image_link>https://assets.mmsrg.com/isr/166325/c1/-/pixelboxx-mss-78592432/fee_786_587_png</g:image_link>
+            <g:price>12.99 EUR</g:price>
+            <g:sale_price>12.99 EUR</g:sale_price>
+            <g:shipping>
+                <g:country>BE</g:country>
+            </g:shipping>
+            <link>https://www.mediamarkt.be/nl/product/_warner-home-video-the-rite-blu-ray-9444518.html</link>
+            <title>The Rite - Blu-ray</title>
+            <specifications>Beeldschermgrootte (cm/inch)=16.5 cm / 6.5 inch, Processor= Octa Core, Geheugencapaciteit=128 GB, Geheugengrootte (RAM)=4 GB, SAT-Categorie=Categorie B: 0.4 tot 0.8 W/kg,Geheugenkaartlezer=Ja</specifications>
+            <shipping_cost>Gratis levering</shipping_cost>
+            <shipping_information>Voor 22u uur besteld, morgen geleverd</shipping_information>
+            <data-modelnumber>1885314</data-modelnumber>
+            <storeID>98952</storeID>
+            <langId>-29</langId>
+            <categoryId_0>666514</categoryId_0>
+            <catEntryId_0>6843375</catEntryId_0>
+        </item>
+    </channel>
+</rss>
+```
+
+```xml Secondary
+<?xml version='1.0' encoding='utf-8'?>
+<rss xmlns:g="http://base.google.com/ns/1.0" xmlns:c="http://base.google.com/cns/1.0" version="2.0">
+    <channel>
+        <title>
+        CRITEO FEED 
+    </title>
+        <description>
+        CRITEO FEED 
+    </description>
+        <link>
+        http://files.channable.com/XXX.xml
+    </link>
+        <pubDate>
+        Thu, 22 Apr 2021 11:03:45 -0000
+    </pubDate>
+        <item>
+            <description>RITE</description>
+            <g:brand>WARNER HOME VIDEO</g:brand>
+            <g:id>9444518</g:id>
+            <title>The Rite - Blu-ray</title>
+            <specifications>Taille de l'affichage (cm/pouce)=16.5 cm / 6.5 pouces, Processeur= Octa Core, Capacité de la mémoire=128 GB, Taille de la mémoire (RAM)=4 GB, Catégorie DAS=Categorie B: 0.4 tot 0.8 W/kg, Fente pour cartes mémoire=Ja</specifications>
+            <shipping_cost>Livraison gratuite</shipping_cost>
+            <shipping_information>Commandé avant 22h, livré demain</shipping_information>
+        </item>
+    </channel>
+</rss>
+```
+</CodeGroup>

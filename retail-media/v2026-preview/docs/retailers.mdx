@@ -1,0 +1,892 @@
+---
+title: Retailer Search
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Migrated to stable (2026.01)/retailers.md
+hidden: true
+---
+
+## Introduction
+
+A retailer offers a selection of products from multiple brands.
+
+Retailers act as publishers, providing advertising inventory for brands to promote their products.
+
+An account can have access to one or more retailers, with this access typically managed by Criteo.
+
+A retailer typically allows multiples types of pages to be targeted. A _page_ is an inventory that can be targeted by [Campaigns](/retail-media/v2025.07/docs/campaign) and  [Line Items](/retail-media/v2026-preview/docs/line-items) with specific configurations.
+
+***
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Method
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/retailers/search
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Search for Retailers associated with specific account
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Retailer Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer ID, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      name
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer name, arbitrary and defined during Retailer integration phase
+    </p>
+    <p>
+     Accepted values: up to 100-chars string
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignAvailabilities
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Set of retail media capabilities available for the specific Retailer, separated by the different
+     <code>
+      campaignType
+     </code>
+     x
+     <code>
+      buyType
+     </code>
+     pairs. It's dependent on their current technical integration and other business conditions
+    </p>
+    <p>
+     Accepted values: see table below
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Retailer Campaign Availability Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign type that the following attributes are available for
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      onsiteDisplay
+     </code>
+     ,
+     <code>
+      sponsoredProducts
+     </code>
+     ,
+     <code>
+      offsite
+     </code>
+     (case-insensitive)
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      buyType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Buy type for the ad impressions of the campaign, that the following attributes are available for
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      auction
+     </code>
+     ,
+     <code>
+      preferredDeals
+     </code>
+     ,
+     <code>
+      sponsorship
+     </code>
+     ,
+     <code>
+      offsite
+     </code>
+     (case-insensitive)
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      isAvailable
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      boolean
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Flag indicating if combination of
+     <code>
+      campaignType
+     </code>
+     x
+     <code>
+      buyType
+     </code>
+     is available for related Retailer
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      true
+     </code>
+     or
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      validCombinations
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     List of page type and environment where the campaign type &amp; buy type are available to deliver ad impressions
+    </p>
+    <p>
+     Accepted values: list of
+     <code>
+      pageType
+     </code>
+     x
+     <code>
+      pageEnvironmentType
+     </code>
+     pairs (see below)
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageTypes
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ``
+    </p>
+   </td>
+   <td>
+    <p>
+     Page type available in the current integration of the associated Retailer
+    </p>
+    <p>
+     Accepted values: case-insensitive values of
+    </p>
+    <ul>
+     <li>
+      <code>
+       home
+      </code>
+     </li>
+     <li>
+      <code>
+       search
+      </code>
+     </li>
+     <li>
+      <code>
+       category
+      </code>
+     </li>
+     <li>
+      <code>
+       productDetail
+      </code>
+     </li>
+     <li>
+      <code>
+       merchandising
+      </code>
+     </li>
+     <li>
+      <code>
+       deals
+      </code>
+     </li>
+     <li>
+      <code>
+       favorites
+      </code>
+     </li>
+     <li>
+      <code>
+       searchBar
+      </code>
+     </li>
+     <li>
+      <code>
+       categoryMenu
+      </code>
+     </li>
+     <li>
+      <code>
+       checkout
+      </code>
+     </li>
+     <li>
+      <code>
+       confirmation
+      </code>
+     </li>
+    </ul>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageEnvironmentType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ``
+    </p>
+   </td>
+   <td>
+    <p>
+     Environment where the page type is available in the associated Retailer integration
+    </p>
+    <p>
+     Accepted values: case-insensitive values of
+    </p>
+    <ul>
+     <li>
+      <code>
+       web
+      </code>
+     </li>
+     <li>
+      <code>
+       mobile
+      </code>
+     </li>
+     <li>
+      <code>
+       app
+      </code>
+     </li>
+     <li>
+      <code>
+       lockout
+      </code>
+     </li>
+     <li>
+      <code>
+       mixed
+      </code>
+     </li>
+     <li>
+      <code>
+       android
+      </code>
+     </li>
+     <li>
+      <code>
+       ios
+      </code>
+     </li>
+    </ul>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Search for Retailers
+
+This endpoint searches for retailers associated with the respective account and retrieves a set of retail media capabilities, allowing the user to set up campaigns accordingly.
+
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `5`, respectively. See [API Response](/retail-media/v2026-preview/docs/api-response#pagination).
+
+<Warning>
+  If the limit above is not respected, a dedicated error `400` with `Model validation error` will return.
+</Warning>
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/{accountId}/retailers/search
+```
+
+**Search Attributes**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerIdFilter
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional list of Retailer IDs, generated internally by Criteo, to retrieve retail media capabilities from
+    </p>
+    <p>
+     Accepted values: list of integers, empty list or
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.criteo.com/preview/retail-media/accounts/18446744073709551616/retailers/search?offset=0&limit=5" \
+  -H 'Accept: application/json' \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H 'Content-Type: application/json' \
+  -d '{
+          "data": {
+              "attributes": {
+                  "retailerIdFilter": [
+                      12345
+                  ]
+              }
+          }
+     }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/preview/retail-media/accounts/18446744073709551616/retailers/search?offset=0&limit=5"
+
+payload = json.dumps({
+  "data": {
+    "attributes": {
+      "retailerIdFilter": [
+        12345
+      ]
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"retailerIdFilter\":[12345]}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts/18446744073709551616/retailers/search?offset=0&limit=5")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts/18446744073709551616/retailers/search?offset=0&limit=5');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+$request->setBody('{"data": {"attributes": {"retailerIdFilter": [12345]}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "metadata": {
+        "count": 1,
+        "offset": 0,
+        "limit": 5
+    },
+    "data": [
+        {
+            "id": "299",
+            "type": "RetailerResult",
+            "attributes": {
+                "name": "Retailer 1234",
+                "campaignAvailabilities": [
+                    {
+                        "campaignType": "onsiteDisplay",
+                        "buyType": "auction",
+                        "isAvailable": true,
+                        "validCombinations": [
+                            {
+                                "pageType": "home",
+                                "pageEnvironmentType": "web"
+                            },
+                            {
+                                "pageType": "home",
+                                "pageEnvironmentType": "ios"
+                            },
+                            {
+                                "pageType": "search",
+                                "pageEnvironmentType": "web"
+                            },
+                            {
+                                "pageType": "category",
+                                "pageEnvironmentType": "web"
+                            },
+                            {
+                                "pageType": "productDetail",
+                                "pageEnvironmentType": "web"
+                            },
+
+                            // ...
+
+                            {
+                                "pageType": "confirmation",
+                                "pageEnvironmentType": "web"
+                            }
+                        ]
+                    },
+                    {
+                        "campaignType": "onsiteDisplay",
+                        "buyType": "preferredDeals",
+                        "isAvailable": true,
+                        "validCombinations": [
+                            {
+                                "pageType": "home",
+                                "pageEnvironmentType": "web"
+                            },
+
+                            // ...
+
+                            {
+                                "pageType": "confirmation",
+                                "pageEnvironmentType": "web"
+                            }
+                        ]
+                    },
+                    {
+                        "campaignType": "onsiteDisplay",
+                        "buyType": "sponsorship",
+                        "isAvailable": false,
+                        "validCombinations": []
+                    },
+                    {
+                        "campaignType": "sponsoredProducts",
+                        "buyType": "auction",
+                        "isAvailable": true,
+                        "validCombinations": [
+                            {
+                                "pageType": "home",
+                                "pageEnvironmentType": "web"
+                            },
+
+                            // ...
+
+                            {
+                                "pageType": "confirmation",
+                                "pageEnvironmentType": "web"
+                            }
+                        ]
+                    },
+                    {
+                        "campaignType": "sponsoredProducts",
+                        "buyType": "sponsorship",
+                        "isAvailable": true,
+                        "validCombinations": [
+                            {
+                                "pageType": "home",
+                                "pageEnvironmentType": "web"
+                            },
+
+                            // ...
+
+                            {
+                                "pageType": "confirmation",
+                                "pageEnvironmentType": "web"
+                            }
+                        ]
+                    },
+                    {
+                        "campaignType": "offsite",
+                        "buyType": "offsite",
+                        "isAvailable": false,
+                        "validCombinations": []
+                    }
+                ]
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢
+    </p>
+    <p>
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     "_Model validation error: The field limit must be between 1 and 10_". This indicates that the endpoint above was invoked requesting more than 10 retailers, which is not possible. Define a
+     <code>
+      limit
+     </code>
+     up to
+     <code>
+      10
+     </code>
+     and use different
+     <code>
+      offset
+     </code>
+     values to navigate through the different result pages.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      403
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     API user does not have the authorization to make requests to the account ID. For an authorization request, follow the authorization request steps
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>

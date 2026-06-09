@@ -1,0 +1,861 @@
+---
+title: Account Fees
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Migrated to Stable (2025.10)/account-fees.md
+description: This page explains in more detail how to leverage the Account Fees feature through the API
+hidden: true
+---
+
+# Introduction
+
+The **Account Fees API** allows Private Market retailers to manage fee settings for their accounts through the external API. This includes retrieving fees for one or more accounts and updating those fees where permitted.
+
+***
+
+# Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /preview/retail-media/accounts/fees/search
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     This endpoint allows users to retrieve fee settings for one or more accounts they have access to.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /preview/retail-media/accounts/fees/update
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     This endpoint allows
+     <strong>
+      Private Market retailers
+     </strong>
+     to update fees for child seller or demand accounts.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<br />
+
+***
+
+## Search Account Fees
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/fees/search
+```
+
+This endpoint allows users to retrieve fee settings for one or more accounts they have access to.
+
+You can find more details in the API reference for this endpoint [here](https://developers.criteo.com/retail-media/v2025-preview/reference/post_preview-retail-media-accounts-fees-search).
+
+<Info>
+  This endpoint does not require Account Manage scope nor consent to the parent supply account.
+</Info>
+
+***
+
+### Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Writeable
+    </p>
+   </th>
+   <th>
+    <p>
+     Nullable
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Account ID
+    </p>
+    <p>
+     Accepted values: string of
+     <code>
+      int64
+     </code>
+    </p>
+    <p>
+     Up to
+     <strong>
+      25 account IDs
+     </strong>
+     can be queried at once.
+    </p>
+   </td>
+   <td>
+    <p>
+     Y
+    </p>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+### Optional Query Parameters
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Query Parameters
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      offsite
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      integer
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Pagination parameter, see
+     <a href="https://developers.criteo.com/retail-media/v2025.01/docs/api-response">
+      API Response
+     </a>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      limit
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      integer
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Pagination parameter, see
+     <a href="https://developers.criteo.com/retail-media/v2025.01/docs/api-response">
+      API Response
+     </a>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      fields
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Comma-separated list of optional attributes to include in the response.
+    </p>
+    <p>
+     Used to optimize response time and payload length.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+### Request Body
+
+```json
+{
+  "data": {
+    "attributes": {
+      "accountIds": [
+        "667131474078658560",
+        "680116036401160192"
+      ]
+    },
+    "type": "AccountFeesSearchRequest"
+  }
+}
+```
+
+Please note that:
+
+* `accountIds` is optional.
+* `accountIds: [""]` → returns an **empty response**.
+* `accountIds: []` → returns **all accounts the user has consent to**.
+* Up to **25 account IDs** can be queried at once in the request.
+* Must be sent as **an array** — not as a comma-separated string.
+
+***
+
+### Example Response
+
+```json
+{
+    "metadata": {
+        "count": 2,
+        "offset": 0,
+        "limit": 50
+    },
+    "data": [
+        {
+            "type": "PrivateMarketAccountFees",
+            "attributes": {
+                "accountId": "667131474078658560",
+                "fees": {
+                    "demandManaged": {
+                        "rate": 0.40
+                    },
+                    "managedService": {
+                        "rate": 0.20,
+                        "onsiteSponsoredProductsEnabled": false,
+                        "onsiteDisplayEnabled": false
+                    }
+                }
+            }
+        },
+        {
+            "type": "PrivateMarketAccountFees",
+            "attributes": {
+                "accountId": "680116036401160192",
+                "fees": {
+                    "demandManaged": {
+                        "rate": 0.10
+                    },
+                    "managedService": {
+                        "rate": 0.15,
+                        "onsiteSponsoredProductsEnabled": true,
+                        "onsiteDisplayEnabled": false
+                    }
+                }
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Update Account Fees (retailers only)
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts/fees/update
+```
+
+This endpoint allows **Private Market retailers** to update fees for child seller or demand accounts. You can find more details about this endpoint in our API reference [here](https://developers.criteo.com/retail-media/v2025-preview/reference/post_preview-retail-media-accounts-fees-update).
+
+To use this endpoint, users must meet the following requirements:
+
+* **OAuth Scope**: `Account Manage`
+* **Consent**:
+  * To the **parent supply account**
+  * To the **child accounts** for which fees are being managed
+
+***
+
+### Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Writable
+    </p>
+   </th>
+   <th>
+    <p>
+     Nullable
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Account ID
+    </p>
+    <p>
+     Accepted values: string of
+     <code>
+      int64
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Y
+    </p>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      fees
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Defines the set of fees you can set on the Account. Possible values:
+    </p>
+    <ul>
+     <li>
+      <code>
+       demandManaged
+      </code>
+      : DSP fee on private market demand account
+     </li>
+     <li>
+      <code>
+       managedService
+      </code>
+      : Managed Service fee on private market demand account
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      rate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      decimal
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Value to apply as the
+     <code>
+      demandManaged
+     </code>
+     and/or
+     <code>
+      managedService
+     </code>
+     fee.
+    </p>
+    <p>
+     Accepted range:
+     <strong>
+      0.00 to 1.00
+     </strong>
+    </p>
+    <p>
+     Max precision:
+     <strong>
+      2 decimal places
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     Y
+    </p>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      managedService
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The managed service fee that is applied to the account.
+    </p>
+    <p>
+     Options:
+    </p>
+    <ul>
+     <li>
+      <code>
+       onsiteDisplayEnabled
+      </code>
+     </li>
+     <li>
+      <code>
+       onsiteSponsoredProductsEnabled
+      </code>
+     </li>
+    </ul>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onsiteDisplayEnabled
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      boolean
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates if
+     <code>
+      Managed Service fee
+     </code>
+     is enabled for Onsite Display.
+    </p>
+   </td>
+   <td>
+    <p>
+     Y
+    </p>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onsiteSponsoredProductsEnabled
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      boolean
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates if
+     <code>
+      Managed Service fee
+     </code>
+     is enabled for Sponsored Products.
+    </p>
+   </td>
+   <td>
+    <p>
+     Y
+    </p>
+   </td>
+   <td>
+    <p>
+     N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+### Feature flag
+
+This functionality is available only to retailers who have the **Private Market Fees** setting enabled in their UI. If you do not see this feature in your account, please contact your support team or account representative.
+
+To have access to this functionality, retailers must:
+
+* Have access to the fee configuration UI,
+* Enable either or both fee types:
+* **Managed Service Fee**
+* **Demand Managed Fee**
+
+***
+
+### Request Body
+
+```json
+{
+  "data": {
+    "attributes": {
+      "accountIds": [
+        "618738804747743232"
+      ],
+      "fees": {
+        "demandManaged": {
+          "rate": "0"
+        },
+        "managedService": {
+          "onsiteDisplayEnabled": "true",
+          "onsiteSponsoredProductsEnabled": "true",
+          "rate": "0.01"
+        }
+      }
+    },
+    "type": "AccountFeesUpdateRequest"
+  }
+}
+```
+
+***
+
+### Validation Rules
+
+* `accountIds` is **required** — omitting it returns a **400 error**.
+* `demandManaged.rate` must be a **decimal between 0 and 1**.
+* `managedService.onsiteDisplayEnabled` and `onsiteSponsoredProductsEnabled` must be **boolean** (`true` or `false`).
+
+***
+
+### Example Response
+
+```json
+{
+  "data": {
+    "type": "AccountFeesUpdateResult",
+    "attributes": {
+      "successfullyUpdatedAccountIds": [
+        "618738804747743232"
+      ],
+      "failedUpdateAccountIds": []
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Title
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢
+    </p>
+    <p>
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Bad Request: Model Validation Error. Check that the acceptable values for the attributes are correct.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      403
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     API user does not have the authorization to make requests to the account ID. For an authorization request, follow
+    </p>
+    <p>
+     <a href="https://developers.criteo.com/retail-media/v2025-preview/docs/authorization-requests">
+      the authorization request steps
+     </a>
+    </p>
+    <p>
+     .
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+### Error responses examples
+
+#### Invalid permission
+
+```json
+{
+    "warnings": [],
+    "errors": [
+        {
+            "type": "authorization",
+            "title": "Authorization error",
+            "detail": "Resource access forbidden: does not have permissions"
+        }
+    ]
+}
+```
+
+#### Rate value is missing
+
+```json
+{
+    "warnings": [],
+    "errors": [
+        {
+            "traceId": "bb1c3376097f47934484ea67bf8e2755",
+            "type": "validation",
+            "code": "model-validation-error",
+            "title": "Model validation error",
+            "detail": "Error converting value {null} to type 'System.Decimal'. Path 'data.attributes.fees.demandManaged.rate', line 9, position 20."
+        },
+        {
+            "traceId": "bb1c3376097f47934484ea67bf8e2755",
+            "type": "validation",
+            "code": "model-validation-error",
+            "title": "Model validation error",
+            "detail": "Required property 'rate' expects a value but got null. Path 'data.attributes.fees.demandManaged', line 10, position 9."
+        }
+    ]
+}
+```

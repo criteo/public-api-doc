@@ -1,0 +1,399 @@
+---
+title: MPO Standard Reporting API
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/reporting/mpo-standard-reporting-api.md
+---
+
+## Overview
+
+The MPO Standard Reporting API provides aggregated performance statistics for Marketplace Performance Outcomes (MPO) across both:
+
+* **Multi-Seller campaigns**
+* **Single-Seller campaigns**
+
+These endpoints are designed for historical and batched reporting (days, weeks, months).   
+They are typically used for:
+
+* Marketplace BI dashboards and data warehouses
+* Scheduled exports and reporting pipelines
+* Seller-facing performance reports
+
+For low-latency / near real-time monitoring, use the **[MPO Real-Time Asynchronous API](/marketing-solutions/docs/getting-realtime-mpo-statistics)** instead.
+
+***
+
+## When to Use Standard vs. Real-Time Stats
+
+Use the **Standard Reporting API** when you need:
+
+* Aggregated metrics over longer time ranges (for example, last 30 days, last quarter)
+* Stable, post-processed data suitable for billing, margin analysis, and long-term trends
+* Scheduled batch exports into your own reporting stack
+
+Use the **[Real-Time API](/marketing-solutions/docs/getting-realtime-mpo-statistics)** when you need:
+
+* Short-window metrics (for example, last minutes or hours)
+* Monitoring of launches, tests, or rapid changes (budgets, activation, CPC)
+* Near real-time dashboards or alerts
+
+***
+
+## Shared Concepts
+
+***
+
+***
+
+## Aggregation Interval
+
+You control the aggregation granularity with `intervalSize`, typically:
+
+* **Day** – one row per day
+* **Month** – one row per calendar month
+* **Year** – one row per calendar year
+* **Hour** – for shorter windows; may have stricter max range
+
+Exact allowed values and maximum date range depend on your environment; see the API reference for constraints.
+
+***
+
+## Common Filtering Parameters
+
+All three endpoints share a common set of filters. The most important are:
+
+### Time range
+
+* `startDate` – include events from the start of this day (inclusive)
+* `endDate` – include events up to the end of this day (inclusive)
+
+### Row limit
+
+* `count` – maximum number of rows to return
+
+### Attribution
+
+* `clickAttributionPolicy` – `SameSeller`, `AnySeller`, or `Both` (where supported)
+
+Each endpoint then adds its own identifier filters (for example, `campaignId`, `sellerId`).
+
+***
+
+# Endpoints
+
+## Seller Statistics
+
+**Purpose:** Performance aggregated per seller over time.
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/sellers
+```
+
+### Typical Use Cases
+
+* Per-seller reporting for marketplace account management
+* Identifying top or underperforming sellers
+* Feeding seller-facing dashboards
+
+### Key Parameters
+
+* `advertiserId` (integer, optional)  
+  Restrict metrics to a specific advertiser (your marketplace).
+
+* `sellerId` (string, optional)  
+  Restrict to a single seller. If omitted, returns one row per seller per interval.
+
+* `startDate`, `endDate` (date, optional)  
+  Filter events to a given date range. If omitted:
+  * `endDate` defaults to today.
+  * `startDate` defaults to `endDate` (one day).
+
+* `intervalSize` (enum, optional)  
+  Aggregation granularity: `Day`, `Month`, `Year`, and in some environments `Hour`.
+
+* `count` (integer, optional)  
+  Maximum number of rows to return (useful for pagination or sampling).
+
+* `clickAttributionPolicy` (enum, optional)  
+  Attribution mode: `SameSeller`, `AnySeller`, or `Both` (where supported).
+
+### Response Shape (Conceptual)
+
+The response uses a **"columns + data"** structure like so:
+
+```json
+{
+  "columns": [
+    "sellerId",
+    "sellerName",
+    "day",
+    "impressions",
+    "clicks",
+    "cost",
+    "saleUnits",
+    "revenue",
+    "cr",
+    "cpo",
+    "cos",
+    "roas"
+  ],
+  "data": [
+    [
+      "1200972",
+      "sellerA",
+      "2026-03-01",
+      14542,
+      48,
+      3.36,
+      0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0
+    ]
+  ],
+  "rows": 1
+}
+```
+
+* The first columns identify the seller (`sellerId`, `sellerName`) and time bucket.
+* The remaining columns are the metrics.
+
+For **Single-Seller** and **Multi-Seller**, the schema is identical; what differs is how you populate `sellerId` and `sellerName`from your catalog and seller mapping.
+
+***
+
+## Campaign Statistics
+
+**Purpose:** Performance aggregated per campaign over time.
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/campaigns
+```
+
+This endpoint works for:
+
+* Multi-Seller MPO campaigns
+* Template / Single-Seller campaigns where you want statistics at campaign ID level
+
+### Key Parameters
+
+* `advertiserId` (integer, optional)  
+  Restrict to a specific advertiser.
+
+* `campaignId` (string, optional)  
+  Restrict to one campaign. If omitted, returns one row per campaign per interval.
+
+* `startDate`, `endDate`, `intervalSize`, `count`, `clickAttributionPolicy`  
+  Same semantics as for seller stats.
+
+### Response Shape (Conceptual)
+
+```json
+{
+  "columns": [
+    "campaignId",
+    "day",
+    "impressions",
+    "clicks",
+    "cost",
+    "saleUnits",
+    "revenue",
+    "cr",
+    "cpo",
+    "cos",
+    "roas"
+  ],
+  "data": [
+    [
+      "168423",
+      "2026-03-01",
+      3969032,
+      13410,
+      1111.295,
+      985,
+      190758099,
+      0.073,
+      1.128,
+      0.0,
+      171653.88
+    ]
+  ],
+  "rows": 1
+}
+```
+
+### Typical Use Cases
+
+* Overall performance for a Multi-Seller or template campaign
+* High-level reporting for commercial or product stakeholders
+* Sanity checks before drilling down at seller or seller-campaign level
+
+***
+
+## Seller-Campaign Statistics
+
+**Purpose:** Performance aggregated per (campaign, seller) pair over time.
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/seller-campaigns
+```
+
+This endpoint is the most granular standard reporting view and is key for:
+
+* Understanding how a specific seller performs within a given campaign
+* Comparing sellers within the same campaign
+* Single-Seller setups, where each seller effectively has a dedicated campaign ID
+
+### Key Parameters
+
+* `advertiserId` (integer, optional)  
+  Restrict to a specific advertiser.
+
+* `campaignId` (string, optional)  
+  Restrict to a specific campaign (or template).
+
+* `sellerId` (string, optional)  
+  Restrict to one seller. If omitted, you get rows across all sellers/campaigns.
+
+* `startDate`, `endDate`, `intervalSize`, `count`, `clickAttributionPolicy`  
+  Same semantics as for the other endpoints.
+
+### Response Shape (Conceptual)
+
+```json
+{
+  "columns": [
+    "campaignId",
+    "sellerId",
+    "sellerName",
+    "day",
+    "impressions",
+    "clicks",
+    "cost",
+    "saleUnits",
+    "revenue",
+    "cr",
+    "cpo",
+    "cos",
+    "roas"
+  ],
+  "data": [
+    [
+      "168423",
+      "1110222",
+      "sellerA",
+      "2026-03-01",
+      14542,
+      48,
+      3.36,
+      0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0
+    ]
+  ],
+  "rows": 1
+}
+```
+
+### Typical Use Cases
+
+* Per-seller performance within a multi-seller campaign
+* Single-Seller reporting when you want to filter on one (`sellerId`, `templateCampaignId`) pair
+* Feeding a seller dashboard that shows per-campaign breakdowns
+
+***
+
+## Multi-Seller vs Single-Seller: How to Think About IDs
+
+The endpoints are shared; what changes is how you interpret IDs:
+
+### Multi-Seller
+
+* `campaignId` – ID of a shared MPO campaign.
+* `sellerId` – marketplace seller identifier managed via MPO Sellers.
+* Seller-campaign rows show how each seller performs inside the pooled campaign.
+
+### Single-Seller
+
+* `campaignId` – often the template campaign ID (for high-level views).
+* `sellerId` – marketplace seller; still the primary key for per-seller reporting.
+* In some setups, a dedicated `sellerCampaignId` exists and may be used in other APIs; here you still filter by `campaignId` + `sellerId`.
+
+### When designing your reporting model
+
+<Info>
+  * Use **Seller Stats** when you care primarily about seller-level performance, regardless of campaign.
+  * Use **Campaign Stats** when you care primarily about campaign-level performance, regardless of seller.
+  * Use **Seller-Campaign Stats** when you need the intersection and want to understand how a seller behaves inside a specific campaign.
+</Info>
+
+***
+
+## Pagination and Count
+
+The `count` parameter lets you limit the maximum number of rows returned. Combined with `startDate` / `endDate`, you can build simple pagination, for example:
+
+1. Request `startDate = 2026-03-01`, `endDate = 2026-03-31`, `count = 100`.
+2. If you receive 100 rows and expect more:
+   * Use the last date returned as the new `startDate` for the next page (plus one day, depending on your logic).
+   * Repeat until a page returns fewer than `count` rows.
+
+If you need robust cursor-based pagination, check the latest API reference for advanced options.
+
+***
+
+## Error Handling
+
+The Standard Reporting API uses the same error semantics as other MPO endpoints:
+
+### 4xx – Client errors
+
+* Invalid date range (for example, start date after end date, or too long)
+* Unsupported `intervalSize`
+* Invalid `clickAttributionPolicy`
+* Invalid or unauthorized `advertiserId`, `campaignId`, or `sellerId`
+
+### 5xx – Server / transient errors
+
+* Retry with backoff; avoid tight retry loops.
+
+**Best practices:**
+
+* Validate inputs on your side (date formats, ranges, enums) before sending.
+* Implement backoff for network errors and 5xx responses.
+* Log both the HTTP status and error payload for diagnosis.
+
+## Integration Patterns
+
+A few common patterns for marketplaces:
+
+### Daily batch export for BI
+
+* Once per day, call Seller Stats and Campaign Stats for the previous day.
+* Load into your data warehouse and join with internal catalog and seller metadata.
+
+### Seller-facing reporting
+
+* Use Seller Stats (and optional Seller-Campaign Stats) filtered by `sellerId`.
+* Aggregate over a seller’s preferred time window (for example, last 7 days, last 30 days).
+* Expose metrics via your own portal UI.
+
+### Performance diagnosis
+
+* Use Seller-Campaign Stats for a given (`campaignId`, `sellerId`) to diagnose:
+  * Why a seller is under-delivering
+  * How performance changes after budget or template changes
+
+For short-window operational monitoring (for example, “did today’s budget change have an effect?”), complement these APIs with the **Real-Time Asynchronous API**.
+## What's next
+
+* [MPO Real-Time Asynchronous API](/marketing-solutions/docs/getting-realtime-mpo-statistics)

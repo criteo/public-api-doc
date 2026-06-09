@@ -1,0 +1,494 @@
+---
+title: 広告関連のアクティビティの追跡
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Commerce video (japanese)/tracking-ad-related-activity-japanese.md
+hidden: true
+---
+
+Commerce Video フォーマットでは、ビーコン には 3 つの異なるレベルがあり、各ビーコンは次のいずれかにリンクされます。
+
+* **フォーマット/広告掲載枠**に関連するイベント。
+* フォーマット内の**個々の SKU** に関連するイベント（フォーマット内で SKU が使用可能な場合）。
+* VAST video player 経由の**動画**に関連するイベント。
+
+これらの3つのレベルのビーコンの違いは、ビーコンの名前と説明とともに、以下の表にまとめられています。
+
+<Warning>
+  ****注意****
+
+  別途記載がない限り、ビーコンの呼び出しは**ページの読み込みごとに1回まで**です。
+</Warning>
+
+<Info>
+  ****補足****
+
+  すべての動画トラッキングビーコン（上記3つ目のイベントに関連）は、VAST XML ファイルの読み込み後に、**クライアント側のビデオプレーヤーによって直接呼び出されます**。
+</Info>
+
+<Info>
+  ****補足****
+
+  Criteo発行のビーコンはクライアントのブラウザ上で呼び出しすることを推奨いたします。サーバからビーコンの呼び出しをご希望の場合は、事前に弊社テクニカルチームにご相談ください。
+</Info>
+
+***
+
+## 広告配信枠レベルのビーコン
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     ビーコン名
+    </p>
+   </th>
+   <th>
+    <p>
+     ビーコンの説明
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnLoadBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     (まだ視認できない場合も含め、)フォーマット（動画 + 該当する場合は SKU）がページに表示されることを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnViewBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     フォーマットがユーザーによって閲覧されていることを示します（閲覧の判定 = フォーマットの50%以上が1秒間ユーザーのビューポートに表示される）。
+    </p>
+    <p>
+     *注：これはフォーマットのビューアビリティを示します。 ただし、動画のビューアビリティ（ユーザーのビューポートに2秒間フォーマットの50%以上が表示されること）は、OMID 機能を使用して追跡されます（「
+     <a href="/retailer-integration/docs/video-player-implementation-guide-desktopmobile-japanese">
+      OMID 互換スクリプトによる追加検証
+     </a>
+     」セクションを参照）。 このビーコンは、動画のビューアビリティを追跡する上で
+     <strong>
+      使用されません
+     </strong>
+     。*
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnClickBeacon
+     </code>
+     (200)
+    </p>
+   </td>
+   <td>
+    <p>
+     動画でも商品タイルでもない、クリック可能でリダイレクト可能な要素（CTA、動画周辺のクリック可能なテキストなど）がユーザーによってクリックされたことを示します。
+    </p>
+    <p>
+     動画または SKU 以外にクリック可能な要素がない場合は、このビーコンを無視できます。
+    </p>
+    <p>
+     *注：*
+    </p>
+    <p>
+     1. SKU のクリックには、SKU レベルで
+     <code>
+      OnClickBeacon
+     </code>
+     を使用する必要があります。
+    </p>
+    <p>
+     2. 動画自体のクリックには、VAST XML のクリック・トラッキング・ビーコンを使用する必要があります。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnFileClickBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     このビーコンは無視してください。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnBundleBasketChangeBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     このビーコンは無視してください。
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## SKU レベルのビーコン
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     ビーコン名
+    </p>
+   </th>
+   <th>
+    <p>
+     ビーコンの説明
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnLoadBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     (まだ視認できない場合も含め、)商品タイルがページ上にレンダリングされていることを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnViewBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     商品タイルがユーザーによって閲覧されたことを示します（閲覧の判定 = 1秒間にユーザーのビューポートに商品の50%以上が表示される）。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnClickBeacon
+     </code>
+     (200) または
+     <code>
+      ProductPage
+     </code>
+     (302)
+    </p>
+   </td>
+   <td>
+    <p>
+     このビーコンは、ユーザーが商品タイルの要素（画像、テキスト）をクリックして商品ページにリダイレクトするとトリガーされます。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnBasketChangeBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     このビーコンは、ユーザーが商品をカートに追加したときに呼び出されます。
+    </p>
+    <p>
+     *
+     <code>
+      Add to Cart
+     </code>
+     機能を利用されない場合はご放念ください。 ユーザーが
+     <code>
+      Add-to-Cart
+     </code>
+     CTA を繰り返しクリックすると、ビーコンが複数回呼び出される可能性があります。*
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnWishListBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     このビーコンは、ユーザーが商品をお気に入りに追加したときにトリガーされます。
+    </p>
+    <p>
+     *
+     <code>
+      Add-to-Wishlist
+     </code>
+     CTA を利用されない場合はご放念ください。 ユーザーが
+     <code>
+      Add-to-Wishlist
+     </code>
+     CTA を繰り返しクリックすると、ビーコンが複数回呼び出される可能性があります。*
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## VAST XML レベルのビーコン
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     名前
+    </p>
+   </th>
+   <th>
+    <p>
+     説明
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Impression
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     (まだ視認できない場合も含め、)動画がページ上にレンダリングされていることを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="start"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画が開始され、ユーザーのビューポートの50%に入ったときに呼び出されます。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="firstQuartile"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の25%が再生されたときに呼び出される必要があります。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="midpoint"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の50%が再生されたときに呼び出される必要があります。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="thirdQuartile"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の75%が再生されたときに呼び出される必要があります。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="complete"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画が100%再生されたときに呼び出される必要があります。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      ClickTracking
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ユーザーが動画をクリックするたびに呼び出され、VAST XML ファイルの
+     <code>
+      &lt;ClickThrough id="Criteo"&gt;
+     </code>
+     ノードに保存されているランディングページにリダイレクトされます。
+    </p>
+    <p>
+     *インタラクティブボタン（
+     <code>
+      pause / resume / mute / unmute
+     </code>
+     ）をクリックしても、このビーコンは呼び出されません。これらのアクションについては、以下の関連するトラッキングイベントを参照してください。*
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="mute"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画のミュートがすでに解除されているときに、ユーザーが
+     <code>
+      Mute
+     </code>
+     ボタンをクリックするたびに呼び出される必要があります。
+    </p>
+    <p>
+     *このアクションは、動画の開始時にトリガーしないでください。ユーザーが
+     <code>
+      Mute
+     </code>
+     ボタンをクリックして自主的にミュートした場合にのみ発生する必要があります。*
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="unmute"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画がミュートされているときに、ユーザーが
+     <code>
+      Unmute
+     </code>
+     ボタンをクリックするたびに呼び出される必要があります。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="pause"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の再生中に
+     <code>
+      Pause
+     </code>
+     ボタンをクリックするたびに呼び出されます。
+    </p>
+    <p>
+     *このビーコンはボタンのクリックによってのみ呼び出され、ビューポートを離れたために動画が一時停止しても呼び出されません。*
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="resume"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画が一時停止されているときに、
+     <code>
+      Resume
+     </code>
+     ボタンをクリックするたびに呼び出される必要があります。
+    </p>
+    <p>
+     *自動再開された場合には呼び出されず、ボタン操作によってのみ発生します。*
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+## What's next
+
+* [Video Player Implementation (desktop/mobile)(Japanese)](/retailer-integration/docs/video-player-implementation-desktopmobile-japanese)
+* [Video Player implementation (App:Android)(Japanese)](/retailer-integration/docs/video-player-implementation-appandroid-japanese)
+* [Video Player Implementation (App: iOS)(Japanese)](/retailer-integration/docs/video-player-implementation-app-ios-japanese)

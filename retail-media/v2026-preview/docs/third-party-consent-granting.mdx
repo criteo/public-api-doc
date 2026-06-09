@@ -1,0 +1,278 @@
+---
+title: Third Party Consent Granting
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Third Party/third-party-consent-granting.md
+hidden: true
+---
+
+# Overview
+
+The programmatic consent granting process for private market will involve two API applications called the Admin app (client credentials) and the Business app (authorization code).
+
+## Admin App
+
+* Is responsible for account creation and consent granting,
+* Will use [the `client credential`workflow](/retail-media/docs/oauth-app-client-credentials#/),
+* A retailer admin will grant consent on behalf of a retailer's supply account (using consent portal),
+* The admin app will use the new `Third-Party Accounts` domain only, to manage accounts programmatically.
+
+***
+
+## Business App
+
+* Will be responsible for all API operations on behalf of private market demand accounts,
+* Will use [the `authorization code` workflow](/retail-media/docs/oauth-app-authorization-code#/),
+* Consent will be managed through the admin app,
+* The business app may manage different business entities from all domains (`Analytics`, `Audience`, `Campaigns`, `Catalog`) except the `Third-Party Accounts` domain (managed exclusively through the admin app).
+
+***
+
+# Admin Application
+
+1. Log into your [partners.criteo.com](https://partners.criteo.com/dashboard/442/apps) account to create the Admin app. For the following steps, we will need to create a new `Client Credentials` application.
+
+## Step 1. Creating your admin application
+
+1. Let's start by creating the admin application and by providing the app details. Click `next` when done.
+
+![](https://files.readme.io/228926e-image.png)
+
+2. For the admin application, we will be using the `Client Credentials` as the authentication method. Choose the option and click `Create`.
+
+![](https://files.readme.io/ce977aa-image.png)
+
+3. Select the `C-Max and Retail Media` as your application service. ![](https://files.readme.io/3dc256f-image.png)
+4. Select only the `Third Party Accounts` domain and set it up on the `Manage` access.
+
+![51c6539ebcb2827cd3a5f9275bf2e59c88a6ba9032b1a8b06d72d25b0b83c486 image](https://files.readme.io/51c6539ebcb2827cd3a5f9275bf2e59c88a6ba9032b1a8b06d72d25b0b83c486-image.png)
+
+<Info>
+  **Information**
+
+  When selecting the `Third-Party Accounts` domain you will be shown the message, `Applications for account management cannot have any other authorization type.` This is expected. You can just click the `Got it` button.
+</Info>
+
+5. Click on `Activate App`
+6. In the `App credentials` section of your app details, click `Create new key` to download your keys. Make sure to store them safely.
+7. Generate a consent URL and send it to your account administrator. Users with admin, business manager or technical managers roles are allowed to grant consent.
+
+***
+
+# Business Application
+
+## Step 2. Creating your business application
+
+Start creating the admin application by providing the app details and click `Next`:
+
+![](https://files.readme.io/0a208b5-image.png)
+
+For the Business Application, we will be using the Authorization Code as the authentication method. Choose this option and click `Create`:
+
+![](https://files.readme.io/42ec0b9-image.png)
+
+3. Select `C-Max and Retail Media` as your application service,
+
+4. Select all relevant authorizations domains that your users will need to access - for more information, check [Create your app](/retail-media/docs/create-your-app#/):
+
+![Authorizations for Business Apps](https://files.readme.io/0ca3b3e9251f19a6d53653a851a688563cf669b4733d135a06611e2c9599abc9-Google_Chrome_2025-01-28_11.46.31.png)
+
+5. Click `Activate App`
+6. In the App credentials section of your app details, click `Create new key` to download your keys. Store them somewhere safe.
+
+***
+
+## Redirect URI
+
+In the Redirect URI section of your app details, register the `callbackUrl` where Criteo API will send your authorization code when consent is granted
+
+![](https://files.readme.io/02e1f6f-image.png)
+
+***
+
+# Demo with Postman
+
+In the following demo, we will do a simple step by step using Postman.
+
+## Step 3. Authenticate the Criteo API with the Admin app
+
+1. Generate a token for your Admin App with the Credentials created in step 1.4. In this step, you will need to run a `POST` call to `/oauth2/token`:
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/oauth2/token" \
+  -d 'grant_type=client_credentials' \
+  -d 'client_id={ADMIN_CLIENT_ID}' \
+  -d 'client_secret={ADMIN_CLIENT_SECRET}'
+```
+
+**Sample Response**
+
+```json
+{
+    "access_token": "&lt;TOKEN STRING&gt;",
+    "token_type": "Bearer",
+    "expires_in": 900
+}
+```
+
+**Postman Example**
+
+<Frame caption="After authenticating, you will receive the access token. Use this access token in the next step to grant the account consent">
+  <img src="https://files.readme.io/e2b810a-image.png" alt="After authenticating, you will receive the access token. Use this access token in the next step to grant the account consent" />
+</Frame>
+
+***
+
+## Step 4. Grant Account Consent
+
+Using the token generated in step 3, make a `POST` call to the consent grant endpoint.  
+The endpoint should respond with a 204 response status.
+
+<Info>
+  Third Party Consent granting is only successful for Private Market accounts created using your Admin App. To receive consent for a legacy Private Market account that was previously set up, please follow the standard consent process here: [Consent URL Generation](/retail-media/docs/consent-url-generation)
+</Info>
+
+```bash
+curl -L -X POST 'https://api.criteo.com/preview/retail-media/accounts/:accountId/grant-third-party-consent' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <ACCESS_TOKEN_FROM_ADMIN_APP>' \
+  -d '{
+    "data":{
+        "type": "GrantConsentModel",
+        "attributes": {
+            "clientId": "{BUSINESS_APP_CLIENT_ID}",
+            "callbackUrl": "{BUSINESS_APP_CALLBACK_URL}", // the redirect uri you registered on the partner portal 
+            "callbackState": "{DEMAND_ACCOUNT_ID}" // this is an optional parameter but we recommend you pass the account id so you can associate it with the right token
+        }
+    }
+}'
+```
+
+### Grant Consent Attributes
+
+* `clientId` - your business client ID that was generated in step 2.6
+* `callbackUrl` - the redirect URI you registered on the partner portal
+* `callbackState` (optional) - This is an optional parameter, but we recommend you pass the account`id` so you can associate it with the right token.
+
+***
+
+## Step 5. Exchange Auth. Code Token Linked to Demand Account
+
+1. As soon as you’ve completed step 4, you should receive a callback to your callback URL with the code. Use the code to make an addition `POST` call to `/oauth2/token` with code. The business app should use this token to request a pair of access and refresh tokens.
+
+```bash
+curl -L -X POST 'https://api.criteo.com/oauth2/token' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d 'grant_type=authorization_code' \
+  -d 'client_id={BUSINESS_APP_CLIENT_ID}' \
+  -d 'client_secret={BUSINESS_APP_CLIENT_SECRET}' \
+  -d 'code={CODE}' \
+  -d 'redirect_uri={BUSINESS_APP_CALLBACK_URL}'
+```
+
+<Frame caption="**Example**: On the right, after completing step 4.1 our callback URL receives the code. On the left a new POST authenticate call is made with the code">
+  <img src="https://files.readme.io/38a22dc-image.png" alt="**Example**: On the right, after completing step 4.1 our callback URL receives the code. On the left a new POST authenticate call is made with the code" />
+</Frame>
+
+2. You're now ready to make calls to Criteo API using the Business App.
+
+***
+
+### Using the Refresh Token
+
+To renew an access token, use the following request:
+
+```bash
+curl -X POST https://api.criteo.com/oauth2/token \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-d "grant_type=refresh_token&refresh_token={refresh_token}&client_id={client_id}&client_secret={client_secret}"
+
+```
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Parameter
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      grant_type=refresh_token
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates that you are providing a refresh token.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      refresh_token
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Refresh token shared when requesting an access token.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      client_id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Your public key accessible in app credentials section.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      client_secret
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Your secret key, accessible only once when creating a pair of
+     <code>
+      client_id
+     </code>
+     and
+     <code>
+      client_secret
+     </code>
+     in credentials section.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+The response will be the same as when issuing an access token.
+## What's next
+
+* [Account Creation & Management (Third-Party)](/retail-media/v2026-preview/docs/account-creation-management-third-party)

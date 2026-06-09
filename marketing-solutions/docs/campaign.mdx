@@ -1,124 +1,154 @@
 ---
-title: "Campaign"
+title: Campaign
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/campaigns/campaign.md
 ---
-
-1. Marketing Solutions Endpoints
-2. [Campaigns](/marketing-solutions/docs/campaigns)
 
 ## Campaign Example
 
 The following is an example of the JSON data structure of a Campaign. Additional details about the individual attributes of Campaigns can be found below.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "type": "Campaign",
-      "attributes": {
-          "name": "My Campaign",
-          "advertiserId": 12345,
-          "goal": "Retention",
-          "spendLimit": {
-              "spendLimitRenewal": "daily",
-              "spendLimitType": "capped",
-              "spendLimitAmount": 123.45
-          }
+```json JSON
+{
+  "type": "Campaign",
+  "attributes": {
+    "name": "My Campaign",
+    "advertiserId": "12345",
+    "goal": "Retention",
+    "spendLimit": {
+      "spendLimitType": "capped",
+      "spendLimitRenewal": "daily",
+      "spendLimitAmount": 123.45
+    },
+    "budgetAutomation": {
+      "enabled": true,
+      "budgetConfiguration": {
+        "adSetObjectives": "conversions"
       }
+    }
   }
-  ```
-</CodeGroup>
+}
+```
 
-***
+---
 
 ## Campaign Attributes
 
-**`name`** Currently read-only. The Campaign name, set by the advertiser.
+**`name`**  
+Currently read-only. The Campaign name, set by the advertiser.
 
-**`advertiserId`** Read-only. The advertiser associated with the Campaign.
+**`advertiserId`**  
+Read-only. The advertiser associated with the Campaign.
 
-**`goal`** The marketing goal of the Campaign. Can be `Acquisition`, `Retention` or `Unspecified` (only for older campaigns).
+**`goal`**  
+The marketing goal of the Campaign. Can be `Acquisition`, `Retention` or `Unspecified` (only for older campaigns).
 
-**`spendLimit.spendLimitRenewal`** The cadence of spend limit renewal. Can be `daily`, `monthly`, `lifetime`, or `undefined` in the case of an `uncapped` limit type.
+**`spendLimit.spendLimitType`**  
+Whether the Campaign spend is capped or not. Can be `capped` or `uncapped`.
 
-**`spendLimit.spendLimitType`** Whether the Campaign spend is capped or not. Can be `capped` or `uncapped`.
+**`spendLimit.spendLimitRenewal`**  
+The cadence of spend limit renewal. Can be `daily`, `monthly`, `lifetime`, or `undefined`. The value `undefined` is only returned for an `uncapped` spend limit.
 
-**`spendLimit.spendLimitAmount`** A decimal value representing the spend limit for the Campaign. If `spendLimitType` is `uncapped`, the value will be `null`.
+**`spendLimit.spendLimitAmount`**  
+A decimal value representing the spend limit for the Campaign in the advertiser's currency. It is required when `spendLimitType` is `capped`. If `spendLimitType` is `uncapped`, the value is `null`. In `PATCH` requests, set it to `null` when switching a Campaign to `uncapped`.
 
-***
+**`budgetAutomation.enabled`**  
+Whether Campaign-level budget automation is active. To enable budget automation, set this field to `true` and provide a valid `budgetConfiguration`. If omitted, it defaults to `false`.
+
+**`budgetAutomation.budgetConfiguration.adSetObjectives`**  
+The optimization objective used by budget automation. Can be `conversions`, `revenue`, `visits`, or `videoViews`. This field is required when `budgetAutomation.enabled` is `true`.
+
+---
 
 ## Create a campaign
 
-A new campaign can be created for a specific advertiser by making a `POST` call to the Campaign's endpoint. The request body should specify the type (`Campaign`) and the [campaign attributes](/marketing-solutions/docs/campaign#campaign-attributes).
+A new campaign can be created for a specific advertiser by making a `POST` call to the Campaign's endpoint.  
+The request body should specify the type (`Campaign`) and the [campaign attributes](/marketing-solutions/docs/campaign#campaign-attributes).
 
 <Info>
   **Spend Limit**
 
-  `spendLimitRenewal` and `spendLimitAmount` are only relevant when `spendLimitType` is set to capped.
+If `spendLimitType` is `capped`, both `spendLimitRenewal` and `spendLimitAmount` are required.
+If `spendLimitType` is `uncapped`, omit `spendLimitRenewal` and `spendLimitAmount` from the request. The response returns `spendLimitRenewal` as `undefined` and `spendLimitAmount` as `null`.
 </Info>
 
 <Info>
   **`Goal`**
 
-  The field `goal` is mandatory and can be either `Acquisition` or `Retention`.
+The field `goal` is mandatory and can be either `Acquisition` or `Retention`.
 </Info>
 
-![](/images/marketing-solutions/docs/b0623eb-post.png)
+<Info>
+  **Budget Automation**
 
-```
+`budgetAutomation` is optional.
+To create a Campaign with budget automation enabled, set `enabled` to `true` and provide `budgetConfiguration.adSetObjectives`.
+If `budgetAutomation` is omitted, the Campaign is created with budget automation disabled.
+</Info>
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
 https://api.criteo.com/2026-01/marketing-solutions/campaigns
 ```
 
 **Request sample**
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data":
-  	{
-      "type": "Campaign",
-      "id": "99999",
-       
-      "attributes": {
-          "name": "My Campaign",
-          "advertiserId": 12345,
-          "goal": "Retention",
-          "spendLimit": {
-              "spendLimitRenewal": "daily",
-              "spendLimitType": "capped",
-              "spendLimitAmount": 123.45
-          }
-     }
+```json JSON
+{
+  "data": {
+    "type": "Campaign",
+    "attributes": {
+      "name": "My Campaign",
+      "advertiserId": "12345",
+      "goal": "Retention",
+      "spendLimit": {
+        "spendLimitType": "capped",
+        "spendLimitRenewal": "daily",
+        "spendLimitAmount": 123.45
+      },
+      "budgetAutomation": {
+        "enabled": true,
+        "budgetConfiguration": {
+          "adSetObjectives": "conversions"
+        }
+      }
+    }
   }
-  ```
-</CodeGroup>
+}
+```
 
 **Response sample**
 
-The API will return an array of the ID, the type (`Campaign`) and the campaign attributes of the new campaign.
+The API will return an array of ID, the type (`Campaign`) and the Campaign attributes of the new Campaign.
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": {
-      "id": "99999",
-      "type": "Campaign",
-      "attributes": {
-        "name": "My Campaign",
-        "advertiserId": "12345",
-        "spendLimit": {
-          "spendLimitType": "capped",
-          "spendLimitRenewal": "daily",
-          "spendLimitAmount": 123.45
-        },
-        "goal": "Retention"
-      }
-    },
-    "warnings": [],
-    "errors": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+  "data": {
+    "id": "99999",
+    "type": "Campaign",
+    "attributes": {
+      "name": "My Campaign",
+      "advertiserId": "12345",
+      "spendLimit": {
+        "spendLimitType": "capped",
+        "spendLimitRenewal": "daily",
+        "spendLimitAmount": 123.45
+      },
+      "budgetAutomation": {
+        "enabled": true,
+        "budgetConfiguration": {
+          "adSetObjectives": "conversions"
+        }
+      },
+      "goal": "Retention"
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
 
-***
+---
 
 ## Searching Campaigns
 
@@ -130,81 +160,84 @@ Using filters, you can restrict the returned results to particular `advertiserId
 
 For example, to retrieve the Campaigns in your portfolio related to a particular advertiser, filter by `advertiserIds`:
 
-![](/images/marketing-solutions/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/2026-01/marketing-solutions/campaigns/search
 ```
 
 **Sample request**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "filters": {
-          "advertiserIds": [ "12345" ]
-      }
+```json JSON
+{
+  "filters": {
+    "advertiserIds": ["12345"]
   }
-  ```
-</CodeGroup>
+}
+```
 
 **Sample response**
 
 The API will return an array of Campaigns that match the provided filters:
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "Campaign",
-              "id": "99999",
-              "attributes": {
-                 "name": "My Campaign",
-                 "advertiserId": 12345,
-                 "goal": "Retention",
-                 "spendLimit": {
-                      "spendLimitRenewal": "daily",
-                      "spendLimitType": "capped",
-                      "spendLimitAmount": 123.45
-                  }
-              }
+```json JSON
+{
+  "data": [
+    {
+      "type": "Campaign",
+      "id": "99999",
+      "attributes": {
+        "name": "My Campaign",
+        "advertiserId": "12345",
+        "goal": "Retention",
+        "spendLimit": {
+          "spendLimitType": "capped",
+          "spendLimitRenewal": "daily",
+          "spendLimitAmount": 123.45
+        },
+        "budgetAutomation": {
+          "enabled": true,
+          "automatedBudgetConfiguration": {
+            "adSetOptimizationObjective": "conversions"
           }
-      ],
-      "errors": []
-  }
-  ```
-</CodeGroup>
+        }
+      }
+    }
+  ],
+  "errors": []
+}
+```
 
-***
+---
 
 ### Retrieving All Campaigns
 
 When no filters are specified in the JSON payload, all campaigns in your portfolio will be returned, as in the example below:
 
-![](/images/marketing-solutions/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+<CodeGroup>
+
+```text Text
 https://api.criteo.com/2026-01/marketing-solutions/campaigns/search
 ```
 
-<CodeGroup>
-  ```bash bash
-  {
-      "filters": {}
-  }
-  ```
+```json JSON
+{
+  "filters": {}
+}
+```
 </CodeGroup>
 
-***
+---
 
 ### Retrieving One Specific Campaign
 
 You can also fetch the details for a single Campaign using a `GET` request:
 
-![](/images/marketing-solutions/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/2026-01/marketing-solutions/campaigns/{campaign-id}
 ```
 
@@ -212,20 +245,33 @@ https://api.criteo.com/2026-01/marketing-solutions/campaigns/{campaign-id}
 
 The response `data` will be a single object containing the Campaign details.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "Campaign",
-          "id": "99999",
-          "attributes": { ... }
+```json JSON
+{
+  "data": {
+    "type": "Campaign",
+    "id": "99999",
+    "attributes": {
+      "name": "My Campaign",
+      "advertiserId": "12345",
+      "goal": "Retention",
+      "spendLimit": {
+        "spendLimitType": "capped",
+        "spendLimitRenewal": "daily",
+        "spendLimitAmount": 123.45
       },
-      "errors": []
-  }
-  ```
-</CodeGroup>
+      "budgetAutomation": {
+        "enabled": true,
+        "automatedBudgetConfiguration": {
+          "adSetOptimizationObjective": "conversions"
+        }
+      }
+    }
+  },
+  "errors": []
+}
+```
 
-***
+---
 
 ## Update Campaigns
 
@@ -233,54 +279,57 @@ The fields of one or more Campaigns can be updated by making a `PATCH` call to t
 
 For example, the following call would update the `spendLimit` settings of an existing Campaign:
 
-![](/images/marketing-solutions/docs/04a928f-patch.png)
+<Badge color="yellow" size="sm" shape="pill">PATCH</Badge>
 
-```
+```text
 https://api.criteo.com/2026-01/marketing-solutions/campaigns
 ```
 
 **Sample request**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "Campaign",
-              "id": "99999",
-              "attributes": {
-                  "spendLimit": {
-                      "spendLimitRenewal": "daily",
-                      "spendLimitType": "capped",
-                      "spendLimitAmount": 123.45
-                  }
-              }
+```json JSON
+{
+  "data": [
+    {
+      "type": "Campaign",
+      "id": "99999",
+      "attributes": {
+        "spendLimit": {
+          "spendLimitType": "capped",
+          "spendLimitRenewal": "daily",
+          "spendLimitAmount": 123.45
+        },
+        "budgetAutomation": {
+          "enabled": true,
+          "budgetConfiguration": {
+            "adSetObjectives": "conversions"
           }
-      ]
-  }
-  ```
-</CodeGroup>
+        }
+      }
+    }
+  ]
+}
+```
 
 **Sample response**
 
-The API will return an array of Campaigns that have been updated successfully in the response `data`. These will contain only two parameters, `type` and `id`.
+The API will return an array of Campaigns that have been updated successfully in the response `data`.  
+These will contain only two parameters, `type` and `id`.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "Campaign",
-              "id": "99999"
-          }
-      ],
-      "errors": [],
-      "warnings": []
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+  "data": [
+    {
+      "type": "Campaign",
+      "id": "99999"
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}
+```
 
-***
+---
 
 ## Partial Success / Partial Failure
 
@@ -291,105 +340,107 @@ As a result, those Campaign updates processed successfully will be returned in t
 <Warning>
   **HTTP Response Codes**
 
-  As a result of this individual processing, the API may respond with a `200` HTTP response code, but the result of its processing may have one or more failures.
+As a result of this individual processing, the API may respond with a `200` HTTP response code, but the result of its processing may have one or more failures.
 </Warning>
 
  For instance, for this payload which intends to update two Campaigns:
 
-![](/images/marketing-solutions/docs/04a928f-patch.png)
+<Badge color="yellow" size="sm" shape="pill">PATCH</Badge>
 
-```
+```text
 https://api.criteo.com/2026-01/marketing-solutions/campaigns
 ```
 
 **Sample request**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "Campaign",
-              "id": "99999",
-              "attributes": {
-                  "spendLimit": {
-                      "spendLimitRenewal": "daily",
-                      "spendLimitType": "capped",
-                      "spendLimitAmount": 123.5
-                  }
-              }
-          },
-          {
-              "type": "Campaign",
-              "id": "88888",
-              "attributes": {
-                  "spendLimit": {
-                      "spendLimitRenewal": "daily",
-                      "spendLimitType": "capped",
-                      "spendLimitAmount": -9000
-                  }
-              }
-          }
-      ]
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+  "data": [
+    {
+      "type": "Campaign",
+      "id": "99999",
+      "attributes": {
+        "spendLimit": {
+          "spendLimitRenewal": "daily",
+          "spendLimitType": "capped",
+          "spendLimitAmount": 123.5
+        }
+      }
+    },
+    {
+      "type": "Campaign",
+      "id": "88888",
+      "attributes": {
+        "spendLimit": {
+          "spendLimitRenewal": "daily",
+          "spendLimitType": "capped",
+          "spendLimitAmount": -9000
+        }
+      }
+    }
+  ]
+}
+```
 
 **Sample response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": [
-          {
-              "type": "Campaign",
-              "id": "99999"
-          }
-      ],
-      "errors": [
-          {
-              "traceIdentifier": "56ed4096-f96a-4944-8881-05468efe0ec8",
-              "type": "validation",
-              "code": "campaign--campaign-update-check--validation-failed-on-spend-limit",
-              "instance": "@data/1",
-              "title": "Validation failed on spend limit",
-              "detail": "There was an issue with the spend limit value specified."
-          }
-      ],
-      "warnings": []
-  }
-  ```
-</CodeGroup>
+```json JSON
+{
+  "data": [
+    {
+      "type": "Campaign",
+      "id": "99999"
+    }
+  ],
+  "errors": [
+    {
+      "traceIdentifier": "56ed4096-f96a-4944-8881-05468efe0ec8",
+      "type": "validation",
+      "code": "campaign--campaign-update-check--validation-failed-on-spend-limit",
+      "instance": "@data/1",
+      "title": "Validation failed on spend limit",
+      "detail": "There was an issue with the spend limit value specified."
+    }
+  ],
+  "warnings": []
+}
+```
 
 <Info>
   **Error `instance`**
 
-  The `instance` field for validation errors will specify the index of the related update, beginning with index 0. For the example above, `@data/1` refers to the second requested update in the request's `data` array.
+The `instance` field for validation errors will specify the index of the related update, beginning with index 0. For the example above, `@data/1` refers to the second requested update in the request's `data` array.
 </Info>
 
-A full list of error codes can be found on the [Validation Errors](/marketing-solutions/docs/campaign#validation-errors-and-warnings) page at the end of this section. In addition to [general API errors](/marketing-solutions/docs/api-error-types) , you may encounter validation errors when updating a Campaign.
+A full list of error codes can be found on the [Validation Errors](/marketing-solutions/docs/campaign#validation-errors-and-warnings) page at the end of this section.  
+In addition to [general API errors](/marketing-solutions/docs/api-error-types) , you may encounter validation errors when updating a Campaign.
 
 Below is a list of error codes for Campaign validation and a more detailed description of their meaning.
 
-***
+---
 
 ## Validation Errors and Warnings
 
-**Campaign Update Errors:** **`campaign--campaign-update-check--spend-limit-does-not-exist`** An update to spend limit was attempted on a Campaign which does not have a spend limit (e.g. an uncapped Campaign). Alternatively, the requestor may not have permissions to update the spend limit of the Campaign.
+**Campaign Update Errors:**  
+**`campaign--campaign-update-check--spend-limit-does-not-exist`**  
+An update to spend limit was attempted on a Campaign which does not have a spend limit (e.g. an uncapped Campaign). Alternatively, the requestor may not have permissions to update the spend limit of the Campaign.
 
-**`campaign--campaign-update-check--cannot-decrease-lifetime-spend-limit-below-what-is-already-spent`** An update attempted to decrease a *lifetime* spend limit of a Campaign to a value lower than what has already been spent.
+**`campaign--campaign-update-check--cannot-decrease-lifetime-spend-limit-below-what-is-already-spent`**  
+An update attempted to decrease a _lifetime_ spend limit of a Campaign to a value lower than what has already been spent.
 
-**`campaign--campaign-update-check--validation-failed-on-spend-limit`** TK
+**`campaign--campaign-update-check--validation-failed-on-spend-limit`**  
+TK
 
-**`campaign--campaign-update-check--cannot-update-same-campaign-multiple-times`** The Campaign is included multiple times in the same update payload. All Campaign field updates should be consolidated into one array item.
+**`campaign--campaign-update-check--cannot-update-same-campaign-multiple-times`**  
+The Campaign is included multiple times in the same update payload. All Campaign field updates should be consolidated into one array item.
 
-**`campaign--campaign-update-check--unavailable-feature-for-this-advertiser`** TK
+**`campaign--campaign-update-check--unavailable-feature-for-this-advertiser`**  
+TK
 
-**Campaign Update Warnings:** **`campaign--campaign-update-check--new-spend-limit-amount-will-take-place-at-the-next-period-start`** The update to spend limit was processed, but it will not take effect until the next period specified by `spendLimitRenewal` (e.g. the next day). This is typically because the new spend amount specified is lower than the amount already spent in the current period.
-
-***
-
-What’s Next
+**Campaign Update Warnings:**  
+**`campaign--campaign-update-check--new-spend-limit-amount-will-take-place-at-the-next-period-start`**  
+The update to spend limit was processed, but it will not take effect until the next period specified by `spendLimitRenewal` (e.g. the next day). This is typically because the new spend amount specified is lower than the amount already spent in the current period.
+## What's next
 
 * [Ad Set](/marketing-solutions/docs/ad-set)
 * [Display Multipliers](/marketing-solutions/docs/display-multipliers)

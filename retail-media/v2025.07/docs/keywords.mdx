@@ -1,62 +1,588 @@
 ---
-title: "Keywords"
+title: Keywords
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2025_07/docs/Guides for Retail Media API/onsite-sponsored-products/keywords.md
 ---
 
-1. Guides for Retail Media API
-2. [Onsite Sponsored Products](/retail-media/v2025.07/docs/onsite-sponsored-products)
-
-<Info>
+<Note>
   Shoppers browsing through the retailer's search page may utilize search for phrases associated with line item products where the line item may not be allowed to search on that page. Similar to this scenario, the shopper can also enter search phrases that align with products permitted to serve on a page.
 
   The keyword API endpoint allows you to control your Onsite Sponsored Products line item by providing visibility to users what keywords are applied to line items, and also allows for users to determine which keyword to target positively or negatively. The endpoint can also provide keyword bidding capabilities to optimize line items based on relevant keywords.
 
-  Check out the [**Onsite Sponsored Products**](doc:onsite-sponsored-products) page for a complete summary of Criteo's keyword service.
-</Info>
+  Check out the [**Onsite Sponsored Products**](/retail-media/v2025.07/docs/onsite-sponsored-products) page for a complete summary of Criteo's keyword service.
+</Note>
 
 ## Endpoints
 
-| Verb     | Endpoint                                        | Description                                                      |
-| -------- | ----------------------------------------------- | ---------------------------------------------------------------- |
-| **GET**  | `/line-items/{lineItemId}/keywords`             | Retrieve a set of positive and negative keywords for a line item |
-| **GET**  | `/line-items/{lineItemId}/keywords/recommended` | Retrieve a collection of recommended keywords for a line item    |
-| **POST** | `/line-items/{lineItemId}/keywords/add-remove`  | Add or remove keywords from a line item                          |
-| **POST** | `/line-items/{lineItemId}/keywords/set-bid`     | Set a bid override at keyword level                              |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;/keywords
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve a set of positive and negative keywords for a line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;/keywords/recommended
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve a collection of recommended keywords for a line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;/keywords/add-remove
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Add or remove keywords from a line item
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /line-items/&#123;lineItemId&#125;/keywords/set-bid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Set a bid override at keyword level
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
 ## Keyword Attributes
 
-| Attribute         | Data Type | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`\*            | string    | [Line Item](doc:line-items) ID, generated internally by CriteoAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `keywords`\*      | object    | Keywords structure, indexed by normalized keyword phrases each of them containing structure of:- `matchType`
-- `bid`
-- `inputKeywords`
-- `reviewState`
-- `createdAt`
-- `updatedAt`                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `matchType`\*     | enum      | Matching algorithm type to be used when comparing this keyword with shopper search phrases.Accepted values:- `PositiveExactMatch`: normalized keyword is an exact match for the normalized search phrase bid
-- `NegativeExactMatch`: normalized keyword is an exact match for the normalized search phrase do not bid
-- `NegativeBroadMatch`: normalized keyword is a substring of the normalized search phrase do not bidDefault: `PositiveExactMatch` Writeable? N / Nullable? N                                                                                                                            |
-| `reviewState`     | enum      | Status of Keyword review, only applicable for `PositiveExactMatch` match type keywords. Keywords not reviewed by the automatic keyword service will be reviewed and approved by the retailer.Accepted values:- `InReview`: keyword has been submitted manually, and the review is still pending
-- `Approved`: keyword was approved manually
-- `AutoApproved`: keyword was approved automatically
-- `Rejected`: keyword was rejected manually
-- `AutoRejected`: keyword was rejected automatically
-- `Recommended`: keyword was recommended by our keyword modelDefault: `InReview` Writeable? N / Nullable? N |
-| `bid`             | decimal   | The bid override for the positive keyword. The keyword will use the default line item bid if the value is `null`. The currency of the bid is the default currency for the retailer. The bid can be applied to both manual keywords and recommended keywords.Accepted values: retailer's `minBid` ≤ `bid` ≤ line-item's `maxBid`, available in the endpoints detailed in [Catalog Endpoints](doc:catalog-endpoints) and [Onsite Display Line Items](doc:onsite-display-line-itemsv2), respectively Default: `null` Writeable? Y / Nullable? Y                                                                  |
-| `isDeleted`       | boolean   | Control flag to add or remove the keyword from the line-itemAccepted values: `true` / `false` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `inputKeywords`\* | object    | Keywords structure associated with line-item containing normalized keyword phrases and organized by match type.Parameters:- `positiveExact`: list of supplied positive exact phrases
-- `negativeExact`: list of supplied negative exact phrases
-- `negativeBroad`: list of supplied negative broad phrases                                                                                                                                                                                                                                                                                                    |
-| `phrase`          | string    | Raw text of the keyword to be added or removedAccepted values: up to 255-chars string Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `createdAt`       | timestamp | Timestamp when keyword was configured in the line-item (or recommended to line-item)Accepted values: `yyyy-mm-ddThh:mm:ss`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `updatedAt`       | timestamp | Timestamp when keyword was last modified in the line-item (or recommended to line-item)Accepted values: `yyyy-mm-ddThh:mm:ss`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                               |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.07/docs/line-items">
+      Line Item
+     </a>
+     ID, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keywords
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     object
+    </p>
+   </td>
+   <td>
+    <p>
+     Keywords structure, indexed by normalized keyword phrases each of them containing structure of:
+    </p>
+    <ul>
+     <li>
+      <code>
+       matchType
+      </code>
+     </li>
+     <li>
+      <code>
+       bid
+      </code>
+     </li>
+     <li>
+      <code>
+       inputKeywords
+      </code>
+     </li>
+     <li>
+      <code>
+       reviewState
+      </code>
+     </li>
+     <li>
+      <code>
+       createdAt
+      </code>
+     </li>
+     <li>
+      <code>
+       updatedAt
+      </code>
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      matchType
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Matching algorithm type to be used when comparing this keyword with shopper search phrases.
+    </p>
+    <p>
+     Accepted values:
+    </p>
+    <ul>
+     <li>
+      <code>
+       PositiveExactMatch
+      </code>
+      : normalized keyword is an exact match for the normalized search phrase bid
+     </li>
+     <li>
+      <code>
+       NegativeExactMatch
+      </code>
+      : normalized keyword is an exact match for the normalized search phrase do not bid
+     </li>
+     <li>
+      <code>
+       NegativeBroadMatch
+      </code>
+      : normalized keyword is a substring of the normalized search phrase do not bid
+     </li>
+    </ul>
+    <p>
+     Default:
+     <code>
+      PositiveExactMatch
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      reviewState
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Status of Keyword review, only applicable for
+     <code>
+      PositiveExactMatch
+     </code>
+     match type keywords.
+    </p>
+    <p>
+     Keywords not reviewed by the automatic keyword service will be reviewed and approved by the retailer.
+    </p>
+    <p>
+     Accepted values:
+    </p>
+    <ul>
+     <li>
+      <code>
+       InReview
+      </code>
+      : keyword has been submitted manually, and the review is still pending
+     </li>
+     <li>
+      <code>
+       Approved
+      </code>
+      : keyword was approved manually
+     </li>
+     <li>
+      <code>
+       AutoApproved
+      </code>
+      : keyword was approved automatically
+     </li>
+     <li>
+      <code>
+       Rejected
+      </code>
+      : keyword was rejected manually
+     </li>
+     <li>
+      <code>
+       AutoRejected
+      </code>
+      : keyword was rejected automatically
+     </li>
+     <li>
+      <code>
+       Recommended
+      </code>
+      : keyword was recommended by our keyword model
+     </li>
+    </ul>
+    <p>
+     Default:
+     <code>
+      InReview
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      bid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     The bid override for the positive keyword. The keyword will use the default line item bid if the value is
+     <code>
+      null
+     </code>
+     . The currency of the bid is the default currency for the retailer. The bid can be applied to both manual keywords and recommended keywords.
+    </p>
+    <p>
+     Accepted values: retailer's
+     <code>
+      minBid
+     </code>
+     ≤
+     <code>
+      bid
+     </code>
+     ≤ line-item's
+     <code>
+      maxBid
+     </code>
+     , available in the endpoints detailed in
+     <a href="/retail-media/v2025.07/docs/catalog-endpoints">
+      Catalog Endpoints
+     </a>
+     and
+     <a href="/retail-media/v2025.07/docs/onsite-display-line-itemsv2">
+      Onsite Display Line Items
+     </a>
+     , respectively
+    </p>
+    <p>
+     Default:
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      isDeleted
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     boolean
+    </p>
+   </td>
+   <td>
+    <p>
+     Control flag to add or remove the keyword from the line-item
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      true
+     </code>
+     /
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      inputKeywords
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     object
+    </p>
+   </td>
+   <td>
+    <p>
+     Keywords structure associated with line-item containing normalized keyword phrases and organized by match type.
+    </p>
+    <p>
+     Parameters:
+    </p>
+    <ul>
+     <li>
+      <code>
+       positiveExact
+      </code>
+      : list of supplied positive exact phrases
+     </li>
+     <li>
+      <code>
+       negativeExact
+      </code>
+      : list of supplied negative exact phrases
+     </li>
+     <li>
+      <code>
+       negativeBroad
+      </code>
+      : list of supplied negative broad phrases
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      phrase
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Raw text of the keyword to be added or removed
+    </p>
+    <p>
+     Accepted values: up to 255-chars string
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      createdAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp when keyword was configured in the line-item (or recommended to line-item)
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      updatedAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp when keyword was last modified in the line-item (or recommended to line-item)
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
-*\*Required*
+_*Required_
 
 <Info>
-  ### Field Definitions
+  **Field Definitions**
 
   * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
   * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
@@ -67,233 +593,232 @@ title: "Keywords"
 
 ## Get Keywords by Line Item
 
-![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}/keywords
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X GET "https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-      -H "Accept: application/json"
-  ```
 
-  ```bash bash
-  import http.client
+```bash cURL
+curl -L -X GET "https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Accept: application/json"
+```
 
-  conn = http.client.HTTPSConnection("api.criteo.com")
+```python Python
+import http.client
 
-  headers = {
-      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
-      'Accept': 'application/json'
-  }
+conn = http.client.HTTPSConnection("api.criteo.com")
 
-  conn.request("GET", "/{version}/retail-media/line-items/358669652976373760/keywords", headers=headers)
+headers = {
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+    'Accept': 'application/json'
+}
 
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
+conn.request("GET", "/{version}/retail-media/line-items/358669652976373760/keywords", headers=headers)
 
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-      .build();
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
 
-  Request request = new Request.Builder()
-      .url("https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords")
-      .method("GET", null)
-      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-      .addHeader("Accept", "application/json")
-      .build();
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
 
-  Response response = client.newCall(request).execute();
-  ```
+Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords")
+    .method("GET", null)
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .addHeader("Accept", "application/json")
+    .build();
 
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords');
-  $request->setMethod(HTTP_Request2::METHOD_GET);
-  $request->setConfig(array(
-      'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
-      'Accept' => 'application/json'
-  ));
+Response response = client.newCall(request).execute();
+```
 
-  try {
-      $response = $request->send();
-      if ($response->getStatus() == 200) {
-          echo $response->getBody();
-      } else {
-          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
-      }
-  } catch(HTTP_Request2_Exception $e) {
-      echo 'Error: ' . $e->getMessage();
-  }
-  ```
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+    'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+    'Accept' => 'application/json'
+));
+
+try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+        echo $response->getBody();
+    } else {
+        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+    }
+} catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "id": "358669652976373760",
-          "type": "RetailMediaKeywordsModel",
-          "attributes": {
-              "keywords": {
-                  "vegetable": {
-                      "matchType": "NegativeBroadMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "negativeBroad": [
-                              "vegetable"
-                          ],
-                          "negativeExact": [],
-                          "positiveExact": []
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "tomato": {
-                      "matchType": "NegativeExactMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "negativeBroad": [],
-                          "negativeExact": [
-                              "tomatoes"
-                          ],
-                          "positiveExact": []
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "strawberry": {
-                      "matchType": "NegativeExactMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "negativeBroad": [],
-                          "negativeExact": [
-                              "strawberry"
-                          ],
-                          "positiveExact": []
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "broccoli": {
-                      "matchType": "NegativeExactMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "negativeBroad": [],
-                          "negativeExact": [
-                              "broccoli"
-                          ],
-                          "positiveExact": []
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "banana": {
-                      "matchType": "NegativeExactMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "negativeBroad": [],
-                          "negativeExact": [
-                              "banana"
-                          ],
-                          "positiveExact": []
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "pasta": {
-                      "reviewState": "Approved",
-                      "matchType": "PositiveExactMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "negativeBroad": [],
-                          "negativeExact": [],
-                          "positiveExact": [
-                              "pasta"
-                          ]
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "milk": {
-                      "reviewState": "Approved",
-                      "matchType": "PositiveExactMatch",
-                      "bid": 0.50,
-                      "inputKeywords": {
-                          "negativeBroad": [],
-                          "negativeExact": [],
-                          "positiveExact": [
-                              "milk"
-                          ]
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "juice": {
-                      "reviewState": "Approved",
-                      "matchType": "PositiveExactMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "negativeBroad": [],
-                          "negativeExact": [],
-                          "positiveExact": [
-                              "juice"
-                          ]
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "egg": {
-                      "reviewState": "Approved",
-                      "matchType": "PositiveExactMatch",
-                      "bid": 0.50,
-                      "inputKeywords": {
-                          "negativeBroad": [],
-                          "negativeExact": [],
-                          "positiveExact": [
-                              "eggs"
-                          ]
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  },
-                  "fruit": {
-                      "matchType": "NegativeBroadMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "negativeBroad": [
-                              "fruits"
-                          ],
-                          "negativeExact": [],
-                          "positiveExact": []
-                      },
-                      "createdAt": "2025-01-01T00:00:00",
-                      "updatedAt": "2025-01-01T00:00:00"
-                  }
-              }
-          }
-      },
-      /* omitted if no errors */
-      "errors": [],
-      /* omitted if no warnings */
-      "warnings": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "id": "358669652976373760",
+        "type": "RetailMediaKeywordsModel",
+        "attributes": {
+            "keywords": {
+                "vegetable": {
+                    "matchType": "NegativeBroadMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [
+                            "vegetable"
+                        ],
+                        "negativeExact": [],
+                        "positiveExact": []
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "tomato": {
+                    "matchType": "NegativeExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [
+                            "tomatoes"
+                        ],
+                        "positiveExact": []
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "strawberry": {
+                    "matchType": "NegativeExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [
+                            "strawberry"
+                        ],
+                        "positiveExact": []
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "broccoli": {
+                    "matchType": "NegativeExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [
+                            "broccoli"
+                        ],
+                        "positiveExact": []
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "banana": {
+                    "matchType": "NegativeExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [
+                            "banana"
+                        ],
+                        "positiveExact": []
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "pasta": {
+                    "reviewState": "Approved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [],
+                        "positiveExact": [
+                            "pasta"
+                        ]
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "milk": {
+                    "reviewState": "Approved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": 0.50,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [],
+                        "positiveExact": [
+                            "milk"
+                        ]
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "juice": {
+                    "reviewState": "Approved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [],
+                        "positiveExact": [
+                            "juice"
+                        ]
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "egg": {
+                    "reviewState": "Approved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": 0.50,
+                    "inputKeywords": {
+                        "negativeBroad": [],
+                        "negativeExact": [],
+                        "positiveExact": [
+                            "eggs"
+                        ]
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                },
+                "fruit": {
+                    "matchType": "NegativeBroadMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "negativeBroad": [
+                            "fruits"
+                        ],
+                        "negativeExact": [],
+                        "positiveExact": []
+                    },
+                    "createdAt": "2025-01-01T00:00:00",
+                    "updatedAt": "2025-01-01T00:00:00"
+                }
+            }
+        }
+    },
+    /* omitted if no errors */
+    "errors": [],
+    /* omitted if no warnings */
+    "warnings": []
+}
+```
 
 ***
 
@@ -301,353 +826,354 @@ https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}/keywords
 
 This endpoint retrieves a collection of recommended keywords for a line item, created automatically by our keyword models.
 
-<Info>
+<Note>
   **Only the top 100 keywords will be returned**
 
   Automatic recommended keywords can change day to day, as are determined based on click volumes by users on Retailer's environment. Although significant changes are not expected, it is possible that the long tail of the top 100 keywords change slightly
-</Info>
+</Note>
 
-![](/images/retail-media/v2025.07/docs/8a6bfd9-get.png)
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}/keywords/recommended
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X GET "https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/recommended" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-      -H "Accept: application/json"
-  ```
 
-  ```bash bash
-  import http.client
+```bash cURL
+curl -L -X GET "https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/recommended" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Accept: application/json"
+```
 
-  conn = http.client.HTTPSConnection("api.criteo.com")
+```python Python
+import http.client
 
-  headers = {
-      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
-      'Accept': 'application/json'
-  }
+conn = http.client.HTTPSConnection("api.criteo.com")
 
-  conn.request("GET", "/{version}/retail-media/line-items/358669652976373760/keywords/recommended", headers=headers)
+headers = {
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+    'Accept': 'application/json'
+}
 
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
+conn.request("GET", "/{version}/retail-media/line-items/358669652976373760/keywords/recommended", headers=headers)
 
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-      .build();
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
 
-  Request request = new Request.Builder()
-      .url("https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/recommended")
-      .method("GET", null)
-      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-      .addHeader("Accept", "application/json")
-      .build();
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
 
-  Response response = client.newCall(request).execute();
-  ```
+Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/recommended")
+    .method("GET", null)
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .addHeader("Accept", "application/json")
+    .build();
 
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/recommended');
-  $request->setMethod(HTTP_Request2::METHOD_GET);
-  $request->setConfig(array(
-      'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
-      'Accept' => 'application/json'
-  ));
+Response response = client.newCall(request).execute();
+```
 
-  try {
-      $response = $request->send();
-      if ($response->getStatus() == 200) {
-          echo $response->getBody();
-      } else {
-          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
-      }
-  } catch(HTTP_Request2_Exception $e) {
-      echo 'Error: ' . $e->getMessage();
-  }
-  ```
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/recommended');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+    'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+    'Accept' => 'application/json'
+));
+
+try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+        echo $response->getBody();
+    } else {
+        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+    }
+} catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
 **Sample Response**
 
-<CodeGroup>
-  ```bash bash
-  {
-      "data": {
-          "type": "RecommendedKeywords",
-          "attributes": {
-              "keywords": {
-                  "bar sound": {
-                      "reviewState": "AutoApproved",
-                      "matchType": "PositiveExactMatch",
-                      "bid": 1.0,
-                      "inputKeywords": {
-                          "positiveExact": [
-                              "bar sound",
-                              "sound bar",
-                              "sound-bar",
-                              "sound bars",
-                              "sounds bar"
-                          ]
-                      },
-                      "createdAt": "2025-01-01T07:00:00",
-                      "updatedAt": "2025-01-01T08:00:00"
-                  },
-                  "dolby soundbar": {
-                      "reviewState": "Recommended",
-                      "matchType": "PositiveExactMatch",
-                      "bid": null,
-                      "inputKeywords": {
-                          "positiveExact": [
-                              "dolby soundbars",
-                              "soundbar dolby"
-                          ]
-                      },
-                      "createdAt": "2025-01-01T07:00:00",
-                      "updatedAt": "2025-01-01T08:00:00"
-                  },
-                  "atmos": {
-                      "matchType": "NegativeBroad",
-                      "inputKeywords": {
-                          "negativeBroad": [
-                              "atmos"
-                          ]
-                      },
-                      "createdAt": "2025-01-01T07:00:00",
-                      "updatedAt": "2025-01-01T08:00:00"
-                  }
-              },
-              "recommended": [
-                  "atmos",
-                  "dolby soundbars",
-                  "sound bar",
-                  "sound bars",
-                  "soundbar dolby"
-              ]
-          }
-      },
-      /* omitted if no errors */
-      "errors": [],
-      /* omitted if no warnings */
-      "warnings": []
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "data": {
+        "type": "RecommendedKeywords",
+        "attributes": {
+            "keywords": {
+                "bar sound": {
+                    "reviewState": "AutoApproved",
+                    "matchType": "PositiveExactMatch",
+                    "bid": 1.0,
+                    "inputKeywords": {
+                        "positiveExact": [
+                            "bar sound",
+                            "sound bar",
+                            "sound-bar",
+                            "sound bars",
+                            "sounds bar"
+                        ]
+                    },
+                    "createdAt": "2025-01-01T07:00:00",
+                    "updatedAt": "2025-01-01T08:00:00"
+                },
+                "dolby soundbar": {
+                    "reviewState": "Recommended",
+                    "matchType": "PositiveExactMatch",
+                    "bid": null,
+                    "inputKeywords": {
+                        "positiveExact": [
+                            "dolby soundbars",
+                            "soundbar dolby"
+                        ]
+                    },
+                    "createdAt": "2025-01-01T07:00:00",
+                    "updatedAt": "2025-01-01T08:00:00"
+                },
+                "atmos": {
+                    "matchType": "NegativeBroad",
+                    "inputKeywords": {
+                        "negativeBroad": [
+                            "atmos"
+                        ]
+                    },
+                    "createdAt": "2025-01-01T07:00:00",
+                    "updatedAt": "2025-01-01T08:00:00"
+                }
+            },
+            "recommended": [
+                "atmos",
+                "dolby soundbars",
+                "sound bar",
+                "sound bars",
+                "soundbar dolby"
+            ]
+        }
+    },
+    /* omitted if no errors */
+    "errors": [],
+    /* omitted if no warnings */
+    "warnings": []
+}
+```
 
 ***
 
 ## Add or remove Keyword from Line Item
 
-![](/images/retail-media/v2025.07/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}/keywords/add-remove
 ```
 
 <Info>
   **Negative Targeting v1**
 
-  The negative keyword targeting in this API will eventually replace the [Negative Keyword Targeting](doc:negative-keywords-open-auction-only) endpoints. You may continue using those endpoints without disrupting your services. We recommend reviewing and testing the new Keyword endpoints to prepare for a future migration to these new endpoints.
+  The negative keyword targeting in this API will eventually replace the [Negative Keyword Targeting](/retail-media/v2025.07/docs/negative-keywords-open-auction-only) endpoints. You may continue using those endpoints without disrupting your services. We recommend reviewing and testing the new Keyword endpoints to prepare for a future migration to these new endpoints.
 </Info>
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X POST "https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/add-remove" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-      -H "Content-Type: application/json" \
-      -H "Accept: application/json" \
-      -d '{
-              "data": {
-                  "id": "358669652976373760",
-                  "type": "RetailMediaKeywordAddRemove",
-                  "attributes": {
-                      "keywords": [
-                          {
-                              "phrase": "cookies and bread",
-                              "matchType": "PositiveExactMatch",
-                              "isDeleted": "false"
-                          },
-                          {
-                              "phrase": "raspberry",
-                              "matchType": "NegativeExactMatch",
-                              "isDeleted": "false"
-                          },
-                          {
-                              "phrase": "potatoes",
-                              "matchType": "NegativeExactMatch",
-                              "isDeleted": "true"
-                          }
-                      ]
-                  }
-              }
-          }'
-  ```
 
-  ```bash bash
-  import http.client
-  import json
+```bash cURL
+curl -L -X POST "https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/add-remove" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{
+            "data": {
+                "id": "358669652976373760",
+                "type": "RetailMediaKeywordAddRemove",
+                "attributes": {
+                    "keywords": [
+                        {
+                            "phrase": "cookies and bread",
+                            "matchType": "PositiveExactMatch",
+                            "isDeleted": "false"
+                        },
+                        {
+                            "phrase": "raspberry",
+                            "matchType": "NegativeExactMatch",
+                            "isDeleted": "false"
+                        },
+                        {
+                            "phrase": "potatoes",
+                            "matchType": "NegativeExactMatch",
+                            "isDeleted": "true"
+                        }
+                    ]
+                }
+            }
+        }'
+```
 
-  conn = http.client.HTTPSConnection("api.criteo.com")
-  payload = json.dumps({
-      "data": {
-          "id": "358669652976373760",
-          "type": "RetailMediaKeywordAddRemove",
-          "attributes": {
-              "keywords": [
-                  {
-                      "phrase": "cookies and bread",
-                      "matchType": "PositiveExactMatch",
-                      "isDeleted": "false"
-                  },
-                  {
-                      "phrase": "raspberry",
-                      "matchType": "NegativeExactMatch",
-                      "isDeleted": "false"
-                  },
-                  {
-                      "phrase": "potatoes",
-                      "matchType": "NegativeExactMatch",
-                      "isDeleted": "true"
-                  }
-              ]
-          }
-      }
-  })
+```python Python
+import http.client
+import json
 
-  headers = {
-      'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-  }
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+    "data": {
+        "id": "358669652976373760",
+        "type": "RetailMediaKeywordAddRemove",
+        "attributes": {
+            "keywords": [
+                {
+                    "phrase": "cookies and bread",
+                    "matchType": "PositiveExactMatch",
+                    "isDeleted": "false"
+                },
+                {
+                    "phrase": "raspberry",
+                    "matchType": "NegativeExactMatch",
+                    "isDeleted": "false"
+                },
+                {
+                    "phrase": "potatoes",
+                    "matchType": "NegativeExactMatch",
+                    "isDeleted": "true"
+                }
+            ]
+        }
+    }
+})
 
-  conn.request("POST", "/{version}/retail-media/line-items/358669652976373760/keywords/add-remove", payload, headers)
+headers = {
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}
 
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
+conn.request("POST", "/{version}/retail-media/line-items/358669652976373760/keywords/add-remove", payload, headers)
 
-  ```bash bash
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
 
-  OkHttpClient client = new OkHttpClient().newBuilder()
-      .build();
+```java Java
 
-  MediaType mediaType = MediaType.parse("application/json");
+OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
 
-  RequestBody body = RequestBody.create(mediaType, """
-  {
-      "data": {
-          "id": "358669652976373760",
-          "type": "RetailMediaKeywordAddRemove",
-          "attributes": {
-              "keywords": [
-                  {
-                      "phrase": "cookies and bread",
-                      "matchType": "PositiveExactMatch",
-                      "isDeleted": "false"
-                  },
-                  {
-                      "phrase": "raspberry",
-                      "matchType": "NegativeExactMatch",
-                      "isDeleted": "false"
-                  },
-                  {
-                      "phrase": "potatoes",
-                      "matchType": "NegativeExactMatch",
-                      "isDeleted": "true"
-                  }
-              ]
-          }
-      }
-  }
-  """);
+MediaType mediaType = MediaType.parse("application/json");
 
-  Request request = new Request.Builder()
-      .url("https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/add-remove")
-      .method("POST", body)
-      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-      .addHeader("Content-Type", "application/json")
-      .addHeader("Accept", "application/json")
-      .build();
+RequestBody body = RequestBody.create(mediaType, """
+{
+    "data": {
+        "id": "358669652976373760",
+        "type": "RetailMediaKeywordAddRemove",
+        "attributes": {
+            "keywords": [
+                {
+                    "phrase": "cookies and bread",
+                    "matchType": "PositiveExactMatch",
+                    "isDeleted": "false"
+                },
+                {
+                    "phrase": "raspberry",
+                    "matchType": "NegativeExactMatch",
+                    "isDeleted": "false"
+                },
+                {
+                    "phrase": "potatoes",
+                    "matchType": "NegativeExactMatch",
+                    "isDeleted": "true"
+                }
+            ]
+        }
+    }
+}
+""");
 
-  Response response = client.newCall(request).execute();
-  ```
+Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/add-remove")
+    .method("POST", body)
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .build();
 
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/add-remove');
-  $request->setMethod(HTTP_Request2::METHOD_POST);
-  $request->setConfig(array(
-      'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
-      'Content-Type' => 'application/json',
-      'Accept' => 'application/json'
-  ));
+Response response = client.newCall(request).execute();
 
-  $request->setBody(json_encode(array(
-      "data" => array(
-          "id" => "358669652976373760",
-          "type" => "RetailMediaKeywordAddRemove",
-          "attributes" => array(
-              "keywords" => array(
-                  array(
-                      "phrase" => "cookies and bread",
-                      "matchType" => "PositiveExactMatch",
-                      "isDeleted" => "false"
-                  ),
-                  array(
-                      "phrase" => "raspberry",
-                      "matchType" => "NegativeExactMatch",
-                      "isDeleted" => "false"
-                  ),
-                  array(
-                      "phrase" => "potatoes",
-                      "matchType" => "NegativeExactMatch",
-                      "isDeleted" => "true"
-                  )
-              )
-          )
-      )
-  ), JSON_PRETTY_PRINT));
+```
 
-  try {
-      $response = $request->send();
-      if ($response->getStatus() == 200) {
-          echo $response->getBody();
-      } else {
-          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
-      }
-  } catch(HTTP_Request2_Exception $e) {
-      echo 'Error: ' . $e->getMessage();
-  }
-  ```
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/add-remove');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+    'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json'
+));
+
+$request->setBody(json_encode(array(
+    "data" => array(
+        "id" => "358669652976373760",
+        "type" => "RetailMediaKeywordAddRemove",
+        "attributes" => array(
+            "keywords" => array(
+                array(
+                    "phrase" => "cookies and bread",
+                    "matchType" => "PositiveExactMatch",
+                    "isDeleted" => "false"
+                ),
+                array(
+                    "phrase" => "raspberry",
+                    "matchType" => "NegativeExactMatch",
+                    "isDeleted" => "false"
+                ),
+                array(
+                    "phrase" => "potatoes",
+                    "matchType" => "NegativeExactMatch",
+                    "isDeleted" => "true"
+                )
+            )
+        )
+    )
+), JSON_PRETTY_PRINT));
+
+try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+        echo $response->getBody();
+    } else {
+        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+    }
+} catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+
+```
 </CodeGroup>
 
-**Sample Response** *200 successful status will return an empty object array*
+**Sample Response**  
+_200 successful status will return an empty object array_
 
-<CodeGroup>
-  ```bash bash
-  {}
-  ```
-</CodeGroup>
+```json
+{}
+```
 
 ***
 
@@ -655,159 +1181,269 @@ https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}/keywords/a
 
 💡**Info**: Bids can be set on a keyword at any time, even when the keyword are still `InReview` state
 
-![](/images/retail-media/v2025.07/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/{version}/retail-media/line-items/{lineItemId}/keywords/set-bid
 ```
 
 **Sample Request**
 
 <CodeGroup>
-  ```bash bash
-  curl -L -X POST "https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/set-bid" \
-      -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-      -H "Content-Type: application/json" \
-      -H "Accept: application/json" \
-      -d '{
-              "data": {
-                  "type": "RetailMediaKeywordsSetBid",
-                  "id": "358669652976373760",
-                  "attributes": {
-                      "keywords": [
-                          {"phrase": "eggs", "bid": "0.50"},
-                          {"phrase": "milk", "bid": "0.50"}
-                      ]
-                  }
-              }
-          }'
-  ```
 
-  ```bash bash
-  import http.client
-  import json
-  conn = http.client.HTTPSConnection("api.criteo.com")
-  payload = json.dumps({
-      "data": {
-          "id": "358669652976373760",
-          "type": "RetailMediaKeywordsSetBid",
-          "attributes": {
-              "keywords": [
-                  {"phrase": "eggs", "bid": "0.50"},
-                  {"phrase": "milk", "bid": "0.50"}
-              ]
-          }
-      }
-  })
+```bash cURL
+curl -L -X POST "https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/set-bid" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaKeywordsSetBid",
+                "id": "358669652976373760",
+                "attributes": {
+                    "keywords": [
+                        {"phrase": "eggs", "bid": "0.50"},
+                        {"phrase": "milk", "bid": "0.50"}
+                    ]
+                }
+            }
+        }'
+```
 
-  headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'text/plain',
-      'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-  }
-  conn.request("POST", "/{version}/retail-media/line-items/358669652976373760/keywords/set-bid", payload, headers)
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+    "data": {
+        "id": "358669652976373760",
+        "type": "RetailMediaKeywordsSetBid",
+        "attributes": {
+            "keywords": [
+                {"phrase": "eggs", "bid": "0.50"},
+                {"phrase": "milk", "bid": "0.50"}
+            ]
+        }
+    }
+})
 
-  res = conn.getresponse()
-  data = res.read()
-  print(data.decode("utf-8"))
-  ```
+headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'text/plain',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/{version}/retail-media/line-items/358669652976373760/keywords/set-bid", payload, headers)
 
-  ```bash bash
-  OkHttpClient client = new OkHttpClient().newBuilder()
-      .build();
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
 
-  MediaType mediaType = MediaType.parse("application/json");
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+    .build();
 
-  RequestBody body = RequestBody.create(mediaType, """
-  {
-      "data": {
-          "id": "358669652976373760",
-          "type": "RetailMediaKeywordsSetBid",
-          "attributes": {
-              "keywords": [
-                  {"phrase": "eggs", "bid": "0.50"},
-                  {"phrase": "milk", "bid": "0.50"}
-              ]
-          }
-      }
-  }
-  """);
+MediaType mediaType = MediaType.parse("application/json");
 
-  Request request = new Request.Builder()
-      .url("https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/set-bid")
-      .method("POST", body)
-      .addHeader("Content-Type", "application/json")
-      .addHeader("Accept", "application/json")
-      .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-      .build();
+RequestBody body = RequestBody.create(mediaType, """
+{
+    "data": {
+        "id": "358669652976373760",
+        "type": "RetailMediaKeywordsSetBid",
+        "attributes": {
+            "keywords": [
+                {"phrase": "eggs", "bid": "0.50"},
+                {"phrase": "milk", "bid": "0.50"}
+            ]
+        }
+    }
+}
+""");
 
-  Response response = client.newCall(request).execute();
-  ``
-  ```
+Request request = new Request.Builder()
+    .url("https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/set-bid")
+    .method("POST", body)
+    .addHeader("Content-Type", "application/json")
+    .addHeader("Accept", "application/json")
+    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+    .build();
 
-  ```bash bash
-  <?php
-  require_once 'HTTP/Request2.php';
-  $request = new HTTP_Request2();
-  $request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/set-bid');
-  $request->setMethod(HTTP_Request2::METHOD_POST);
-  $request->setConfig(array(
-      'follow_redirects' => TRUE
-  ));
-  $request->setHeader(array(
-      'Content-Type' => 'application/json',
-      'Accept' => 'text/plain',
-      'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-  ));
+Response response = client.newCall(request).execute();
+``
+```
 
-  $request->setBody(json_encode(array(
-      "data" => array(
-          "id" => "358669652976373760",
-          "type" => "RetailMediaKeywordsSetBid",
-          "attributes" => array(
-              "keywords" => array(
-                  array("phrase" => "eggs", "bid" => "0.50"),
-                  array("phrase" => "milk", "bid" => "0.50")
-              )
-          )
-      )
-  ), JSON_PRETTY_PRINT));
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/line-items/358669652976373760/keywords/set-bid');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+    'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'text/plain',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
 
-  try {
-      $response = $request->send();
-      if ($response->getStatus() == 200) {
-          echo $response->getBody();
-      } else {
-          echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
-      }
-  } catch(HTTP_Request2_Exception $e) {
-      echo 'Error: ' . $e->getMessage();
-  }
-  ```
+$request->setBody(json_encode(array(
+    "data" => array(
+        "id" => "358669652976373760",
+        "type" => "RetailMediaKeywordsSetBid",
+        "attributes" => array(
+            "keywords" => array(
+                array("phrase" => "eggs", "bid" => "0.50"),
+                array("phrase" => "milk", "bid" => "0.50")
+            )
+        )
+    )
+), JSON_PRETTY_PRINT));
+
+try {
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+        echo $response->getBody();
+    } else {
+        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+    }
+} catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+```
 </CodeGroup>
 
-**Sample Response** *200 successful status will return an empty object array*
+**Sample Response**  
+_200 successful status will return an empty object array_
 
-<CodeGroup>
-  ```bash bash
-  {}
-  ```
-</CodeGroup>
+```json
+{}
+```
 
 ***
 
 ## Responses
 
-| Response               | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🔵 `200` OK            | Call completed with success                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| 🔵 `201` OK            | * The call to add/remove the keyword from the line item was executed successfully
-
-* The call to set keyword bid to the line item was executed successfully                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| 🔴 `400` - Bad Request | Setting a bid for a positive keyword that doesn't exist on the line item. **Error Message** `"On line item {lineItemId} normalized keyword \"{keyword}\"/en_US not found"`Setting a keyword bid above the line-item `maxBid` value will result in a 400 bad request error message. In this example, the `maxBid` value is at least 0.40. **Error Message** `"Invalid bid value, bid greater than maximum of 1.00000000, found for keyword: <keyword>"`Setting a keyword bid below the retailer `minBid` value will result in a 400 bad request error message. In this example, the `minBid` value is at least 0.40. **Error Message** `"Invalid bid value, bid less than minimum of 0.4000, found for keyword: <keyword>"` |
-
-***
-
-[Onsite Sponsored Products Line Items](/retail-media/v2025.07/docs/onsite-sponsored-products-line-items)
-
-[Keyword Review](/retail-media/v2025.07/docs/keyword-review)
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      200
+     </code>
+     OK
+    </p>
+   </td>
+   <td>
+    <p>
+     Call completed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔵
+     <code>
+      201
+     </code>
+     OK
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      The call to add/remove the keyword from the line item was executed successfully
+     </li>
+     <li>
+      The call to set keyword bid to the line item was executed successfully
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+     - Bad Request
+    </p>
+   </td>
+   <td>
+    <p>
+     Setting a bid for a positive keyword that doesn't exist on the line item.
+    </p>
+    <p>
+     <strong>
+      Error Message
+     </strong>
+    </p>
+    <p>
+     <code>
+      "On line item &#123;lineItemId&#125; normalized keyword \"&#123;keyword&#125;\"/en_US not found"
+     </code>
+    </p>
+    <p>
+     Setting a keyword bid above the line-item
+     <code>
+      maxBid
+     </code>
+     value will result in a 400 bad request error message. In this example, the
+     <code>
+      maxBid
+     </code>
+     value is at least 0.40.
+    </p>
+    <p>
+     <strong>
+      Error Message
+     </strong>
+    </p>
+    <p>
+     <code>
+      "Invalid bid value, bid greater than maximum of 1.00000000, found for keyword: "
+     </code>
+    </p>
+    <p>
+     Setting a keyword bid below the retailer
+     <code>
+      minBid
+     </code>
+     value will result in a 400 bad request error message. In this example, the
+     <code>
+      minBid
+     </code>
+     value is at least 0.40.
+    </p>
+    <p>
+     <strong>
+      Error Message
+     </strong>
+    </p>
+    <p>
+     <code>
+      "Invalid bid value, bid less than minimum of 0.4000, found for keyword: "
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>

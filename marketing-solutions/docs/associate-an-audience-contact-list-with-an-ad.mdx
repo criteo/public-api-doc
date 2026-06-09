@@ -1,0 +1,115 @@
+---
+title: Associate an Audience Contact List with an Ad
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/creatives/associate-an-audience-contact-list-with-an-ad.md
+hidden: true
+---
+
+<Warning>
+  **DISCLAIMER**: Associating an Ad with an Audience Contact List should be done with caution. The API is restricted to a client list supported by the Criteo technical team.
+</Warning>
+
+You can assign an Audience Contact List to an Ad as a filter. Once applied, the Ad will be shown only to users within that Audience Contact List.
+
+## Associate an Audience Contact List with an Ad
+
+After creating a Contact List, you can use it as a filter on an Ad. As a result, the Ad will only be displayed to users included in the selected Audience Contact List.
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/preview/marketing-solutions/ads/{adId}/audience-segment
+```
+
+**`adId`**: The ID of the Ad to link to the specified Audience Contact List.
+
+<Info>
+  An Ad can have only **one** Audience Contact List assigned.
+
+  An Audience Contact List can be linked to zero or multiple Ads.
+
+  If a new Audience Contact List is linked to an Ad, it will replace any previous link.
+</Info>
+
+<CodeGroup>
+
+```json Sample Request
+{
+  "data": {
+    "type": "AdAudienceSegmentLink",
+    "attributes": {
+      "audienceSegmentId": "740910"
+    }  
+  }
+}
+```
+
+```json Sample Success Response
+{
+    "data": {
+        "type": "AdAudienceSegmentLink",
+        "attributes": {
+            "adId": "2627196",
+            "audienceSegmentId": "740910"
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+</CodeGroup>
+
+## Remove the Association Between an Audience Contact List and an Ad
+
+To unlink an Audience Contact List from an Ad, use:
+
+<Badge color="purple" size="sm" shape="pill">DELETE</Badge>
+
+```text
+https://api.criteo.com/preview/marketing-solutions/ads/{adId}/audience-segment
+```
+
+**`adId`**: The ID of the Ad you want to remove from the Audience Contact List.
+
+```text Sample Success Response
+HTTP 204 NO CONTENT
+```
+
+## Retrieve Associations Between an Ad and an Audience Contact List
+
+To find the Audience Contact List assigned to an Ad:
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/marketing-solutions/ads/{adId}/audience-segment
+```
+
+**`adId`**: The ID of the Ad to query.
+
+```json Sample Success response
+{
+    "data": {
+        "type": "AdAudienceSegmentLink",
+        "attributes": {
+            "adId": "2627196",
+            "audienceSegmentId": "740910"
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+## Validation errors
+
+**`ad-not-found`**  
+The specified Ad could not be found. 
+
+**`audience-segment-not-found`**  
+The specified Audience Segment could not be found.
+
+**`audience-segment-type-must-be-supported`**  
+The Audience Segment must be of type Contact List.
+
+**`ad-audience-segment-link-not-found`**  
+The Ad-Audience Segment link could not be found.

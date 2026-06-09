@@ -1,0 +1,702 @@
+---
+title: ビデオ プレーヤーの実装（デスクトップ／モバイル）
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Commerce video (japanese)/video-player-implementation-desktopmobile-japanese.md
+description: This is a translated version of the Commerce Onsite Video documentation
+hidden: true
+---
+
+動画広告を実装はいくつかの大まかなステップに分けられます。
+
+1. VAST tag を要求し、解析する
+2. DOMに挿入するプレーヤーの HTMLを構成する
+3. 動画の再生中に適切なタイミングで ビーコン を呼び出す
+4. 追加の検証スクリプト（OMID）を組み込む
+
+弊社では **VAST 4.2** をサポートしています（IAB 仕様は[こちら](https://iabtechlab.com/wp-content/uploads/2019/06/VAST_4.2_final_june26.pdf)で入手できます）。
+
+***
+
+## ステップ1：VAST tagのリクエストと解析
+
+ビデオプレーヤーのデータを取得するには、まず Criteo API の広告レスポンスから VAST 情報を取得します。
+
+VAST のリクエスト、解析例を以下に示します。
+
+```javascript
+const response = await fetch('VAST TAG URL');  
+const DOMXML = await response.text();  
+const xmlParser = new window.DOMParser();  
+const data = xmlParser.parseFromString(DOMXML, 'text/xml');
+```
+
+解析された VAST tag を取得したら、このドキュメント内で定義されている必要なビーコンを取り出します。
+
+<Note>
+  ### VAST 解析ライブラリ
+
+  一部のクライアントは、必要な情報をすべて抽出する上で VAST 解析ライブラリを使用しています。 `DOMParser` の使用を避けたい場合の以下のライブラリが代替として使用可能です。
+
+  * [VAST クライアント JS](https://github.com/dailymotion/vast-client-js)
+  * [JQuery](https://github.com/jquery/jquery)
+</Note>
+
+***
+
+## ステップ2：ビデオプレーヤーの HTML 構造を作成する
+
+当社のビデオ プレーヤーは、動画 HTML タグを中心に構築されています。 このタグは `HTMLMediaElement` から継承し、`play()` や `pause()` などのメソッドに加えて、`volume`、`duration`、`currentTime` などのプロパティを提供します。
+
+これらのプロパティは、プレーヤーをミュートまたはミュート解除したり、再生の進行状況を追跡したりするのに役立ちます。
+
+<Note>
+  ### [HTML タグ](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video)、[HTMLMediaElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement)、[ビデオコントロール](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video#controls)の詳細については、Mozilla 開発者向けドキュメントを参照してください。
+</Note>
+
+これらの機能を管理するには、広告配信面全体を `<div>` で囲み、「再生/一時停止」、「ミュート/ミュート解除」、「CC（クローズドキャプション）」ボタン用の追加の HTML を組み込みます。
+
+再生、一時停止、音量コントロールを処理するために、これらのボタンにクリックイベントリスナーを追加します。 `<video>` タグにはデフォルトのコントロール属性が含まれていますが、シークイベントを許可してしまうため、使用を避けています。
+
+また、地域の規制によっては、必須の通知に**コールアウト**または**ポップアップ**が必要になる場合がありますのでご注意ください。
+
+***
+
+## ステップ3：動画再生中にビーコンを呼び出す
+
+<Note>
+  ### ブラウザ内でビーコンを呼び出すための推奨方法の詳細については、[Mozilla 開発者向けドキュメントの次のページ](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)を参照してください。 その他の方法（以下に説明）では、一部のデータが送れない問題が発生しました。
+</Note>
+
+最初に呼び出されなければならないのは、**インプレッションビーコン** です。
+
+このビーコンを呼び出すには、`<video>` 要素に `can play` イベントのイベントリスナーを追加します。 このイベントは、ビューポート内の位置に関係なく、動画の再生準備が完了し、ページに描画されたことをブラウザが判断するとすぐに送信されます。
+
+<Warning>
+  正確なビーコンのトラッキングを確実に行うには、**再生ビーコン**（開始ビーコンとクォータイルビーコン）**が動画の最初の再生中に1回だけ呼び出される必要があります**。 重複を防ぐため、動画では呼び出されたそれぞれのビーコンの状態を維持することが重要です。
+
+  ただし、**インタラクションビーコン**（クリック、ミュート、ミュート解除、一時停止、再開など）は、**対応するユーザーアクションが発生するたびに呼び出される必要があります。**
+</Warning>
+
+開始、`firstQuartile`、`midpoint`、および `thirdQuartile` ビーコンは、`<video>` タグの `timeupdate event ` 上のリスナーによって呼び出される関数で管理されます。
+
+この再生ハンドラー関数内では、まず動画再生の最初のループ内にあるかどうかを確認します。 ある場合、`currentTime` 属性を duration 属性で割って、視聴された動画の割合を計算し、その結果に100を掛けてこの値を0 ～ 100の範囲に正規化します。
+
+パーセンテージがゼロ以外になり、最初のループに入ったら、`start` ビーコンを呼び出します。 視聴率が25%で、まだ最初のループ内にある場合は、`firstQuartile` ビーコンを呼び出します。50%と75%の場合も同様です。
+
+このハンドラーは1秒間に何度も呼び出されるため（[`timeupdate` 仕様を参照](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/timeupdate_event)）、次のようにハンドラーを構築できます。
+
+```javascript
+// 初期化プロセスの間
+this.videoPlayer.addEventListener('timeupdate', this.handlePlaybackEvents.bind(this));
+
+function handlePlaybackEvents() {
+        const percent = (this.videoPlayer.currentTime / this.videoPlayer.duration) * 100;
+// 最初のループの間だけ、これらのビーコンを起動します
+        if (this.currentLoop === 1 ) {
+            if (percent >= 0.01 && !this.adStarted.sent) {
+// マークが送信されました
+              this.adStarted.sent = true;
+// 開始ビーコンを起動します
+              const adStartedBeacon = new URL(this.adStarted.beacon);
+              adStartedBeacon.drop();
+// OMID にイベントを転送します（本ドキュメントの次のセクションに関連）
+              if (this.mediaEvents) {
+                  this.mediaEvents.start(this.videoPlayer.duration, this.videoPlayer.muted ? 0 : this.videoPlayer.volume);
+              }
+            }
+
+            if (percent >= 25 && !this.adFirstQuartile.sent) {
+// マークが送信されました
+              this.adFirstQuartile.sent = true;
+// firstQuartile ビーコンを起動します
+              const adFirstQuartileBeacon = new URL(this.adFirstQuartile.beacon);
+              adFirstQuartileBeacon.drop();
+// OMID にイベントを転送します（本ドキュメントの次のセクションに関連）
+              if (this.mediaEvents) {
+                  this.mediaEvents.firstQuartile();
+              }
+            }
+
+            if (percent >= 50 && !this.adMidpoint.sent) {
+// マークが送信されました
+              this.adMidpoint.sent = true;
+// 中間ビーコンを起動します
+              const adMidpointBeacon = new URL(this.adMidpoint.beacon);
+              adMidpointBeacon.drop();
+// OMID にイベントを転送します（本ドキュメントの次のセクションに関連）
+              if (this.mediaEvents) {
+                  this.mediaEvents.midpoint();
+              }
+          }
+
+            if (percent >= 75 && !this.adThirdQuartile.sent) {
+// マークが送信されました
+              this.adThirdQuartile.sent = true;
+// thirdQuartile ビーコンを起動します
+              const adThirdQuartileBeacon = new URL(this.adThirdQuartile.beacon);
+              adThirdQuartileBeacon.drop();
+// OMID にイベントを転送します（本ドキュメントの次のセクションに関連）
+              if (this.mediaEvents) {
+                  this.mediaEvents.thirdQuartile();
+              }
+          }
+        }
+```
+
+完全なビーコンを処理するには、**ビデオプレーヤーによって発生する[終了イベント](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/ended_event)をリッスンします。**
+
+このイベントを受信すると、動画の最初のループ内にあるかどうかを確認し、ある場合はビーコン全体を呼び出します。 次に、不要になった `timeupdate event` リスナーとそれに関連する再生ハンドラーを削除します。
+
+その後、デバッグとログを目的として内部ループカウントを増やし、動画に対して `play()` を呼び出してループ効果を作成します。 後続の「終了」イベントでは、ループカウントを増やして動画を再開します。
+
+```javascript
+// 初期化プロセスの間
+this.videoPlayer.addEventListener('ended', this.handleLoop.bind(this));
+
+handleLoop() {
+    if (this.currentLoop === 1) {
+        Logger.info('Sent video ad completed beacon');
+// 完了クォータイルビーコンを発信します
+        const adCompletedBeacon = new URL(this.adCompleted.beacon);
+        adCompletedBeacon.drop();
+// OMID にイベントを転送します（本ドキュメントの次のセクションに関連）
+        if (this.mediaEvents) {
+            this.mediaEvents.complete();
+        }
+    }
+// 動画の進捗の監視を停止します
+    this.videoPlayer.removeEventListener('timeupdate', this.handlePlaybackEvents);
+// ループを増やし、動画を再開します
+    this.currentLoop++;
+    this.videoPlayer.play();
+}
+
+```
+
+すべての再生ビーコンは、プレーヤーが再生しているときにのみ起動されます。
+
+<Warning>
+  IAB 標準に従って広告が表示されるようにするには、**ビデオプレーヤーの50%以上がビューポート内にある必要があります**。 しきい値を0.5に設定した [IntersectionObserver](\(\<https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver>\)) を使用して、ビデオプレーヤーが「50%表示」されているかどうかを確認します。
+</Warning>
+
+```javascript
+handleVideoPlayPauseObserver(entries, observer) {
+    for (let i = 0; i < entries.length; i++) {
+        let entry = entries[i];
+        let isVisible = entry.isIntersecting;
+        if (isVisible) {
+            this.playVideo();
+        } else if (!isVisible && this.isPlaying) {
+            this.pauseVideo();
+        }
+    }
+}
+
+startVideoAdObserver() {
+    try {
+// 動画がビューポートの50%以上にならない限り、動画を再生します
+        const observer = new IntersectionObserver(this.handleVideoPlayPauseObserver.bind(this), {threshold: 0.5});
+        observer.observe(this.videoPlayerContainer);
+    } catch (error) {
+        throw new Error(`Unable to start video ad or observer. Error:  ${error}`);
+    }
+}
+// プレイヤーが作成され、初期化された後
+this.player.startVideoAdObserver();
+```
+
+最後に、`click` イベントの `<video>` タグにイベントリスナーを付与して、`ClickTracking` ビーコンを処理します。 handler 関数では、ビーコンを呼び出し、リダイレクト URL が提供されている場合にのみ、ブラウザに VAST tag から `ClickThrough `URL を開くように指示します。
+
+```javascript
+clickThroughHandler() {
+// クリックビーコンを発信します
+    if (this.clickThrough.beacon) {
+        Logger.info('Sent video ad Click Through beacon');
+        const clickThroughBeacon = new URL(this.clickThrough.beacon);
+        clickThroughBeacon.drop();
+    }
+// クリックスルー URL にユーザーをリダイレクトします
+    window.open(this.clickThroughURL, '_self');
+}
+
+handlePlayPause() {
+    if (this.isPlaying) {
+// 動画を停止して停止ビーコンを発信します
+        this.pauseVideo();
+    } else {
+// 動画の再生を開始して再開ビーコンを発信します
+        this.playVideo();
+    }
+}
+
+handleClickThrough() {
+// クリックスルー URL がない場合は、動画プレイヤーをクリックしたときに動画を再生または停止します
+    if (this.clickThroughURL) {
+        this.videoPlayer.addEventListener('click', this.clickThroughHandler.bind(this));
+    } else {
+        this.videoPlayer.addEventListener('click', this.handlePlayPause.bind(this));
+    }
+}
+```
+
+***
+
+## ステップ 4：OMID 互換スクリプトによる追加検証（動画ビュー）
+
+クライアントは、プレーヤーが追加のスクリプトを実行できるように OMID をサポートし、弊社がが動画のviewabilityを追跡できるようにしていただく必要がございます。 これにより、弊社は VAST XML 内で独自の検証スクリプトを送信し、動画のビューアビリティを追跡できるようになります。
+
+<Info>
+  **OMID について**
+
+  [Open Measurement Interface Definition（OMID）](https://iabtechlab.com/standards/open-measurement-sdk/)は、さまざまなプラットフォームやデバイスにわたるデジタル広告、特に動画広告のビューアビリティを測定および検証するために IAB が提供する標準化された技術です。
+
+  OMID は、業界標準に準拠した、視認可能なインプレッションや視認可能な動画再生などのビューアビリティ指標を測定するための一貫したフレームワークを提供します。 OMID を実装すると、広告のパフォーマンスとユーザー・エンゲージメントに関する正確な分析情報が得られるほか、すべての小売業者にわたって同じ方法で動画のビューアビリティを追跡できるため、ネットワーク全体の一貫性が確保されます。
+
+  このドキュメントの OM SDK は、**ウェブ動画向けの OM SDKJS** を指します。
+</Info>
+
+[VAST 仕様](https://www.iab.com/wp-content/uploads/2016/04/VAST4.0_Updated_April_2016.pdf)のセクション3.16では、これらの検証が存在するオプションの `AdVerifications` 要素について概説しています。 `AdVerifications` 内にネストされた各 `Verification` 要素には、検証に必要なリソースの詳細が記載されています。
+
+<Note>
+  ### OM SDK
+
+  これらのリソースを処理するため、IAB が提供する Open-Measurement SDK にリソースを渡します。 公式 OM SDK JS 実装ガイドについては、[こちら](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS)を参照してください。 ドキュメントには、ビューアビリティの統合に必要な、各ステップのコードスニペットが記載されています。
+</Note>
+
+大まかなステップは以下のようになります。
+
+1. OMID サービススクリプトとセッション・クライアントをロードする
+2. 必要なセッション・クライアント・クラスを抽出する
+3. `VerificationParameters` 情報をセッション・クライアントの広告 `Context` に渡す
+4. セッションを開始する
+5. 動画と広告関連のイベントが発生したときに、OM SDK に `adEvents` および `mediaEvents` イベントをトリガーします。
+
+<Warning>
+  [IAB 実装ガイド](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS/)では、弊社の一部ビデオプレーヤーの仕様（バッファリングイベントのサポート、トラッキングイベントの1回のみの起動、再生/一時停止イベントが OM SDK に通知されないなど）が考慮されていません。 そのため、\*\*[IAB ドキュメント](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS/validation.html)に従い、\*\***IAB が提供する[検証スクリプト](https://github.com/InteractiveAdvertisingBureau/Open-Measurement-JSClients/blob/master/creatives/video/omid_video_creative_session.js)を使用してシステム導入の検証を実施することを推奨いたします。**
+</Warning>
+
+![](https://files.readme.io/9b71828-image.png)
+
+<Info>
+  弊社の検証用スクリプトは VAST XML ファイルから取得が可能です。
+</Info>
+
+OM SDK を通じて、Criteo OMID 検証スクリプトから Criteo サーバーにいくつかのイベントが送信されます。
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     レベル
+    </p>
+   </th>
+   <th>
+    <p>
+     ビーコン名
+    </p>
+   </th>
+   <th>
+    <p>
+     説明
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     OMID（
+     <code>
+      VerificationParameters
+     </code>
+     ）
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      omidTrackView
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     OMID 広告セッションが適切に初期化されたことを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     OMID（
+     <code>
+      VerificationParameters
+     </code>
+     ）
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      start
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の再生が開始され、ビューポートで動画が100%表示されていることを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     OMID（
+     <code>
+      VerificationParameters
+     </code>
+     ）
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      firstQuartile
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の再生が25%に達し、ビューポートで動画が100%表示されていることを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     OMID（
+     <code>
+      VerificationParameters
+     </code>
+     ）
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      midpoint
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の再生が50%に達し、ビューポートで動画が100%表示されていることを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     OMID（
+     <code>
+      VerificationParameters
+     </code>
+     ）
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      thirdQuartile
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の再生が75%に達し、ビューポートで動画が100%表示されていることを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     OMID（
+     <code>
+      VerificationParameters
+     </code>
+     ）
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      complete
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画の再生が完了し、ビューポートで動画が100%表示されていることを示します。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     OMID（
+     <code>
+      VerificationParameters
+     </code>
+     ）
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      twoSecondsFiftyPercentView
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     動画が2秒間連続して再生され、ビューポートで動画が50%以上表示されていることを示します。 動画をバッファリングしたり一時停止したりすると、2秒のカウンターがリセットされることに注意してください。
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     VAST XML - OMID
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      &lt;Tracking event="verificationNotExecuted"&gt;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     検証スクリプトの初期化に失敗したことを示します。
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<Info>
+  ビューポート表示の100%は、クォータイルなどの再生イベントを追跡するための業界標準です。 ビューポートでの連続2秒間と50%の表示は MRC 標準です。
+</Info>
+
+***
+
+### 1. OMID サービススクリプトとセッション・クライアントをロードする
+
+当該の IAB OM SDK JS は、クリエイティブが viewability をサポートするために組み込む必要がある2つのスクリプト（`omweb-v1.js` と `omid-session-client-v1.js`）で構成されています。
+
+<Note>
+  ### これらのファイルは、自身でホストする、または Criteo の CDN から取得することができます。 ファイルは以下の URL から確認できます。
+
+  [https://static.criteo.net/banners/js/omidjs/stable/omid-session-client-v1.js](https://static.criteo.net/banners/js/omidjs/stable/omid-session-client-v1.js)
+
+  [https://static.criteo.net/banners/js/omidjs/stable/omweb-v1.js](https://static.criteo.net/banners/js/omidjs/stable/omweb-v1.js)
+
+  Omid-session-client-v1.js は、統合パートナーが JavaScript レイヤーで広告セッション・アクティビティを実行するために使用されます。
+
+  Omweb-v1.js は、ウェブコンテキスト向けの OMID JS ライブラリです。
+</Note>
+
+***
+
+### 2. 必要なセッション・クライアント・クラスを抽出する
+
+```javascript
+        const AdSession = sessionClient.AdSession;
+        const Partner = sessionClient.Partner;
+        const Context = sessionClient.Context;
+        const VerificationScriptResource = sessionClient.VerificationScriptResource;
+        const AdEvents = sessionClient.AdEvents;
+        const MediaEvents = sessionClient.MediaEvents;
+        const VastProperties = sessionClient.VastProperties;
+```
+
+***
+
+### 3. `&lt;VerificationParameters&gt;` 情報をセッション・クライアントの広告 `Context` に渡す
+
+広告セッションを初期化する前に、OM SDK JS では Criteoに対応するためのパラメータの定義が必要です。
+
+```javascript
+const CONTENT_URL = window.location.href;
+const PARTNER_NAME = 'criteo';
+const PARTNER_VERSION = Object.keys(OmidSessionClient)[0];
+
+const partner = new Partner(PARTNER_NAME, PARTNER_VERSION);
+```
+
+このステップにより、Criteo の検証スクリプトが参照可能となり、`AdSession` の開始時に検証スクリプトを自動で読み込むことができるようになります。
+
+```javascript
+// VAST 定義の &lt;AdVerifications&gt; から
+const vastVerifications = [{
+    javaScriptResource: 'https://static.criteo.net/banners/js/omidjs/stable/omid-validation-verification-script-for-retail-media.js',
+    vendor: 'criteo.com-omid',
+// VAST 定義の &lt;VerificationParameters&gt; から
+    verificationParameters: JSON.stringify({
+        "beacons": {
+            "omidTrackView": `${bbtUrlomidTrackView}`,
+            "start": `${bbtUrlStart}`,
+            "firstQuartile": `${bbtUrlFirstQuartile}`,
+            "midpoint": `${bbtUrlMidpoint}`,
+            "thirdQuartile": `${bbtUrlThirdQuartile}`,
+            "complete": `${bbtUrlComplete}`,
+            "twoSecondsFiftyPercentView": `${bbtUrlTwoSecondsFiftyPercentView}`
+        }
+    }),
+}];
+
+const resources = vastVerifications.map((verification) => {
+    const scriptUrl = verification.javaScriptResource;
+// アクセスモードの値：
+// https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS/accessmodes.html
+    const accessMode = 'full';
+    return new VerificationScriptResource(scriptUrl, verification.vendor, verification.verificationParameters, accessMode);
+});
+
+const OMSDK_SERVICE_WINDOW = window.top;
+const VIDEO_ELEMENT = document.getElementById('video-creative-element');
+// 参照を Criteo の認証スクリプトに設定します
+const context = new Context(partner, resources, CONTENT_URL);
+context.setVideoElement(VIDEO_ELEMENT);
+context.setServiceWindow(OMSDK_SERVICE_WINDOW);
+```
+
+***
+
+### 4. セッションを開始する
+
+広告セッションが開始されると、`Context` 情報を使用して Criteo 検証スクリプトが自動的に読み込まれます（[IAB 実装ガイドのステップ3](https://interactiveadvertisingbureau.github.io/Open-Measurement-SDKJS/#3-create-the-context)）。
+
+この時点で、Criteo 検証スクリプトは、OM SDK に向けてトリガーされる `AdEvents` と `MediaEvents` の監視を開始します。
+
+```javascript
+const adSession = new AdSession(context);
+adSession.setCreativeType('video');
+adSession.setImpressionType('beginToRender');
+
+if (!adSession.isSupported()) {
+    const errorMessage = "Ad session is not supported."
+    Logger.error(errorMessage)
+    throw errorMessage
+}
+
+const adEvents = new AdEvents(adSession);
+const mediaEvents = new MediaEvents(adSession);
+// 広告セッションを開始します
+adSession.start();
+// OM SDK JS セッションが開始されたことを通知し、ライフタイム（エラー/完了）をサポートします
+adSession.registerSessionObserver((event) => {
+    const {adSessionId, timestamp, type, data} = event;
+    switch (type) {
+        case 'sessionStart':
+            state.omidState.sessionActive = true;
+
+            const isSkippable = false;
+            const skipOffset = 0;
+            const vastProperties = new VastProperties(isSkippable, skipOffset, /* isAutoPlay= */ true, /* position= */ 'standalone');
+// イベントをロードします
+            adEvents.loaded(vastProperties);
+            adEvents.impressionOccurred();
+            break;
+        case 'sessionError':
+            Logger.error("An OMID session error occured", event);
+            throw event;
+        case 'sessionFinish':
+// クリーンアップを実行します
+            Logger.log("The OMID session finished", event);
+            break;
+    }
+});
+```
+
+***
+
+### 5. Open Measurement イベントをトリガーする
+
+<Note>
+  ### 利用可能な `AdEvents` と `MediaEvents` のリストは [IAB の Github](https://github.com/InteractiveAdvertisingBureau/) からアクセスが可能です。
+</Note>
+
+これらの呼び出しを通じて、Criteo 検証スクリプトは高度なビューアビリティ・イベントを計算できるようになります。
+
+* Criteo はクォータイルイベントを追跡することができるようになります（動画がviewportの100%を占めている場合）
+* 高度なイベントは、動画の50%が2秒間連続して再生され、ビューポートに表示されているかどうかを追跡するために計算されます。
+
+`AdEvents` と `MediaEvents` の両方に対するすべての呼び出しは、クォータイルおよびディスプレイ・イベントの既存のトラッキングビーコンとは別で呼び出される必要があります。
+
+また、動画バッファリング・イベントは、IAB コード サンプルの説明に従って起動する必要があります。
+
+```javascript
+this.isBuffering = false;
+
+this.videoPlayer.addEventListener("waiting", () => {
+    this.isBuffering = true;
+    this.mediaEvents.bufferStart();
+});
+
+this.videoPlayer.addEventListener("timeupdate", () => {
+    if (this.isBuffering) {
+        this.isBuffering = false;
+        this.mediaEvents.bufferFinish();
+    }
+});
+```
+
+***
+
+### 6. 複数の動画が存在する場合に適切な動画を選択する
+
+<Info>
+  **ターゲット範囲**とは、動画が配置される HTML 要素の幅と高さを指します。
+</Info>
+
+VAST XML に複数の動画が存在する場合は、`loadAd()` を呼び出すときにターゲット範囲をパラメーターとして指定することが重要です。 以下のとおり、`clientWidth` と `clientHeight` を使用して範囲を動的に取得することが可能です。
+
+```javascript
+const targetContainer = document.querySelector('.targetContainerSelector');
+
+const targetDimension = {
+    width: targetContainer.clientWidth,
+    height: targetContainer.clientHeight,
+};
+
+await videoAdPlayer.loadAd(targetDimension);
+```
+
+取得されたターゲット範囲に最も近いサイズのものが最適な動画として選択されます。
+
+<Warning>
+  有効なターゲット範囲が指定されていない場合、または無効な場合は、リストの一番上の動画が自動的に選択されます。
+</Warning>
+
+有効なターゲット範囲が指定されると、ライブラリはアスペクト比を考慮し、比率の差が最小の動画を選択します。
+
+<Info>
+  **例**
+
+  縦型、横型、正方形の動画と、縦型のターゲット範囲が提示された場合、ライブラリは縦型の動画を選択します。 縦型の動画が2つ、横型の動画が2つ、正方形の動画が1つ使用可能で、ターゲット範囲が縦型の場合、比率の差が最も小さい2つの縦型動画のうちの1つが選択されます。
+</Info>
+
+***
+
+### コードサンプル
+
+<Note>
+  ### 弊社よりビデオプレーヤーの実装の参考として提供している**ビデオプレーヤーのオープンソース・バージョン**は、[こちら](https://github.com/criteo/video-ad-player/blob/main/VideoAd/VideoAdPlayer.js)からアクセスが可能です。
+</Note>
+## What's next
+
+* [Video Player implementation (App:Android)(Japanese)](/retailer-integration/docs/video-player-implementation-appandroid-japanese)
+* [Video Player Implementation (App: iOS)(Japanese)](/retailer-integration/docs/video-player-implementation-app-ios-japanese)

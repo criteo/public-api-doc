@@ -1,6 +1,9 @@
 ---
-title: "Order Confirmation Page"
+title: Order Confirmation Page
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Requesting Ads/api-parameters-1/order-confirmation-page.md
 ---
+
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
 
 # Definition
 
@@ -95,12 +98,12 @@ The order confirmation page is **the page where the user is taken right after co
 
 # Reporting Discounts in the OCP API Call
 
-When a promotion applies a discount (e.g., “*buy 1 get 1 for 40% off*”), the `unit_price` should reflect the average price shared across the paid items.
+When a promotion applies a discount (e.g., “_buy 1 get 1 for 40% off_”), the `unit_price` should reflect the average price shared across the paid items.
 
 ### Example
 
-* A customer buys 2 items, normally priced at $24 each.
-* One of them is effectively discounted under the promotion “*buy 1 get 1 for 40% off*”.
+* A customer buys 2 items, normally priced at \$24 each.
+* One of them is effectively discounted under the promotion “_buy 1 get 1 for 40% off_”.
 * To calculate the `unit_price`, we do: (24 + (0.6 × 24)) / 2 = 19.20
 * Then the retailer reports `unit_price` as `19.20` in the OCP API call.
 
@@ -109,56 +112,52 @@ When a promotion applies a discount (e.g., “*buy 1 get 1 for 40% off*”), the
 # Sample Calls
 
 <Info>
-  The header values in the sample calls are illustrative. Make sure to replace them with the appropriate values for your implementation.
+  Header values are illustrative.
 </Info>
 
 ***
 
 ## AMER
 
-<CodeGroup>
-  ```bash bash
-  curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
-  --data-urlencode "criteo-partner-id=12345" \
-  --data-urlencode "environment=d" \
-  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
-  --data-urlencode "customer-id=123456789" \
-  --data-urlencode "page-id=trackTransaction_API_desktop" \
-  --data-urlencode "event-type=trackTransaction" \
-  --data-urlencode "transaction-id=1841xva0ha8" \
-  --data-urlencode "item=123|456|789" \
-  --data-urlencode "price=29.99|15.49|9.99" \
-  --data-urlencode "quantity=4|1|2" \
-  --data-urlencode "currency=USD" \
-  -H "Referer: https://www.criteo.com" \
-  -H "X-Forwarded-For: 123.456.789.012" \
-  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-  ```
-</CodeGroup>
+```bash
+curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+--data-urlencode "criteo-partner-id=12345" \
+--data-urlencode "environment=d" \
+--data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+--data-urlencode "customer-id=123456789" \
+--data-urlencode "page-id=trackTransaction_API_desktop" \
+--data-urlencode "event-type=trackTransaction" \
+--data-urlencode "transaction-id=1841xva0ha8" \
+--data-urlencode "item=123|456|789" \
+--data-urlencode "price=29.99|15.49|9.99" \
+--data-urlencode "quantity=4|1|2" \
+--data-urlencode "currency=USD" \
+-H "Referer: https://www.criteo.com" \
+-H "X-Forwarded-For: 123.456.789.012" \
+-H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+```
 
 ***
 
 ## EMEA
 
-<CodeGroup>
-  ```bash bash
-  curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
-  --data-urlencode "criteo-partner-id=12345" \
-  --data-urlencode "environment=d" \
-  --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
-  --data-urlencode "customer-id=123456789" \
-  --data-urlencode "page-id=trackTransactionApiAios" \
-  --data-urlencode "event-type=trackTransaction" \
-  --data-urlencode "transaction-id=1841xva0ha8" \
-  --data-urlencode "item=123|456|789" \
-  --data-urlencode "price=29.99|15.49|9.99" \
-  --data-urlencode "quantity=4|1|2" \
-  --data-urlencode "currency=EUR" \
-  -H "Referer: https://www.criteo.com" \
-  -H "X-Forwarded-For: 123.456.789.012" \
-  -H "User-Agent: app_ios 1.2.3"
-  ```
-</CodeGroup>
+```bash
+curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+--data-urlencode "criteo-partner-id=12345" \
+--data-urlencode "environment=d" \
+--data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+--data-urlencode "customer-id=123456789" \
+--data-urlencode "page-id=trackTransactionApiAios" \
+--data-urlencode "event-type=trackTransaction" \
+--data-urlencode "transaction-id=1841xva0ha8" \
+--data-urlencode "item=123|456|789" \
+--data-urlencode "price=29.99|15.49|9.99" \
+--data-urlencode "quantity=4|1|2" \
+--data-urlencode "currency=EUR" \
+-H "Referer: https://www.criteo.com" \
+-H "X-Forwarded-For: 123.456.789.012" \
+-H "User-Agent: app_ios 1.2.3"
+```
 
 ***
 
@@ -174,23 +173,18 @@ To ensure accurate tracking, `trackTransaction` calls must be re-fired under the
 ### Modifications
 
 * When a user modifies their order (e.g., changes the quantity or adds/removes products), a new `trackTransaction` call must be triggered with the same `transaction-id` as the original order.
-
 * The following product details must be managed within the new call:
-
-  * **Unchanged products**: Include these products in the new API call with their *original* quantity and price.
-  * **Modified products**: Include these products with *updated* quantities and/or prices.
+  * **Unchanged products**: Include these products in the new API call with their _original_ quantity and price.
+  * **Modified products**: Include these products with _updated_ quantities and/or prices.
   * **New products**: Add these products to the API call with their respective prices/quantities.
   * **Deleted products**: Include these products in the new API call with their quantities set to `0`
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-What’s Next
+<SendFeedback />
+## What's next
 
 * [Organic add-to-cart events](/retailer-integration/docs/organic-add-to-cart-events)
 * [Filters](/retailer-integration/docs/filtering)

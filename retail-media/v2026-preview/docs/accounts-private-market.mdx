@@ -1,0 +1,300 @@
+---
+title: Accounts (Private Market)
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Private market (target Only)/accounts-private-market.md
+hidden: true
+---
+
+<Note>
+  ### A FEW THINGS TO KNOW
+
+  An account represents a brand, agency, marketplace seller, or retailer; it is a business & billing entity that contains campaigns. 
+
+  Your account is the supply account in the private market, which hosts all the individual private market demand accounts. Each private market demand account belongs to a brand buying within the retailer's inventory.
+
+  **Private market demand accounts are created by Criteo; please reach out to your account representative.**
+</Note>
+
+## **Endpoint**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Get All Accounts
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<Danger>
+  **X-Origin-Account Header**
+
+  Pass the `X-Origin-Account` header to specify which private market (brand) account your API call should return results for.
+
+  * If your application doesn't have access to the accountID that is passed in the headers, your api call will return a 403 Forbidden response. If a correct account ID that your application has access to is passed, then a 200 response
+  * Endpoints where `accountId` is passed in the path takes priority, so headers won't affect the api call
+  * **Note:** If your api call doesn't specify this header, the call will still work returning a 200 response
+</Danger>
+
+## **Account Attributes**
+
+<ParamField path="id" type="string">
+  The private market (Brand) account ID
+
+  **Values:** int64
+</ParamField>
+
+<ParamField path="name" type="string">
+  The private market (Brand) account name
+
+  **Values:** 510 char limit
+</ParamField>
+
+<ParamField path="type" type="enum">
+  Account type
+
+  **Values:** `demand`, `supply`
+</ParamField>
+
+<ParamField path="subtype" type="enum">
+  Account subtype
+
+  **Values:** `brand`, `seller`
+</ParamField>
+
+<ParamField path="countries" type="string array">
+  Countries associated with the account
+
+  **Values:** ISO-3166 alpha-2 (eg.`US` , `FR`)
+</ParamField>
+
+<ParamField path="currency" type="string">
+  One single currency for billing, budgeting, bid settings & campaign performance metrics
+
+  **Values:** ISO-4217 (eg.`USD` , `EUR`)
+</ParamField>
+
+<ParamField path="parentAccountLabel" type="string">
+  Label used to associate multiple accounts; defaults to the account name
+
+  **Values:** 510 char limit
+</ParamField>
+
+<ParamField path="timeZone" type="string">
+  Retailer time zone
+
+  **Values:** database tz syntax, (eg. `America/New_York`, `Europe/Paris` , `UTC`)
+</ParamField>
+
+## **Get All Accounts**
+
+This endpoint lists all accounts that your API credentials have access to.  Response results will be provided in paginated form
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/accounts
+```
+
+**Sample Request** 
+
+<CodeGroup>
+
+```bash cURL
+curl -L 'https://api.criteo.com/preview/retail-media/accounts' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/preview/retail-media/accounts"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/preview/retail-media/accounts")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/preview/retail-media/accounts');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response** 
+
+```json JSON
+{
+    "metadata": {
+        "totalItemsAcrossAllPages": 3,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 1
+    },
+    "data": [
+        {
+            "id": "425730879617900544",
+            "type": "RetailMediaAccount",
+            "attributes": {
+                "name": "Target Private Market Supply TEST",
+                "type": "supply",
+                "subtype": null,
+                "countries": [
+                    "US"
+                ],
+                "currency": "USD",
+                "parentAccountLabel": "Target Private Market Supply TEST",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "433350412678656000",
+            "type": "RetailMediaAccount",
+            "attributes": {
+                "name": "Timberland - Target PM",
+                "type": "demand",
+                "subtype": "brand",
+                "countries": [
+                    "US"
+                ],
+                "currency": "USD",
+                "parentAccountLabel": "Target Private Market Supply TEST",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "433433483696336896",
+            "type": "RetailMediaAccount",
+            "attributes": {
+                "name": "Microsoft - Target PM",
+                "type": "demand",
+                "subtype": "brand",
+                "countries": [
+                    "US"
+                ],
+                "currency": "USD",
+                "parentAccountLabel": "Target Private Market Supply TEST",
+                "timeZone": "America/New_York"
+            }
+        }
+    ]
+}
+```
+
+## **Responses**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+    </p>
+    <p>
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>

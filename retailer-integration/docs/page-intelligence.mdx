@@ -1,0 +1,2079 @@
+---
+title: Page Intelligence
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/PAGE INTELLIGENCE/page-intelligence.md
+hidden: true
+---
+
+This guide introduces the `Page Intelligence` endpoint, its request and response objects, and the expected integration behavior for retailers using holistic optimization across organic and sponsored products.
+
+## Business Context
+
+`Page Intelligence` helps retailers optimize search and category pages holistically by evaluating organic and sponsored products together instead of managing them through separate decisioning flows.
+
+It uses the same Sponsored Products campaigns and reporting, while adding a unified scoring and policy layer so retailers can control how sponsored SKUs appear across placements without compromising relevance or shopper experience.
+
+<Warning>
+  Page Intelligence does not replace Sponsored Products.
+
+  It uses the same Sponsored Products campaigns and reporting, but offers an additional way to orchestrate where and how sponsored SKUs appear across placements on your page.
+
+  You can enable it on selected search and category pages while keeping your existing Sponsored Products integration elsewhere.
+</Warning>
+
+## Endpoint Behavior
+
+`Page Intelligence` helps retailers maximize page-level value by balancing organic and sponsored products across placements using a unified scoring and policy layer.
+
+The endpoint lets you:
+
+* Send page context and organic candidates for placements that require holistic optimization.
+* Receive multiple optimized placements, each with its own ranked list of products.
+* Implement both product-level and placement-level beacons for measurement and model training.
+
+The updated contract is designed to support multiple placements and align more closely with existing delivery behavior across placement types.
+
+## Prerequisites
+
+* The retailer is already integrated with Criteo Retail Media Delivery.
+* `Page Intelligence` configuration and policy settings are set up with your Criteo team.
+* You can send a stable `retailerVisitorId` and relevant page context.
+
+## Recommendations
+
+* Do not re-rank the products returned in each placement.
+* Implement both product-level and placement-level beacons from the response.
+* Include `organicSkus` for requests that use holistic optimization.
+
+## Endpoint Overview
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Method
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      POST
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      https://api.criteo.com/v1/partners/&#123;partnerId&#125;/optimize
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optimize one or more placements across organic and sponsored products using a unified scoring and policy layer.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Request Body
+
+### Top-level request object
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the page that this ad call is for.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageAdContext
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      OptimizeAdContext
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Page context for the ad request. Contains composable properties that inform ad selection algorithms based on page content and context.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerVisitorId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique, unauthenticated user ID persisted across sessions on the same device. Can be a string ID or SHA256-hashed email.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      customerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique ID of the authenticated user for the current session.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      regionId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Store ID selected by the user when browsing the retailer site.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### `OptimizeAdContext`
+
+The `pageAdContext` object uses a flat, composable structure. Each property can be included or omitted depending on the content and context needed for each ad request.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keywords
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Keyword search string entered by the user.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      category
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Category or taxonomy text of the page the user is browsing.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      organicSkus
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array&lt;OrganicSku&gt;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No*
+    </p>
+   </td>
+   <td>
+    <p>
+     Organic SKUs returned by a search query or category in rank order. Up to 1000 values. Required for ad calls that utilize HPO.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      filters
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array&lt;RequestFilter&gt;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Filters applied by the shopper on the result set. Up to 10 filters.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageNumber
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      integer
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Page number for paginated results or dynamically loaded result folds.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     SKU ID corresponding to the product on a product detail page.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      price
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Current price of the product added to the basket, including discount if any.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      availability
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      boolean
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Whether the product is in stock.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+* Required for requests that use holistic optimization.
+
+### `OrganicSku`
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      skuId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the organic SKU.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      isDisplayedOnCurrentPage
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      boolean
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     If
+     <code>
+      true
+     </code>
+     , indicates that the SKU was displayed on the current page of results.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      score
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Quality or relevancy score assigned by the retailer to this SKU.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### `RequestFilter`
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      name
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the filter.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      operator
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      OperatorEnum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter operator.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      value
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array&lt;string&gt;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Values the operator applies to. Up to 10 values.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+`In` and `NotIn` support multiple values. The other operators support a single value.
+
+### `OperatorEnum`
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Value
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Equal
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Equal to.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      GreaterThan
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Greater than.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      LessThan
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Less than.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      GreaterThanOrEqual
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Greater than or equal to.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      LessThanOrEqual
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Less than or equal to.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      In
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Membership in a list.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      NotEqual
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Not equal to.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      NotIn
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Not in the membership list.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Sample Request
+
+```json
+{
+  "pageId": "hpo_searchPage_desktop",
+  "pageAdContext": {
+    "keywords": "windows",
+    "filters": [
+      {
+        "name": "color",
+        "operator": "Equal",
+        "value": ["blue"]
+      }
+    ],
+    "pageNumber": 1,
+    "organicSkus": [
+      {
+        "skuId": "5454644",
+        "isDisplayedOnCurrentPage": true,
+        "score": 0.98
+      },
+      {
+        "skuId": "1005000",
+        "isDisplayedOnCurrentPage": true,
+        "score": 0.97
+      }
+    ]
+  },
+  "customerId": "567242992384",
+  "regionId": "us-east"
+}
+```
+
+## Response Body
+
+The response supports **multiple placements** in a single response. Each placement has its own `format`, `products`, and placement-level beacons. The response uses a resource-style envelope with `data.type` and `data.attributes`.
+
+### Response overview
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      data
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      OptimizeData
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Response data payload.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      warnings
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Warnings about this specific request.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      errors
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Errors that happened while handling this request.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+The `data` object includes a `type` field set to `"OptimizeData"` and an `attributes` object containing the actual response payload.
+
+### `OptimizeData`
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageUid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique ID of this optimize response, used for debugging purposes.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      placements
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      dictionary&lt;string, OptimizePlacement&gt;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     List of placements returned in the response. The key is the placement name.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### `OptimizePlacement`
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      placementId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Example response
+    </p>
+   </td>
+   <td>
+    <p>
+     Placement identifier shown in the current contract example response.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      format
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Ad format of the placement.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      products
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array&lt;OptimizeProduct&gt;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     List of products to include in the placement. Can include both ads and organic product results.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      beacons
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      OptimizePlacementBeacons
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Placement-level tracking beacons.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      vastTagUrl
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     VAST tag URL for video ad formats.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      vastTagXml
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     VAST tag XML for video ad formats.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### `OptimizeProduct`
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      listingType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      ListingType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of product, such as organic or sponsored.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      skuId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     SKU ID of the product.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      parentSkuId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Parent SKU ID. If the product does not have a parent, its own ID is used.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Example response
+    </p>
+   </td>
+   <td>
+    <p>
+     Product name shown in the current contract example response.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productPageUrl
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     URL for the product detail page.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productImageUrl
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     URL for the product image.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      rating
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Product rating.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      price
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Current price in the retailer's currency.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      comparePrice
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Original price before discount, if any.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      renderingAttributes
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer-provided JSON-serialized dictionary of additional rendering properties.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      beacons
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      OptimizeProductBeacons
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Product-level tracking beacons for this product.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Placement-level beacons
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onLoadBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     URL to call when the placement is loaded.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onViewBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     URL to call when the placement is viewed according to IAB guidelines.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onClickBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     URL to call when the placement is clicked.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Product-level beacons
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onViewBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     URL to call when the product is viewed according to IAB guidelines.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onClickBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     URL to call when the product is clicked.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onBasketChangeBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     URL to call when the product is added to the basket.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      onWishlistBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     URL to call when the product is added to a wishlist.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+## Sample Response
+
+```json
+{
+  "data": {
+    "type": "OptimizeData",
+    "attributes": {
+      "pageUid": "ef47a7cc-a703-4775-8032-24145a6a0c0a",
+      "placements": {
+        "viewSearchResult_API_desktop-Carousel": {
+          "placementId": "viewSearchResult_API_desktop-Carousel",
+          "format": "sponsored_products",
+          "products": [
+            {
+              "listingType": "Sponsored",
+              "skuId": "6887924",
+              "parentSkuId": "6887924",
+              "productName": "Example product",
+              "productPageUrl": "https://www.example.com/product/6887924",
+              "productImageUrl": "https://www.example.com/images/6887924.jpg",
+              "rating": "4.0000",
+              "price": "10.00",
+              "comparePrice": "44.49",
+              "renderingAttributes": "{\"brand\":\"example\"}",
+              "beacons": {
+                "onViewBeacon": "//b.example/rm?...",
+                "onClickBeacon": "//b.example/rm?...",
+                "onBasketChangeBeacon": "//b.example/rm?...",
+                "onWishlistBeacon": "//b.example/rm?..."
+              }
+            }
+          ],
+          "beacons": {
+            "onLoadBeacon": "//b.example/rm?...",
+            "onViewBeacon": "//b.example/rm?...",
+            "onClickBeacon": "//b.example/rm?..."
+          }
+        },
+        "viewSearchResult_API_desktop-InGrid": {
+          "placementId": "viewSearchResult_API_desktop-InGrid",
+          "format": "page_intelligence",
+          "products": [
+            {
+              "listingType": "Sponsored",
+              "skuId": "6887100",
+              "parentSkuId": "6887100",
+              "productName": "Example sponsored product",
+              "productPageUrl": "https://www.example.com/product/6887100",
+              "productImageUrl": "https://www.example.com/images/6887100.jpg",
+              "rating": "4.0000",
+              "price": "10.00",
+              "comparePrice": "44.49",
+              "renderingAttributes": "{\"brand\":\"example\"}",
+              "beacons": {
+                "onViewBeacon": "//b.example/rm?...",
+                "onClickBeacon": "//b.example/rm?...",
+                "onBasketChangeBeacon": "",
+                "onWishlistBeacon": ""
+              }
+            },
+            {
+              "listingType": "Organic",
+              "skuId": "5454644",
+              "parentSkuId": null,
+              "productName": null,
+              "productPageUrl": "https://www.example.com/product/5454644",
+              "productImageUrl": "https://www.example.com/images/5454644.jpg",
+              "rating": "2.5000",
+              "price": "48.99",
+              "comparePrice": "48.99",
+              "renderingAttributes": "{\"brand\":\"example\"}",
+              "beacons": {
+                "onViewBeacon": "",
+                "onClickBeacon": "//b.example/rm?...",
+                "onBasketChangeBeacon": "//b.example/rm?...",
+                "onWishlistBeacon": "//b.example/rm?..."
+              }
+            }
+          ],
+          "beacons": {
+            "onLoadBeacon": null,
+            "onViewBeacon": null,
+            "onClickBeacon": null
+          }
+        }
+      }
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+## Integration Notes
+
+* Use this endpoint on pages where you want Criteo to optimize across organic and sponsored products together.
+* Include the relevant page context and `organicSkus` in `pageAdContext` for holistic optimization scenarios.
+* Render each placement exactly as returned.
+* Implement all beacons returned in the response.
+
+## Response Codes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response code
+    </p>
+   </th>
+   <th>
+    <p>
+     Title
+    </p>
+   </th>
+   <th>
+    <p>
+     Detail
+    </p>
+   </th>
+   <th>
+    <p>
+     Troubleshooting
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      OK
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Request succeeded and returned one or more placements, each with a ranked products list.
+    </p>
+   </td>
+   <td>
+    <p>
+     Render each placement as-is, use
+     <code>
+      listingType
+     </code>
+     for labeling, and implement both product-level and placement-level beacons correctly.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Bad Request
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Request body is invalid, for example because required fields are missing or the filter structure is invalid.
+    </p>
+   </td>
+   <td>
+    <p>
+     Verify that required attributes are present and that the request structure is valid.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      401
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Unauthorized
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Authentication failed or token is missing or invalid.
+    </p>
+   </td>
+   <td>
+    <p>
+     Check API credentials and authorization header.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      5xx
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Server error
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Internal error while processing the request.
+    </p>
+   </td>
+   <td>
+    <p>
+     Retry with backoff. If the issue persists, contact your Criteo representative with
+     <code>
+      pageUid
+     </code>
+     and timeframe.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<br />

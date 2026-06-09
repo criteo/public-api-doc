@@ -1,19 +1,18 @@
 ---
-title: "Real Time Statistics"
+title: Real Time Statistics
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026-preview/docs/Preview Endpoints/analytics/real-time-statistics.md
 ---
 
-1. Preview Endpoints
-2. [Analytics](/marketing-solutions/v2026-preview/docs/analytics)
-
-The purpose of this endpoint is to provide realtime data for CMS via an API. This provided data is the same as in the [Real Time dashboard in CGrowth](https://marketing.criteo.com/analytics/dashboards/mc-realtime).
+The purpose of this endpoint is to provide realtime data for CMS via an API.  
+This provided data is the same as in the [Real Time dashboard in CGrowth](https://marketing.criteo.com/analytics/dashboards/mc-realtime).
 
 ## Making a call
 
 Real Time Statistics report is available at the following endpoint:
 
-![](/images/marketing-solutions/v2026-preview/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
+```text
 https://api.criteo.com/preview/reports/realtime
 ```
 
@@ -21,112 +20,398 @@ The following request returns data based on the selected `attributes` similarly 
 
 Example of body for the POST call:
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": {
-      "type": "string",
-      "attributes": {
-        "advertiserIds": [
-          1234
-        ],
-        "adsetIds": [
-          2345 
-        ], 
-        "campaignIds": [
-          3456
-        ],
-        "dimensions": [
-          "advertiser", "advertiserId", "adset", "adsetId", "campaign", "campaignId", "hour", "day", "week", "month", "year"
-        ],
-        "metrics": [
-          "clicks", "displays", "cost"
-        ],
-        "lookbackWindow": 12,
-        "currency": "EUR",
-        "timezone": "UTC"
-      }
+```text Example POST body
+{
+  "data": {
+    "type": "string",
+    "attributes": {
+      "advertiserIds": [
+        1234
+      ],
+      "adsetIds": [
+        2345 
+      ], 
+      "campaignIds": [
+        3456
+      ],
+      "dimensions": [
+        "advertiser", "advertiserId", "adset", "adsetId", "campaign", "campaignId", "hour", "day", "week", "month", "year"
+      ],
+      "metrics": [
+        "clicks", "displays", "cost"
+      ],
+      "lookbackWindow": 12,
+      "currency": "EUR",
+      "timezone": "UTC"
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
 The POST call will generate a report in the format of a JSON document. This is a response example:
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": [
-      {
-        "type": "RealtimeStatisticsReport",
-        "attributes": {
-          "rows": [
-            {
-              "advertiser": "Advertiser1",
-              "advertiserId": "1234",
-              "adset": "AdsetName",
-              "adsetId": "2345",
-              "campaign": "CampaignName",
-              "campaignId": "3456",
-              "hour": "12",
-              "day": "2025-03-31",
-              "week": "2025-03-31",
-              "month": "2025-03-01",
-              "year": "2025-01-01",
-              "clicks": "22222",
-              "displays": "11111",
-              "cost": "33.333"
-            },
-            {
-              "advertiser": "Advertiser1",
-              "advertiserId": "1234",
-              "adset": "AdsetName",
-              "adsetId": "2345",
-              "campaign": "CampaignName",
-              "campaignId": "3456",
-              "hour": "11",
-              "day": "2025-03-31",
-              "week": "2025-03-31",
-              "month": "2025-03-01",
-              "year": "2025-01-01",
-              "clicks": "44444",
-              "displays": "55555",
-              "cost": "66.666"
-            },
-          ]
-        }
+```text JSON
+{
+  "data": [
+    {
+      "type": "RealtimeStatisticsReport",
+      "attributes": {
+        "rows": [
+          {
+            "advertiser": "Advertiser1",
+            "advertiserId": "1234",
+            "adset": "AdsetName",
+            "adsetId": "2345",
+            "campaign": "CampaignName",
+            "campaignId": "3456",
+            "hour": "12",
+            "day": "2025-03-31",
+            "week": "2025-03-31",
+            "month": "2025-03-01",
+            "year": "2025-01-01",
+            "clicks": "22222",
+            "displays": "11111",
+            "cost": "33.333"
+          },
+          {
+            "advertiser": "Advertiser1",
+            "advertiserId": "1234",
+            "adset": "AdsetName",
+            "adsetId": "2345",
+            "campaign": "CampaignName",
+            "campaignId": "3456",
+            "hour": "11",
+            "day": "2025-03-31",
+            "week": "2025-03-31",
+            "month": "2025-03-01",
+            "year": "2025-01-01",
+            "clicks": "44444",
+            "displays": "55555",
+            "cost": "66.666"
+          },
+        ]
       }
-    ],
-    "warnings": [],
-    "errors": []
-  }
-  ```
-</CodeGroup>
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
 
 ## Report Request attributes
 
 Below is all possible attributes you may use for the request:
 
-| Field            | Required | Type          | Default Value                                                                                | Description                                                                                 |
-| ---------------- | -------- | ------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `advertiserIds`  | Yes      | `string[]`    |                                                                                              | Id(s) of the account(s).                                                                    |
-| `campaignIds`    | Optional | `string[]`    | `[]`                                                                                         | Id(s) of the campaigns to filter.                                                           |
-| `adsetIds`       | Optional | `string[]`    | `[]`                                                                                         | Id(s) of the adset(s) to filter.                                                            |
-| `lookbackWindow` | Optional | `integer`     | `12`                                                                                         | Number of hours going back the query should apply to (from 12 to 24).                       |
-| `timezone`       | Optional | `string`      | `UTC`                                                                                        | Timezone used for dates. Must exist in the [Time Zone DB](https://www.iana.org/time-zones). |
-| `currency`       | Optional | `string`      | `EUR`                                                                                        | Currency in which the results are shown.                                                    |
-| `dimensions`     | Optional | `Dimension[]` | `["AdvertiserId", "Advertiser", "CampaignId", "Campaign", "AdsetId", "Adset", "Day", "Hour]` | Dimensions of the report.                                                                   |
-| `metrics`        | Optional | `Metric[]`    | `["Clicks", "Cost", "Displays"]`                                                             | Metrics of the report.                                                                      |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Default Value
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advertiserIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string[]
+     </code>
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Id(s) of the account(s).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      []
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Id(s) of the campaigns to filter.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      adsetIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      []
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Id(s) of the adset(s) to filter.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lookbackWindow
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      integer
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      12
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Number of hours going back the query should apply to (from 12 to 24).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timezone
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      UTC
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Timezone used for dates. Must exist in the
+     <a href="https://www.iana.org/time-zones">
+      Time Zone DB
+     </a>
+     .
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      currency
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      EUR
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Currency in which the results are shown.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      dimensions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Dimension[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      ["AdvertiserId", "Advertiser", "CampaignId", "Campaign", "AdsetId", "Adset", "Day", "Hour]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimensions of the report.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      metrics
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Metric[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      ["Clicks", "Cost", "Displays"]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Metrics of the report.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ## **Response Codes**
 
 The following response codes may be returned by the API:
 
-`400`: Bad request, invalid syntax or validation error. Review the request to make sure the format is valid. `401`: Authentication failed. Ensure the authentication header is formatted properly and your access token hasn't expired. `403`: No campaign found. Verify your campaign IDs are correct. `429`: Throttling failure. Wait a minute to try again - there is a limit of 200 requests per minute. `500`: Unknown error.
+`400`: Bad request, invalid syntax or validation error. Review the request to make sure the format is valid.  
+`401`: Authentication failed. Ensure the authentication header is formatted properly and your access token hasn't expired.  
+`403`: No campaign found. Verify your campaign IDs are correct.  
+`429`: Throttling failure. Wait a minute to try again - there is a limit of 200 requests per minute.  
+`500`: Unknown error.
 
 ## **Validation Errors**
 
-Below is a list of error codes for the Real Time Statistics endpoint and a more detailed description of their meaning. General guidance on handling API errors can be found [here](doc:api-error-types).
+Below is a list of error codes for the Real Time Statistics endpoint and a more detailed description of their meaning. General guidance on handling API errors can be found [here](/marketing-solutions/v2025.07/docs/api-error-types).
 
 `insufficient-account-permissions`
 
@@ -136,8 +421,8 @@ You do not have the rights to generate a report on these accounts.
 
 There are different types of errors, depending on title:
 
-* The `<field>` field is required: Missing required field.
-* Time zone `<timezone>` is not valid. See criteo developer portal for supported time zones.
+- The `<field>` field is required: Missing required field.
+- Time zone `<timezone>` is not valid. See criteo developer portal for supported time zones.
 
 ## Dimensions
 
@@ -145,30 +430,378 @@ Dimensions allow you to specify the aggregation level suited to your needs.
 
 There are no restrictions on the number of dimensions or the order of dimensions. The full list is below:
 
-| **Value**      | **Description**                        | **Type** |
-| -------------- | -------------------------------------- | -------- |
-| `advertiserId` | ID of the advertiser.                  | `String` |
-| `advertiser`   | Name of the advertiser.                | `String` |
-| `campaignId`   | ID of the campaign.                    | `String` |
-| `campaign`     | Name of the campaign.                  | `String` |
-| `adsetId`      | ID of the adset.                       | `String` |
-| `adset`        | Name of the adset.                     | `String` |
-| `year`         | Year in datetime format `YYYY-01-01`.  | `Date`   |
-| `month`        | Month in datetime format `YYYY-MM-01`. | `Date`   |
-| `week`         | Week in datetime format `YYYY-MM-DD`.  | `Date`   |
-| `day`          | Day in datetime format `YYYY-MM-DD`.   | `Date`   |
-| `hour`         | Hour in format `HH`.                   | `Date`   |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     <strong>
+      Value
+     </strong>
+    </p>
+   </th>
+   <th>
+    <p>
+     <strong>
+      Description
+     </strong>
+    </p>
+   </th>
+   <th>
+    <p>
+     <strong>
+      Type
+     </strong>
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advertiserId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the advertiser.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advertiser
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the advertiser.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the campaign.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaign
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the campaign.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      adsetId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the adset.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      adset
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Name of the adset.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      year
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Year in datetime format
+     <code>
+      YYYY-01-01
+     </code>
+     .
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Date
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      month
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Month in datetime format
+     <code>
+      YYYY-MM-01
+     </code>
+     .
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Date
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      week
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Week in datetime format
+     <code>
+      YYYY-MM-DD
+     </code>
+     .
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Date
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      day
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Day in datetime format
+     <code>
+      YYYY-MM-DD
+     </code>
+     .
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Date
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      hour
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Hour in format
+     <code>
+      HH
+     </code>
+     .
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Date
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ## Metrics
 
-| **Value**  | **Description**                                  | **Type**  |
-| ---------- | ------------------------------------------------ | --------- |
-| `clicks`   | Number of clicks the campaign has generated.     | `Integer` |
-| `cost`     | Total cost of the campaign for the client.       | `Double`  |
-| `displays` | Number of times the campaign has been displayed. | `Integer` |
-
-***
-
-[Async Reports](/marketing-solutions/v2026-preview/docs/async-reports)
-
-[Audiences](/marketing-solutions/v2026-preview/docs/audiences)
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     <strong>
+      Value
+     </strong>
+    </p>
+   </th>
+   <th>
+    <p>
+     <strong>
+      Description
+     </strong>
+    </p>
+   </th>
+   <th>
+    <p>
+     <strong>
+      Type
+     </strong>
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clicks
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Number of clicks the campaign has generated.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Integer
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      cost
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Total cost of the campaign for the client.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Double
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      displays
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Number of times the campaign has been displayed.
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Integer
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>

@@ -1,0 +1,435 @@
+---
+title: Category Search
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Migrated to Stable (2025.10)/category-search.md
+hidden: true
+---
+
+## Introduction
+
+The Category Search endpoint enables you to explore and discover available product categories within a retailer's hierarchical taxonomy structure. Product categories allow retailers to create a hierarchical structure that helps narrow down products into unique groups or subgroups based on shared characteristics.
+
+This endpoint provides the ability to see what categories are available to serve against a retailer's inventory, making it an essential tool for understanding targeting options and campaign planning. Unlike recommendation endpoints, `Category Search` allows you to actively explore the retailer's category structure through flexible search parameters.
+
+You can search for categories using category IDs to find specific categories and their relationships, or use text substring matching to discover categories by name. The endpoint supports pagination for large result sets, making it easy to browse through extensive category hierarchies efficiently.
+
+This functionality is particularly valuable for **campaign setup**, **category discovery**, and **understanding the breadth of targeting options available within a retailer's ecosystem**.
+
+***
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Method
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /preview/retail-media/retailers/&#123;retailerId&#125;/categories/search
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Searches for available categories within a retailer's taxonomy
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Attributes table
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique identifier for the retailer.
+    </p>
+    <p>
+     Found using the
+     <code>
+      GET
+     </code>
+     retailer's endpoint.
+    </p>
+    <p>
+     Required in URL path.
+    </p>
+    <p>
+     Writable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      categoryIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array
+    </p>
+   </td>
+   <td>
+    <p>
+     Array of category ID strings for search filtering.
+    </p>
+    <p>
+     Must be positive integer strings.
+    </p>
+    <p>
+     Writable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      textSubstring
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Text string to search for in category names.
+    </p>
+    <p>
+     Used for category name filtering.
+    </p>
+    <p>
+     Writable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      offset
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Pagination offset for search results.
+    </p>
+    <p>
+     Default:
+     <code>
+      0
+     </code>
+     .
+    </p>
+    <p>
+     Query parameter.
+    </p>
+    <p>
+     Writable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      limit
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Maximum number of results to return.
+    </p>
+    <p>
+     Default:
+     <code>
+      500
+     </code>
+     .
+    </p>
+    <p>
+     Query parameter.
+    </p>
+    <p>
+     Writable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+*_Required_
+
+***
+
+## Search Categories
+
+This endpoint enables searching for available categories within a retailer's hierarchical taxonomy structure. You can search by category IDs or text substring, with pagination support for large result sets.
+
+Results are paginated using offset and limit query parameters; if omitted, defaults to 0 and 500, respectively.
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/retailers/{retailerId}/categories/search?offset=0&limit=50
+```
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/preview/retail-media/retailers/12345/categories/search?offset=0&limit=50' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+          "data": {
+            "attributes": {
+              "categoryIds": [
+                "520020"
+              ],
+              "textSubstring": "headphones"
+            },
+            "type": "CategoriesSearchRequestV1"
+          }
+      }'
+```
+
+**Sample Response**
+
+```json
+{
+    "metadata": {
+        "count": 2,
+        "offset": 0,
+        "limit": 50
+    },
+    "data": [
+        {
+            "id": "673311",
+            "type": "CategoryV1",
+            "attributes": {
+                "text": "Electronics|Audio|Headphones|Wireless",
+                "name": "Wireless Headphones",
+                "parentId": "683708"
+            }
+        },
+        {
+            "id": "4830673",
+            "type": "CategoryV1",
+            "attributes": {
+                "text": "Electronics|Audio|Headphones",
+                "name": "Headphones",
+                "parentId": "683706"
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Code
+    </p>
+   </th>
+   <th>
+    <p>
+     Meaning
+    </p>
+   </th>
+   <th>
+    <p>
+     Troubleshooting Hint
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢 200
+    </p>
+   </td>
+   <td>
+    <p>
+     Success
+    </p>
+   </td>
+   <td>
+    <p>
+     Request processed successfully with pagination metadata
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴 400
+    </p>
+   </td>
+   <td>
+    <p>
+     Bad Request
+    </p>
+   </td>
+   <td>
+    <p>
+     Check that
+     <code>
+      categoryIds
+     </code>
+     are positive integer strings and
+     <code>
+      retailerId
+     </code>
+     is valid in URL path
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴 403
+    </p>
+   </td>
+   <td>
+    <p>
+     Forbidden
+    </p>
+   </td>
+   <td>
+    <p>
+     Verify authorization and retailer access permissions
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+### Common Error Scenarios
+
+**Invalid Category ID Format**
+
+```json
+{
+    "metadata": null,
+    "data": null,
+    "warnings": [],
+    "errors": [
+        {
+            "type": "validation",
+            "code": "InvalidCategoryId",
+            "title": "Validation error",
+            "detail": "Category ids can only be positive integer strings."
+        }
+    ]
+}
+```
+
+**Invalid Retailer ID**
+
+```json
+{
+    "warnings": [],
+    "errors": [
+        {
+            "traceId": "954eab48899860c9b18880eb0018fd3f",
+            "type": "validation",
+            "code": "model-validation-error",
+            "title": "Model validation error",
+            "detail": "The value ':retailerId' is not valid."
+        }
+    ]
+}
+```

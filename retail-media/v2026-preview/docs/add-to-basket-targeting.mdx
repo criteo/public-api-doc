@@ -1,0 +1,308 @@
+---
+title: Add-to-basket targeting
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/preferred-deals-line-items/add-to-basket-targeting.md
+hidden: true
+---
+
+- This endpoint and its underlying capabilities only apply Preferred Deals Line items.
+- Add-to-basket targeting allows to restrict a Preferred Deals line items to serve only for users who have added specific products, or products from specific categories, to their basket
+
+# Endpoints
+
+- `GET /preferred-line-items/`{line-item-id}`/targeting/add-to-basket` Get All targeted Add-to-basket products or categories on a specific Line Item
+- `PUT /preferred-line-items/`{line-item-id}`/targeting/add-to-basket` Initialize or Override add-to-basket targeting on a specific Line Item
+- `POST /preferred-line-items/`{line-item-id}`/targeting/add-to-basket/append` Add targeted Add-to-basket products or categories to a Specific Line Item
+- `POST /preferred-line-items/`{line-item-id}`/targeting/add-to-basket/delete` Remove targeted Add-to-basket products or categories from a Specific Line Item
+
+When using the feature, the PUT endpoint must be used to first initialize it, defining its `scope`. POST endpoints can only alter the list of product or categories.
+
+Either Product IDs or Category IDs must be provided. Providing both simultaneously is not allowed.
+
+# Store Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Values
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      scope
+     </code>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Whether listed entries should be included or excluded from the line item
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      include
+     </code>
+     ,
+     <code>
+      exclude
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Required on PUT endpoint
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productIds
+     </code>
+     string array
+    </p>
+   </td>
+   <td>
+    <p>
+     List of all Products IDs
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      categoryIds
+     </code>
+     string array
+    </p>
+   </td>
+   <td>
+    <p>
+     List of all Category IDs
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+# List all targeted Stores on a Preferred Deals Line Item
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/preferred-line-items/`{line-item-id}`/targeting/add-to-basket
+```
+
+**Sample Request**
+
+```bash
+curl -X GET "https://api.criteo.com/preview/retail-media/preferred-line-items/2465695028166499188/targeting/add-to-basket" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaAddToBasketTarget",
+        "attributes": {
+            "scope": "include",
+            "productIds": null,
+            "categoryIds": [
+                "3922691",
+                "4386545",
+                "4386646"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+# Initiate targeted Stores list and scope on a Line item
+
+- This endpoint initializes the feature on a Preferred Deals Line item.
+- If targeted Stores were already defined, those will be overridden
+
+<Badge color="orange" size="sm" shape="pill">PUT</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/preferred-line-items/`{line-item-id}`/targeting/stores
+```
+
+**Sample Request**
+
+```bash
+curl -X PUT "https://api.criteo.com/preview/retail-media/preferred-line-items/2465695028166499188/targeting/stores" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaAddToBasketTarget",
+                "attributes": {
+                    "scope": "include",
+                    "productIds": null,
+                    "categoryIds": [
+                        "3922691",
+                        "4386545",
+                        "4386646"
+                    ]
+                }
+            }
+       }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaAddToBasketTarget",
+        "attributes": {
+            "scope": "include",
+            "productIds": null,
+            "categoryIds": [
+                "3922691",
+                "4386545",
+                "4386646"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+# Add targeted Product or Category IDs on a Line item
+
+- This endpoint adds target product or category IDs to a Preferred Deals Line item.  
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/preferred-line-items/`{line-item-id}`/targeting/add-to-basket/append
+```
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/preview/retail-media/preferred-line-items/2465695028166499188/targeting/add-to-basket/append" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaAddToBasketTarget",
+                "attributes": {
+                    "productIds": null,
+                    "categoryIds": [
+                        "4380644",
+                        "4380645"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaAddToBasketTarget",
+        "attributes": {
+            "scope": "include",
+            "productIds": null,
+            "categoryIds": [
+                "4380646",
+                "4380645",
+                "4380644"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+# Remove targeted Product or Category IDs on a Line item
+
+- This endpoint removes previously targeted Add-to-basket categories or products
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/preview/retail-media/preferred-line-items/`{line-item-id}`/targeting/add-to-basket/delete
+```
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/preview/retail-media/preferred-line-items/2465695028166499188/targeting/add-to-basket/delete" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "RetailMediaAddToBasketTarget",
+                "attributes": {
+                    "categoryIds": [
+                        "4380646"
+                    ]
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "RetailMediaAddToBasketTarget",
+        "attributes": {
+            "scope": "include",
+            "productIds": null,
+            "categoryIds": [
+                "4380644",
+                "4380645"
+            ]
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```

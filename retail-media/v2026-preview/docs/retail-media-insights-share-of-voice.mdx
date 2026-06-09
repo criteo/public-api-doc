@@ -1,27 +1,23 @@
 ---
-title: "Retail Media Insights (Share of Voice)"
+title: Insights - Share of Voice
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/demand-side-analytics/retail-media-insights-share-of-voice.md
 ---
 
-1. Guides for Retail Media API
-2. [Demand Side Analytics (DSP)](/retail-media/v2026-preview/docs/demand-side-analytics)
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
 
-## **Introduction**
+## Introduction
 
-Retail Media Insights exposes performance dashboards available on the Demand Side of Commerce Max.
+Retail Media Insights exposes performance dashboards available on the Demand & Supply Sides of Commerce Max.
 
-The **Share of Voice by Category** API is an asynchronous reporting endpoint reflecting the *Share of Voice by Category* dashboard available in Retail Media Insights. It allows Demand Side users to retrieve impression and click share metrics at a **served category** level.
+The **Share of Voice** API is an asynchronous reporting endpoint reflecting the _Share of Voice_ dashboard available in Retail Media Insights. It allows users to retrieve impression and click share metrics at a **served category and keyword levels**.
 
-This API is designed for:
-
-* Demand Side users accessing through a **Commerce Max Network account**
-* Demand Side users accessing through a **Commerce Yield Private Market account**
-
-The primary purpose of this endpoint is to fetch **impression and click share metrics** across categories where ads were served on retailer sites.
+The primary purpose of this endpoint is to fetch impression and click share metrics across categories where ads were served on retailer sites.
 
 <Info>
   **Asynchronous Reports**
 
-  This endpoint initiates an asynchronous export. The response returns a report ID that must be used to:
+  This endpoint initiates an asynchronous export.  
+  The response returns a report ID that must be used to:
 
   * Check report generation status
   * Download the generated report once ready
@@ -29,210 +25,1775 @@ The primary purpose of this endpoint is to fetch **impression and click share me
 
 ***
 
-## **Endpoints**
+## Endpoints
 
-| Verb     | Endpoint                                            | Description                                          |
-| -------- | --------------------------------------------------- | ---------------------------------------------------- |
-| **POST** | `/retail-media/insights/share-of-voice-by-category` | Initiates a Share of Voice by Category report export |
-| **GET**  | `/retail-media/insights/{reportId}/status`          | Retrieves the status of a report                     |
-| **GET**  | `/retail-media/insights/{reportId}/output`          | Downloads the generated report                       |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      POST
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /retail-media/insights/share-of-voice
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Initiates a Share of Voice by Category report export
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /retail-media/insights/&#123;reportId&#125;/status
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieves the status of a report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      GET
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /retail-media/insights/&#123;reportId&#125;/output
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Downloads the generated report
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
-## **Dimensions**
+## Dimensions
 
 Dimensions define how the report data is grouped.
 
-| Dimension         | Type   | Description                                                                                                                                                                                                                                                                                                                |
-| ----------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `date`            | date   | The date of when events occurred for the requested line-item or campaign report. If there are no results to show for the requested dates, the API will return no results.**Note:** Dates are reflected based on the API call requested time zone. Dates are also reported at either the campaign level or line-item level. |
-| `accountId`       | int    | Account ID of the requested report                                                                                                                                                                                                                                                                                         |
-| `accountName`     | string | The supply or demand account name                                                                                                                                                                                                                                                                                          |
-| `retailerId`      | int    | Retailer ID of the retailer of the line item served on                                                                                                                                                                                                                                                                     |
-| `retailerName`    | string | Retailer name of the retailer the line item served on                                                                                                                                                                                                                                                                      |
-| `brandId`         | int    | Advertised product brand ID                                                                                                                                                                                                                                                                                                |
-| `brandName`       | string | Advertised product brand name. Names are standardized across retailers                                                                                                                                                                                                                                                     |
-| `campaignId`      | int    | Campaign ID of the requested report                                                                                                                                                                                                                                                                                        |
-| `campaignName`    | string | Campaign name of the requested report                                                                                                                                                                                                                                                                                      |
-| `buyType`         | string | The Buy type                                                                                                                                                                                                                                                                                                               |
-| `skuId`           | string | The SKU identifier                                                                                                                                                                                                                                                                                                         |
-| `skuName`         | string | The Product name                                                                                                                                                                                                                                                                                                           |
-| `lineItemId`      | int    | Line item ID of the requested report                                                                                                                                                                                                                                                                                       |
-| `lineItemName`    | string | Line item name of the requested report.                                                                                                                                                                                                                                                                                    |
-| `pageTypeId`      | int    | The Identifier of the page type where the ad was served                                                                                                                                                                                                                                                                    |
-| `pageTypeName`    | string | Type of retailer web page an ad creative rendered on. Current page types include:- `home`
-- `search`
-- `category`
-- `productDetail`
-- `merchandising`
-- `deals`
-- `checkout`
-- `confirmation`                                                                                                                              |
-| `productGtin`     | string | The Global Trade Item Number                                                                                                                                                                                                                                                                                               |
-| `productMpn`      | string | The Manufacturer Part Number                                                                                                                                                                                                                                                                                               |
-| `productCategory` | string | The Product category                                                                                                                                                                                                                                                                                                       |
-| `servedCategory`  | string | The Served category                                                                                                                                                                                                                                                                                                        |
-| `campaignType`    | string | The type of campaign. Available options are `Open Auction` or `Preferred Deals`                                                                                                                                                                                                                                            |
-| `creativeType`    | string | The Creative type                                                                                                                                                                                                                                                                                                          |
-| `adFormat`        | string | The Ad format                                                                                                                                                                                                                                                                                                              |
-| `creativeName`    | string | The Creative name                                                                                                                                                                                                                                                                                                          |
-| `environment`     | string | Type of environment an ad creative rendered on, such as `web`, `mobile` and `app`                                                                                                                                                                                                                                          |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Dimension
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      date
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      date
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The date of when events occurred for the requested line-item or campaign report. If there are no results to show for the requested dates, the API will return no results.
+    </p>
+    <p>
+     <strong>
+      Note:
+     </strong>
+     Dates are reflected based on the API call requested time zone. Dates are also reported at either the campaign level or line-item level.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Account ID of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The supply or demand account name
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer ID of the retailer of the line item served on
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer name of the retailer the line item served on
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      brandId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product brand ID
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      brandName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Advertised product brand name. Names are standardized across retailers
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign ID of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign name of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      buyType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Buy type
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      skuId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The SKU identifier
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      skuName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Product name
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lineItemId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item ID of the requested report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lineItemName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item name of the requested report.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageTypeId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Identifier of the page type where the ad was served
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageTypeName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of retailer web page an ad creative rendered on. Current page types include:
+    </p>
+    <ul>
+     <li>
+      <code>
+       home
+      </code>
+     </li>
+     <li>
+      <code>
+       search
+      </code>
+     </li>
+     <li>
+      <code>
+       category
+      </code>
+     </li>
+     <li>
+      <code>
+       productDetail
+      </code>
+     </li>
+     <li>
+      <code>
+       merchandising
+      </code>
+     </li>
+     <li>
+      <code>
+       deals
+      </code>
+     </li>
+     <li>
+      <code>
+       checkout
+      </code>
+     </li>
+     <li>
+      <code>
+       confirmation
+      </code>
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productGtin
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Global Trade Item Number
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productMpn
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Manufacturer Part Number
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productCategory
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Product category
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The type of campaign. Available options are
+     <code>
+      Open Auction
+     </code>
+     or
+     <code>
+      Preferred Deals
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      creativeType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Creative type
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      adFormat
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Ad format
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      creativeName
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The Creative name
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Environment
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of environment an ad creative rendered on, such as
+     <code>
+      web
+     </code>
+     ,
+     <code>
+      mobile
+     </code>
+     and
+     <code>
+      app
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keyword
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Search term that is used to measure advertising activity
+    </p>
+    <p>
+     *included by default in Keyword report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keywordType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of the keyword
+    </p>
+    <p>
+     Options:
+     <code>
+      Unknown
+     </code>
+     ,
+     <code>
+      Generic
+     </code>
+     ,
+     <code>
+      Branded
+     </code>
+     , `Conquesting
+    </p>
+    <p>
+     *only available in Keyword reports
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
-## **Metrics**
+## Metrics
 
 At least **one metric** must be selected.
 
-| Metric                    | Type  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `impressions`             | int   | **Campaign Report Types** Measured when an ad creative renders on a page; an ad creative may display products from one or more campaigns; each unique campaign is counted once; used in all report types except for Product and Product Category reports**Line-Item Report Types** Measured when an ad creative renders on a page; an ad creative may display products from one or more line items; each unique line item is counted once; used in all report types except for Product and Product Category reports**Product, Product Category and Served Category Report Types** Measured when a promoted product is rendered on the page, whether as a single ad creative or as one of many products in an ad creative; each product is counted once separately**More Info**: [Product & Placement Impression](https://help.retailmedia.criteo.com/kb/guide/en/product-placement-impressions-Yg9vyLMSMS/Steps/2492962) Help Center article |
-| `clicks`                  | int   | Measured when an ad creative is clicked on, which incurs a cost to the advertiser for open auction campaigns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `grossClicks`             | int   | Clicks including suspected invalid traffic                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `invalidClicks`           | int   | Invalid clicks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `totalSpend`              | float | Total spend                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `cpc`                     | float | The average cost you are paying per click. Available for On-site Sponsored Products campaigns only. Value is inclusive of platform fees.**Formula**: `spend` / `clicks`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `ctr`                     | float | The percentage of shoppers who clicked an ad rendered on a page.**Product and Product Category Report Types** Formula: `clicks` / `productImpressions`**All other report types** Formula: `clicks` / `placementImpressions`**Note:** there are two types of impressions that can be measured to know the success of your ads: `placementImpressions` and `productImpressions`. Preferred deals have placement impressions, while open auction uses product impressions.**More info**: [Product & Placement Impression](https://help.retailmedia.criteo.com/kb/guide/en/product-placement-impressions-Yg9vyLMSMS/Steps/2492962) Help Center article                                                                                                                                                                                                                                                                                           |
-| `cpm`                     | float | Calculated as the total cost of impressions served divided by the total number of impressions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `roas`                    | float | A measurement of the revenue you will receive for every unit of currency you spend on ads. ROAS can vary based on your attribution settings. This metric is inclusive of platform fees.**Formula**: `attributedSales` / `spend`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `attributedSales`         | float | A sale that was a direct result of your marketing campaign (in accordance with your attribution rules). Also, a measure of the conversions of your campaign.**Formula**: Sum of all Sales**Important**: Sales are de-duplicated between off-site and on-site, however the Criteo API will report on **on-site campaigns only**. A sale can only be attributed to one line item across all campaigns.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `attributedUnits`         | int   | Units sold attributed to a click or impression. Attributed units are exclusive of.`assistedUnits` meaning assisted units are not counted in the attribution.**Example:** If a shopper purchases one order of two products, the number of Attributed Units is 2.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `assistedUnits`           | int   | The number of events that occurred that helped to generate a sale. Assisted units are excluded from `attributedUnits`. This means it's not counted in the attributed units' calculation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `assistedSales`           | float | Sales revenue attributed to a click or impression of all the ads that appeared on a page within the chosen attribution window (specified at the campaign level) but were not determined to be the `attributedSales` (the last ad before the customer purchased).**More Info**: [Demand Side Metrics](https://help.retailmedia.criteo.com/kb/guide/en/demand-side-metrics-WUR7bClZmA/Steps/1033012,1033080,1033082) Help Center article                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `exposedUsers`            | int   | Exposed users                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `shareOfVoiceImpressions` | float | Share of impressions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `shareOfVoiceClicks`      | float | Share of clicks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Metric
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      impressions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <strong>
+      Campaign Report Types
+     </strong>
+     Measured when an ad creative renders on a page; an ad creative may display products from one or more campaigns; each unique campaign is counted once; used in all report types except for Product and Product Category reports
+    </p>
+    <p>
+     <strong>
+      Line-Item Report Types
+     </strong>
+     Measured when an ad creative renders on a page; an ad creative may display products from one or more line items; each unique line item is counted once; used in all report types except for Product and Product Category reports
+    </p>
+    <p>
+     <strong>
+      Product, Product Category and Served Category Report Types
+     </strong>
+     Measured when a promoted product is rendered on the page, whether as a single ad creative or as one of many products in an ad creative; each product is counted once separately
+    </p>
+    <p>
+     <strong>
+      More Info
+     </strong>
+     : Product &amp; Placement Impression Help Center article
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clicks
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Measured when an ad creative is clicked on, which incurs a cost to the advertiser for open auction campaigns
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      grossClicks
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Clicks including suspected invalid traffic
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      invalidClicks
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Invalid clicks
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      spend
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Total spend
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      cpc
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The average cost you are paying per click. Available for On-site Sponsored Products campaigns only. Value is inclusive of platform fees.
+    </p>
+    <p>
+     <strong>
+      Formula
+     </strong>
+     :
+     <code>
+      spend
+     </code>
+     /
+     <code>
+      clicks
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      ctr
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The percentage of shoppers who clicked an ad rendered on a page.
+    </p>
+    <p>
+     <strong>
+      Product and Product Category Report Types
+     </strong>
+     Formula:
+     <code>
+      clicks
+     </code>
+     /
+     <code>
+      productImpressions
+     </code>
+    </p>
+    <p>
+     <strong>
+      All other report types
+     </strong>
+     Formula:
+     <code>
+      clicks
+     </code>
+     /
+     <code>
+      placementImpressions
+     </code>
+    </p>
+    <p>
+     <strong>
+      Note:
+     </strong>
+     there are two types of impressions that can be measured to know the success of your ads:
+     <code>
+      placementImpressions
+     </code>
+     and
+     <code>
+      productImpressions
+     </code>
+     . Preferred deals have placement impressions, while open auction uses product impressions.
+    </p>
+    <p>
+     <strong>
+      More info
+     </strong>
+     : Product &amp; Placement Impression Help Center article
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      cpm
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Calculated as the total cost of impressions served divided by the total number of impressions.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      roas
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     A measurement of the revenue you will receive for every unit of currency you spend on ads. ROAS can vary based on your attribution settings. This metric is inclusive of platform fees.
+    </p>
+    <p>
+     <strong>
+      Formula
+     </strong>
+     :
+     <code>
+      attributedSales
+     </code>
+     /
+     <code>
+      spend
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributedSales
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     A sale that was a direct result of your marketing campaign (in accordance with your attribution rules). Also, a measure of the conversions of your campaign.
+    </p>
+    <p>
+     <strong>
+      Formula
+     </strong>
+     : Sum of all Sales
+    </p>
+    <p>
+     <strong>
+      Important
+     </strong>
+     : Sales are de-duplicated between off-site and on-site, however the Criteo API will report on
+     <strong>
+      on-site campaigns only
+     </strong>
+     . A sale can only be attributed to one line item across all campaigns.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributedUnits
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Units sold attributed to a click or impression. Attributed units are exclusive of.
+     <code>
+      assistedUnits
+     </code>
+     meaning assisted units are not counted in the attribution.
+    </p>
+    <p>
+     <strong>
+      Example:
+     </strong>
+     If a shopper purchases one order of two products, the number of Attributed Units is 2.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      assistedUnits
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The number of events that occurred that helped to generate a sale. Assisted units are excluded from
+     <code>
+      attributedUnits
+     </code>
+     . This means it's not counted in the attributed units' calculation.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      assistedSales
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Sales revenue attributed to a click or impression of all the ads that appeared on a page within the chosen attribution window (specified at the campaign level) but were not determined to be the
+     <code>
+      attributedSales
+     </code>
+     (the last ad before the customer purchased).
+    </p>
+    <p>
+     <strong>
+      More Info
+     </strong>
+     : Demand Side Metrics Help Center article
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      exposedUsers
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      int
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Exposed users
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      impressions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Share of impressions
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clicks
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      float
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Share of clicks
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
-## **Report Formats**
+## Report Formats
 
 ### `json-compact`
 
 This is a column-based compact JSON format.
 
-<CodeGroup>
-  ```bash bash
-  {
-      "columns":[dimension_1, ..., metric_1, ...],
-      "data":[row1, row2, ...],
-      "rows":100
-  }
-  ```
-</CodeGroup>
+```json
+{
+    "columns":[dimension_1, ..., metric_1, ...],
+    "data":[row1, row2, ...],
+    "rows":100
+}
+```
 
 ### `json-newline`
 
 This is a newline-delimited JSON format.
 
-<CodeGroup>
-  ```bash bash
-  {"id":"1234","name":"Fred Flintstone","age":34}
-  {"id":"2345","name":"Wilma Flintstone","age":32}
-  {"id":"3456","name":"Barney Rubble","age":33}
-  {"id":"4567","name":"Betty Rubble","age":31}
-  ```
-</CodeGroup>
+```json
+{"id":"1234","name":"Fred Flintstone","age":34}
+{"id":"2345","name":"Wilma Flintstone","age":32}
+{"id":"3456","name":"Barney Rubble","age":33}
+{"id":"4567","name":"Betty Rubble","age":31}
+```
 
 ### `json`
 
 This is standard JSON format.
 
-<CodeGroup>
-  ```bash bash
-  [
-   {"id":"1234","name":"Fred Flintstone","age":34},
-   {"id":"2345","name":"Wilma Flintstone","age":32},
-   {"id":"3456","name":"Barney Rubble","age":33},
-   {"id":"4567","name":"Betty Rubble","age":31}
-  ] 
-  ```
-</CodeGroup>
+```json
+[
+ {"id":"1234","name":"Fred Flintstone","age":34},
+ {"id":"2345","name":"Wilma Flintstone","age":32},
+ {"id":"3456","name":"Barney Rubble","age":33},
+ {"id":"4567","name":"Betty Rubble","age":31}
+] 
+```
 
 ### `csv`
 
 This is the standard CSV format.
 
-<CodeGroup>
-  ```bash bash
-  "col1","col2",...,"colN"
-  val_11,val_12,...,val_1N
-  ....
-  val_M1,val_M2,...,val_MN
-  ```
-</CodeGroup>
+```text CSV
+"col1","col2",...,"colN"
+val_11,val_12,...,val_1N
+....
+val_M1,val_M2,...,val_MN
+```
 
 ***
 
-## **Share of Voice by Category Report**
+## Share of Voice by Category Report
 
-![](/images/retail-media/v2026-preview/docs/b0623eb-post.png)
+<Badge color="red" size="sm" shape="pill">POST</Badge>
 
-```
-https://api.criteo.com/{version}/retail-media/insights/share-of-voice-by-category
+```text
+https://api.criteo.com/{version}/retail-media/insights/share-of-voice
 ```
 
 ### Attributes
 
-| Field              | Required | Type                    | Description                                     |
-| ------------------ | -------- | ----------------------- | ----------------------------------------------- |
-| `accountId`        | Yes      | String                  | Filter by account ID                            |
-| `startDate`        | Yes      | String                  | Start date (YYYY-MM-DD)                         |
-| `endDate`          | Yes      | String                  | End date (YYYY-MM-DD)                           |
-| `campaignType`     | No       | `CampaignFilterType`    | all, `onsiteSponsoredProducts`, `onsiteDisplay` |
-| `dimensions`       | Yes      | Dimension\[]            | Dimensions to report on                         |
-| `metrics`          | Yes      | Metric\[]               | Metrics to report on                            |
-| `brandIds`         | No       | String\[]               | Filter by brand IDs                             |
-| `retailerIds`      | No       | String\[]               | Filter by retailer IDs                          |
-| `servedCategories` | No       | ServedCategoryFilter\[] | Categories grouped by retailer                  |
-| `format`           | No       | Format                  | Output format                                   |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter by account ID
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Start date (YYYY-MM-DD)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     End date (YYYY-MM-DD)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      CampaignFilterType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     all,
+     <code>
+      onsiteSponsoredProducts
+     </code>
+     ,
+     <code>
+      onsiteDisplay
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      dimensions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Dimension[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Dimensions to report on
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      metrics
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Metric[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Metrics to report on
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      brandIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter by brand IDs
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter by retailer IDs
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      servedCategories
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      ServedCategoryFilter[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Categories grouped by retailer
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      format
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Format
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Output format
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      aggregationLevel
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      category
+     </code>
+     or
+     <code>
+      keyword
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Level of aggregation for the report. Can either be
+     <code>
+      category
+     </code>
+     or
+     <code>
+      keyword
+     </code>
+     type.
+    </p>
+    <p>
+     Default:
+     <code>
+      category
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keywords
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      String[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter by Keyword.
+    </p>
+    <p>
+     *only available in Keyword reports
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      keywordTypes
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      KeywordType[]
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Filter by Keyword type.
+    </p>
+    <p>
+     Options:
+     <code>
+      Branded
+     </code>
+     ,
+     <code>
+      Conquesting
+     </code>
+     ,
+     <code>
+      Generic
+     </code>
+     , `Unknown
+    </p>
+    <p>
+     *only available in Keyword reports
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 <Info>
-  ### Field Definitions
+  **Field Definitions**
 
   * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
   * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
   * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `retailerId`, `campaignId`, `lineItemId`) and are usually required in the URL path.
 </Info>
 
-### **Sample Request**
+### Sample Request
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": {
-      "type": "RetailMediaShareOfVoiceByCategory",
-      "attributes": {
-        "accountId": "123",
-        "dimensions": ["Date", "CampaignName", "RetailerId", "ServedCategory"],
-        "metrics": ["Impressions"],
-        "startDate": "2025-08-01",
-        "endDate": "2025-08-11",
-        "format": "json-compact"
-      }
+```json
+{
+  "data": {
+    "type": "RetailMediaShareOfVoice",
+    "attributes": {
+      "accountId": "123",
+      "dimensions": ["Date", "CampaignName", "RetailerId"],
+      "metrics": ["Impressions"],
+      "startDate": "2025-08-01",
+      "endDate": "2025-08-11",
+      "format": "json-compact"
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
-### **Sample Response**
+### Sample Response
 
 The request initiated an asynchronous export of the report.
 
-<CodeGroup>
-  ```bash bash
-  {
-    "data": {
-      "id": "aa9e0816-2484-4605-b540-f62e1387af61",
-      "type": "StatusResponse",
-      "attributes": {
-        "status": "pending",
-        "createdAt": "2025-08-11T09:18:33.275Z"
-      }
+```json
+{
+  "data": {
+    "id": "aa9e0816-2484-4605-b540-f62e1387af61",
+    "type": "StatusResponse",
+    "attributes": {
+      "status": "pending",
+      "createdAt": "2025-08-11T09:18:33.275Z"
     }
   }
-  ```
-</CodeGroup>
+}
+```
 
 <Info>
   The report can be then be retrieved using:
@@ -243,11 +1804,12 @@ The request initiated an asynchronous export of the report.
 
 ***
 
-## **Errors & Warnings**
+## Errors & Warnings
 
-This endpoint may return validation or access-control errors. All errors follow a consistent JSON error object structure.
+This endpoint may return validation or access-control errors.  
+All errors follow a consistent JSON error object structure.
 
-### **403: Insufficient Account Permissions**
+### `403`: Insufficient Account Permissions
 
 The requester does not have permission to access one or more of the specified advertiser accounts.
 
@@ -257,22 +1819,20 @@ The requester does not have permission to access one or more of the specified ad
 
 **HTTP Status Code:** `403 Forbidden`
 
-<CodeGroup>
-  ```bash bash
-  {
-    "errors": [
-      {
-        "traceIdentifier": "9353e1711d738a7a",
-        "type": "access-control",
-        "code": "insufficient-account-permissions",
-        "instance": "insights/share-of-voice-by-category",
-        "title": "Insufficient account permissions",
-        "detail": "You do not have the rights to report on these accounts."
-      }
-    ]
-  }
-  ```
-</CodeGroup>
+```json
+{
+  "errors": [
+    {
+      "traceIdentifier": "9353e1711d738a7a",
+      "type": "access-control",
+      "code": "insufficient-account-permissions",
+      "instance": "insights/share-of-voice-by-category",
+      "title": "Insufficient account permissions",
+      "detail": "You do not have the rights to report on these accounts."
+    }
+  ]
+}
+```
 
 ***
 
@@ -282,22 +1842,20 @@ One or more required fields are missing from the request payload.
 
 **HTTP Status Code:** `400 Bad Request`
 
-<CodeGroup>
-  ```bash bash
-  {
-    "errors": [
-      {
-        "traceIdentifier": "9353e1711d738a7a",
-        "type": "validation",
-        "code": "required-field",
-        "instance": "/insights/share-of-voice-by-category",
-        "title": "Missing required field",
-        "detail": "Missing fields: <field name(s)>"
-      }
-    ]
-  }
-  ```
-</CodeGroup>
+```json
+{
+  "errors": [
+    {
+      "traceIdentifier": "9353e1711d738a7a",
+      "type": "validation",
+      "code": "required-field",
+      "instance": "/insights/share-of-voice",
+      "title": "Missing required field",
+      "detail": "Missing fields: <field name(s)>"
+    }
+  ]
+}
+```
 
 ***
 
@@ -307,22 +1865,20 @@ The provided date range is invalid. The start date must not be later than the en
 
 **HTTP Status Code:** `400 Bad Request`
 
-<CodeGroup>
-  ```bash bash
-  {
-    "errors": [
-      {
-        "traceIdentifier": "9353e1711d738a7a",
-        "type": "validation",
-        "code": "invalid-date-range",
-        "instance": "/insights/share-of-voice-by-category",
-        "title": "Invalid date range",
-        "detail": "The 'startDate' can not be after 'endDate'."
-      }
-    ]
-  }
-  ```
-</CodeGroup>
+```json
+{
+  "errors": [
+    {
+      "traceIdentifier": "9353e1711d738a7a",
+      "type": "validation",
+      "code": "invalid-date-range",
+      "instance": "/insights/share-of-voice",
+      "title": "Invalid date range",
+      "detail": "The 'startDate' can not be after 'endDate'."
+    }
+  ]
+}
+```
 
 ***
 
@@ -332,31 +1888,23 @@ No metrics were provided in the request. At least one metric is required to gene
 
 **HTTP Status Code:** `400 Bad Request`
 
-<CodeGroup>
-  ```bash bash
-  {
-    "errors": [
-      {
-        "traceIdentifier": "9353e1711d738a7a",
-        "type": "validation",
-        "code": "missing-dimensions",
-        "instance": "/insights/share-of-voice-by-category",
-        "title": "Missing metrics",
-        "detail": "At least one metric must be provided."
-      }
-    ]
-  }
-  ```
-</CodeGroup>
+```json
+{
+  "errors": [
+    {
+      "traceIdentifier": "9353e1711d738a7a",
+      "type": "validation",
+      "code": "missing-dimensions",
+      "instance": "/insights/share-of-voice",
+      "title": "Missing metrics",
+      "detail": "At least one metric must be provided."
+    }
+  ]
+}
+```
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-[Offsite Report](/retail-media/v2026-preview/docs/create-offsite-report)
-
-[Supply Side Analytics (SSP)](/retail-media/v2026-preview/docs/supply-side-reporting-ssp)
+<SendFeedback />

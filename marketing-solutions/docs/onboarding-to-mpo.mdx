@@ -1,0 +1,220 @@
+---
+title: Onboarding to MPO
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/integration/onboarding-to-mpo.md
+---
+
+Marketplace Performance Outcomes (MPO) is API-first, but the API is only one part of the integration. Before a marketplace can activate sellers, set budgets, or pull statistics, it needs two core data foundations in place: event collection and catalog integration with seller data.
+
+This article explains what needs to be in place before MPO can work reliably, why these inputs matter, and where to go next for implementation details.
+
+***
+
+## What this article is for
+
+This page is intended for:
+
+* Technical leads and architects planning an MPO integration
+* Developers preparing the marketplace-side implementation
+* Marketplace teams aligning with Criteo on onboarding scope
+
+Use this page as the entry point to the Integration section. It gives the high-level onboarding picture before you move into detailed event and catalog guides.
+
+***
+
+## The two pillars of MPO onboarding
+
+MPO depends on two types of data being set up correctly:
+
+1. **Events** — so Criteo can understand user behavior, build audiences, measure conversions, and optimize delivery
+2. **Catalog data** — so Criteo can identify products, sellers, and the seller-to-product relationships used by MPO
+
+<Info>
+   **Note:** If either pillar is missing or inconsistent, MPO can still appear partially configured, but seller activation, delivery, attribution, and reporting may fail or become unreliable.
+
+</Info>
+
+***
+
+## Why MPO collects events
+
+MPO is designed to help marketplaces advertise sellers offsite using Criteo's performance advertising stack. To do that, Criteo needs event signals from the marketplace site or app.
+
+At a minimum, MPO onboarding expects:
+
+* Product page events
+* Transaction / conversion events
+* Consistent user identifiers across the supported integration surfaces
+
+These events support three critical MPO functions:
+
+### 1. Audience building
+
+MPO audience eligibility is determined at the seller level. When user events are received, MPO updates the seller-level audience state used for targeting and recommendation logic.
+
+### 2. Performance optimization
+
+MPO needs behavioral signals to decide which sellers and products are relevant for a given user, and to support recommendation-driven delivery and seller-level optimization.
+
+### 3. Attribution and reporting
+
+Conversions used for MPO attribution can come from OneTag, app integrations, MMP integrations, and other supported event sources. Those conversion signals feed into Criteo's reporting and optimization pipeline.
+
+***
+
+## Event collection options
+
+The right event setup depends on whether the marketplace is integrating web, app, or both.
+
+### Web
+
+For web onboarding, use OneTag to capture on-site user behavior, including product page views and transactions.
+
+For offsite web integrations, the main shared references are:
+
+* [Introduction to the Criteo OneTag](https://help.criteo.com/kb/guide/en/intro-to-the-criteo-onetag-8fjCDwCENw/Steps/775595)
+
+### MMP-based app integrations
+
+> **Important:** All in-app events should be forwarded — not only the subset attributed to Criteo by the MMP. Forwarding only attributed events can break offsite measurement and reduce performance.
+
+Common MMP references used by Criteo teams include:
+
+* AppsFlyer
+* Adjust
+* Branch
+* Singular
+* Kochava
+* Tealium
+* Segment
+* AB180 Airbridge
+
+***
+
+## Catalog integration for MPO
+
+MPO sellers are not usually created manually through MPO onboarding flows. Instead, sellers are inferred from the marketplace product catalog, and MPO relies on that catalog to expose sellers and products correctly through the API and delivery systems.
+
+### MPO-specific seller mapping
+
+Your product feed must include `seller_id` and `seller_name` for each product. Criteo uses these fields to identify and ingest sellers from your catalog.
+
+Once your catalog is processed, Criteo generates an internal `sellerId` for each seller. You can retrieve this through the MPO Sellers endpoints and use it to map back to your own seller records.
+
+### Important rules for seller data
+
+When preparing seller fields for MPO:
+
+* Treat `seller_id` as case-sensitive
+* Keep seller values stable over time
+* Use your own internal seller identifier consistently if possible
+
+### What happens after seller data is ingested
+
+Once the catalog is processed correctly, sellers become available through the MPO Sellers endpoints within 1–2 days and can then be linked to campaign operations such as seller-campaigns, bids, budgets, and reporting.
+
+**Relevant API endpoints:**
+
+```text
+GET /marketplace-performance-outcomes/sellers
+GET /marketplace-performance-outcomes/sellers/{sellerId}
+GET /marketplace-performance-outcomes/sellers/{sellerId}/budgets
+GET /marketplace-performance-outcomes/sellers/{sellerId}/seller-campaigns
+```
+
+<Info>
+   **Note:** Because ingestion is asynchronous, allow processing time between catalog updates and MPO seller availability. Build your onboarding and validation flows with that delay in mind.
+
+</Info>
+
+***
+
+## What Criteo sets up vs what the marketplace sets up
+
+MPO onboarding is shared between Criteo and the marketplace.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Responsibility
+    </p>
+   </th>
+   <th>
+    <p>
+     Tasks
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      Criteo
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     MPO enablement on the account; campaign / template configuration; core advertiser and campaign readiness for MPO use
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <strong>
+      Marketplace
+     </strong>
+    </p>
+   </td>
+   <td>
+    <p>
+     Event collection on web and/or app; product catalog integration; seller data mapping in the feed; OAuth / API integration for ongoing operations; seller activation, budgets, bids, and statistics retrieval once onboarding is complete
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Recommended onboarding checklist
+
+Before moving into campaign launch or API operations, confirm all of the following are in place:
+
+* [ ] OneTag or the relevant app event integration is set up
+* [ ] Product page and transaction events are being collected
+* [ ] The catalog includes MPO seller fields
+* [ ] `seller_id` and `seller_name` values are consistent in casing and format across all catalog updates
+* [ ] The marketplace can retrieve sellers through the MPO Sellers endpoints
+* [ ] API authentication is ready for ongoing operations
+
+***
+
+## Related documentation
+
+The detailed implementation guidance lives in the child pages of this Integration section.
+
+### Event collection
+
+Use the dedicated Event collection article for:
+
+* Why MPO needs site and app events
+* Web tagging with [Introduction to the Criteo OneTag](https://help.criteo.com/kb/guide/en/intro-to-the-criteo-onetag-8fjCDwCENw/Steps/775595) and [OneTag for Offsite](/retailer-integration/docs/onetag-for-offsite)
+* Hybrid app event capture with [OneTag for Offsite – Hybrid Apps](/retailer-integration/docs/onetag-offsite-for-hybrid-apps)
+* Native app event capture with [API Parameters – In-app events](/retailer-integration/docs/api-parameters-1#in-app-events)
+* MMP integration references
+* Validation and prelaunch checks
+
+### Product taxonomy
+
+Use the dedicated Product taxonomy article for:
+
+* MPO-specific feed requirements with [Product feed parameters](/retailer-integration/docs/product-feed-parameters)
+* Seller field mapping
+* Seller ID and seller name rules
+* Feed validation expectations, sync behavior, and other catalog requirements via the Product Feed Upload Guide, Feed Best Practices, and Product Importer API Guide
+* Troubleshooting seller ingestion issues

@@ -1,34 +1,335 @@
 ---
-title: "Marketplace Performance Outcomes"
+title: Marketplace Performance Outcomes
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/index.md
 ---
 
-1. Marketing Solutions Endpoints
+## What MPO is
 
-## Marketplace Performance Outcomes endpoint
+**Marketplace Performance Outcomes (MPO)** is designed for marketplaces that want to activate and scale **offsite advertising for sellers** through a structured, API-driven workflow.
 
-```
-/marketplace-performance-outcomes
-```
+At a high level, MPO gives marketplaces a way to:
 
-## Introduction
+* Onboard sellers.
+* Control campaign delivery.
+* Allocate and manage budgets.
+* Monitor performance across sellers and campaigns.
 
-The Marketplace Performance Outcomes (MPO) API allows you to manage your MPO campaigns.
+MPO supports two main activation models:
 
-**Marketplace Performance Outcomes require "Campaign" domain permission.** (see [step 3](https://developers.criteo.com/marketing-solutions/docs/onboarding-checklist#3-define-your-app-scope))
+* **Multi-seller** – multiple sellers share the same campaign.
+* **Single-seller** – each seller gets a **dedicated ad set/campaign** based on a marketplace-defined template.
 
-This API allows you to :
+These two models are **complementary**, not mutually exclusive:
 
-* Retrieve the list of **Sellers** associated with your campaign
-* Set the **bids** of your **Seller Campaigns**
-* Configure the **budgets** for your **Seller Campaigns**
-* Review the performance of your MPO campaigns by querying their delivery statistics
-
-<Info>
-  ### The Campaign Manage permission is required to use this API.
-</Info>
+* **Multi-seller**: pooled activation at scale, especially for long-tail or smaller-budget sellers.
+* **Single-seller**: dedicated setup for sellers that need **greater transparency or control**.
 
 ***
 
-[Coupon](/marketing-solutions/docs/coupon)
+## What makes MPO different
 
-[Managing Sellers](/marketing-solutions/docs/managing-sellers)
+MPO is designed to optimize advertising performance at the **seller level**.
+
+Unlike traditional DSP setups, where optimization is typically applied **at campaign level across multiple advertisers**, MPO uses the **seller** as the primary unit of configuration and optimization.
+
+In practice:
+
+* Each **seller’s budget** is managed **independently**.
+* Budget is spent toward **that seller’s configured objective**.
+* Performance is tracked at **seller** and **seller-campaign** level.
+
+This model allows marketplaces to manage many sellers within a shared framework while maintaining **per-seller control and visibility**.
+
+## Why MPO
+
+MPO can be used to:
+
+* Integrate **seller advertising into marketplace workflows**.
+* Manage **campaigns, budgets, and sellers programmatically**.
+* Access **performance data** across sellers and campaigns.
+
+In short, MPO is designed to support **scalable, API-driven seller advertising** within marketplace environments.
+
+## How MPO works
+
+A typical MPO integration follows this flow:
+
+1. **Identify the advertiser** (your marketplace context).
+2. **Create and manage sellers** (via catalog + MPO Sellers endpoints).
+3. **Configure seller campaign delivery** (ad sets and templates).
+4. **Set and manage budgets** per seller.
+5. **Retrieve performance statistics** to optimize and monitor.
+
+Targeting and delivery controls are defined at the **ad set / campaign level**, which determines how campaigns are executed.
+
+This structure allows marketplaces to integrate MPO into existing systems while keeping **seller activation and campaign management fully programmatic**.
+
+## Singleseller and multiseller in MPO
+
+MPO supports two complementary activation models:
+
+### Multiseller
+
+* Multiple sellers share one campaign or ad set.
+* Simplified structure for **onboarding many sellers quickly**.
+* Commonly used for **smaller seller budgets**.
+
+### Singleseller
+
+* **One seller per ad set/campaign**, based on a **shared template**.
+* **Dedicated budget per seller**.
+* More **granular configuration and reporting**.
+
+### SingleSeller vs MultiSeller MPO campaigns
+
+“Single-Seller” campaigns build on top of the **multi-seller** model where multiple sellers share a single campaign.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Aspect
+    </p>
+   </th>
+   <th>
+    <p>
+     Multi-Seller
+    </p>
+   </th>
+   <th>
+    <p>
+     Single-Seller campaigns
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     Sellers per campaign
+    </p>
+   </td>
+   <td>
+    <p>
+     Many sellers share one campaign
+    </p>
+   </td>
+   <td>
+    <p>
+     One seller per campaign (per-seller campaign)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Configuration
+    </p>
+   </td>
+   <td>
+    <p>
+     One configuration shared by all sellers
+    </p>
+   </td>
+   <td>
+    <p>
+     Shared template configuration + per-seller campaign derived from it
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Budget model
+    </p>
+   </td>
+   <td>
+    <p>
+     Shared budgets across multiple sellers
+    </p>
+   </td>
+   <td>
+    <p>
+     One capped total budget per seller per template (no shared budgets)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Cost control
+    </p>
+   </td>
+   <td>
+    <p>
+     Supports CPC-based control only
+    </p>
+   </td>
+   <td>
+    <p>
+     Requires budget-based control (template must use budget as cost controller)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Budget types
+    </p>
+   </td>
+   <td>
+    <p>
+     Various (including daily caps)
+    </p>
+   </td>
+   <td>
+    <p>
+     Capped total budget over a date range only; no daily or uncapped budgets
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Pacing
+    </p>
+   </td>
+   <td>
+    <p>
+     Daily caps managed explicitly
+    </p>
+   </td>
+   <td>
+    <p>
+     Automatic pacing: total budget distributed over the period, with daily caps recomputed
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+**When to use each**
+
+Use **Single-Seller** when:
+
+* Per-seller budget control is required.
+* Granular per-seller performance tracking and troubleshooting are needed.
+* Specific sellers need dedicated configuration or reporting.
+
+Use **Multi-seller** when:
+
+* Onboarding many sellers quickly is a priority.
+* Seller budgets are small or highly variable.
+* A pooled setup is sufficient for business goals.
+
+_For more detail, see the public guide:  
+[MPO Single Seller Campaigns](/marketing-solutions/docs/single-seller-campaigns)._
+
+***
+
+## What You Can Do With the MPO API
+
+The MPO API includes endpoints for:
+
+* **Advertisers**
+* **Sellers**
+* **Seller campaigns**
+* **Budgets**
+* **Statistics**
+
+These APIs allow marketplaces to:
+
+* Automate **seller advertising workflows**.
+* Integrate MPO deeply into **internal systems** (e.g., marketplace UI, data warehouse, reporting).
+* Build custom orchestration, monitoring, and optimization logic on top of Criteo delivery.
+
+***
+
+## Optimization Strategies
+
+MPO supports multiple optimization strategies, allowing marketplaces to align campaign delivery with different seller goals.
+
+Campaigns can be configured to optimize for:
+
+* **Sales / revenue**
+* **Conversions**
+* **Leads**
+* **Traffic / landing visits**
+* **Click volume**
+
+These strategies can be selected depending on:
+
+* The seller’s **objective** (performance vs scale).
+* The seller’s **stage in the funnel** (prospecting vs retargeting vs always-on).
+
+***
+
+## How to Use this Documentation
+
+Use this page as the **entry point** to MPO. Then continue with the documentation that matches your integration and use case:
+
+* **Single-seller documentation**:
+  * Concepts and entities for Single-Seller.
+  * Single-Seller Quick Start (create first budget and campaign).
+  * Managing Single-Seller budgets and `productSet`s.
+  * Single-Seller troubleshooting and FAQs.
+
+* **Multi-seller documentation**:
+  * Concepts and entities for multi-seller setups.
+  * Multi-seller onboarding and campaign management flows.
+  * Budgeting and optimization best practices.
+
+* **Statistics**:
+  * Available stats endpoints (`/stats/campaigns`, `/stats/sellers`, `/stats/seller-campaigns`).
+  * How to choose identifiers (`campaignId`, `sellerId`, `sellerCampaignId`) for different reporting needs.
+  * Patterns for monitoring performance and building dashboards.
+
+### Multiseller Guides
+
+<Columns cols={3}>
+  <Card title="Managing Sellers" href="https://developers.criteo.com/marketing-solutions/docs/multiseller-managing-sellers" icon="">
+    Explore the endpoints for seller management via API.
+  </Card>
+
+  <Card title="Managing Campaigns" href="https://developers.criteo.com/marketing-solutions/docs/multiseller-managing-campaigns" icon="">
+    Explore the endpoints allowing to manage campaigns.
+  </Card>
+
+  <Card title="Managing Budgets" href="https://developers.criteo.com/marketing-solutions/docs/multiseller-managing-budgets" icon="">
+    Explore the programmatic ways to manage budgets.
+  </Card>
+
+  <Card title="Getting Statistics" href="https://developers.criteo.com/marketing-solutions/docs/multiseller-getting-statistics" icon="">
+    Learn more about MPO Multiseller statistics.
+  </Card>
+</Columns>
+
+### Singleseller Guides
+
+<Columns cols={3}>
+  <Card title="Campaigns - Concept Guide" href="https://developers.criteo.com/marketing-solutions/docs/campaigns-concept-guide" icon="">
+    Start by exploring the campaign-related concepts.
+  </Card>
+
+  <Card title="Quick Start" href="https://developers.criteo.com/marketing-solutions/docs/quick-start-launch-a-single-seller-campaign-via-mpo" icon="">
+    Learn how to quick start by launching a Single-Seller Campaign via MPO.
+  </Card>
+
+  <Card title="Managing Sellers" href="https://developers.criteo.com/marketing-solutions/docs/managing-sellers" icon="">
+    Explore the endpoints for seller management via API.
+  </Card>
+
+  <Card title="Managing Campaigns" href="https://developers.criteo.com/marketing-solutions/docs/managing-campaigns" icon="">
+    Explore the endpoints allowing to manage campaigns.
+  </Card>
+
+  <Card title="Managing Budgets" href="https://developers.criteo.com/marketing-solutions/docs/managing-budgets" icon="">
+    Explore the programmatic ways to manage budgets.
+  </Card>
+
+  <Card title="Getting Statistics" href="https://developers.criteo.com/marketing-solutions/docs/getting-statistics" icon="">
+    Learn more about MPO Singleseller statistics.
+  </Card>
+</Columns>

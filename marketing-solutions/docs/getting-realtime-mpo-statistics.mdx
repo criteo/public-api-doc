@@ -1,0 +1,1141 @@
+---
+title: MPO Real-Time Asynchronous API
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/reporting/getting-realtime-mpo-statistics.md
+---
+
+<Warning>
+  **Important Data Usage Warning**
+
+  This data is generated in real time and is intended **only for real-time reporting purposes**. It is not subject to standard data cleaning practices (deduplication, quality checks) and **must not be used for pricing, bidding, invoicing, or any financial decision-making.**
+</Warning>
+
+<Warning>
+  **BETA Access**  
+  The API is currently in **beta** and is only available to a limited list of clients onboarded by the Criteo technical team. You can find the reference for the endpoints mentioned in the page in [the **Preview** version](https://developers.criteo.com/marketing-solutions/v2026-preview/reference/getrealtimeproduct) of this documentation.
+</Warning>
+
+***
+
+## Overview
+
+This API provides real-time reporting for **Marketplace Performance Outcomes (MPO)** via an asynchronous export workflow designed for large volumes of data.
+
+* **Data latency:** Approximately 10 minutes.
+* **Base URL:**
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/
+```
+
+* **Compatibility:** This endpoint supports both **multi-seller** and **single-seller** campaign configurations.
+
+<Info>
+  The workflow is:
+
+  1. Create an asynchronous report job with your filters.
+  2. Poll the job status until it is complete.
+  3. Download the generated export file (CSV or JSON).
+</Info>
+
+***
+
+### 1. Create a report job
+
+**Endpoint:** `POST /stats/realtime-reports/export`
+
+Submit a request with your desired filters. The API creates an export job and returns an identifier (UUID) and a `status` (typically `Pending`).
+
+### 2. Poll for Completion
+
+**Endpoint:** `GET /stats/report-jobs/{reportId}`
+
+Poll the job status until it reaches `Done`. Do not poll more than once every 5–10 seconds to remain within rate limits.
+
+* **Status options:** `Pending`, `Done`, `Failure`, `Expired`.
+* **Note:** Identical requests may reuse cached results, returning a previously generated ID.
+
+### 3. Download the report
+
+**Endpoint:** `GET /stats/realtime-reports/{reportId}`
+
+Once the status is `Done`, this call returns the raw file bytes.
+
+* **CSV output:** `Content-Type: text/csv`.
+* **JSON output:** `Content-Type: application/json`.
+
+***
+
+## Data models
+
+### Request attributes (`RealTimeProductReportJob`)
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      fileFormat
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Output format:
+     <code>
+      csv
+     </code>
+     (default) or
+     <code>
+      json
+     </code>
+     .
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advertiserIds
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     array[string]
+    </p>
+   </td>
+   <td>
+    <p>
+     IDs of advertiser accounts.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array[string]
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional campaign filter.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      sellerIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array[string]
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional seller filter.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      dimensions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array[string]
+    </p>
+   </td>
+   <td>
+    <p>
+     Aggregation levels (for example,
+     <code>
+      advertiserId
+     </code>
+     ,
+     <code>
+      campaignId
+     </code>
+     ).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      metrics
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     array[string]
+    </p>
+   </td>
+   <td>
+    <p>
+     Metrics to retrieve. Default:
+     <code>
+      ["clicks", "displays", "cost"]
+     </code>
+     .
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      lookbackWindow
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Duration in minutes counted backwards from now (60–1440). Mutually exclusive with
+     <code>
+      startDate
+     </code>
+     .
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     ISO-8601 UTC start time; must be within the last 24 hours from the time of the request.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     ISO-8601 UTC end time. If omitted, defaults to the current time when
+     <code>
+      startDate
+     </code>
+     is provided.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timezone
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     IANA time zone identifier (default:
+     <code>
+      UTC
+     </code>
+     ). Used to format time values in the output.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_(*) - Required_
+
+#### Dimensions
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Dimension
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Constraints
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advertiserId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the advertiser.
+    </p>
+   </td>
+   <td>
+    <p>
+     —
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      partnerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the partner.
+    </p>
+   </td>
+   <td>
+    <p>
+     —
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the campaign (ad set-level entity in MPO).
+    </p>
+   </td>
+   <td>
+    <p>
+     —
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      sellerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     ID of the seller used in the MPO public API.
+    </p>
+   </td>
+   <td>
+    <p>
+     —
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      productId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Client-provided product ID.
+    </p>
+   </td>
+   <td>
+    <p>
+     Cannot be combined with
+     <code>
+      hour
+     </code>
+     or
+     <code>
+      minute
+     </code>
+     .
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      hour
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Start of hourly aggregation bucket (ISO-8601; minutes/seconds = 00) in the requested time zone.
+    </p>
+   </td>
+   <td>
+    <p>
+     Cannot be combined with
+     <code>
+      minute
+     </code>
+     or
+     <code>
+      productId
+     </code>
+     .
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      minute
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Start of minute aggregation bucket (ISO-8601; seconds = 00) in the requested time zone.
+    </p>
+   </td>
+   <td>
+    <p>
+     Cannot be combined with
+     <code>
+      hour
+     </code>
+     or
+     <code>
+      productId
+     </code>
+     .
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+#### Metrics
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Metric
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      clicks
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Number of clicks generated.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      displays
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Number of display opportunities used.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      cost
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Total cost in the advertiser account currency.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Step 1. Create an Async Report Job
+
+<Badge color="red" size="sm" shape="pill">POST</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/realtime-reports/export
+```
+
+This endpoint creates a new asynchronous report job for a real-time product report. The backend triggers production of an export file and may reuse cached results when the same request has already been processed.
+
+### Sample Request
+
+```json
+{
+  "data": {
+    "type": "RealTimeProductReportJob",
+    "attributes": {
+      "fileFormat": "csv",
+      "advertiserIds": ["321"],
+      "campaignIds": ["12345", "56789"],
+      "sellerIds": ["254614150"],
+      "dimensions": ["advertiserId", "campaignId", "sellerId"],
+      "metrics": ["clicks", "displays", "cost"],
+      "startDate": "2026-01-09T08:00:00Z",
+      "endDate": "2026-01-09T09:00:00Z",
+      "timezone": "UTC"
+    }
+  }
+}
+```
+
+### Sample Response
+
+#### Successful Response
+
+```json
+{
+  "exportId": "45f7ec55-1008-4372-9144-1da37d8dccc2",
+  "status": "Pending",
+  "message": null
+}
+```
+
+#### Error Example: unsupported `fileFormat`
+
+If `fileFormat` is not one of `csv` or `json`, the API returns a `400 Bad Request` validation error.
+
+```json
+{
+  "warnings": [],
+  "errors": [
+    {
+      "traceId": "31500d5059bb85b2168e9256f8722fa8",
+      "type": "validation",
+      "code": "json-serialization-error",
+      "title": "JSON error",
+      "detail": "data.attributes.fileFormat 'xls' not valid. Must be one of 'Csv','Json'"
+    }
+  ]
+}
+```
+
+***
+
+## Step 2. Poll for completion
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/report-jobs/{reportId}
+```
+
+This endpoint polls the job status until it reaches `Done`.  
+Do not poll more than once every 5–10 seconds to remain within rate limits.
+
+* **Status options:** `Pending`, `Done`, `Failure`, `Expired`.
+* **Note:** Identical requests may reuse cached results, returning a previously generated ID.
+
+***
+
+## Step 3. Download Report Output
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/realtime-reports/{reportId}
+```
+
+This endpoint downloads the file corresponding to a completed export job.
+
+<Info>
+  Download availability window
+
+  Export files generated by the MPO Real-Time Asynchronous API are only guaranteed to be available for download for a short period after the job reaches `status = Done` (typically up to **4 hours**). If the file has expired, you must create a new export job and download its output within this retention window.
+</Info>
+
+* If `fileFormat = csv` → `Content-Type: text/csv`
+* If `fileFormat = json` → `Content-Type: application/json`
+
+### Path Parameters
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Name
+    </p>
+   </th>
+   <th>
+    <p>
+     In
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      reportId
+     </code>
+     *
+    </p>
+   </td>
+   <td>
+    <p>
+     path
+    </p>
+   </td>
+   <td>
+    <p>
+     string (UUID)
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique ID of the export job.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_(*) - Required_
+
+### Example Request
+
+<Badge color="blue" size="sm" shape="pill">GET</Badge>
+
+```text
+GET https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/realtime-reports/45f7ec55-1008-4372-9144-1da37d8dccc2
+```
+
+#### Successful response
+
+* **200 OK** only if job status is `Done`.
+* Body contains **raw file bytes** (CSV or JSON).
+
+### Output formats
+
+#### CSV output
+
+The response contains a header row followed by data rows.
+
+```text
+"advertiserId","campaignId","clicks","displays","cost"
+321,12345,1873,800247,992.21671380425
+321,56789,17927,5275096,3460.71409576333
+...
+```
+
+#### JSON output
+
+The response contains a columnar JSON payload with a `data` array and top-level `columns` and `rows` fields.
+
+```json
+{
+  "columns": [
+    "advertiserId",
+    "campaignId",
+    "clicks",
+    "displays",
+    "cost"
+  ],
+  "data": [
+    [
+      321,
+      12345,
+      17927,
+      5275096,
+      3460.71409576333
+    ],
+    [
+      321,
+      56789,
+      1873,
+      800247,
+      992.21671380425
+    ]
+  ],
+  "rows": 2
+}
+```
+
+***
+
+## Validation rules
+
+The following validation rules are explicitly described via field notes and domain errors.
+
+### 1) Required fields
+
+* `advertiserIds` is **required**.
+* Missing required fields yields `invalid-query`.
+
+### 2) File format
+
+* `fileFormat` must be one of `csv` or `json`.
+* Otherwise the API returns `json-serialization-error` (as shown in the example).
+
+### 3) Time interval definition
+
+You must use **exactly one** of:
+
+* **Relative interval:** `lookbackWindow` (minutes from now).
+* **Absolute interval:** `startDate` (and optionally `endDate`).
+
+Rules:
+
+* `lookbackWindow` must be within **60–1440**.
+* `lookbackWindow` **cannot** be combined with `startDate` and/or `endDate`.
+* `startDate` is **mutually exclusive** with `lookbackWindow`.
+* `startDate` must be within the **last 24 hours** relative to “now”. Requests with an older `startDate` are **rejected**.
+* If `startDate` is provided and `endDate` is omitted, `endDate` defaults to the **current time**.
+
+### 4) Time zone
+
+* `timezone` must exist in the IANA Time Zone database.
+* Invalid time zones yield `invalid-query` (as part of "invalid query definition").
+
+### 5) Dimension combination constraints
+
+* Only **one** of the following dimensions can be used in a single request:
+  * `productId`
+  * `hour`
+  * `minute`
+
+Violations yield `invalid-dimensioncombination`.
+
+### 6) Report lifecycle constraints
+
+* Downloading output is only valid when `status == Done`.
+* If the job does not exist (or is not visible), the API returns `export-not-found` and maps it to HTTP `403`.
+* If the job exists, but the output has been permanently deleted, the API returns `export-alreadyexpired`.
+
+### 7) Caching behavior (identical requests)
+
+* Identical requests may reuse cached results, meaning a previous export/report ID may be returned instead of generating a new export.
+
+***
+
+## Errors & status codes
+
+### HTTP status codes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     HTTP
+    </p>
+   </th>
+   <th>
+    <p>
+     Meaning
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     400
+    </p>
+   </td>
+   <td>
+    <p>
+     Bad request (invalid syntax or validation error).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     401
+    </p>
+   </td>
+   <td>
+    <p>
+     Authentication failed (missing or expired token).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     403
+    </p>
+   </td>
+   <td>
+    <p>
+     Insufficient permissions, no campaign found in scope, or export job not found.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     409
+    </p>
+   </td>
+   <td>
+    <p>
+     Conflicting parameters (for example, invalid combination of filters).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     429
+    </p>
+   </td>
+   <td>
+    <p>
+     Throttling limit reached (example value noted: 200 requests/minute — to be confirmed).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     500
+    </p>
+   </td>
+   <td>
+    <p>
+     Internal server error.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Domain errors / validation errors
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Code
+    </p>
+   </th>
+   <th>
+    <p>
+     Title / Description
+    </p>
+   </th>
+   <th>
+    <p>
+     Notes
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      insufficient-accountpermissions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Insufficient account permissions
+    </p>
+   </td>
+   <td>
+    <p>
+     Caller lacks rights for specified advertisers.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      invalid-query
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Invalid query definition
+    </p>
+   </td>
+   <td>
+    <p>
+     Missing required fields, unsupported dimensions/metrics, invalid time zone, invalid IDs.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      invalid-lookbackwindow
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Invalid lookback window
+    </p>
+   </td>
+   <td>
+    <p>
+     Outside 60–1440 or combined with dates.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      invalid-time-interval
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Invalid time interval definition
+    </p>
+   </td>
+   <td>
+    <p>
+     Dates combined with
+     <code>
+      lookbackWindow
+     </code>
+     ; may be returned alongside
+     <code>
+      invalid-lookbackwindow
+     </code>
+     .
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      invalid-dimensioncombination
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Invalid combination of dimensions
+    </p>
+   </td>
+   <td>
+    <p>
+     Only one of
+     <code>
+      productId
+     </code>
+     ,
+     <code>
+      hour
+     </code>
+     ,
+     <code>
+      minute
+     </code>
+     per request.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      unsupported-fileformat
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Unsupported file format
+    </p>
+   </td>
+   <td>
+    <p>
+     Only CSV and JSON are supported.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      export-not-found
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Export job not found
+    </p>
+   </td>
+   <td>
+    <p>
+     Requested
+     <code>
+      reportId
+     </code>
+     does not exist or is not visible.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      export-alreadyexpired
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Export already expired
+    </p>
+   </td>
+   <td>
+    <p>
+     Output has been permanently deleted.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+## What's next
+
+* [Validation Errors](/marketing-solutions/docs/validation-errors)
+* [MPO Standard Reporting API](/marketing-solutions/docs/mpo-standard-reporting-api)

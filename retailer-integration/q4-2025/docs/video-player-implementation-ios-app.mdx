@@ -3,6 +3,8 @@ title: "Video Player Implementation (App: iOS)"
 description: "This document provides implementation guidance for Onsite Video Ads in iOS Apps."
 ---
 
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
+
 <Info>
   **Onsite Video for Apps is in Beta**
 
@@ -116,7 +118,7 @@ It introduces a ready-to-integrate video ad wrapper that handles VAST parsing, v
 1. In `OMSDK/Service`, find `omsdk-v1.js`. Add it to your app bundle in a directory of your choice (e.g., Resources/OMID/). You can load its content using:
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   let omidServiceUrl = Bundle.main.url(forResource: "omsdk-v1", withExtension: "js")!
   ```
 </CodeGroup>
@@ -144,7 +146,7 @@ It introduces a ready-to-integrate video ad wrapper that handles VAST parsing, v
 **Why:** OMID must be activated before any `OMIDAdSession` is created; otherwise, session creation will fail. Call activation **once,** **on app launch** (in `AppDelegate`):
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   class AppDelegate: UIResponder, UIApplicationDelegate {
       func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
           
@@ -199,7 +201,7 @@ Short, descriptive snippets that explain behavior over boilerplate.
 * On exit, `pauseAndDetach` and clear callbacks.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
    private var videoAd: CriteoVideoAdWrapper?
 
       override func viewDidLoad() {
@@ -253,7 +255,7 @@ Short, descriptive snippets that explain behavior over boilerplate.
 * On **cell hidden**: `pauseAndDetach()` (free UI; state is preserved - position/mute/CC).
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   override func viewDidLoad() {
       super.viewDidLoad()
       setupTableView()
@@ -341,7 +343,7 @@ Short, descriptive snippets that explain behavior over boilerplate.
 * Bridge via `UIViewRepresentable`; call **resume/pause** based on visibility.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   // SwiftUI list using a shared wrapper from a view model; ad row inserted at index 12.
   struct CriteoAdSwiftUIListView_Sample: View {
       @StateObject private var viewModel = VideoAdViewModel(vastURL: "https://raw.githubusercontent.com/criteo/interview-ios/refs/heads/main/server/sample_vast_app.xml")
@@ -487,7 +489,7 @@ Short, descriptive snippets that explain behavior over boilerplate.
 * Use `.xml` from `VASTSource` public enum.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   let config = CriteoVideoAdConfiguration(autoLoad: true)
   let videoAd = CriteoVideoAdWrapper(source: .xml(<VAST...</VAST>), configuration: config)
   ```
@@ -611,7 +613,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 **Why it matters:** Downloads the VAST XML and transforms it into a structured `VASTAd`.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   // Wrapper calls this under the hood
   let ad: VASTAd = try await NetworkManager.shared.fetchAndParseVAST(from: url)
   ```
@@ -624,7 +626,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 **Why it matters:** Extracts media URL, verification script URL, click-through, and tracking events.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   // Example fields typically extracted
   ad.videoURL                 // Creative video
   ad.verificationScriptURL    // OMID verification script
@@ -640,7 +642,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 **Why it matters:** Downloads the video (and its closed captions) once and reuses them locally for a smooth start.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   let localVideoURL = try await CreativeDownloaderAsync().fetchCreative(from: remoteVideoURL)
   ```
 </CodeGroup>
@@ -652,7 +654,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 **Why it matters:** Starts/stops OMID session, registers friendly obstructions, and emits measurement events.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   // Created with vendorKey + verificationScriptURL + parameters from VAST
   omid.setupOMIDSession(...)
   omid.fireImpression()             // impression
@@ -669,7 +671,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 **Why it matters:** Fires video tracking beacons for events related to impressions, quartiles, clicks, and user actions.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   // Example inside player events
   beaconManager.fireBeacon(url: url, type: "firstQuartile")
   ```
@@ -682,7 +684,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 **Why it matters:** Parses and displays VTT closed captions with frame-accurate timing updates.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   try closedCaptionManager.load(from: vttURL)
   closedCaptionLabel.text = closedCaptionManager.text(at: playerTime)
   ```
@@ -695,7 +697,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 **Why it matters:** Presents controls, loads the cached asset, performs precise seeks, and relays events back to the wrapper.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   player.setVASTAd(vastAd)
   player.loadVideo(from: localVideoURL)
   player.seekPreciselyTo(time: lastPlaybackPosition) { _ in /* resume UI */ }
@@ -709,7 +711,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 **Why it matters:** Centralized logging by category (vast, network, video, beacon, omid, ui), you can enable logs globally or per wrapper instance.
 
 <CodeGroup>
-  ```bash bash
+  ```bash Bash
   // Enable globally for all components (wrapper, player, managers)
   CriteoVideoAdWrapper.setGlobalLogging([.network, .beacon])
 
@@ -857,11 +859,7 @@ Invalid/missing scheme or non-HTTPS redirect chain.
 * Ensure the redirection URL is valid and resolves to `https://` as `http://` is not supported.
 
 ***
-
-Did anything feel unclear or missing on this page?
-
-Send feedback
-
+<SendFeedback />
 ***
 
 [Video Player Implementation (Web Browser)](/retailer-integration/q4-2025/docs/video-player-implementation-guide-desktopmobile)

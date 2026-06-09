@@ -1,10 +1,13 @@
 ---
-title: "Tracking Ad-Related Activity"
+title: Tracking Ad-Related Activity
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Commerce Video/tracking-ad-related-activity.md
 ---
+
+import { SendFeedback } from "/snippets/sendFeedback.jsx";
 
 ## Introduction
 
-With Commerce Video formats, the beacons have three different levels, meaning that each beacon will be linked to either:
+With Commerce Video formats, the beacons  have three different levels, meaning that each beacon will be linked to either:
 
 * An event that relates to **the format/placement** itself;
 * An event that relates to **the individual SKUs** within the format (if SKUs are available in the format);
@@ -28,43 +31,474 @@ The distinctions between these three levels of beacons are outlined in the table
 
 ## Format Level Beacons
 
-| Beacon Name                  | Beacon Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OnLoadBeacon`               | Indicates that the format (video + SKUs if applicable) is rendered on the page, even if not viewable yet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `OnViewBeacon`               | Indicates that the format is viewed by the user (viewability = more than 50% of the format in the user's viewport for 1 second).*Note: this indicates the viewability of the format. However, video viewability (more than 50% of the format in the user’s viewport for two consecutive seconds) is tracked with OMID capabilities (see the "[Additional verification with OMID compatible scripts](https://developers.criteo.com/retail-media-delivery/docs/video-player-implementation-guide-desktopmobile#step-4-additional-verification-with-omid-compatible-scripts-video-views)” section). This beacon is **not** used to track video viewability.* |
-| `OnClickBeacon` (200)        | Indicates that the format has been clicked by the user on a clickable and redirectable element that is neither the video nor the product tile (example: a CTA, a clickable text around the video...). If there is no any other clickable element than the video or SKUs, you can ignore this beacon.*Notes:*- 1. Clicks on SKUs should use the `OnClickBeacon` at SKU level.2) Clicks on the video itself should use the click tracking beacon in the VAST XML.\_                                                                                                                                                                                         |
-| `OnFileClickBeacon`          | Please disregard this beacon.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `OnBundleBasketChangeBeacon` | Please disregard this beacon.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Beacon Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Beacon Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnLoadBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates that the format (video + SKUs if applicable) is rendered on the page, even if not viewable yet.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnViewBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates that the format is viewed by the user (viewability = more than 50% of the format in the user's viewport for 1 second).
+    </p>
+    <p>
+     _Note: this indicates the viewability of the format. However, video viewability (more than 50% of the format in the user’s viewport for two consecutive seconds) is tracked with OMID capabilities (see the "Additional verification with OMID compatible scripts” section). This beacon is
+     <strong>
+      not
+     </strong>
+     used to track video viewability._
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnClickBeacon
+     </code>
+     (200)
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates that the format has been clicked by the user on a clickable and redirectable element that is neither the video nor the product tile (example: a CTA, a clickable text around the video...).
+    </p>
+    <p>
+     If there is no any other clickable element than the video or SKUs, you can ignore this beacon.
+    </p>
+    <p>
+     _Notes:_
+    </p>
+    <ul>
+     <li>
+      1. Clicks on SKUs should use the
+      <code>
+       OnClickBeacon
+      </code>
+      at SKU level.
+     </li>
+    </ul>
+    <p>
+     2. Clicks on the video itself should use the click tracking beacon in the VAST XML._
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnFileClickBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Please disregard this beacon.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnBundleBasketChangeBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Please disregard this beacon.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
 ## SKU Level Beacons
 
-| Beacon Name                                  | Beacon Description                                                                                                                                                                                                                       |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OnLoadBeacon`                               | Indicates that the product tile is rendered on the page (even if not viewable yet).                                                                                                                                                      |
-| `OnViewBeacon`                               | Indicates that the product tile is viewed by the user (viewed = more than 50% of the product in the user's viewport for 1 second).                                                                                                       |
-| `OnClickBeacon` (200) or `ProductPage` (302) | This beacon is triggered when a user clicks on an element (image, text) of the product tile that redirects to the product page.                                                                                                          |
-| `OnBasketChangeBeacon`                       | This beacon is triggered when the user adds a product to their cart.*If there is no`Add to Cart` functionality available, please disregard. The beacon can be fired multiple times if the user repeatedly clicks the `Add-to-Cart` CTA.* |
-| `OnWishListBeacon`                           | This beacon is triggered when the user adds a product to their wishlist.*If no add-to-Wishlist CTA is available, it can be disregarded. The beacon can be fired multiple times if the user repeatedly clicks the`Add-to-Wishlist `CTA.*  |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Beacon Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Beacon Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnLoadBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates that the product tile is rendered on the page (even if not viewable yet).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnViewBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates that the product tile is viewed by the user (viewed = more than 50% of the product in the user's viewport for 1 second).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnClickBeacon
+     </code>
+     (200) or
+     <code>
+      ProductPage
+     </code>
+     (302)
+    </p>
+   </td>
+   <td>
+    <p>
+     This beacon is triggered when a user clicks on an element (image, text) of the product tile that redirects to the product page.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnBasketChangeBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     This beacon is triggered when the user adds a product to their cart.
+    </p>
+    <p>
+     _If there is no
+     <code>
+      Add to Cart
+     </code>
+     functionality available, please disregard. The beacon can be fired multiple times if the user repeatedly clicks the
+     <code>
+      Add-to-Cart
+     </code>
+     CTA._
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      OnWishListBeacon
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     This beacon is triggered when the user adds a product to their wishlist.
+    </p>
+    <p>
+     _If no add-to-Wishlist CTA is available, it can be disregarded. The beacon can be fired multiple times if the user repeatedly clicks the
+     <code>
+      Add-to-Wishlist
+     </code>
+     CTA._
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 ***
 
 ## VAST XML Level Beacons
 
-| Name                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Impression`                     | Indicates that the video is rendered on the page (even if not viewable yet). Not used for billing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `Tracking event="start"`         | Indicates that the video has started and should be triggered when the video enters in 50% of the user’s viewport. **This is the beacon used for impression billing and reporting.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `Tracking event="firstQuartile`  | Must be triggered when 25% of the video has been played.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `Tracking event="midpoint"`      | Must be triggered when 50% of the video has been played.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `Tracking event="thirdQuartile"` | Must be triggered when 75% of the video has been played.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `Tracking event="complete"`      | Must be triggered when 100% of the video has been played.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `ClickTracking`                  | Must be triggered every time the user clicks on the video and gets redirected to the landing page stored in the `\<ClickThrough id="Criteo">` node of the VAST XML file. This beacon can be fired multiple times per page load, for every click on the video.*Do not trigger this beacon for clicks on the interactive buttons (`pause / resume / mute / unmute`). Please refer to the associated tracking events below for those actions.*                                                                                                                                                                                                                                        |
-| `Tracking event="mute"`          | Must be triggered every time the user clicks the `Mute` button of the video player when the video is already unmuted. This beacon can be fired multiple times per page load, for every click on the Mute button. The video should begin in a muted state when in the viewport.*This action must not be triggered at the start of the video. It should only be initiated when the user actively mutes the video by clicking the`Mute` button.*                                                                                                                                                                                                                                      |
-| `Tracking event="unmute"`        | Must be triggered every time the user clicks the `Unmute` button of the video player when the video is already muted. This beacon could be fired multiple times per page load, for every click on the `Unmute` button.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `Tracking event="pause"`         | Must be triggered every time the user clicks the `Pause` button of the video player when the video is already playing. This beacon could be fired multiple times per page load, for every click on the `Pause` button.*If the decision is made not to display a pause/resume button in the player, this beacon can be ignored. This beacon should only be triggered by the button click and should not be triggered when the video pauses by itself due to leaving the viewport.**If there is no redirection link provided in the VAST XML, a click on the video itself should pause/resume the video and this beacon should be fired.*                                            |
-| `Tracking event="resume"`        | Must be triggered every time the user clicks the `Play` button of the video player when the video is already paused. This beacon can be fired multiple times per page load, for every click on the `Resume` button.*If the decision is made not to display a pause/resume button in the player, this beacon can be ignored. This beacon should only be triggered by the button click and should not be triggered when the video autonomously resumes after being paused by leaving the viewport and subsequently returning.**If there is no redirection link provided in the VAST XML, a click on the video itself should pause/resume the video and this beacon should be fired.* |
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Impression
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates that the video is rendered on the page (even if not viewable yet). Not used for billing.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="start"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates that the video has started and should be triggered when the video enters in 50% of the user’s viewport.
+     <strong>
+      This is the beacon used for impression billing and reporting.
+     </strong>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="firstQuartile
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered when 25% of the video has been played.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="midpoint"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered when 50% of the video has been played.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="thirdQuartile"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered when 75% of the video has been played.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="complete"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered when 100% of the video has been played.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      ClickTracking
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered every time the user clicks on the video and gets redirected to the landing page stored in the
+     <code>
+      \
+     </code>
+     node of the VAST XML file. This beacon can be fired multiple times per page load, for every click on the video.
+    </p>
+    <p>
+     _Do not trigger this beacon for clicks on the interactive buttons (
+     <code>
+      pause / resume / mute / unmute
+     </code>
+     ). Please refer to the associated tracking events below for those actions._
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="mute"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered every time the user clicks the
+     <code>
+      Mute
+     </code>
+     button of the video player when the video is already unmuted. This beacon can be fired multiple times per page load, for every click on the Mute button. The video should begin in a muted state when in the viewport.
+    </p>
+    <p>
+     _This action must not be triggered at the start of the video. It should only be initiated when the user actively mutes the video by clicking the
+     <code>
+      Mute
+     </code>
+     button._
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="unmute"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered every time the user clicks the
+     <code>
+      Unmute
+     </code>
+     button of the video player when the video is already muted. This beacon could be fired multiple times per page load, for every click on the
+     <code>
+      Unmute
+     </code>
+     button.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="pause"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered every time the user clicks the
+     <code>
+      Pause
+     </code>
+     button of the video player when the video is already playing. This beacon could be fired multiple times per page load, for every click on the
+     <code>
+      Pause
+     </code>
+     button.
+    </p>
+    <p>
+     _If the decision is made not to display a pause/resume button in the player, this beacon can be ignored. This beacon should only be triggered by the button click and should not be triggered when the video pauses by itself due to leaving the viewport._
+    </p>
+    <p>
+     _If there is no redirection link provided in the VAST XML, a click on the video itself should pause/resume the video and this beacon should be fired._
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      Tracking event="resume"
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be triggered every time the user clicks the
+     <code>
+      Play
+     </code>
+     button of the video player when the video is already paused. This beacon can be fired multiple times per page load, for every click on the
+     <code>
+      Resume
+     </code>
+     button.
+    </p>
+    <p>
+     _If the decision is made not to display a pause/resume button in the player, this beacon can be ignored. This beacon should only be triggered by the button click and should not be triggered when the video autonomously resumes after being paused by leaving the viewport and subsequently returning._
+    </p>
+    <p>
+     _If there is no redirection link provided in the VAST XML, a click on the video itself should pause/resume the video and this beacon should be fired._
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
 
 <Info>
   The VAST `videoStart` beacon is triggered at ≥50% in view (used for billing). If integrated, the OMID `start` event requires 100% in view, so it will often fire slightly later than VAST. This is expected behavior and ensures compliance with OM SDK standards. Both beacons may appear in logs for the same impression.
@@ -72,12 +506,9 @@ The distinctions between these three levels of beacons are outlined in the table
 
 ***
 
-Did anything feel unclear or missing on this page?
+<br />
 
-Send feedback
-
-***
-
-What’s Next
+<SendFeedback />
+## What's next
 
 * [Criteo-Owned Video Player Integration](/retailer-integration/docs/criteo-owned-video-player-integration)
