@@ -64,7 +64,7 @@ Here is an example of how to request the VAST file (if required) and how to pars
 * OMID Verification URL and `VerificationParameters `,
 * Closed captions file.
 
-```text swift
+```swift
 public func fetchVAST(_ remoteURL: URL,
                           _ statusHandler: @escaping (_ message: String) -> (),
                           _ completionHandler: @escaping (_ videoAdURL: URL, 
@@ -130,7 +130,7 @@ public func fetchVAST(_ remoteURL: URL,
 
 And the parsing function to evaluate the XPath below:
 
-```text swift
+```swift
 private func evaluateXPath(xmlString: Data, xpath: String) -> [String] {
   var results: [String] = [];
 
@@ -203,7 +203,7 @@ In practice, we add a `UIView` called `playerView` for the player container in t
 
 The video player can be created programmatically, and added to this container. 
 
-```text swift
+```swift
 func createMediaPlayer(withAsset asset: AVAsset) {
 		let player = AVQueuePlayer()
     let looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: asset!))
@@ -502,7 +502,7 @@ Before the ad session initialization, the OM SDK needs to be activated. The ad s
   OMID `VerificationScript` , `VerificationParameters` and `VendorKey` are provided inside the VAST.
 </Info>
 
-```text swift
+```swift
 private static func createAdSession(adView: UIView?, vendorKey:String, verificationScriptURL: String, verificationParameters: String) -> OMIDCriteoAdSession {
     // ensure OMID has been already activated
     guard OMIDCriteoSDK.shared.isActive else {
@@ -575,7 +575,7 @@ private static func createAdSessionConfiguration() -> OMIDCriteoAdSessionConfigu
 
 When the ad session is started, the Criteo verification script is automatically loaded. At this point, the Criteo verification script will start observing any `AdEvents` & `MediaEvents` that are triggered toward the OM SDK.
 
-```text swift
+```swift
 func startSession() {
     print("Starting session for \(adSession.debugDescription)")
 
@@ -626,7 +626,7 @@ Triggering OMID events is similar to triggering VAST trackers, both will be desc
 
 Once the creative is downloaded, we can start the OMID session and trigger the `loaded` event.
 
-```text swift
+```swift
 func didFinishFetchingCreative() {
   sessionInteractor?.startSession()
 
@@ -644,7 +644,7 @@ func didFinishFetchingCreative() {
 
 Right after the ad is presented, we can fire the `impression` beacons from VAST and to OMID.
 
-```text swift
+```swift
 func emitBeacon(type: Beacon) {        
   let task = URLSession.shared.dataTask(with: self.tracking![type.rawValue]!);
   task.resume()
@@ -658,7 +658,7 @@ func didPresentAd() {
 
 The `start`, `firstQuartile`, `midpoint`, `thirdQuartile` and `complete` beacons are managed in a function triggered by a polling thread. For each of their playback events, we send both VAST and OMID beacons.
 
-```text swift
+```swift
 func addQuartileTrackingToVideoPlayer() {
   guard let player = player else { return }
   player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1, preferredTimescale: 10),
@@ -732,7 +732,7 @@ func recordQuartileChange() {
 
 We handle the **pause/resume** beacons by attaching an event listener to the button. If the player is currently playing, we pause and emit the OMID and VAST pause beacons. Otherwise, we emit the resume beacons. We also change the image of the button to represent a play and pause button.
 
-```text swift
+```swift
 @IBAction func tappedPlayingControl() {
   changePlayingControls()
 }
@@ -756,7 +756,7 @@ We handle the **click** beacon by creating a `Tap Gesture Recognizer` in the Int
 
 If the redirection URL is not provided, we pause/resume the video and trigger the corresponding tracking beacons:
 
-```text swift
+```swift
 @IBAction func handleClick() {
   let clickThroughURL = self.tracking![Beacon.click.rawValue];
 
@@ -773,7 +773,7 @@ If the redirection URL is not provided, we pause/resume the video and trigger th
 
 Finally, we handle the **mute/unmute** beacons similarly, by attaching a listener to the button.  It changes the state of the player, the image of the button, and triggers the VAST and OMID tracking beacons.
 
-```text swift
+```swift
 @IBAction func toggleMute() {
   player.isMuted = !player.isMuted
   player.isMuted ? attachUnMuteButtonImage() : attachMuteButtonImage();
@@ -788,7 +788,7 @@ Finally, we handle the **mute/unmute** beacons similarly, by attaching a listene
 
   As the OM SDK has access to the video player `UIView`, it checks and sends the percentage of the video being visible. So, if the buttons are on the overlay of the player, make sure to declare them:
 
-  ```text swift
+  ```swift
    adSession.addFriendlyObstruction(element, // muteButton, playButton
                                     purpose: .mediaControls,
                                     detailedReason: "Media Controls over video");
@@ -801,7 +801,7 @@ Finally, we handle the **mute/unmute** beacons similarly, by attaching a listene
 
 It is important to handle correctly the destruction of the player and the ad session:
 
-```text swift
+```swift
 func willDismissAd() {
     // Finish measurement
     print("Ending measurement session now")
@@ -838,7 +838,7 @@ Instead of creating a `AVAsset` using only the video URL, we are creating a `AVM
 
 Here is the full code example:
 
-```text coffeescript Swift
+```swift coffeescript Swift
 func getVideoAndCaptions() -> AVMutableComposition? {
   let videoAndCaptions = AVMutableComposition()
   let videoTrack = videoAndCaptions.addMutableTrack(withMediaType:.video , preferredTrackID: kCMPersistentTrackID_Invalid)
@@ -890,7 +890,7 @@ func getVideoAndCaptions() -> AVMutableComposition? {
   Prior to iOS 15, `AVMutableComposition` only supports the insertion of locally stored assets; remote items cannot be used. As a result, we download and store the media file and closed captions locally before initializing the player.
 </Info>
 
-```text coffeescript Swift
+```swift coffeescript Swift
 public func fetch(_ remoteURL: URL, 
                   _ localAssetURL: URL,
                   _ statusHandler: @escaping (_ message: String) -> (), 

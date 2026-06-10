@@ -37,7 +37,7 @@ Add the Criteo sample folders to your app target. You can download/clone **[the 
 
 In **Android Studio**, drag the following sample source folders from:
 
-```text
+```http
 /android-sample/src/main/java/com/iab/omid/sampleapp/
 ```
 
@@ -99,7 +99,7 @@ Pick one of the patterns in this guide and adapt the snippet:
 * Place the `omsdk-android-<version>-<namespace>.aar` file into your module's `libs/` directory.
 * In your module's `build.gradle`, ensure the `libs/` directory is included as a flat file repository:
 
-```text gradle Gradle
+```gradle Gradle
 dependencies {
     implementation fileTree(include: ['*.aar'], dir: 'libs/')
 }
@@ -141,7 +141,7 @@ dependencies {
 
 Call activation once in your `Application` subclass:
 
-```text kotlin
+```kotlin
 class AdApplication : Application() {
 
     override fun onCreate() {
@@ -194,7 +194,7 @@ Pattern:
 * Resume playback in `onResume`, pause in `onPause`.
 * On destroy, `release()` the wrapper to free all resources.
 
-```text kotlin
+```kotlin
 class BasicVideoPlayerFragment : Fragment() {
 
     private var videoAdWrapper: CriteoVideoAdWrapper? = null
@@ -303,7 +303,7 @@ Fragment: `src/main/java/com/iab/omid/sampleapp/FeedVideoPlayerFragment.kt`
 * On cell below 50% visible: `pause()` (state is preserved — position/mute).
 * On Fragment destroy: `release()` all wrappers to clean up resources.
 
-```text kotlin
+```kotlin
 class FeedVideoPlayerFragment : Fragment() {
 
     private var recyclerView: RecyclerView? = null
@@ -379,7 +379,7 @@ class FeedVideoPlayerFragment : Fragment() {
 
 The `VideoAdViewHolder` manages play/pause based on visibility:
 
-```text kotlin
+```kotlin
 inner class VideoAdViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val videoContainer: FrameLayout = itemView.findViewById(R.id.videoAdContainer)
 
@@ -426,7 +426,7 @@ inner class VideoAdViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView
 
 Cleanup on adapter destruction:
 
-```text kotlin
+```kotlin
 fun pauseAllVideos() {
     videoAdWrappers.values.forEach { it.pause() }
 }
@@ -444,7 +444,7 @@ fun cleanupVideos() {
 * Use `CriteoVideoAdWrapper.fromXml()` factory method instead of `fromUrl()`.
 * Or use the `VASTSource.Xml` sealed interface variant with `loadVideoAd()`.
 
-```text kotlin
+```kotlin
 // Using factory method
 val videoAd = CriteoVideoAdWrapper.fromXml(
     context = this,
@@ -798,7 +798,7 @@ A quick tour of what happens under the hood. You should not need to call these d
   **Why it matters**: Downloads the VAST XML and transforms it into a structured `VastAd`.
 </Info>
 
-```text kotlin
+```kotlin
 // Wrapper calls this under the hood
 val result: Result&lt;VastAd&gt; = networkManager.fetchAndParseVast(url)
 ```
@@ -811,7 +811,7 @@ val result: Result&lt;VastAd&gt; = networkManager.fetchAndParseVast(url)
   **Why it matters**: Extracts media URL, verification script URL, click-through, and tracking events.
 </Info>
 
-```text kotlin
+```kotlin
 // Example fields typically extracted from VastAd
 ad.videoUrl                 // Creative video URL
 ad.verificationScriptUrl    // OMID verification script
@@ -827,7 +827,7 @@ ad.trackingEvents           // start / quartiles / complete / pause / resume
   **Why it matters**: Downloads the video (and its closed captions) once and stores them as local temp files for smooth playback.
 </Info>
 
-```text kotlin
+```kotlin
 val localFile: Result&lt;File&gt; = creativeDownloader.fetchCreative(remoteUrl)
 ```
 
@@ -839,7 +839,7 @@ val localFile: Result&lt;File&gt; = creativeDownloader.fetchCreative(remoteUrl)
   **Why it matters**: Starts/stops OMID session, registers friendly obstructions, and emits measurement events.
 </Info>
 
-```text kotlin
+```kotlin
 // Created with vendorKey + verificationScriptURL + parameters from VAST
 val omid = OMIDSessionInteractorFactory.create(
     context, adView, vendorKey, verificationScriptURL, verificationParameters
@@ -859,7 +859,7 @@ Note: When OMID is not available, a stub (`OMIDSessionInteractorStub`) is automa
   **Why it matters**: Fires video tracking beacons for events related to impressions, quartiles, clicks, and user actions. Includes retry logic with exponential backoff.
 </Info>
 
-```text kotlin
+```kotlin
 beaconManager.fireBeacon(url = url, type = "firstQuartile")
 beaconManager.fireImpressionBeacons(ad = vastAd)
 beaconManager.fireClickTrackingBeacons(ad = vastAd)
@@ -873,7 +873,7 @@ beaconManager.fireClickTrackingBeacons(ad = vastAd)
   **Why it matters**: Presents controls (play/pause, mute, closed captions), loads the cached asset via ExoPlayer (Media3), and relays events back to the wrapper.
 </Info>
 
-```text kotlin
+```kotlin
 player.setVastAd(vastAd)
 player.load(
     videoUri = videoUri,
@@ -892,7 +892,7 @@ player.seekTo(positionMs)
   **Why it matters**: Centralized logging by category (VAST, NETWORK, VIDEO, BEACON, OMID, UI), you can enable logs globally or per wrapper instance.
 </Info>
 
-```text kotlin
+```kotlin
 // Enable specific categories for a single wrapper instance
 videoAd.enableLogs = setOf(
     CriteoVideoAdLogCategory.NETWORK,

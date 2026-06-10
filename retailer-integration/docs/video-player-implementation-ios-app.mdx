@@ -116,7 +116,7 @@ It introduces a ready-to-integrate video ad wrapper that handles VAST parsing, v
 
 1. In `OMSDK/Service`, find `omsdk-v1.js`. Add it to your app bundle in a directory of your choice (e.g., Resources/OMID/). You can load its content using:
 
-```text swift
+```swift
 let omidServiceUrl = Bundle.main.url(forResource: "omsdk-v1", withExtension: "js")!
 ```
 
@@ -144,7 +144,7 @@ In `Managers/OMIDSessionInteractor.swift`, make the following changes:
 **Why:** OMID must be activated before any `OMIDAdSession` is created; otherwise, session creation will fail.
 Call activation **once,** **on app launch** (in `AppDelegate`):
 
-```text swift
+```swift
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
@@ -198,7 +198,7 @@ Short, descriptive snippets that explain behavior over boilerplate.
 
 * On exit, `pauseAndDetach` and clear callbacks.
 
-```text swift
+```swift
  private var videoAd: CriteoVideoAdWrapper?
 
     override func viewDidLoad() {
@@ -251,7 +251,7 @@ Short, descriptive snippets that explain behavior over boilerplate.
 
 * On **cell hidden**: `pauseAndDetach()` (free UI; state is preserved - position/mute/CC).
 
-```text swift
+```swift
 override func viewDidLoad() {
     super.viewDidLoad()
     setupTableView()
@@ -337,7 +337,7 @@ deinit {
 
 * Bridge via `UIViewRepresentable`; call **resume/pause** based on visibility.
 
-```text swift
+```swift
 // SwiftUI list using a shared wrapper from a view model; ad row inserted at index 12.
 struct CriteoAdSwiftUIListView_Sample: View {
     @StateObject private var viewModel = VideoAdViewModel(vastURL: "https://raw.githubusercontent.com/criteo/interview-ios/refs/heads/main/server/sample_vast_app.xml")
@@ -481,7 +481,7 @@ final class VideoAdViewModel: ObservableObject {
 
 * Use `.xml` from `VASTSource` public enum.
 
-```text swift
+```swift
 let config = CriteoVideoAdConfiguration(autoLoad: true)
 let videoAd = CriteoVideoAdWrapper(source: .xml(&lt;VAST...&lt;/VAST&gt;), configuration: config)
 ```
@@ -870,7 +870,7 @@ A quick tour of what happens under the hood. You **should not** need to call the
 
 **Why it matters:** Downloads the VAST XML and transforms it into a structured `VASTAd`.
 
-```text swift
+```swift
 // Wrapper calls this under the hood
 let ad: VASTAd = try await NetworkManager.shared.fetchAndParseVAST(from: url)
 ```
@@ -881,7 +881,7 @@ let ad: VASTAd = try await NetworkManager.shared.fetchAndParseVAST(from: url)
 
 **Why it matters:** Extracts media URL, verification script URL, click-through, and tracking events.
 
-```text swift
+```swift
 // Example fields typically extracted
 ad.videoURL                 // Creative video
 ad.verificationScriptURL    // OMID verification script
@@ -895,7 +895,7 @@ ad.trackingEvents           // start / quartiles / complete / pause / resume
 
 **Why it matters:** Downloads the video (and its closed captions) once and reuses them locally for a smooth start.
 
-```text swift
+```swift
 let localVideoURL = try await CreativeDownloaderAsync().fetchCreative(from: remoteVideoURL)
 ```
 
@@ -905,7 +905,7 @@ let localVideoURL = try await CreativeDownloaderAsync().fetchCreative(from: remo
 
 **Why it matters:** Starts/stops OMID session, registers friendly obstructions, and emits measurement events.
 
-```text swift
+```swift
 // Created with vendorKey + verificationScriptURL + parameters from VAST
 omid.setupOMIDSession(...)
 omid.fireImpression()             // impression
@@ -920,7 +920,7 @@ omid.getMediaEventsPublisher().start(...) // start
 
 **Why it matters:** Fires video tracking beacons for events related to impressions, quartiles, clicks, and user actions.
 
-```text swift
+```swift
 // Example inside player events
 beaconManager.fireBeacon(url: url, type: "firstQuartile")
 ```
@@ -931,7 +931,7 @@ beaconManager.fireBeacon(url: url, type: "firstQuartile")
 
 **Why it matters:** Parses and displays VTT closed captions with frame-accurate timing updates.
 
-```text swift
+```swift
 try closedCaptionManager.load(from: vttURL)
 closedCaptionLabel.text = closedCaptionManager.text(at: playerTime)
 ```
@@ -942,7 +942,7 @@ closedCaptionLabel.text = closedCaptionManager.text(at: playerTime)
 
 **Why it matters:** Presents controls, loads the cached asset, performs precise seeks, and relays events back to the wrapper.
 
-```text swift
+```swift
 player.setVASTAd(vastAd)
 player.loadVideo(from: localVideoURL)
 player.seekPreciselyTo(time: lastPlaybackPosition) { _ in /* resume UI */ }
@@ -954,7 +954,7 @@ player.seekPreciselyTo(time: lastPlaybackPosition) { _ in /* resume UI */ }
 
 **Why it matters:** Centralized logging by category (vast, network, video, beacon, omid, ui), you can enable logs globally or per wrapper instance.
 
-```text swift
+```swift
 // Enable globally for all components (wrapper, player, managers)
 CriteoVideoAdWrapper.setGlobalLogging([.network, .beacon])
 
