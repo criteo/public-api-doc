@@ -34,31 +34,31 @@ Additional details about the individual attributes of Campaigns can be found bel
   ```
 </CodeGroup>
 
- 
-
 ## **Campaign Attributes**
 
-**`name`** Currently read-only. The Campaign name, set by the advertiser.
+**`name`**
 
- 
+Currently read-only. The Campaign name, set by the advertiser.
 
-**`advertiserId`** Read-only. The advertiser associated with the Campaign.
+**`advertiserId`**
 
- 
+Read-only. The advertiser associated with the Campaign.
 
-**`goal`** The marketing goal of the Campaign. Can be `Acquisition`, `Retention` or `Unspecified` (only for older campaigns).
+**`goal`**
 
- 
+The marketing goal of the Campaign. Can be `Acquisition`, `Retention` or `Unspecified` (only for older campaigns).
 
-**`spendLimit.spendLimitRenewal`** The cadence of spend limit renewal. Can be `daily`, `monthly`, `lifetime`, or `undefined` in the case of an `uncapped` limit type.
+**`spendLimit.spendLimitRenewal`**
 
- 
+The cadence of spend limit renewal. Can be `daily`, `monthly`, `lifetime`, or `undefined` in the case of an `uncapped` limit type.
 
-**`spendLimit.spendLimitType`** Whether the Campaign spend is capped or not. Can be `capped` or `uncapped`.
+**`spendLimit.spendLimitType`**
 
- 
+Whether the Campaign spend is capped or not. Can be `capped` or `uncapped`.
 
-**`spendLimit.spendLimitAmount`** A decimal value representing the spend limit for the Campaign. If `spendLimitType` is `uncapped`, the value will be `null`.
+**`spendLimit.spendLimitAmount`**
+
+A decimal value representing the spend limit for the Campaign. If `spendLimitType` is `uncapped`, the value will be `null`.
 
 **`budgetAutomation.enabled`**
 
@@ -70,23 +70,15 @@ Specifies the primary goal of the ad set when budget automation is enabled. This
 
 Possible values: `conversions`, `revenue`, `visits`, `videoViews`
 
- 
-
 ## **Create a campaign**
 
 A new campaign can be created for a specific advertiser by making a POST call to the campaigns endpoint. The request body should specify the type (`Campaign`) and the [campaign attributes](/marketing-solutions/v2025.04/docs/campaign#campaign-attributes).
-
- 
 
 <Info>
   **Spend Limit**
 
   `spendLimitRenewal` and `spendLimitAmount` are only relevant when `spendLimitType` is set to capped.
 </Info>
-
- 
-
- 
 
 <Info>
   **Goal**
@@ -213,10 +205,6 @@ The API will return an array of Campaigns that match the provided filters:
   ```
 </CodeGroup>
 
- 
-
- 
-
 ### Retrieving All Campaigns
 
 When no filters are specified in the JSON payload, all Campaigns in your portfolio will be returned, as in the example below:
@@ -235,10 +223,6 @@ When no filters are specified in the JSON payload, all Campaigns in your portfol
   ```
 </CodeGroup>
 
- 
-
- 
-
 ### Retrieving One Specific Campaign
 
 You can also fetch the details for a single Campaign using a GET request:
@@ -248,8 +232,6 @@ You can also fetch the details for a single Campaign using a GET request:
 /marketing-solutions/campaigns/{campaignId}
 ```
 </EndpointBadge>
-
- 
 
 The response `data` will be a single object containing the Campaign details.
 
@@ -265,8 +247,6 @@ The response `data` will be a single object containing the Campaign details.
   }
   ```
 </CodeGroup>
-
- 
 
 ## **Update Campaigns**
 
@@ -323,10 +303,6 @@ The API will return an array of Campaigns that have been updated successfully in
   ```
 </CodeGroup>
 
- 
-
- 
-
 ## **Partial Success / Partial Failure**
 
 Each Campaign update is processed individually and can succeed or fail without impacting other updates in the same payload.
@@ -338,10 +314,6 @@ As a result, those Campaign updates processed successfully will be returned in t
 
   As a result of this individual processing, the API may respond with a `200` HTTP response code, but the result of its processing may have one or more failures.
 </Warning>
-
- 
-
- 
 
 For instance, for this payload which intends to update two Campaigns:
 
@@ -394,8 +366,6 @@ For instance, for this payload which intends to update two Campaigns:
   ```
 </CodeGroup>
 
- 
-
 The response might look like:
 
 <CodeGroup>
@@ -432,23 +402,35 @@ A full list of error codes can be found on the [Validation Errors](/marketing-so
 
 Below is a list of error codes for Campaign validation and a more detailed description of their meaning.
 
- 
-
 ## **Validation Errors and Warnings**
 
-**Campaign Update Errors:** **`campaign--campaign-update-check--spend-limit-does-not-exist`** An update to spend limit was attempted on a Campaign which does not have a spend limit (e.g. an uncapped Campaign). Alternatively, the requestor may not have permissions to update the spend limit of the Campaign.
+**Campaign Update Errors:**
 
-**`campaign--campaign-update-check--cannot-decrease-lifetime-spend-limit-below-what-is-already-spent`** An update attempted to decrease a *lifetime* spend limit of a Campaign to a value lower than what has already been spent.
+**`campaign--campaign-update-check--spend-limit-does-not-exist`**
 
-**`campaign--campaign-update-check--validation-failed-on-spend-limit`** TK
+An update to spend limit was attempted on a Campaign which does not have a spend limit (e.g. an uncapped Campaign). Alternatively, the requestor may not have permissions to update the spend limit of the Campaign.
 
-**`campaign--campaign-update-check--cannot-update-same-campaign-multiple-times`** The Campaign is included multiple times in the same update payload. All Campaign field updates should be consolidated into one array item.
+**`campaign--campaign-update-check--cannot-decrease-lifetime-spend-limit-below-what-is-already-spent`**
 
-**`campaign--campaign-update-check--unavailable-feature-for-this-advertiser`** TK
+An update attempted to decrease a *lifetime* spend limit of a Campaign to a value lower than what has already been spent.
 
- 
+**`campaign--campaign-update-check--validation-failed-on-spend-limit`**
 
-**Campaign Update Warnings:** **`campaign--campaign-update-check--new-spend-limit-amount-will-take-place-at-the-next-period-start`** The update to spend limit was processed, but it will not take effect until the next period specified by `spendLimitRenewal` (e.g. the next day). This is typically because the new spend amount specified is lower than the amount already spent in the current period.
+TK
+
+**`campaign--campaign-update-check--cannot-update-same-campaign-multiple-times`**
+
+The Campaign is included multiple times in the same update payload. All Campaign field updates should be consolidated into one array item.
+
+**`campaign--campaign-update-check--unavailable-feature-for-this-advertiser`**
+
+TK
+
+**Campaign Update Warnings:**
+
+**`campaign--campaign-update-check--new-spend-limit-amount-will-take-place-at-the-next-period-start`**
+
+The update to spend limit was processed, but it will not take effect until the next period specified by `spendLimitRenewal` (e.g. the next day). This is typically because the new spend amount specified is lower than the amount already spent in the current period.
 
 ***
 
