@@ -21,125 +21,101 @@ Four separate endpoints support requests to create campaign and line item report
 
 ## **Report Request Attributes**
 
-id *Required*
+<ResponseField name="id" required>
+**Data Type:** string
 
-***
+**Description:** Campaign or Line Item ID of the desired report
 
-* **Data Type:** string
+**Accepted Values** a single or a group of `campaignId` or `lineItemId` e.g `id: CampaignId`, OR `ids: ["CampaignId1","CampaignId2"`], (maximum 50 ids per call)
+</ResponseField>
 
-  **Description:** Campaign or Line Item ID of the desired report
+<ResponseField name="metrics">
+**Data Type:** string
 
-  **Accepted Values** a single or a group of `campaignId` or `lineItemId` e.g `id: CampaignId`, OR `ids: ["CampaignId1","CampaignId2"`], (maximum 50 ids per call)
+**Description:** Quantitative values associated to the campaign or line item. When `metrics` and `dimension` is used, the `reportType` is ignored.
 
-metrics
+**Accepted Values:** Refer to the [Metrics & Dimension](/retail-media/docs/metrics-and-dimensions) page for a complete list of supported metrics
+</ResponseField>
 
-***
+<ResponseField name="dimensions">
+**Data Type:** string
 
-* **Data Type:** string
+**Description:** Attributes of your campaign or line item data. When `metrics` and `dimension` is used, the `reportType` is ignored.
 
-  **Description:** Quantitative values associated to the campaign or line item. When `metrics` and `dimension` is used, the `reportType` is ignored.
+**Accepted Values:** Refer to the [Metrics & Dimension](/retail-media/docs/metrics-and-dimensions) page for a complete list of supported dimensions
+</ResponseField>
 
-  **Accepted Values:** Refer to the [Metrics & Dimension](/retail-media/docs/metrics-and-dimensions) page for a complete list of supported metrics
+<ResponseField name="reportType">
+**Data Type:** string
 
-dimensions
+**Description:** Report types are pre-packaged reports that allow the specification of the report breakdown. They provide metrics and dimensions distribution by summary, pageType, keyword, productCategory, product, attributedTransactions, servedCategory, environment. When not using `reportType` use the metrics and dimensions arrays to build your report for additional fields. When `metrics` and `dimensions` are used, the report type is ignored.
 
-***
+**Accepted Values** `summary`, `capout`,`pageType`, `keyword`, `productCategory`, `product`, `attributedTransactions`, `servedCategory`, `environment`
+</ResponseField>
 
-* **Data Type:** string
+<ResponseField name="startDate" required>
+**Data Type:** date
 
-  **Description:** Attributes of your campaign or line item data. When `metrics` and `dimension` is used, the `reportType` is ignored.
+**Description:** Earliest day to report; inclusive
 
-  **Accepted Values:** Refer to the [Metrics & Dimension](/retail-media/docs/metrics-and-dimensions) page for a complete list of supported dimensions
+**Accepted Values:** YYYY-MM-DDThh:mm:ss.sTZD
+</ResponseField>
 
-reportType
+<ResponseField name="endDate" required>
+**Data Type:** date
 
-***
+**Description:** Latest day to report; inclusive
 
-* **Data Type:** string
+**Accepted Values:** YYYY-MM-DDThh:mm:ss.sTZD
+</ResponseField>
 
-  **Description:** Report types are pre-packaged reports that allow the specification of the report breakdown. They provide metrics and dimensions distribution by summary, pageType, keyword, productCategory, product, attributedTransactions, servedCategory, environment. When not using `reportType` use the metrics and dimensions arrays to build your report for additional fields. When `metrics` and `dimensions` are used, the report type is ignored.
+<ResponseField name="campaignType">
+**Data Type:** enum
 
-  **Accepted Values** `summary`, `capout`,`pageType`, `keyword`, `productCategory`, `product`, `attributedTransactions`, `servedCategory`, `environment`
+**Description:** The campaign type
 
-startDate *Required*
+**Accepted Values:** `sponsoredProducts`, `onSiteDisplays`
+</ResponseField>
 
-***
+<ResponseField name="timeZone">
+**Data Type:** string
 
-* **Data Type:** date
+**Description:** Time zone for the report
 
-  **Description:** Earliest day to report; inclusive
+**Accepted Values:** database tz syntax, eg. `America/New_York`, `Europe/Paris`, `UTC`
+</ResponseField>
 
-  **Accepted Values:** YYYY-MM-DDThh:mm:ss.sTZD
+<ResponseField name="clickAttributionWindow">
+**Data Type:** string
 
-endDate *Required*
+**Description:** The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if `viewAttributionWindow` is one of the accepted values.
 
-***
+**Accepted Values:** `7D`, `14D`,`30D`
+</ResponseField>
 
-* **Data Type:** date
+<ResponseField name="viewAttributionWindow">
+**Data Type:** string
 
-  **Description:** Latest day to report; inclusive
+**Description:** The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values.
 
-  **Accepted Values:** YYYY-MM-DDThh:mm:ss.sTZD
+**Accepted Values:** none, `1D`,`7D`, `14D`, `30D`
+</ResponseField>
 
-campaignType
+<ResponseField name="salesChannel">
+**Data Type:** string
 
-***
+**Description:**&#x46;ilter on specific sales channel: offline or online
 
-* **Data Type:** enum
+**Accepted Values:** `offline`, `online`
+</ResponseField>
 
-  **Description:** The campaign type
+<ResponseField name="format">
+**Data Type:** string
 
-  **Accepted Values:** `sponsoredProducts`, `onSiteDisplays`
+**Description:** Format of the report data returned
 
-timeZone
-
-***
-
-* **Data Type:** string
-
-  **Description:** Time zone for the report
-
-  **Accepted Values:** database tz syntax, eg. `America/New_York`, `Europe/Paris`, `UTC`
-
-clickAttributionWindow
-
-***
-
-* **Data Type:** string
-
-  **Description:** The post-click attribution window, defined as the maximum number of days considered between a click and a conversion for attribution; conversions are attributed to the date of conversion, not the date of click; defaults to campaign settings if omitted; must be specified if `viewAttributionWindow` is one of the accepted values.
-
-  **Accepted Values:** `7D`, `14D`,`30D`
-
-viewAttributionWindow
-
-***
-
-* **Data Type:** string
-
-  **Description:** The post-view attribution window, defined as the maximum number of days considered between an impression and a conversion for attribution; conversions are attributed to the date of conversion, not the date of impression; defaults to campaign settings if omitted; must be less than or equal to `clickAttributionWindow`; must be specified if `clickAttributionWindow` is one of the accepted values.
-
-  **Accepted Values:** none, `1D`,`7D`, `14D`, `30D`
-
-salesChannel
-
-***
-
-* **Data Type:** string
-
-  **Description:**&#x46;ilter on specific sales channel: offline or online
-
-  **Accepted Values:** `offline`, `online`
-
-format *Optional*
-
-***
-
-* **Data Type:** string
-
-  **Description:** Format of the report data returned
-
-  **Accepted Values:** json-compact, json-newline, json (default), csv
+**Accepted Values:** json-compact, json-newline, json (default), csv
+</ResponseField>
 
 <Info>
   **Reporting Asynchronous Workflow: Step 1 of 3**
