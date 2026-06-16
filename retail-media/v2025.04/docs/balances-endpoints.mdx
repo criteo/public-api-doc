@@ -30,48 +30,396 @@ View and manage all available balances across campaigns
 
 ## **Balance Parameters**
 
-| Attribute                  | Data Type | Description                                                                                                                                                                                                                                                                                                                |
-| -------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                       | string    | Balance IDAccepted values: string of int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                      |
-| `name`\*                   | string    | Balance nameAccepted values: up to 255-char strings Writeable? Y / Nullable? N                                                                                                                                                                                                                                             |
-| `poNumber`                 | string    | Purchase order numberAccepted values: up to 32-char strings Writeable? Y / Nullable? Y                                                                                                                                                                                                                                     |
-| `deposited`                | decimal   | Amount of funds deposited; uncapped if `null`Accepted values: `deposited` ≥ 0.0 Writeable? Y / Nullable? Y                                                                                                                                                                                                                 |
-| `spent`                    | decimal   | Amount of funds already spentAccepted values: 0 ≤ `spent` ≤ `deposited` Writeable? N / Nullable? N                                                                                                                                                                                                                         |
-| `remaining`                | decimal   | Amount of funds already spentAccepted values: 0 ≤ `remaining` ≤ `deposited` (or `null`, if `deposited` not set) Writeable? N / Nullable? Y                                                                                                                                                                                 |
-| `startDate`\*              | timestamp | Balance start date; if time zone is not set, will consider [Account](/retail-media/v2025.04/docs/account)'s time zone as defaultAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Writeable? Y / Nullable? N                                                                    |
-| `endDate`                  | timestamp | Balance end date; if time zone is not set, will consider [Account](/retail-media/v2025.04/docs/account)'s time zone as defaultAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) ) Default: if `null` or absent, balance will be available indefinitely Writeable? Y / Nullable? Y |
-| `status`                   | enum      | Balance current statusAccepted values: `active`, `scheduled`, `ended` Writeable? N / Nullable? N                                                                                                                                                                                                                           |
-| `createdAt`                | timestamp | Timestamp of balance creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html)) Writeable? N / Nullable? N                                                                                                                                       |
-| `updatedAt`                | timestamp | Timestamp of last balance update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html)) Writeable? N / Nullable? N                                                                                                                                    |
-| `memo`                     | string    | An optional memo note that can be set in the balanceAccepted values: up to 250-char strings Writeable? Y / Nullable? Y                                                                                                                                                                                                     |
-| `balanceType`              | enum      | The balance type is computed based on the deposited amount:Accepted values: `capped`, `uncapped` Writeable? N / Nullable? N- `capped`: if the deposited amount is provided.
-- `uncapped`: when there is no amount defined (set to `null`)                                                                                  |
-| `spendType`                | enum      | The type of balance that will be used based on the campaign typeAccepted values: `Onsite`, `Offsite`, `OffsiteAwareness` Writeable? N / Nullable? N                                                                                                                                                                        |
-| `privateMarketBillingType` | enum      | Billing type of the balanceAccepted values: `notApplicable`, `billByRetailer`, `billByCriteo`⚠️ **Note**:- balances created through the API will, automatically, be denoted as`billByRetailer`
-- only balances denoted as `billByRetailer` can be modified through the APIWriteable? N / Nullable? N                       |
+<table>
+  <thead>
+    <tr>
+      <th>
+        Attribute
+      </th>
+
+      <th>
+        Data Type
+      </th>
+
+      <th>
+        Description
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `id`
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        Balance ID
+
+        Accepted values: string of int64\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `name`\*
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        Balance name
+
+        Accepted values: up to 255-char strings\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `poNumber`
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        Purchase order number
+
+        Accepted values: up to 32-char strings\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `deposited`
+      </td>
+
+      <td>
+        decimal
+      </td>
+
+      <td>
+        Amount of funds deposited; uncapped if `null`
+
+        Accepted values: `deposited` ≥ 0.0\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `spent`
+      </td>
+
+      <td>
+        decimal
+      </td>
+
+      <td>
+        Amount of funds already spent
+
+        Accepted values: 0 ≤ `spent` ≤ `deposited`\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `remaining`
+      </td>
+
+      <td>
+        decimal
+      </td>
+
+      <td>
+        Amount of funds already spent
+
+        Accepted values: 0 ≤ `remaining` ≤ `deposited`  (or `null`, if `deposited` not set)\
+        Writeable? N / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `startDate`\*
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Balance start date; if time zone is not set, will consider [Account](https://developers.criteo.com/retail-media/docs/account)'s time zone as default
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) )\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `endDate`
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Balance end date; if time zone is not set, will consider [Account](https://developers.criteo.com/retail-media/docs/account)'s time zone as default
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html) )\
+        Default: if `null` or absent, balance will be available indefinitely\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `status`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Balance current status
+
+        Accepted values: `active`, `scheduled`, `ended`\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `createdAt`
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Timestamp of balance creation, in UTC
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html))\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `updatedAt`
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Timestamp of last balance update, in UTC
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html))\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `memo`
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        An optional memo note that can be set in the balance
+
+        Accepted values: up to 250-char strings\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `balanceType`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        The balance type is computed based on the deposited amount:
+
+        Accepted values: `capped`, `uncapped`\
+        Writeable? N / Nullable? N
+
+        * `capped`: if the deposited amount is provided.
+        * `uncapped`: when there is no amount defined (set to `null`)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `spendType`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        The type of balance that will be used based on the campaign type
+
+        Accepted values: `Onsite`, `Offsite`,  `OffsiteAwareness`\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `privateMarketBillingType`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Billing type of the balance
+
+        Accepted values: `notApplicable`, `billByRetailer`, `billByCriteo`
+
+        :warning: **Note**:
+
+        * balances created through the API will, automatically, be denoted as`billByRetailer`
+        * only balances denoted as `billByRetailer` can be modified through the API
+
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 *\*Required for Balance creation*
 
 ## **Balance History Parameters**
 
-| Attribute            | Data Type | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| -------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dateOfModification` | timestamp | Timestamp of balance updateAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `modifiedByUser`     | string    | Username who modified the insertion orderAccepted values: strings in format "j.doe" Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `changeType`         | enum      | Definition of the type of change in a balanceAccepted values:- `BalanceCreated`: new balance is created
-- `BalanceAdded`: capped balance amount was increased by a certain amount
-- `BalanceRemoved`: capped balance is decreased by a certain amount
-- `BalanceUncapped`: capped balance is changed to uncapped
-- `BalanceCapped`: uncapped balance is changed to capped
-- `StartDate`: start date is modified
-- `EndDate`: end date is modified
-- `BalanceName`: balance name is modified
-- `PoNumber`: PO Number is modified
-- `ValueAdd`: new additional amount is added to the balance
-- `SalesforceId`: SalesForceID (internal Criteo ID) is modified by Criteo (this would appear for Criteo billed balances) |
-| `changeDetails`      | object    | Structure with the change details (from Balance History endpoint)Parameters:- `previousValue`: previous value of a property of the balance
-- `currentValue`: current value of a property of the balance
-- `changeValue`: change value of a property of the balance                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+<table>
+  <thead>
+    <tr>
+      <th>
+        Attribute
+      </th>
+
+      <th>
+        Data Type
+      </th>
+
+      <th>
+        Description
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `dateOfModification`
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Timestamp of balance update
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm` (in [ISO-8601](https://www.iso.org/iso-8601-date-and-time-format.html))\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `modifiedByUser`
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        Username who modified the insertion order
+
+        Accepted values: strings in format "j.doe"\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `changeType`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Definition of the type of change in a balance
+
+        Accepted values:
+
+        * `BalanceCreated`: new balance is created
+        * `BalanceAdded`: capped balance amount was increased by a certain amount
+        * `BalanceRemoved`: capped balance is decreased by a certain amount
+        * `BalanceUncapped`: capped balance is changed to uncapped
+        * `BalanceCapped`: uncapped balance is changed to capped
+        * `StartDate`: start date is modified
+        * `EndDate`: end date is modified
+        * `BalanceName`: balance name is modified
+        * `PoNumber`: PO Number is modified
+        * `ValueAdd`: new additional amount is added to the balance
+        * `SalesforceId`: SalesForceID (internal Criteo ID) is modified by Criteo (this would appear for Criteo billed balances)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `changeDetails`
+      </td>
+
+      <td>
+        object
+      </td>
+
+      <td>
+        Structure with the change details  (from Balance History endpoint)
+
+        Parameters:
+
+        * `previousValue`: previous value of a property of the balance
+        * `currentValue`: current value of a property of the balance
+        * `changeValue`: change value of a property of the balance
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## **Get all Balances**
 
@@ -93,7 +441,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
       -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
 
   url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25"
@@ -109,7 +457,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -127,7 +475,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -162,7 +510,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "metadata": {
           "totalItemsAcrossAllPages": 94,
@@ -304,7 +652,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
           }'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
   import json
 
@@ -334,7 +682,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -353,7 +701,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -449,7 +797,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
           }'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
   import json
 
@@ -476,7 +824,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -495,7 +843,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -600,7 +948,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
           }'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
   import json
 
@@ -626,7 +974,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -645,7 +993,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -733,7 +1081,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
       -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -751,7 +1099,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
 
   url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?pageIndex=0&pageSize=25"
@@ -767,7 +1115,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
   print(response.text)
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -863,7 +1211,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/app
           }'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
   import json
 
@@ -892,7 +1240,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/app
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -911,7 +1259,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/app
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -1009,7 +1357,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
           }'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
   import json
 
@@ -1034,7 +1382,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -1053,7 +1401,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP expandable
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -1150,7 +1498,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history
 **Sample Response**: retrieve all changes
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "meta": {
           "count": 5,
@@ -1231,7 +1579,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history
 **Sample Response**: retrieve only changes in balance values (added / removed)
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "meta": {
           "count": 2,
@@ -1278,11 +1626,4 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history
 | 🔴 `400` | **Invalid deltaamount**                           | Can not decrease funds to less than zero                                                                               | Review value of `deltaAmount` and make sure it's greater than current balance's `deposited * (-1)`                                                                                                                                                                                                                           |
 | 🔴 `400` | **Invalid operation**                             | Can only change the field xxx of a balance not billed by retailer.                                                     | Cannot edit balances not created through the API; only balances with billing type `billByRetailer` can be modified                                                                                                                                                                                                           |
 | 🔴 `400` | **Invalid operation**                             | Can not add funds to a balance not billed by retailer.                                                                 | Cannot edit balances not created through the API; only balances with billing type `billByRetailer` can be modified                                                                                                                                                                                                           |
-| 🔴 `403` | **Authorization error**                           | Resource access forbidden: does not have permissions                                                                   | One of the permission levels was not respected. Make sure that the respective API app has access to:- Read/Manage the domain "Balance" (depending on the requested action). Review the Types of Permissions in [Authorization Requests](/retail-media/v2025.04/docs/authorization-requests)
-- the `accountId` or `balanceId` provided in the request |
-
-***
-
-[Balances](/retail-media/v2025.04/docs/balances)
-
-[Audiences](/retail-media/v2025.04/docs/audiences)
+| 🔴 `403` | **Authorization error**                           | Resource access forbidden: does not have permissions                                                                   | One of the permission levels was not respected. Make sure that the respective API app has access to:<ul><li>Read/Manage the domain "Balance" (depending on the requested action). Review the Types of Permissions in [Authorization Requests](/retail-media/v2025.04/docs/authorization-requests)</li><li>the `accountId` or `balanceId` provided in the request</li></ul> |

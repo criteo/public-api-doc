@@ -39,30 +39,420 @@ View and manage all your campaigns
 
 ## Campaign Attributes
 
-| Attribute                  | Data Type     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| -------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                       | string        | Campaign IDAccepted values: int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `accountId`\*              | string        | [Account](/retail-media/v2025.01/docs/account) IDAccepted values: int64 Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `name`\*                   | string        | Campaign name; must be unique within an [Account](/retail-media/v2025.01/docs/account)Accepted values: up to 255-chars string Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `type`                     | enum          | Campaign type If attribute is passed in the call, a value must be specifiedAccepted values: `auction`, `preferred` Default: `auction` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `budget`                   | decimal       | Campaign lifetime spend cap; uncapped if omitted or set to `null`. Note that preferred campaign types cannot have budgets as these campaign types must be uncappedAccepted values: equals/greater than zero Default: `null` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `budgetSpent`              | decimal       | Amount the campaign has already spentAccepted values: equals/greater than zero Default: `0.0` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `budgetRemaining`          | decimal       | Amount the campaign has remaining until cap is hit; `null` if budget is uncappedAccepted values: between zero and `budget` Default: `null` Writeable? N / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `clickAttributionWindow`\* | enum          | Post-click attribution windowAccepted values: `7D`, `14D`, `30D` Default: `30D` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `viewAttributionWindow`\*  | enum          | Post-view attribution windowAccepted values: `None`,`1D`,`7D`, `14D`, `30D` Default: `None` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `clickAttributionScope`    | enum          | Post-click attribution scopeAccepted values: `sameSku`, `sameSkuCategory`, `sameSkuCategoryBrand` Default: `sameSkuCategory` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `viewAttributionScope`     | enum          | Post-view attribution scopeAccepted values: `sameSku`, `sameSkuCategory`, `sameSkuCategoryBrand` Default: `sameSku` Writeable? Y / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `drawableBalanceIds`       | list\<string> | List of [Balances](/retail-media/v2025.01/docs/balances) the campaign is able to draw from; at least one balance is required for a campaign to startAccepted values: list of `balanceId` Default: `[]` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `status`                   | enum          | Campaign status, derived from the status of [Line Items](/retail-media/v2025.01/docs/line-items) it holds; `active` if at least one line item is active. To understand the conditions that will cause a status to change, check out [Campaign & Line Item Status](/retail-media/v2025.01/docs/campaign-lineitem-status)Accepted values: `active`, `inactive` Default: `inactive` Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `monthlyPacing`            | decimal       | The maximum monthly spend allowed for the campaign in the currency of the account. The spend is constrained by remaining account balance and total budget of the campaign. Monthly budget spend reset monthly at the start of the month based on the account timezoneAccepted values: `null` or greater than zero Default: `null` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `dailyPacing`              | decimal       | The maximum daily spend allowed for the campaign in the currency of the account, as long as not set to `null` and `isAutoDailyPacing = false`; otherwise no daily spend limit will be enforcedAccepted values: `null` or greater than zero Default: `null` Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `isAutoDailyPacing`        | boolean       | Auto daily pacing flag for the campaign budget. The daily pacing value is automatically calculated with respect to the days left in the month for the account. The campaign's remaining account balance, total budget, and monthly pacing value are constrained by account's timezone and the campaign status. If auto daily pacing is enabled, `dailyPacing` value should be left empty (`null`). Note the value may be affected by budget override. Daily budget spend is reset daily at the start of the day based on the account timezone. To activate, either campaign's `endDate` and `budget` or `monthlyPacing` must be specified, overwriting `dailyPacing` with the new respective pace (if not set previously)Accepted values: `true`, `false` Writeable? Y / Nullable? N |
-| `startDate`\*              | timestamp     | Campaign start date. The campaign starts inactive if invalid start date is not today or end date is in previous day.Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Default: creation timestamp Writeable? Y / Nullable? Y⚠️ **Note**: if time/timezone designators are not provided, the default value to be considered will be `00:00:00+00:00` (i.e., midnight in UTC - account timezone not taken in consideration here)                                                                                                                                                                                                                                                                                                     |
-| `endDate`\*                | timestamp     | Campaign end date. The campaign starts inactive if invalid start date is not today or end date is in previous dayAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Default: `null` Writeable? Y / Nullable? Y⚠️ **Note**: if time/timezone designators are not provided, the default value to be considered will be `00:00:00+00:00` (i.e., midnight in UTC - account timezone not taken in consideration here)                                                                                                                                                                                                                                                                                                                    |
-| `createdAt`                | timestamp     | Timestamp of campaign creation, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `updatedAt`                | timestamp     | Timestamp of last campaign update, in UTCAccepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601)) Writeable? N / Nullable? N                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `companyName`              | string        | This optional field, exclusively accessible to marketplaces within the European Union (in compliance with the Digital Service Act - DSA), will display the name of the company associated with the advertisement.Accepted values: up to 255-chars string Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `onBehalfCompanyName`      | string        | This optional field, exclusively accessible to marketplaces within the European Union (in compliance with the Digital Service Act - DSA), will display the name of the company (on behalf of `companyName`) associated with the advertisementAccepted values: up to 255-chars string Writeable? Y / Nullable? Y                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+<table>
+  <thead>
+    <tr>
+      <th>
+        Attribute
+      </th>
+
+      <th>
+        Data Type
+      </th>
+
+      <th>
+        Description
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `id`
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        Campaign ID
+
+        Accepted values: int64\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `accountId`\*
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        [Account](https://developers.criteo.com/retail-media/docs/account) ID
+
+        Accepted values: int64\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `name`\*
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        Campaign name; must be unique within an [Account](https://developers.criteo.com/retail-media/docs/account)
+
+        Accepted values: up to 255-chars string\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `type`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Campaign type\
+        If attribute is passed in the call, a value must be specified
+
+        Accepted values: `auction`, `preferred`\
+        Default: `auction`\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `budget`
+      </td>
+
+      <td>
+        decimal
+      </td>
+
+      <td>
+        Campaign lifetime spend cap; uncapped if omitted or set to `null`.\
+        Note that preferred campaign types cannot have budgets as these campaign types must be uncapped
+
+        Accepted values: equals/greater than zero\
+        Default: `null`\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `budgetSpent`
+      </td>
+
+      <td>
+        decimal
+      </td>
+
+      <td>
+        Amount the campaign has already spent
+
+        Accepted values: equals/greater than zero\
+        Default: `0.0`\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `budgetRemaining`
+      </td>
+
+      <td>
+        decimal
+      </td>
+
+      <td>
+        Amount the campaign has remaining until cap is hit; `null` if budget is uncapped
+
+        Accepted values: between zero and `budget`\
+        Default: `null`\
+        Writeable? N / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `clickAttributionWindow`\*
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Post-click attribution window
+
+        Accepted values: `7D`, `14D`, `30D`\
+        Default: `30D`\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `viewAttributionWindow`\*
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Post-view attribution window
+
+        Accepted values: `None`,`1D`,`7D`, `14D`, `30D`\
+        Default: `None`\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `clickAttributionScope`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Post-click attribution scope
+
+        Accepted values:  `sameSku`, `sameSkuCategory`, `sameSkuCategoryBrand`\
+        Default: `sameSkuCategory`\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `viewAttributionScope`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Post-view attribution scope
+
+        Accepted values:  `sameSku`, `sameSkuCategory`, `sameSkuCategoryBrand`\
+        Default: `sameSku`\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `drawableBalanceIds`
+      </td>
+
+      <td>
+        list\<string>
+      </td>
+
+      <td>
+        List of [Balances](https://developers.criteo.com/retail-media/docs/balances) the campaign is able to draw from; at least one balance is required for a campaign to start
+
+        Accepted values:  list of `balanceId`\
+        Default: `[]`\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `status`
+      </td>
+
+      <td>
+        enum
+      </td>
+
+      <td>
+        Campaign status, derived from the status of [Line Items](https://developers.criteo.com/retail-media/docs/line-items) it holds; `active` if at least one line item is active. To understand the conditions that will cause a status to change, check out [Campaign & Line Item Status](https://developers.criteo.com/retail-media/docs/campaign-lineitem-status)
+
+        Accepted values: `active`, `inactive`\
+        Default: `inactive`\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `monthlyPacing`
+      </td>
+
+      <td>
+        decimal
+      </td>
+
+      <td>
+        The maximum monthly spend allowed for the campaign in the currency of the account. The spend is constrained by remaining account balance and total budget of the campaign. Monthly budget spend reset monthly at the start of the month based on the account timezone
+
+        Accepted values: `null` or greater than zero\
+        Default: `null`\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `dailyPacing`
+      </td>
+
+      <td>
+        decimal
+      </td>
+
+      <td>
+        The maximum daily spend allowed for the campaign in the currency of the account, as long as not set to `null` and `isAutoDailyPacing = false`; otherwise no daily spend limit will be enforced
+
+        Accepted values: `null` or greater than zero\
+        Default: `null`\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `isAutoDailyPacing`
+      </td>
+
+      <td>
+        boolean
+      </td>
+
+      <td>
+        Auto daily pacing flag for the campaign budget. The daily pacing value is automatically calculated with respect to the days left in the month for the account. The campaign's remaining account balance, total budget, and monthly pacing value are constrained by account's timezone and the campaign status. If auto daily pacing is enabled, `dailyPacing` value should be left empty (`null`).\
+        Note the value may be affected by budget override. Daily budget spend is reset daily at the start of the day based on the account timezone. To activate, either campaign's `endDate` and `budget` or `monthlyPacing` must be specified, overwriting `dailyPacing` with the new respective pace (if not set previously)
+
+        Accepted values: `true`, `false`\
+        Writeable? Y / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `startDate`\*
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Campaign start date. The campaign starts inactive if invalid start date is not today or end date is in previous day.
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601))\
+        Default: creation timestamp\
+        Writeable? Y / Nullable? Y
+
+        ⚠️ **Note**: if time/timezone designators are not provided, the default value to be considered will be `00:00:00+00:00` (i.e., midnight in UTC - account timezone not taken in consideration here)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `endDate`\*
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Campaign end date. The campaign starts inactive if invalid start date is not today or end date is in previous day
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601))\
+        Default: `null`\
+        Writeable? Y / Nullable? Y
+
+        ⚠️ **Note**: if time/timezone designators are not provided, the default value to be considered will be `00:00:00+00:00` (i.e., midnight in UTC - account timezone not taken in consideration here)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `createdAt`
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Timestamp of campaign creation, in UTC
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601))\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `updatedAt`
+      </td>
+
+      <td>
+        timestamp
+      </td>
+
+      <td>
+        Timestamp of last campaign update, in UTC
+
+        Accepted values: `yyyy-mm-ddThh:mm:ss±hh:mm`(in [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601))\
+        Writeable? N / Nullable? N
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `companyName`
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        This optional field, exclusively accessible to marketplaces within the European Union (in compliance with the Digital Service Act - DSA), will display the name of the company associated with the advertisement.
+
+        Accepted values: up to 255-chars string\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `onBehalfCompanyName`
+      </td>
+
+      <td>
+        string
+      </td>
+
+      <td>
+        This optional field, exclusively accessible to marketplaces within the European Union (in compliance with the Digital Service Act - DSA), will display the name of the company (on behalf of `companyName`) associated with the advertisement
+
+        Accepted values: up to 255-chars string\
+        Writeable? Y / Nullable? Y
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 *\*Required*
 
@@ -116,7 +506,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   }'
   ```
 
-  ```bash Bash
+  ```python Python expandable
   import http.client
   import json
 
@@ -156,7 +546,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   print(data.decode("utf-8"))
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
   MediaType mediaType = MediaType.parse("application/json");
@@ -171,7 +561,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -205,7 +595,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "data": {
           "id": "544937665113018368",
@@ -260,7 +650,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
 
   url = "https://api.criteo.com/{version}/retail-media/accounts/4/campaigns"
@@ -276,7 +666,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -294,7 +684,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -330,7 +720,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "metadata": {
           "totalItemsAcrossAllPages": 306,
@@ -434,7 +824,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
   ```
 
-  ```bash Bash
+  ```python Python
   import http.client
 
   conn = http.client.HTTPSConnection("api.criteo.com")
@@ -449,7 +839,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   print(data.decode("utf-8"))
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
   MediaType mediaType = MediaType.parse("text/plain");
@@ -463,7 +853,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -495,7 +885,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "data": {
           "id": "544937665113018368",
@@ -576,7 +966,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   }'
   ```
 
-  ```bash Bash
+  ```python Python expandable
   import http.client
   import json
 
@@ -617,7 +1007,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   print(data.decode("utf-8"))
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
   MediaType mediaType = MediaType.parse("application/json");
@@ -632,7 +1022,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -666,7 +1056,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "data": {
           "id": "544937665113018368",
@@ -708,10 +1098,4 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🟢`200`  | Call completed with success                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 🟢`201`  | Campaign was created successfully                                                                                                                                                                                                                                                                                                                                                                                            |
-| 🔴 `400` | Validation Error - one or more required field was not found. Confirm if all required fields are present in the API call- \*Invalid isautodailypacing\*\* - *Cannot turn on IsAutoDailyPacing and add a DailyPacing value*IsAutoDailyPacing and Daily Pacing can not be active at the same time. Passing this in the call will return a 400 error- \*Invalid budget\*\* - *Budget is not allowed for the Preferred campaign.* |
-
-***
-
-[Campaigns](/retail-media/v2025.01/docs/campaign)
-
-[Catalog](/retail-media/v2025.01/docs/catalogs)
+| 🔴 `400` | Validation Error - one or more required field was not found. Confirm if all required fields are present in the API call<ul><li>\*Invalid isautodailypacing\*\* - *Cannot turn on IsAutoDailyPacing and add a DailyPacing value*</li></ul>IsAutoDailyPacing and Daily Pacing can not be active at the same time. Passing this in the call will return a 400 error<ul><li>\*Invalid budget\*\* - *Budget is not allowed for the Preferred campaign.*</li></ul> |

@@ -39,354 +39,316 @@ View and manage all your campaigns
 
 ## Campaign Attributes
 
-id
+<ResponseField name="id">
+**Data Type:** string
 
-***
+**Description:** Campaign ID
 
-* **Data Type:** string
+**Accepted Value:** int64
 
-  **Description:** Campaign ID
+**Default Values:** None
 
-  **Accepted Value:** int64
+**Write?** No
 
-  **Default Values:** None
+**Nullable?** No
+</ResponseField>
 
-  **Write?** No
+<ResponseField name="accountId" required>
+**Data Type:** string
 
-  **Nullable?** No
+**Description:** Account ID
 
-accountId *Required*
+**Accepted Value:** int64
 
-***
+**Default Value:** None
 
-* **Data Type:** string
+**Write?** No
 
-  **Description:** Account ID
+**Nullable?** No
+</ResponseField>
 
-  **Accepted Value:** int64
+<ResponseField name="name" required>
+**Data Type:** string
 
-  **Default Value:** None
+**Description:** Campaign name; must be unique within an [account](/retail-media/docs/account)
 
-  **Write?** No
+**Values:** 255 char limit
 
-  **Nullable?** No
+**Default Value:** None
 
-name *Required*
+**Write?** Yes
 
-***
+**Nullable?** No
+</ResponseField>
 
-* **Data Type:** string
+<ResponseField name="type">
+**Data Type:** enum
 
-  **Description:** Campaign name; must be unique within an [account](/retail-media/docs/account)
+**Description:** Campaing type
 
-  **Values:** 255 char limit
+**Accepted Values:** `auction`,`preferred`
 
-  **Default Value:** None
+**Default Value:** `auction`
 
-  **Write?** Yes
+**Write?** None other than the accepted values
 
-  **Nullable?** No
+**Nullable?** No - if attribute is passed in the call, a value must be specified
+</ResponseField>
 
-type *Optional*
+<ResponseField name="budget">
+**Data Type:** number
 
-***
+**Description:** Campaign lifetime spend cap; uncapped if omitted or set to null. Note that preferred campaign types cannot have budgets as these campaings types must be uncapped.
 
-* **Data Type:** enum
+**Accepted Values:** at least 0
 
-  **Description:** Campaing type
+**Default Value:** `null`
 
-  **Accepted Values:** `auction`,`preferred`
+**Write?** Yes
 
-  **Default Value:** `auction`
+**Nullable?** Yes
+</ResponseField>
 
-  **Write?** None other than the accepted values
+<ResponseField name="budgetSpent">
+**Data Type:** number
 
-  **Nullable?** No - if attribute is passed in the call, a value must be specified
+**Description:** Amount the campaign has already spent
 
-budget *Optional*
+**Accepted Values:** at least 0
 
-***
+**Default Value:** `0.0`
 
-* **Data Type:** number
+**Write?** No
 
-  **Description:** Campaign lifetime spend cap; uncapped if omitted or set to null. Note that preferred campaign types cannot have budgets as these campaings types must be uncapped.
+**Nullable?** No
+</ResponseField>
 
-  **Accepted Values:** at least 0
+<ResponseField name="budgetRemaining">
+**Data Type:** number
 
-  **Default Value:** `null`
+**Description:** Amount the campaign has remaining until cap is hit; `null` if budget is uncapped
 
-  **Write?** Yes
+**Accepted Values:** between 0 and `budget` Amount
 
-  **Nullable?** Yes
+**Default Value:** `null`
 
-budgetSpent *Optional*
+**Write?** No
 
-***
+**Nullable?** Yes
+</ResponseField>
 
-* **Data Type:** number
+<ResponseField name="clickAttributionWindow" required>
+**Data Type:** enum
 
-  **Description:** Amount the campaign has already spent
+**Description:** Post-click attribution window
 
-  **Accepted Values:** at least 0
+**Accepted Values:** `7D`,`14D`, `30D`
 
-  **Default Value:** `0.0`
+**Default Value:** `30D`
 
-  **Write?** No
+**Write?** Yes
 
-  **Nullable?** No
+**Nullable?** No
+</ResponseField>
 
-budgetRemaining
+<ResponseField name="viewAttributionWindow" required>
+**Data Type:** enum
 
-***
+**Description:** Post-view attribution window
 
-* **Data Type:** number
+**Accepted Values:** `None`,`7D`,`14D`, `30D`
 
-  **Description:** Amount the campaign has remaining until cap is hit; `null` if budget is uncapped
+**Default Value:** `None`
 
-  **Accepted Values:** between 0 and `budget` Amount
+**Write?** Yes
 
-  **Default Value:** `null`
+**Nullable?** No
+</ResponseField>
 
-  **Write?** No
+<ResponseField name="clickAttributionScope">
+**Data Type:** enum
 
-  **Nullable?** Yes
+**Description:** Post-click attribution scope
 
-clickAttributionWindow *Required*
+**Accepted Values:** `samesku`, `sameskucategory`, `sameskucategorybrand`
 
-***
+**Default Value:** `sameskucategory`
 
-* **Data Type:** enum
+**Write?** None other than the accepted values
 
-  **Description:** Post-click attribution window
+**Nullable?** No
+</ResponseField>
 
-  **Accepted Values:** `7D`,`14D`, `30D`
+<ResponseField name="viewAttributionScope">
+**Data Type:** enum
 
-  **Default Value:** `30D`
+**Description:** Post-view attribution scope
 
-  **Write?** Yes
+**Accepted Values:** `samesku`, `sameskucategory`, `sameskucategorybrand`
 
-  **Nullable?** No
+**Default Value:** `sameskucategory`
 
-viewAttributionWindow *Required*
+**Write?** None other than the accepted values
 
-***
+**Nullable?** No
+</ResponseField>
 
-* **Data Type:** enum
+<ResponseField name="drawableBalanceIds">
+**Data Type:** string array
 
-  **Description:** Post-view attribution window
+**Description:** List of [balances](/retail-media/docs/balances) the campaign is able to draw from; at least one balance is required for a campaign to begin
 
-  **Accepted Values:** `None`,`7D`,`14D`, `30D`
+**Accepted Values:** list of `balanceId`
 
-  **Default Value:** `None`
+**Default Value:** `[ ]`
 
-  **Write?** Yes
+**Write?** No
 
-  **Nullable?** No
+**Nullable?** No
+</ResponseField>
 
-clickAttributionScope
+<ResponseField name="status">
+**Data Type:** enum
 
-***
+**Description:** Campaign status, derived from the status of [line items](/retail-media/docs/line-items) it holds; active if at least one line item is active. To understand the conditions that will cause a status to change, check out our [status page](/retail-media/docs/campaign-lineitem-status)
 
-* **Data Type:** enum
+**Accepted Values:** `active`, `inactive`
 
-  **Description:** Post-click attribution scope
+**Default Value:** `inactive`
 
-  **Accepted Values:** `samesku`, `sameskucategory`, `sameskucategorybrand`
+**Write?** No
 
-  **Default Value:** `sameskucategory`
+**Nullable?** No
+</ResponseField>
 
-  **Write?** None other than the accepted values
+<ResponseField name="monthlyPacing">
+**Data Type:** decimal
 
-  **Nullable?** No
+**Description:** The maximum monthly spend allowed for the campaign in the currency of the account. The spend is constrained by remaining account balance and total budget of the campaign. Monthly budget spend reset monthly at the start of the month based on the account timezone.
 
-viewAttributionScope
+**Accepted Values:** `null` or a value that is greater or equal to 0.01
 
-***
+**Default Value:** `null`
 
-* **Data Type:** enum
+**Write?** Yes
 
-  **Description:** Post-view attribution scope
+**Nullable?** Yes
+</ResponseField>
 
-  **Accepted Values:** `samesku`, `sameskucategory`, `sameskucategorybrand`
+<ResponseField name="dailyPacing">
+**Data Type:** decimal
 
-  **Default Value:** `sameskucategory`
+**Description:** The maximum daily spend allowed for the campaign in the currency of the account. As long as the parameter is not set to `null` and auto daily pacing is not set to `true` then monthly pacing will be applied to the campaign.
+* If monthly pacing is set to `null` and auto daily pacing is set to `false`, then no daily spend limit will be enforced.
 
-  **Write?** None other than the accepted values
+* The maximum daily spend allowed for the campaign in the currency of the account.
 
-  **Nullable?** No
+**Accepted Values:** `null` or a value that is greater or equal to 0.01
 
-drawableBalanceIds
+**Default Value:** `null`
 
-***
+**Write?** Yes
 
-* **Data Type:** string array
+**Nullable?** Yes
+</ResponseField>
 
-  **Description:** List of [balances](/retail-media/docs/balances) the campaign is able to draw from; at least one balance is required for a campaign to begin
+<ResponseField name="isAutoDailyPacing" required>
+**Data Type:** boolean
 
-  **Accepted Values:** list of `balanceId`
+**Description:** Auto daily pacing flag for the campaign budget. The daily pacing value is automatically calculated with respect to the days left in the month for the account. The campaign's remaining account balance, total budget, and monthly pacing value is constrained by the account timezone and the campaign status. If auto daily pacing is enabled, dailyPacing value should be left empty (null). Note the value may be affected by budget override. Daily budget spend is reset daily at the start of the day based on the account timezone. To activate, either line item `endDate` and budget, or `monthlyPace`, must be specified; overwrites `dailyPacing` with a calculation if not set prior
 
-  **Default Value:** `[ ]`
+**Accepted Values:** `true`, `false`
 
-  **Write?** No
+**Default Value:** N/A
 
-  **Nullable?** No
+**Write?** Yes
 
-status
+**Nullable?** No
+</ResponseField>
 
-***
+<ResponseField name="startDate">
+**Data Type:** date-time
 
-* **Data Type:** enum
+**Description:** Campaign start date. The campaign start inactive if invalid start date is not today or end date is in previous day.
 
-  **Description:** Campaign status, derived from the status of [line items](/retail-media/docs/line-items) it holds; active if at least one line item is active. To understand the conditions that will cause a status to change, check out our [status page](/retail-media/docs/campaign-lineitem-status)
+**Accepted Values:** YYYY-MM-DD
 
-  **Accepted Values:** `active`, `inactive`
+**Default Value:** `Null`
 
-  **Default Value:** `inactive`
+**Write?** Yes
 
-  **Write?** No
+**Nullable?** Yes
+</ResponseField>
 
-  **Nullable?** No
+<ResponseField name="endDate">
+**Data Type:** date-time
 
-monthlyPacing *Optional*
+**Description:** Campaign end date
 
-***
+**Accepted Values:** YYYY-MM-DD
 
-* **Data Type:** decimal
+**Default Value:** `Null`
 
-  **Description:** The maximum monthly spend allowed for the campaign in the currency of the account. The spend is constrained by remaining account balance and total budget of the campaign. Monthly budget spend reset monthly at the start of the month based on the account timezone.
+**Write?** Yes
 
-  **Accepted Values:** `null` or a value that is greater or equal to 0.01
+**Nullable?** Yes
+</ResponseField>
 
-  **Default Value:** `null`
+<ResponseField name="createdAt">
+**Data Type:** timestamp
 
-  **Write?** Yes
+**Description:** Timestamp in UTC of campaign creation
 
-  **Nullable?** Yes
+**Accepted Values:** ISO-8601
 
-dailyPacing *Optional*
+**Default Value:** N/A
 
-***
+**Write?** No
 
-* **Data Type:** decimal
+**Nullable?** No
+</ResponseField>
 
-  **Description:** The maximum daily spend allowed for the campaign in the currency of the account. As long as the parameter is not set to `null` and auto daily pacing is not set to `true` then monthly pacing will be applied to the campaign.
-  * If monthly pacing is set to `null` and auto daily pacing is set to `false`, then no daily spend limit will be enforced.
+<ResponseField name="updatedAt">
+**Data Type:** timestamp
 
-  * The maximum daily spend allowed for the campaign in the currency of the account.
-     
-  **Accepted Values:** `null` or a value that is greater or equal to 0.01
+**Description:** Timestamp in UTC of last campaign update
 
-  **Default Value:** `null`
+**Accepted Values:** ISO-8601
 
-  **Write?** Yes
+**Default Value:** N/A
 
-  **Nullable?** Yes
+**Write?** No
 
-isAutoDailyPacing *Required*
+**Nullable?** No
+</ResponseField>
 
-***
+<ResponseField name="companyName">
+**Data Type:** string
 
-* **Data Type:** boolean
+**Values:** Company name
 
-  **Description:** Auto daily pacing flag for the campaign budget. The daily pacing value is automatically calculated with respect to the days left in the month for the account. The campaign's remaining account balance, total budget, and monthly pacing value is constrained by the account timezone and the campaign status. If auto daily pacing is enabled, dailyPacing value should be left empty (null). Note the value may be affected by budget override. Daily budget spend is reset daily at the start of the day based on the account timezone. To activate, either line item `endDate` and budget, or `monthlyPace`, must be specified; overwrites `dailyPacing` with a calculation if not set prior
+**Description:** This optional field, exclusively accessible to marketplaces within the European Union, will display the name of the company associated with the advertisement.
 
-  **Accepted Values:** `true`, `false`
+<Info>
+**📃 *Digital Service Act (DSA)***
 
-  **Default Value:** N/A
+In compliance with the [Digital Services Act (DSA)](https://dsa-info.eu/index.php/art-24/), marketplaces within the European Union will receive information about the company name associated with each advertisement.
+</Info>
+</ResponseField>
 
-  **Write?** Yes
+<ResponseField name="onBehalfCompanyName">
+**Data Type:** string
 
-  **Nullable?** No
+**Values:** Company name (on behalf of)
 
-startDate *Optional*
+**Description:** This optional field, exclusively accessible to marketplaces within the European Union, will display the name of the company (on behalf of `companyName`) associated with the advertisement.
 
-***
+<Info>
+**📃 *Digital Service Act (DSA)***
 
-* **Data Type:** date-time
-
-  **Description:** Campaign start date. The campaign start inactive if invalid start date is not today or end date is in previous day.
-
-  **Accepted Values:** YYYY-MM-DD
-
-  **Default Value:** `Null`
-
-  **Write?** Yes
-
-  **Nullable?** Yes
-
-endDate *Optional*
-
-***
-
-* **Data Type:** date-time
-
-  **Description:** Campaign end date
-
-  **Accepted Values:** YYYY-MM-DD
-
-  **Default Value:** `Null`
-
-  **Write?** Yes
-
-  **Nullable?** Yes
-
-createdAt
-
-***
-
-* **Data Type:** timestamp
-
-  **Description:** Timestamp in UTC of campaign creation
-
-  **Accepted Values:** ISO-8601
-
-  **Default Value:** N/A
-
-  **Write?** No
-
-  **Nullable?** No
-
-updatedAt
-
-***
-
-* **Data Type:** timestamp
-
-  **Description:** Timestamp in UTC of last campaign update
-
-  **Accepted Values:** ISO-8601
-
-  **Default Value:** N/A
-
-  **Write?** No
-
-  **Nullable?** No
-
-companyName
-
-***
-
-* **Data Type:** string
-
-  **Values:** Company name
-
-  **Description:** This optional field, exclusively accessible to marketplaces within the European Union, will display the name of the company associated with the advertisement.
-
-  **📃 *Digital Service Act (DSA)***&#x49;n compliance with the [Digital Services Act (DSA)](https://dsa-info.eu/index.php/art-24/), marketplaces within the European Union will receive information about the company name associated with each advertisement.
-
-onBehalfCompanyName
-
-***
-
-* **Data Type:** string
-
-  **Values:** Company name (on behalf of)
-
-  **Description:** This optional field, exclusively accessible to marketplaces within the European Union, will display the name of the company (on behalf of `companyName`) associated with the advertisement.
-
-  **📃 *Digital Service Act (DSA)***&#x49;n compliance with the [Digital Services Act (DSA)](https://dsa-info.eu/index.php/art-24/), marketplaces within the European Union will receive information about the company name associated with each advertisement.
-
- 
+In compliance with the [Digital Services Act (DSA)](https://dsa-info.eu/index.php/art-24/), marketplaces within the European Union will receive information about the company name associated with each advertisement.
+</Info>
+</ResponseField>
 
 ## Create a Campaign
 
@@ -432,7 +394,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   }'
   ```
 
-  ```bash Bash
+  ```python Python expandable
   import http.client
   import json
 
@@ -472,7 +434,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   print(data.decode("utf-8"))
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
   MediaType mediaType = MediaType.parse("application/json");
@@ -487,7 +449,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -521,7 +483,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "data": {
           "id": "544937665113018368",
@@ -576,7 +538,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
 
   url = "https://api.criteo.com/{version}/retail-media/accounts/4/campaigns"
@@ -592,7 +554,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -610,7 +572,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -646,7 +608,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "metadata": {
           "totalItemsAcrossAllPages": 306,
@@ -750,7 +712,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
   ```
 
-  ```bash Bash
+  ```python Python
   import http.client
 
   conn = http.client.HTTPSConnection("api.criteo.com")
@@ -765,7 +727,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   print(data.decode("utf-8"))
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
   MediaType mediaType = MediaType.parse("text/plain");
@@ -779,7 +741,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -811,7 +773,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "data": {
           "id": "544937665113018368",
@@ -892,7 +854,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   }'
   ```
 
-  ```bash Bash
+  ```python Python expandable
   import http.client
   import json
 
@@ -933,7 +895,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   print(data.decode("utf-8"))
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
   MediaType mediaType = MediaType.parse("application/json");
@@ -948,7 +910,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -982,7 +944,7 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "data": {
           "id": "544937665113018368",
@@ -1025,9 +987,3 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
 | 🟢`200`  | Call completed with success                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 🟢`201`  | Campaign was created successfully                                                                                                                                                                                                                                                                                                                                                                                            |
 | 🔴 `400` | Validation Error - one or more required field was not found. Confirm if all required fields are present in the API call- \*Invalid isautodailypacing\*\* - *Cannot turn on IsAutoDailyPacing and add a DailyPacing value*IsAutoDailyPacing and Daily Pacing can not be active at the same time. Passing this in the call will return a 400 error- \*Invalid budget\*\* - *Budget is not allowed for the Preferred campaign.* |
-
-***
-
-[Campaigns](/retail-media/v2024.10/docs/campaign)
-
-[Catalog](/retail-media/v2024.10/docs/catalogs)

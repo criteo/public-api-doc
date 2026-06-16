@@ -26,211 +26,173 @@ View and manage all available balances across campaigns
 
 ## **Request Body Parameters**
 
-id *Required for **POST** requests*
+<ResponseField name="id">
+*Required for **POST** requests*
 
-***
+**Data Type:** string
 
-* **Data Type:** string
+**Description:** Campaign ID to which balance should be appended or deleted from
 
-  **Description:** Campaign ID to which balance should be appended or deleted from
-
-  **Values:** int64
+**Values:** int64
+</ResponseField>
 
 ## **Balance Response Attributes**
 
-id
+<ResponseField name="id">
+**Data Type:** string
 
-***
+**Values:** int64
 
-* **Data Type:** string
+**Description:** Balance ID
+</ResponseField>
 
-  **Values:** int64
+<ResponseField name="name">
+**Data Type:** string
 
-  **Description:** Balance ID
+**Values:** -
 
-name
+**Description:** Balance name
+</ResponseField>
 
-***
+<ResponseField name="poNumber">
+**Data Type:** string
 
-* **Data Type:** string
+**Values:** -
 
-  **Values:** -
+**Description:** Purchase order number
+</ResponseField>
 
-  **Description:** Balance name
+<ResponseField name="deposited">
+**Data Type:** number
 
-poNumber
+**Values:** -
 
-***
+**Description:** Amount of funds deposited, uncapped if `null`
+</ResponseField>
 
-* **Data Type:** string
+<ResponseField name="spent">
+**Data Type:** number
 
-  **Values:** -
+**Values:** Amount of funds already spent
 
-  **Description:** Purchase order number
+**Description:** Amount of funds already spent
+</ResponseField>
 
-deposited
+<ResponseField name="remaining">
+**Data Type:** number
 
-***
+**Values:** between 0 and `deposited`
 
-* **Data Type:** number
+**Description:** Amount of funds remaining until cap is hit, `null` if not set
+</ResponseField>
 
-  **Values:** -
+<ResponseField name="startDate">
+**Data Type:** date
 
-  **Description:** Amount of funds deposited, uncapped if `null`
+**Values:** YYYY-MM-DD
 
-spent
+**Description:** Balance start date in the [account](/retail-media/docs/accounts-endpoints) timeZone if not set
+</ResponseField>
 
-***
+<ResponseField name="endDate">
+**Data Type:** date
 
-* **Data Type:** number
+**Values:** YYYY-MM-DD
 
-  **Values:** Amount of funds already spent
+**Description:** Balance end date in the [account](/retail-media/docs/accounts-endpoints) timeZone available indefinitely if `null`
+</ResponseField>
 
-  **Description:** Amount of funds already spent
+<ResponseField name="status">
+**Data Type:** enum
 
-remaining
+**Values:** `active`, `scheduled`, `ended`
 
-***
+**Description:** Balance status
+</ResponseField>
 
-* **Data Type:** number
+<ResponseField name="createdAt">
+**Data Type:** timestamp
 
-  **Values:** between 0 and `deposited`
+**Values:** ISO-8601
 
-  **Description:** Amount of funds remaining until cap is hit, `null` if not set
+**Description:** Timestamp in UTC of balance creation
+</ResponseField>
 
-startDate
+<ResponseField name="updatedAt">
+**Data Type:** timestamp
 
-***
+**Values:** ISO-8601
 
-* **Data Type:** date
+**Description:** Timestamp in UTC of balance updated
+</ResponseField>
 
-  **Values:** YYYY-MM-DD
+<ResponseField name="memo">
+**Data Type:** string
 
-  **Description:** Balance start date in the [account](/retail-media/docs/accounts-endpoints) timeZone if not set
+**Values:** string value
 
-endDate
+**Description:** An optional memo note that can be set on that balance
+</ResponseField>
 
-***
+<ResponseField name="DateOfModification">
+**Data Type:** DateTimeOffset
 
-* **Data Type:** date
+**Values:** ISO-8601 datetime format, e.g. "2023-04-02T13:43:42+02:00"
 
-  **Values:** YYYY-MM-DD
+**Description:** Date when data change has occured
+</ResponseField>
 
-  **Description:** Balance end date in the [account](/retail-media/docs/accounts-endpoints) timeZone available indefinitely if `null`
+<ResponseField name="ModifiedByUser">
+**Data Type:** string
 
-status
+**Values:** string
 
-***
+**Description:** UserName who modified the insertion order
+</ResponseField>
 
-* **Data Type:** enum
+<ResponseField name="ChangeType">
+**Data Type:** ChangeDataCaptureType
 
-  **Values:** `active`, `scheduled`, `ended`
+**Values:** When a field on the balance is modified, one of the following will be used to identify the action taken on that balance:
+* `BalanceCreated` - when a new balance is created
+* `BalanceAdded`- when capped balance amount was increased by a certain amount
+* `BalanceRemoved` - when capped balance is decreased by a certain amount
+* `BalanceUncapped` - when the balance deposited amount is changed to uncapped
+* `BalanceCapped` - when a balance deposited amount is changed to capped
+* `EndDate` - when end date is modified
+* `StartDate` - when start date is modified
+* `BalanceName` - when balance name is modified
+* `PoNumber` - when PO Numer is modified
+* `ValueAdd` - when a new additional amount is added to the balance
+* `SalesforceId` - when the salesForceID (internal Criteo ID) was modified by Criteo. This would appear for Criteo billed balances
+**Description:** Represent the change states of the history
+</ResponseField>
 
-  **Description:** Balance status
+<ResponseField name="ChangeDetails">
+**Data Type:** string
 
-createdAt
+**Values:** Available values will be provided in string format. Values include:
+* `PreviousValue` - Previous value of a property of the balance
+* `CurrentValue` - Current value of a property of the balance
+* `ChangeValue` - Change detail of a property of the balance
+**Description:** Represents the detail of change states of the history
+</ResponseField>
 
-***
+<ResponseField name="balanceType">
+**Data Type:** enum
 
-* **Data Type:** timestamp
+**Values:** `capped`, `uncapped`
 
-  **Values:** ISO-8601
+**Description:** The balance type is computed based on the deposited amount. We automatically set the balance type based on the deposited field when creating a balance. The balance type will be `uncapped` if the deposited amount is `null`. Otherwise, if a value is provided then the balance type is set to `capped`.
+</ResponseField>
 
-  **Description:** Timestamp in UTC of balance creation
+<ResponseField name="spendType">
+**Data Type:** enum
 
-updatedAt
+**Values:** `onsite`, `offsite`
 
-***
-
-* **Data Type:** timestamp
-
-  **Values:** ISO-8601
-
-  **Description:** Timestamp in UTC of balance updated
-
-memo
-
-***
-
-* **Data Type:** string
-
-  **Values:** string value
-
-  **Description:** An optional memo note that can be set on that balance
-
-DateOfModification
-
-***
-
-* **Data Type:** DateTimeOffset
-
-  **Values:** ISO-8601 datetime format, e.g. "2023-04-02T13:43:42+02:00"
-
-  **Description:** Date when data change has occured
-
-ModifiedByUser
-
-***
-
-* **Data Type:** string
-
-  **Values:** string
-
-  **Description:** UserName who modified the insertion order
-
-ChangeType
-
-***
-
-* **Data Type:** ChangeDataCaptureType
-
-  **Values:** When a field on the balance is modified, one of the following will be used to identify the action taken on that balance:
-  * `BalanceCreated` - when a new balance is created
-  * `BalanceAdded`- when capped balance amount was increased by a certain amount
-  * `BalanceRemoved` - when capped balance is decreased by a certain amount
-  * `BalanceUncapped` - when the balance deposited amount is changed to uncapped
-  * `BalanceCapped` - when a balance deposited amount is changed to capped
-  * `EndDate` - when end date is modified
-  * `StartDate` - when start date is modified
-  * `BalanceName` - when balance name is modified
-  * `PoNumber` - when PO Numer is modified
-  * `ValueAdd` - when a new additional amount is added to the balance
-  * `SalesforceId` - when the salesForceID (internal Criteo ID) was modified by Criteo. This would appear for Criteo billed balances
-  **Description:** Represent the change states of the history
-
-ChangeDetails
-
-***
-
-* **Data Type:** string
-
-  **Values:** Available values will be provided in string format. Values include:
-  * `PreviousValue` - Previous value of a property of the balance
-  * `CurrentValue` - Current value of a property of the balance
-  * `ChangeValue` - Change detail of a property of the balance
-  **Description:** Represents the detail of change states of the history
-
-balanceType
-
-***
-
-* **Data Type:** enum
-
-  **Values:** `capped`, `uncapped`
-
-  **Description:** The balance type is computed based on the deposited amount. We automatically set the balance type based on the deposited field when creating a balance. The balance type will be `uncapped` if the deposited amount is `null`. Otherwise, if a value is provided then the balance type is set to `capped`.
-
-spendType
-
-***
-
-* **Data Type:** enum
-
-  **Values:** `onsite`, `offsite`
-
-  **Description:** The type of balance that will be used based on the campaign type
-
- 
+**Description:** The type of balance that will be used based on the campaign type
+</ResponseField>
 
 ## **Get All Balances**
 
@@ -250,7 +212,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
       -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
 
   url = "https://api.criteo.com/{version}/retail-media/accounts/4/balances"
@@ -266,7 +228,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -284,7 +246,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -319,7 +281,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "data": [
           {
@@ -403,7 +365,7 @@ https://api.criteo.com/{version}/retail-media//balances/{balanceId}/campaigns/ap
           }'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
   import json
 
@@ -428,7 +390,7 @@ https://api.criteo.com/{version}/retail-media//balances/{balanceId}/campaigns/ap
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -447,7 +409,7 @@ https://api.criteo.com/{version}/retail-media//balances/{balanceId}/campaigns/ap
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -539,7 +501,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
           }'
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
   import json
 
@@ -564,7 +526,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
   print(response.text)
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -583,7 +545,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```php PHP expandable
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -663,7 +625,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
       -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
   ```
 
-  ```bash Bash
+  ```java Java
   OkHttpClient client = new OkHttpClient().newBuilder()
     .build();
 
@@ -681,7 +643,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
   Response response = client.newCall(request).execute();
   ```
 
-  ```bash Bash
+  ```python Python
   import requests
 
   url = "https://api.criteo.com/{version}/retail-media/balances/13/campaigns"
@@ -697,7 +659,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
   print(response.text)
   ```
 
-  ```bash Bash
+  ```php PHP
   <?php
   require_once 'HTTP/Request2.php';
   $request = new HTTP_Request2();
@@ -785,7 +747,7 @@ https://api.criteo.com/{version}/retail-media/insertion-order-history/{externalI
 **Sample Response**
 
 <CodeGroup>
-  ```json JSON
+  ```json JSON expandable
   {
       "meta": {
           "count": 4,
@@ -841,9 +803,3 @@ https://api.criteo.com/{version}/retail-media/insertion-order-history/{externalI
   }
   ```
 </CodeGroup>
-
-***
-
-[Balances](/retail-media/v2024.10/docs/balances)
-
-[Audiences](/retail-media/v2024.10/docs/audiences)
