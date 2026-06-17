@@ -5,22 +5,29 @@ original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performanc
 
 ## General
 
-## 1. How should I handle API errors?
+<AccordionGroup>
+<Accordion title="1. How should I handle API errors?">
 
 As a general rule:
 
 * `4xx` errors indicate an input or business logic issue. Read the error payload carefully — it will contain field-level detail to help you correct the request before retrying.
 * `500` and `503` errors are typically caused by a temporary network or service issue. Implement an exponential backoff policy: wait 10 seconds before the first retry, 20 seconds before the second, 40 seconds before the third, and so on.
 
-## 2. What is the maximum payload size?
+</Accordion>
+
+<Accordion title="2. What is the maximum payload size?">
 
 The API accepts up to **2,000 budget objects per call** with no defined maximum payload size.
 
-## 3. Does the API support partial failures?
+</Accordion>
+
+<Accordion title="3. Does the API support partial failures?">
 
 Partial failure is not supported at the request level. However, if a call fails, the error response will include detail records identifying which items caused the failure, so you can correct and resubmit.
 
-## 4. Why is my seller-campaign not delivering even though it looks active?
+</Accordion>
+
+<Accordion title="4. Why is my seller-campaign not delivering even though it looks active?">
 
 Check the `suspendedSince` and `suspensionReasons` fields on the seller-campaign:
 
@@ -222,15 +229,22 @@ Check the `suspendedSince` and `suspensionReasons` fields on the seller-campaign
 ]
 ```
 
-## 5. How are sellers added to the system?
+</Accordion>
+
+<Accordion title="5. How are sellers added to the system?">
 
 In the most common scenario, sellers are added automatically from the catalog you have provided to Criteo. You must include the seller identifier in the `seller_id` field of each product in your catalog feed. The value is case-sensitive.
 
 Once the catalog is imported, it typically takes **3–4 hours** for sellers to appear in the system.
 
+</Accordion>
+
+</AccordionGroup>
+
 ## Sellers
 
-### 6. How do I look up a seller's ID?
+<AccordionGroup>
+<Accordion title="6. How do I look up a seller's ID?">
 
 Use the sellers endpoint with a name filter:
 
@@ -238,22 +252,31 @@ Use the sellers endpoint with a name filter:
 GET /marketplace-performance-outcomes/sellers?sellerName=YourSellerName
 ```
 
+</Accordion>
+
+</AccordionGroup>
+
 ## Campaigns
 
-### 7. What is the difference between a campaign and a seller-campaign?
+<AccordionGroup>
+<Accordion title="7. What is the difference between a campaign and a seller-campaign?">
 
 A campaign (also referred to as an ad set in Commerce Growth) is the top-level configuration managed by Criteo. You do not create or modify it directly via the MPO API.
 
 A seller-campaign is automatically created for each seller when the seller is set up. For example, if there are two MPO campaigns (one for web and one for app), two seller-campaigns will be created per seller by default. Seller-campaigns are the entities you manage via the API bids, and run state.
 
-### 8. Where do I get the campaign ID?
+</Accordion>
+
+<Accordion title="8. Where do I get the campaign ID?">
 
 Campaign IDs are assigned and managed by Criteo. You can obtain the campaign ID:
 
 * Directly from your Criteo point of contact.
 * Via the `GET /marketplace-performance-outcomes/campaigns` endpoint.
 
-### 9. How do I start or stop a seller-campaign?
+</Accordion>
+
+<Accordion title="9. How do I start or stop a seller-campaign?">
 
 There is no single flag that starts or stops a seller-campaign. A seller-campaign becomes active when it meets a set of conditions — including having a valid budget, a CPC bid, and active products in the catalog. See [Managing Campaigns](/marketing-solutions/docs/multiseller-managing-campaigns) for the full list of conditions. :llmCitationRef[0]
 
@@ -263,7 +286,9 @@ To stop a seller-campaign, set the budget to `isSuspended: true` via:
 PATCH /marketplace-performance-outcomes/budgets
 ```
 
-### 10. Why does a seller-campaign show as active when it is not delivering?
+</Accordion>
+
+<Accordion title="10. Why does a seller-campaign show as active when it is not delivering?">
 
 This can happen when the suspension reason is not yet surfaced by the API. Common causes include:
 
@@ -272,9 +297,14 @@ This can happen when the suspension reason is not yet surfaced by the API. Commo
 
 Check the `suspendedSince` and `suspensionReasons` fields when retrieving a seller-campaign. If both are `null`, the campaign appears active. If `suspendedSince` is set, the campaign is inactive — check `suspensionReasons` for details. :llmCitationRef[1]
 
+</Accordion>
+
+</AccordionGroup>
+
 ## Budgets
 
-### 11. How do I check the remaining budget?
+<AccordionGroup>
+<Accordion title="11. How do I check the remaining budget?">
 
 There is no dedicated endpoint for remaining budget. Calculate it usin
 
@@ -287,7 +317,9 @@ Both `amount` and `spend` are available from:
 * `GET /marketplace-performance-outcomes/budgets`
 * `GET /marketplace-performance-outcomes/budgets/{budgetId}`
 
-### 12. Can budget periods overlap for the same seller?
+</Accordion>
+
+<Accordion title="12. Can budget periods overlap for the same seller?">
 
 No. For a given (`sellerId`, `campaignId`) pair, budget periods must not overlap. If you need to extend a period, update the existing budget. If you need to replace it, create a new one with non-overlapping dates.
 
@@ -298,18 +330,29 @@ No. For a given (`sellerId`, `campaignId`) pair, budget periods must not overlap
 
 If you need to free up a date range currently held by a suspended budget, you must delete or expire the suspended budget before creating a new one for that period.
 
-### 13. Can I schedule future budgets?
+</Accordion>
+
+<Accordion title="13. Can I schedule future budgets?">
 
 Yes. You can create budgets with future `startDate` values as long as their date ranges do not overlap with any existing active budgets for the same (`sellerId`, `campaignId`) pair.
 
+</Accordion>
+
+</AccordionGroup>
+
 ## Statistics
 
-### 14. Are statistics available in local time zones (for example, KST)?
+<AccordionGroup>
+<Accordion title="14. Are statistics available in local time zones (for example, KST)?">
 
 Yes. While statistics data defaults to UTC, the Stats API supports a `timezone` parameter so you can retrieve data in your preferred local time zone directly.
 
-### 15. What is the data latency for statistics?
+</Accordion>
+
+<Accordion title="15. What is the data latency for statistics?">
 
 Statistics are typically available with a latency of a few hours. Exact latency may vary; refer to the [Getting Statistics](/marketing-solutions/docs/multiseller-getting-statistics) page for current SLA guidance. :llmCitationRef[2]
 
 <br />
+</Accordion>
+</AccordionGroup>
