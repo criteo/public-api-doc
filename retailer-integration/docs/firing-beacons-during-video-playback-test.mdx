@@ -1,0 +1,101 @@
+---
+title: Firing beacons during video playback - TEST
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/recipes/firing-beacons-during-video-playback-test.md
+description: How to fire beacons properly during the video playback (for video on-site integration)
+---
+
+<CodeGroup>
+
+```javascript JavaScript
+// During the initialization process
+this.videoPlayer.addEventListener('timeupdate', this.handlePlaybackEvents.bind(this));
+
+function handlePlaybackEvents() {
+        const percent = (this.videoPlayer.currentTime / this.videoPlayer.duration) * 100;
+
+        //only fire these beacons during the first loop
+        if (this.currentLoop === 1 ) {
+            if (percent >= 0.01 && !this.adStarted.sent) {
+              // mark sent
+              this.adStarted.sent = true;
+
+              // fire start beacon
+              const adStartedBeacon = new URL(this.adStarted.beacon);
+              adStartedBeacon.drop();
+
+              // forward event to OMID (related to next section of the document)
+              if (this.mediaEvents) {
+                  this.mediaEvents.start(this.videoPlayer.duration, this.videoPlayer.muted ? 0 : this.videoPlayer.volume);
+              }
+            }
+
+            if (percent >= 25 && !this.adFirstQuartile.sent) {
+              // mark sent
+              this.adFirstQuartile.sent = true;
+
+              // fire firstQuartile beacon
+              const adFirstQuartileBeacon = new URL(this.adFirstQuartile.beacon);
+              adFirstQuartileBeacon.drop();
+
+              // forward event to OMID (related to next section of the document)
+              if (this.mediaEvents) {
+                  this.mediaEvents.firstQuartile();
+              }
+            }
+
+            if (percent >= 50 && !this.adMidpoint.sent) {
+              // mark sent
+              this.adMidpoint.sent = true;
+
+              // fire midPoint beacon
+              const adMidpointBeacon = new URL(this.adMidpoint.beacon);
+              adMidpointBeacon.drop();
+
+              // forward event to OMID (related to next section of the document)
+              if (this.mediaEvents) {
+                  this.mediaEvents.midpoint();
+              }
+          }
+
+            if (percent >= 75 && !this.adThirdQuartile.sent) {
+              // mark sent
+              this.adThirdQuartile.sent = true;
+
+              // fire thirdQuartile beacon
+              const adThirdQuartileBeacon = new URL(this.adThirdQuartile.beacon);
+              adThirdQuartileBeacon.drop();
+
+              // forward event to OMID (related to next section of the document)
+              if (this.mediaEvents) {
+                  this.mediaEvents.thirdQuartile();
+              }
+          }
+        }
+
+```
+
+```json Response Example
+{"success":true}
+```
+</CodeGroup>
+
+# To start: listening to 'timeupdate'
+
+{/* javascript@1-6 */}
+
+To set a trigger for this, we add an event listener to our `<video>` element for the `<can play>` event. This event is dispatched as soon as the browser determines the video is ready for playback and painted to the page, regardless of its position in the viewport.
+The start, firstQuartile, midpoint, and thirdQuartile beacons are managed in a function triggered by a listener on the timeupdate event from the `<video>` tag.
+
+Inside this playback handler function, we first check if we are within the first loop of video playback. If so, we calculate the percentage of video viewed by dividing the currentTime attribute by the duration attribute, then normalizing this value to a range of 0-100 by multiplying the result by 100.
+
+# Fire beacons during the first loop
+
+{/* javascript@7-22 */}
+
+Once we have a non-zero percentage, and we are in the first loop, we drop the start beacon.
+
+# Fire quartile beacons
+
+{/* javascript@23-64 */}
+
+At 25 percent viewed and still within the first loop, we drop the firstQuartile beacon, and the same applies for 50 and 75 percent.
