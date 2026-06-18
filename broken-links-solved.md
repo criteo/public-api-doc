@@ -37,7 +37,7 @@ Cada alvo foi confirmado existente no disco antes de gravar.
 ---
 
 ### Slug renomeado — confirmado por redirect no site live — 7 links
-Descobertos via [scripts/check_live_links.py](scripts/check_live_links.py) (segue o redirect do ReadMe live → slug canônico). Alvo confirmado no disco.
+Descobertos via `scripts/check_live_links.py` (segue o redirect do ReadMe live → slug canônico). Alvo confirmado no disco.
 - [retail-media/docs/retailer-cpc-rate-cards.mdx](retail-media/docs/retailer-cpc-rate-cards.mdx) · [retail-media/v2025.07/docs/retailer-cpc-rate-cards.mdx](retail-media/v2025.07/docs/retailer-cpc-rate-cards.mdx) · [retail-media/v2025.10/docs/retailer-cpc-rate-cards.mdx](retail-media/v2025.10/docs/retailer-cpc-rate-cards.mdx)
   - `/retail-media/docs/oa-line-items` → `/retail-media/docs/onsite-sponsored-products-line-items`
 - [retail-media/v2026-preview/docs/metrics-and-dimensions-dsp.mdx](retail-media/v2026-preview/docs/metrics-and-dimensions-dsp.mdx)

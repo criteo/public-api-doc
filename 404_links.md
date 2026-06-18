@@ -1,6 +1,6 @@
 # 404_links — links sem destino (decidir depois)
 
-Todos verificados contra o site live (developers.criteo.com) via [scripts/check_live_links.py](scripts/check_live_links.py).
+Todos verificados contra o site live (developers.criteo.com) via `scripts/check_live_links.py`.
 Os `.mdx` **não foram alterados** — só listados aqui pra decisão.
 "Substituto no repo" = página que existe no projeto e poderia receber o link, se você quiser.
 
