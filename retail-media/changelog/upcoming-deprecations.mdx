@@ -1,0 +1,653 @@
+---
+title: Upcoming API Deprecations and Sunsets
+original_file: to-migrate/criteo-site-changelog/markdown/retail-media/entries/upcoming-deprecations.md
+---
+
+## Upcoming sunset of API version v2021.07 and expected breaking changes to Preview.
+
+As part of the [Criteo API policy](/retail-media/docs/versioning-policy), we release a new stable API version every three months, and as a result, older stable versions become deprecated. That is why each version is supported for 12 months after its initial release.
+
+Therefore, we recommend migrating your application as soon as possible to avoid service interruption.
+
+In part of this policy, we wanted to remind you of some upcoming API sunsets that are expected to take place within the next couple of months and provide you with the resources to help with these transitions.
+
+We know that migration can take some time to complete, so we want to ensure that we can be here to help support you through these changes. So to give all of our API users additional time, **we've decided to extend the sunset dates of these two API versions**, as seen in the table below.
+
+If you have an application using any of the versions below, please consider migrating to **[v2022-04](/retail-media/docs/changes-from-v202107-to-v202110)**.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Version
+    </p>
+   </th>
+   <th>
+    <p>
+     Release date
+    </p>
+   </th>
+   <th>
+    <p>
+     Date support is expected by
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     2021-07
+    </p>
+   </td>
+   <td>
+    <p>
+     July 21st, 2021
+    </p>
+   </td>
+   <td>
+    <p>
+     September 1st, 2022
+    </p>
+    <p>
+     *(date extended)*
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Preview
+    </p>
+    <p>
+     (2020-10)
+    </p>
+   </td>
+   <td>
+    <p>
+     October 1st, 2020
+    </p>
+   </td>
+   <td>
+    <p>
+     September 30th, 2022
+    </p>
+    <p>
+     *(date extended)*
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     2021-10
+    </p>
+   </td>
+   <td>
+    <p>
+     October 19th, 2022
+    </p>
+   </td>
+   <td>
+    <p>
+     December 14th, 2022
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<br />
+
+<Warning>
+  **USING PREVIEW - [https://apigateway.criteo.com/preview](https://apigateway.criteo.com/preview)**
+
+  This version is only intended to preview upcoming releases of a new API version. We do not recommend using this version in production environments since **it's not a stable version**, and we can introduce breaking changes anytime. Please use our latest stable version for all production workflows to avoid the risk of service interruptions to your applications.
+
+  By September 30th, we expect to introduce some breaking changes. Therefore some endpoints may either become deprecated or present some errors when calling some endpoints.
+</Warning>
+
+<br />
+
+## Migrating to v2022.04 - Release notes from prior versions
+
+### *Changes that were introduced since 2021.07*
+
+**Addition / removal of items**\
+Using PUT and DELETE methods to add or remove items is deprecated. Instead, dedicated `/append` and `/delete` endpoints have been added, which can be called using POST method.
+
+**Catalog filtering**\
+It is now possible to restrict catalog requests to a particular brand(s) by indicating them in the `brandIdFilter` .\
+Affected endpoints is `/2021-10/retail-media/accounts/{accountId}/catalogs`\
+No other change was made to the request or response.\\
+
+### *Changes that were introduced since 2021.10*
+
+🆕 **New Capability to Pause or Unpause the Serving of an SKU**
+
+In this new version, we have introduced two new endpoints that allow to pause or unpause products belonging to a line item. The new endpoints also provide the option to apply a bid override. The new endpoints include
+
+```text
+POST - https://api.criteo.com/2022-04/retail-media/line-items/{lineItemId}/products/pause
+POST - https://api.criteo.com/2022-04/retail-media/line-items/{lineItemId}/products/unpause
+```
+
+* See the [Line item endpoints guide](/retail-media/docs/promoted-products) for more details\\
+
+📊 **Updates Made to Report Field Names, and Metric Calculations**
+
+<ins>Metric Calculation Changes</ins>\
+We changed impression calculation for preferred deals and open auction campaigns. These changes in the API are now reflecting the same reporting logic for impressions used by reports within the Retail Media Platform.
+
+For the following reports, the API will report impressions as follows:
+
+* For Preferred Deals campaigns - the sum of *placement* impressions
+* For Open Auction campaigns - the sum of *product* impressions
+
+**Summary Report**\
+Metrics changed by impression calculation change:\
+\-  Campaign: *CampaignCtr and CampaignFrequency*\
+\- Line Item: *lineItemCtr and lineItemFrequency*
+
+**pageType Report**\
+Metrics changed by impression calculation change:\
+\-  Campaign: *CampaignCtr*\
+\- Line Item: *lineItemCtr*
+
+**Keyword Report**\
+Metrics changed by impression calculation change:\
+\-  Campaign: *CampaignCtr and CampaignFrequency*\
+\- Line Item: *lineItemCtr and lineItemFrequency*
+
+<ins>Report Field Names</ins>\
+In this version, we also updated some report field names. For example, in previous versions where the reports fields such as  *productCPC* or *productRoas*, we renamed the latest version to simply CPC or ROAS.
+
+<Info>
+  **NOTE**
+
+  Besides metrics that utilize impressions for calculations, no other report metric had its calculation logic modified.
+</Info>
+
+**Campaign Reports**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Report
+    </p>
+   </th>
+   <th>
+    <p>
+     Old Field Name
+    </p>
+   </th>
+   <th>
+    <p>
+     New Field Name in v2022.04
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     Product
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      productClicks
+     </li>
+     <li>
+      productImpressions
+     </li>
+     <li>
+      productCtr
+     </li>
+     <li>
+      productCpc
+     </li>
+     <li>
+      productCpo
+     </li>
+     <li>
+      productRoas
+     </li>
+     <li>
+      clickSpend
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      clicks
+     </li>
+     <li>
+      impressions
+     </li>
+     <li>
+      ctr
+     </li>
+     <li>
+      cpc
+     </li>
+     <li>
+      cpo
+     </li>
+     <li>
+      roas
+     </li>
+     <li>
+      spend
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     ProductCategory
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      productClicks
+     </li>
+     <li>
+      productImpressions
+     </li>
+     <li>
+      productCtr
+     </li>
+     <li>
+      productCpc
+     </li>
+     <li>
+      productCpo
+     </li>
+     <li>
+      productRoas
+     </li>
+     <li>
+      clickSpend
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      clicks
+     </li>
+     <li>
+      impressions
+     </li>
+     <li>
+      ctr
+     </li>
+     <li>
+      cpc
+     </li>
+     <li>
+      cpo
+     </li>
+     <li>
+      roas
+     </li>
+     <li>
+      spend
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Summary
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      campaignPlacementImpressions
+     </li>
+     <li>
+      campaignCtr
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      impressions
+     </li>
+     <li>
+      ctr
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Page Type
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      campaignCtr
+     </li>
+     <li>
+      campaignFrequency
+     </li>
+     <li>
+      campaignPlacementImpressions
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      ctr
+     </li>
+     <li>
+      frequency
+     </li>
+     <li>
+      impressions
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     keyword
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      CampaignPlacementImpressions
+     </li>
+     <li>
+      campaignCtr
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      impressions
+     </li>
+     <li>
+      ctr
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     attributedTransactions
+    </p>
+   </td>
+   <td>
+    <p>
+     No Change
+    </p>
+   </td>
+   <td>
+    <p>
+     No Change
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+**Line Item Reports**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Report
+    </p>
+   </th>
+   <th>
+    <p>
+     Old Field Name
+    </p>
+   </th>
+   <th>
+    <p>
+     New Field Name in v2022.04
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     Product
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      productClicks
+     </li>
+     <li>
+      productImpressions
+     </li>
+     <li>
+      productCtr
+     </li>
+     <li>
+      productCpc
+     </li>
+     <li>
+      productCpo
+     </li>
+     <li>
+      productRoas
+     </li>
+     <li>
+      clickSpend
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      clicks
+     </li>
+     <li>
+      impressions
+     </li>
+     <li>
+      ctr
+     </li>
+     <li>
+      cpc
+     </li>
+     <li>
+      cpo
+     </li>
+     <li>
+      roas
+     </li>
+     <li>
+      spend
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     ProductCategory
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      productClicks
+     </li>
+     <li>
+      productImpressions
+     </li>
+     <li>
+      productCtr
+     </li>
+     <li>
+      productCpc
+     </li>
+     <li>
+      productCpo
+     </li>
+     <li>
+      productRoas
+     </li>
+     <li>
+      clickSpend
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      clicks
+     </li>
+     <li>
+      impressions
+     </li>
+     <li>
+      ctr
+     </li>
+     <li>
+      cpc
+     </li>
+     <li>
+      cpo
+     </li>
+     <li>
+      roas
+     </li>
+     <li>
+      spend
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Summary
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      lineItemPlacementImpressions
+     </li>
+     <li>
+      lineItemFrequency
+     </li>
+     <li>
+      lineItemCtr
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      impression
+     </li>
+     <li>
+      frequency
+     </li>
+     <li>
+      ctr
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     PageType
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      lineItemPlacementImpressions
+     </li>
+     <li>
+      lineItemCtr
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      impressions
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     keyword
+    </p>
+   </td>
+   <td>
+    <ul>
+     <li>
+      lineItemPlacementImpressions
+     </li>
+     <li>
+      lineItemCtr
+     </li>
+    </ul>
+   </td>
+   <td>
+    <ul>
+     <li>
+      impressions
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     attributedTransactions
+    </p>
+   </td>
+   <td>
+    <p>
+     No Changes
+    </p>
+   </td>
+   <td>
+    <p>
+     No Changes
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
