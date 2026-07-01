@@ -187,7 +187,6 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       accountId
      </code>
-     <span>*</span>
     </p>
    </td>
    <td>
@@ -443,7 +442,6 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       clickAttributionWindow
      </code>
-     <span>*</span>
     </p>
    </td>
    <td>
@@ -488,7 +486,6 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       viewAttributionWindow
      </code>
-     <span>*</span>
     </p>
    </td>
    <td>
@@ -527,7 +524,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
     <p>
      Default:
      <code>
-      None
+      none
      </code>
     </p>
     <p>
@@ -657,7 +654,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      Default: empty list
     </p>
     <p>
-     Writeable? N / Nullable? N
+     Writeable? Y / Nullable? N
     </p>
    </td>
   </tr>
@@ -800,6 +797,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       isAutoDailyPacing
      </code>
+     <span>*</span>
     </p>
    </td>
    <td>
@@ -861,7 +859,6 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       startDate
      </code>
-     <span>*</span>
     </p>
    </td>
    <td>
@@ -911,7 +908,6 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       endDate
      </code>
-     <span>*</span>
     </p>
    </td>
    <td>
@@ -1106,10 +1102,10 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      The retailer this campaign is associated with.
     </p>
     <p>
-     Required when using a retailer-billed balance.
+     Required when using a retailer budget balance.
     </p>
     <p>
-     Writeable? Y (at create) / Nullable? Y (for non-retailer-billed campaigns)
+     Writeable? Y (at create) / Nullable? Y (for non-retailer-budget campaigns)
     </p>
    </td>
   </tr>
@@ -1124,12 +1120,24 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
 ## Create a Campaign
 
-This endpoint creates a new campaign in the specified account.
+This endpoint creates a Sponsored Products (`type: auction`) or Onsite Display (`type: preferred`) campaign.
+
+**Retailer budget vs Criteo budget:** Including `retailerId` in the request creates a retailer budget campaign. Omitting `retailerId` (or setting it to `null`) creates a standard Criteo budget campaign — `retailerId` will be `null` in the response.
+
+**Balance mapping at create time:** You may optionally include `drawableBalanceIds` to map the campaign to one or more retailer budget balances at creation. All compatibility rules apply (same retailer, same billing type, same demand account). You can also map balances separately after creation using `POST /balances/{balanceId}/campaigns/append`.
 
 <Warning>
-  **Retailer-billed campaigns**
+  **Note on `403` vs `400`**
 
-  When creating a campaign for a retailer-billed balance, `retailerId` must be provided and must match the `retailerId` of the balance. Mismatched values will return a `RetailerMismatchWithBalance` error. Learn more about Retailer billed [here](/retail-media/docs/retailer-billed).
+  A `403` on campaign create means the `retailerId` you set is not recognized as an authorized retailer for your account. A `400` with a specific mismatch code means the retailer is valid but incompatible with the balance you included (see [Error responses](#responses)).
+
+  **Legacy version behavior (`2025-10` and earlier):** Returns `400` when attempting to create a retailer budget campaign.
+</Warning>
+
+<Warning>
+  **Retailer Budgets Campaigns**
+
+  When creating a campaign for a retailer-budget balance, `retailerId` must be provided and must match the `retailerId` of the balance. Mismatched values will return a `RetailerMismatchWithBalance` error. Learn more about Retailer budgets [here](/retail-media/docs/retailer-budgets).
 </Warning>
 
 <EndpointBadge method="post">
@@ -1140,162 +1148,63 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
 
 **Sample Request**
 
-<CodeGroup>
-
 ```bash cURL
-curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/5/campaigns' \
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/accounts/{accountId}/campaigns' \
 -H 'Content-Type: application/json' \
 -H 'Accept: application/json' \
 -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
 -d '{
-    "data": {
-        "type": "<string>",
-        "attributes": {
-            "name": "Valentine Day Sale",
-            "isAutoDailyPacing": false,
-            "startDate": "2024-02-12",
-            "endDate": "2024-02-15",
-            "type": "auction",
-            "drawableBalanceIds": [
-                "142000305654435840"
-            ],
-            "clickAttributionWindow": "30D",
-            "viewAttributionWindow": "None",
-            "retailerId": "1298",
-            "budget": 100,
-            "monthlyPacing": 50,
-            "dailyPacing": 10,
-            "clickAttributionScope": "sameSkuCategory",
-            "viewAttributionScope": "sameSkuCategory",
-            "companyName": "Test Company A",
-            "onBehalfCompanyName": "Test Company B"
-        }
-    }
-}'
-```
-
-```python Python expandable
-import http.client
-import json
-
-conn = http.client.HTTPSConnection("api.criteo.com")
-payload = json.dumps({
   "data": {
-    "type": "<string>",
+    "type": "Campaign",
     "attributes": {
-      "name": "Valentine Day Sale",
-      "isAutoDailyPacing": False,
-      "startDate": "2024-02-12",
-      "endDate": "2024-02-15",
+      "name": "My Retailer Budget Campaign",
       "type": "auction",
-      "drawableBalanceIds": [
-        "142000305654435840"
-      ],
+      "retailerId": "123",
+      "drawableBalanceIds": ["100000000000000001"],
+      "startDate": "2026-06-01T00:00:00+00:00",
       "clickAttributionWindow": "30D",
-      "viewAttributionWindow": "None",
-			"retailerId": "1298"
-      "budget": 100,
-      "monthlyPacing": 50,
-      "dailyPacing": 10,
+      "viewAttributionWindow": "none",
       "clickAttributionScope": "sameSkuCategory",
       "viewAttributionScope": "sameSkuCategory",
-      "companyName": "Test Company A",
-      "onBehalfCompanyName": "Test Company B"
+      "isAutoDailyPacing": false
     }
   }
-})
-headers = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-}
-conn.request("POST", "/{version}/retail-media/accounts/5/campaigns", payload, headers)
-res = conn.getresponse()
-data = res.read()
-print(data.decode("utf-8"))
+}'
 ```
-
-```java Java
-OkHttpClient client = new OkHttpClient().newBuilder()
-  .build();
-MediaType mediaType = MediaType.parse("application/json");
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"<string>\",\"attributes\":{\"name\":\"Valentine Day Sale\",\"isAutoDailyPacing\":false,\"startDate\":\"2024-02-12\",\"endDate\":\"2024-02-15\",\"type\":\"auction\",\"drawableBalanceIds\":[\"142000305654435840\"],\"clickAttributionWindow\":\"30D\",\"retailerId\":\"1298\"\"viewAttributionWindow\":\"None\",\"budget\":100,\"monthlyPacing\":50,\"dailyPacing\":10,\"clickAttributionScope\":\"sameSkuCategory\",\"viewAttributionScope\":\"sameSkuCategory\",\"companyName\":\"Test Company A\",\"onBehalfCompanyName\":\"Test Company B\"}}}");
-Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/retail-media/accounts/5/campaigns")
-  .method("POST", body)
-  .addHeader("Content-Type", "application/json")
-  .addHeader("Accept", "application/json")
-  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-  .build();
-Response response = client.newCall(request).execute();
-```
-
-```php PHP
-<?php
-require_once 'HTTP/Request2.php';
-$request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/5/campaigns');
-$request->setMethod(HTTP_Request2::METHOD_POST);
-$request->setConfig(array(
-  'follow_redirects' => TRUE
-));
-$request->setHeader(array(
-  'Content-Type' => 'application/json',
-  'Accept' => 'application/json',
-  'Authorization' => 'Bearer &lt;TOKEN&gt;'
-));
-$request->setBody('{"data":{"type":"<string>","attributes":{"name":"Valentine Day Sale","isAutoDailyPacing":false,"startDate":"2024-02-12","endDate":"2024-02-15","type":"auction","drawableBalanceIds":["142000305654435840"],"clickAttributionWindow":"30D","viewAttributionWindow":"None","retailerId": "1298","budget":100,"monthlyPacing":50,"dailyPacing":10,"clickAttributionScope":"sameSkuCategory","viewAttributionScope":"sameSkuCategory","companyName":"Test Company A","onBehalfCompanyName":"Test Company B"}}}');
-try {
-  $response = $request->send();
-  if ($response->getStatus() == 200) {
-    echo $response->getBody();
-  }
-  else {
-    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-    $response->getReasonPhrase();
-  }
-}
-catch(HTTP_Request2_Exception $e) {
-  echo 'Error: ' . $e->getMessage();
-}
-```
-</CodeGroup>
 
 **Sample Response**
 
 ```json expandable
 {
-    "data": {
-        "id": "544937665113018368",
-        "type": "RetailMediaCampaignV202301",
-        "attributes": {
-            "accountId": "5",
-            "promotedBrandIds": [],
-            "budgetSpent": 0.00000000,
-            "budgetRemaining": 100.00000000,
-            "status": "inactive",
-            "retailerId": "1298",
-            "createdAt": "2024-02-12T17:47:43+00:00",
-            "updatedAt": "2024-02-12T17:47:43+00:00",
-            "type": "auction",
-            "drawableBalanceIds": [
-                "142000305654435840"
-            ],
-            "clickAttributionWindow": "30D",
-            "viewAttributionWindow": "1D",
-            "name": "Valentine Day Sale",
-            "budget": 100.00000000,
-            "monthlyPacing": 50.00000000,
-            "dailyPacing": 10.00000000,
-            "isAutoDailyPacing": false,
-            "startDate": "2024-02-12T00:00:00+00:00",
-            "endDate": "2024-02-15T00:00:00+00:00",
-            "clickAttributionScope": "sameSkuCategory",
-            "viewAttributionScope": "sameSkuCategory",
-            "companyName": "Test Company A",
-            "onBehalfCompanyName": "Test Company B"
-        }
+  "data": {
+    "id": "100000000000000001",
+    "type": "RetailMediaCampaignV202301",
+    "attributes": {
+      "accountId": "123",
+      "promotedBrandIds": [],
+      "budgetSpent": 0.0,
+      "budgetRemaining": null,
+      "status": "inactive",
+      "createdAt": "2026-05-29T20:33:27+00:00",
+      "updatedAt": "2026-05-29T20:33:27+00:00",
+      "type": "auction",
+      "drawableBalanceIds": ["100000000000000001"],
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "none",
+      "retailerId": 123,
+      "name": "My Retailer Budget Campaign",
+      "budget": null,
+      "monthlyPacing": null,
+      "dailyPacing": null,
+      "isAutoDailyPacing": false,
+      "startDate": "2026-06-01T00:00:00+00:00",
+      "endDate": null,
+      "clickAttributionScope": "sameSkuCategory",
+      "viewAttributionScope": "sameSkuCategory",
+      "companyName": null,
+      "onBehalfCompanyName": null
     }
+  }
 }
 ```
 
@@ -1303,7 +1212,13 @@ catch(HTTP_Request2_Exception $e) {
 
 ## Get All Campaigns by Account ID
 
-This endpoint lists all campaigns in the specified account.
+This endpoint returns all campaigns for an account.
+
+<Warning>
+  As of `2026-01`, `retailerId` is included in each campaign's attributes. Use the `retailerId` query parameter to filter campaigns by retailer.
+
+  **Legacy version behavior (`2025-10` and earlier):** Retailer budget campaigns are not returned; `retailerId` is not present in the attribute set.
+</Warning>
 
 Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively. See [API Response](/retail-media/docs/api-response#pagination).
 
@@ -1315,161 +1230,51 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/campaigns
 
 **Sample Request**
 
-<CodeGroup>
-
 ```bash cURL
-curl -L -X GET 'https://api.criteo.com/{version}/retail-media/accounts/5/campaigns?pageIndex=8&pageSize=2' \
+curl -L -X GET 'https://api.criteo.com/2026-01/retail-media/accounts/{accountId}/campaigns' \
 -H 'Accept: application/json' \
 -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
 ```
-
-```python Python
-import requests
-
-url = "https://api.criteo.com/{version}/retail-media/accounts/4/campaigns?pageIndex=8&pageSize=2"
-
-payload={}
-headers = {
-  'Accept': 'application/json',
-  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-}
-
-response = requests.request("GET", url, headers=headers, data=payload)
-
-print(response.text)
-```
-
-```java Java
-OkHttpClient client = new OkHttpClient().newBuilder()
-  .build();
-
-MediaType mediaType = MediaType.parse("text/plain");
-
-RequestBody body = RequestBody.create(mediaType, "");
-
-Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/retail-media/accounts/4/campaigns?pageIndex=8&pageSize=2")
-  .method("GET", body)
-  .addHeader("Accept", "application/json")
-  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-  .build();
-
-Response response = client.newCall(request).execute();
-```
-
-```php PHP
-<?php
-require_once 'HTTP/Request2.php';
-$request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/4/campaigns?pageIndex=8&pageSize=2');
-$request->setMethod(HTTP_Request2::METHOD_GET);
-$request->setConfig(array(
-  'follow_redirects' => TRUE
-));
-
-$request->setHeader(array(
-  'Accept' => 'application/json',
-  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-));
-
-try {
-  $response = $request->send();
-  if ($response->getStatus() == 200) {
-    echo $response->getBody();
-  }
-  
-  else {
-    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-    $response->getReasonPhrase();
-  }
-}
-
-catch(HTTP_Request2_Exception $e) {
-  echo 'Error: ' . $e->getMessage();
-}
-```
-</CodeGroup>
 
 **Sample Response**
 
 ```json expandable
 {
     "metadata": {
-        "totalItemsAcrossAllPages": 306,
+        "totalItemsAcrossAllPages": 2533,
         "currentPageSize": 2,
         "currentPageIndex": 8,
         "totalPages": 153,
-        "nextPage": "https://api.criteo.com/{version}/retail-media/accounts/5/campaigns?pageIndex=9&pageSize=2",
-        "previousPage": "https://api.criteo.com/{version}/retail-media/accounts/5/campaigns?pageIndex=7&pageSize=2"
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 102
     },
     "data": [
         {
-            "id": "360028769027026944",
+            "id": "100000000000000001",
             "type": "RetailMediaCampaignV202301",
             "attributes": {
-                "accountId": "5",
+                "accountId": "123",
                 "promotedBrandIds": [],
-                "budgetSpent": 0.00000000,
+                "budgetSpent": 0.0,
                 "budgetRemaining": null,
                 "status": "inactive",
-                "retailerId": "1298",
-                "createdAt": "2022-09-20T11:45:47+00:00",
-                "updatedAt": "2023-09-12T13:50:06+00:00",
-                "type": "preferred",
-                "drawableBalanceIds": [],
-                "clickAttributionWindow": "14D",
-                "viewAttributionWindow": "14D",
-                "name": "Spring Sale 1",
+                "createdAt": "2026-05-29T20:00:47+00:00",
+                "updatedAt": "2026-05-29T20:00:47+00:00",
+                "type": "auction",
+                "drawableBalanceIds": ["100000000000000002"],
+                "clickAttributionWindow": "30D",
+         	      "viewAttributionWindow": "none",
+                "retailerId": 123,
+                "name": "Sample Name",
                 "budget": null,
                 "monthlyPacing": null,
                 "dailyPacing": null,
                 "isAutoDailyPacing": false,
-                "startDate": null,
+                "startDate": "2026-06-01T00:00:00+00:00",
                 "endDate": null,
                 "clickAttributionScope": "sameSkuCategory",
                 "viewAttributionScope": "sameSkuCategory",
-                "companyName": null,
-                "onBehalfCompanyName": null
-            }
-        },
-        {
-            "id": "360029773808807936",
-            "type": "RetailMediaCampaignV202301",
-            "attributes": {
-                "accountId": "5",
-                "promotedBrandIds": [
-                    "82539",
-                    "105804",
-                    "113465",
-                    "117905",
-                    "120242",
-                    "125722",
-                    "126509",
-                    "135449",
-                    "190104",
-                    "2000000201",
-                    "2000002375",
-                    "2000002969"
-                ],
-                "budgetSpent": 0.00000000,
-                "budgetRemaining": 555.00000000,
-                "status": "inactive",
-                "createdAt": "2022-09-20T11:49:47+00:00",
-                "updatedAt": "2023-09-12T13:50:06+00:00",
-                "type": "auction",
-                "drawableBalanceIds": [],
-                "clickAttributionWindow": "30D",
-         	      "viewAttributionWindow": "1D",
-						  	"retailerId": "1298",
-                "name": "Spring Sales 2",
-                "budget": 555.00000000,
-                "monthlyPacing": null,
-                "dailyPacing": null,
-                "isAutoDailyPacing": false,
-                "startDate": "2022-09-20T04:00:00+00:00",
-                "endDate": "2022-09-21T03:59:59+00:00",
-                "clickAttributionScope": "sameSkuCategory",
-                "viewAttributionScope": "sameSku",
                 "companyName": null,
                 "onBehalfCompanyName": null
             }
@@ -1480,9 +1285,15 @@ catch(HTTP_Request2_Exception $e) {
 
 ***
 
-## Get a specific Campaign
+## Get a Specific Campaign
 
 This endpoint retrieves the specified campaign.
+
+<Warning>
+  As of `2026-07`, `retailerId` is included in the response attributes. Retailer budget campaigns also surface `criteoPoNumber` and `retailerPoNumber` from the mapped balance.
+
+  **Legacy version behavior (`2026-01` and earlier):** Returns `400` for retailer budget campaigns.
+</Warning>
 
 <EndpointBadge method="get">
 ```http
@@ -1492,107 +1303,43 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
 
 **Sample Request**
 
-<CodeGroup>
-
 ```bash cURL
-curl -L -X GET 'https://api.criteo.com/{version}/retail-media/campaigns/1240' \
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}' \
 -H 'Accept: application/json' \
 -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
 ```
-
-```python Python
-import http.client
-
-conn = http.client.HTTPSConnection("api.criteo.com")
-payload = ''
-headers = {
-  'Accept': 'application/json',
-  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-}
-conn.request("GET", "/{version}/retail-media/campaigns/1240", payload, headers)
-res = conn.getresponse()
-data = res.read()
-print(data.decode("utf-8"))
-```
-
-```java Java
-OkHttpClient client = new OkHttpClient().newBuilder()
-  .build();
-MediaType mediaType = MediaType.parse("text/plain");
-RequestBody body = RequestBody.create(mediaType, "");
-Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/retail-media/campaigns/1240")
-  .method("GET", body)
-  .addHeader("Accept", "application/json")
-  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-  .build();
-Response response = client.newCall(request).execute();
-```
-
-```php PHP
-<?php
-require_once 'HTTP/Request2.php';
-$request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/1240');
-$request->setMethod(HTTP_Request2::METHOD_GET);
-$request->setConfig(array(
-  'follow_redirects' => TRUE
-));
-$request->setHeader(array(
-  'Accept' => 'application/json',
-  'Authorization' => 'Bearer MY_ACCESS_TOKEN>'
-));
-try {
-  $response = $request->send();
-  if ($response->getStatus() == 200) {
-    echo $response->getBody();
-  }
-  else {
-    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-    $response->getReasonPhrase();
-  }
-}
-catch(HTTP_Request2_Exception $e) {
-  echo 'Error: ' . $e->getMessage();
-}
-```
-</CodeGroup>
 
 **Sample Response**
 
 ```json expandable
 {
     "data": {
-        "id": "544937665113018368",
-        "type": "RetailMediaCampaignV202301",
-        "attributes": {
-            "accountId": "5",
-            "promotedBrandIds": [],
-            "budgetSpent": 0.00000000,
-            "budgetRemaining": null,
-    	      "status": "inactive", 
-						"retailerId": "1298",
-            "createdAt": "2024-02-12T17:47:43+00:00",
-            "updatedAt": "2024-02-12T17:56:04+00:00",
-            "type": "auction",
-            "drawableBalanceIds": [
-                "142000305654435840"
-            ],
-            "clickAttributionWindow": "30D",
-            "viewAttributionWindow": "1D",
-            "name": "Valentine Day Sale",
-            "budget": null,
-            "monthlyPacing": 50.00000000,
-            "dailyPacing": null,
-            "isAutoDailyPacing": false,
-            "startDate": "2024-02-12T00:00:00+00:00",
-            "endDate": "2024-02-15T00:00:00+00:00",
-            "clickAttributionScope": "sameSku",
-            "viewAttributionScope": "sameSku",
-            "companyName": "ABC Test Company",
-            "onBehalfCompanyName": "ABC Test Company"
-        }
+        "id": "100000000000000001",
+    "type": "RetailMediaCampaignV202301",
+    "attributes": {
+      "accountId": "123",
+      "promotedBrandIds": [],
+      "budgetSpent": 0.0,
+      "budgetRemaining": null,
+      "status": "inactive",
+      "createdAt": "2026-05-29T20:00:47+00:00",
+      "updatedAt": "2026-05-29T20:00:47+00:00",
+      "type": "auction",
+      "drawableBalanceIds": ["100000000000000002"],
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "none",
+      "retailerId": 123,
+      "name": "Sample Name",
+      "budget": null,
+      "isAutoDailyPacing": false,
+      "startDate": "2026-06-01T00:00:00+00:00",
+      "endDate": null,
+      "clickAttributionScope": "sameSkuCategory",
+      "viewAttributionScope": "sameSkuCategory",
+      "companyName": null,
+      "onBehalfCompanyName": null
     }
+  }
 }
 ```
 
@@ -1602,6 +1349,10 @@ catch(HTTP_Request2_Exception $e) {
 
 This endpoint allows you to update a specified campaign. The following example demonstrates how to switch to an uncapped campaign budget and modify the post-view attribution window.
 
+<Warning>
+  **Legacy version behavior (`2025-10` and earlier):** Returns `400` for retailer budget campaigns.
+</Warning>
+
 <EndpointBadge method="put">
 ```http
 https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
@@ -1610,161 +1361,53 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}
 
 **Sample Request**
 
-<CodeGroup>
-
 ```bash cURL
-curl -L -X PUT 'https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368' \
+curl -L -X PUT 'https://api.criteo.com/2026-01/retail-media/campaigns/{campaignId}' \
 -H 'Content-Type: application/json' \
 -H 'Accept: application/json' \
--H 'Authorization: Bearer &lt;TOKEN&gt;' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
 -d '{
-	"data": {
-    "id": "544937665113018368",
-    "type": "UpdateCampaign",
-        "attributes": {
-            "name": "Valentine Day Sale",
-            "isAutoDailyPacing": false,
-            "startDate": "2024-02-12",
-            "endDate": "2024-02-15",
-            "type": "auction",
-            "drawableBalanceIds": [
-                "142000305654435840"
-            ],
-            "clickAttributionWindow": "30D",
-            "viewAttributionWindow": "1D",
-            "budget": null,
-            "monthlyPacing": 50,
-            "dailyPacing": 10,
-            "clickAttributionScope": "sameSku",
-            "viewAttributionScope": "sameSku",
-            "companyName": "ABC Test Company",
-            "onBehalfCompanyName": "ABC Test Company"
-        }
-	}
-}'
-```
-
-```python Python expandable
-import http.client
-import json
-
-conn = http.client.HTTPSConnection("api.criteo.com")
-payload = json.dumps({
   "data": {
-    "id": "544937665113018368",
-    "type": "UpdateCampaign",
+    "type": "Campaign",
     "attributes": {
-      "name": "Valentine Day Sale",
-      "isAutoDailyPacing": "false",
-      "startDate": "2024-02-12",
-      "endDate": "2024-02-15",
-      "type": "auction",
-      "drawableBalanceIds": [
-        "142000305654435840"
-      ],
-      "clickAttributionWindow": "30D",
-      "viewAttributionWindow": "1D",
-      "budget": None,
-      "monthlyPacing": "50",
-      "dailyPacing": "10",
-      "clickAttributionScope": "samesku",
-      "viewAttributionScope": "samesku",
-      "companyName": "ABC Test Company",
-      "onBehalfCompanyName": "ABC Test Company"
+      "name": "Updated Campaign Name",
+      "endDate": "2026-12-31T23:59:59+00:00"
     }
   }
-})
-headers = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer &lt;TOKEN&gt;'
-}
-conn.request("PUT", "/{version}/retail-media/campaigns/544937665113018368", payload, headers)
-res = conn.getresponse()
-data = res.read()
-print(data.decode("utf-8"))
+}'
 ```
-
-```java Java
-OkHttpClient client = new OkHttpClient().newBuilder()
-  .build();
-MediaType mediaType = MediaType.parse("application/json");
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"id\":\"544937665113018368\",\"type\":\"UpdateCampaign\",\"attributes\":{\"name\":\"Valentine Day Sale\",\"isAutoDailyPacing\":\"false\",\"startDate\":\"2024-02-12\",\"endDate\":\"2024-02-15\",\"type\":\"auction\",\"drawableBalanceIds\":[\"142000305654435840\"],\"clickAttributionWindow\":\"30D\",\"viewAttributionWindow\":\"1D\",\"budget\":null,\"monthlyPacing\":\"50\",\"dailyPacing\":\"10\",\"clickAttributionScope\":\"samesku\",\"viewAttributionScope\":\"samesku\",\"companyName\":\"ABC Test Company\",\"onBehalfCompanyName\":\"ABC Test Company\"}}}");
-Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368")
-  .method("PUT", body)
-  .addHeader("Content-Type", "application/json")
-  .addHeader("Accept", "application/json")
-  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
-  .build();
-Response response = client.newCall(request).execute();
-```
-
-```php PHP
-<?php
-require_once 'HTTP/Request2.php';
-$request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368');
-$request->setMethod(HTTP_Request2::METHOD_PUT);
-$request->setConfig(array(
-  'follow_redirects' => TRUE
-));
-$request->setHeader(array(
-  'Content-Type' => 'application/json',
-  'Accept' => 'application/json',
-  'Authorization' => 'Bearer&lt;TOKEN&gt;'
-));
-$request->setBody('{"data":{"id":"544937665113018368","type":"UpdateCampaign","attributes":{"name":"Valentine Day Sale","isAutoDailyPacing":"false","startDate":"2024-02-12","endDate":"2024-02-15","type":"auction","drawableBalanceIds":["142000305654435840"],"clickAttributionWindow":"30D","viewAttributionWindow":"1D","budget": null,"monthlyPacing":"50","dailyPacing":"10","clickAttributionScope":"samesku","viewAttributionScope":"samesku","companyName":"ABC Test Company","onBehalfCompanyName":"ABC Test Company"}}}');
-try {
-  $response = $request->send();
-  if ($response->getStatus() == 200) {
-    echo $response->getBody();
-  }
-  else {
-    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-    $response->getReasonPhrase();
-  }
-}
-catch(HTTP_Request2_Exception $e) {
-  echo 'Error: ' . $e->getMessage();
-}
-```
-</CodeGroup>
 
 **Sample Response**
 
 ```json expandable
 {
-    "data": {
-        "id": "544937665113018368",
-        "type": "RetailMediaCampaignV202301",
-        "attributes": {
-            "accountId": "5",
-            "promotedBrandIds": [],
-            "budgetSpent": 0.00000000,
-            "budgetRemaining": null,
-            "status": "inactive",
-            "createdAt": "2024-02-12T17:47:43+00:00",
-            "updatedAt": "2024-02-12T17:56:04+00:00",
-            "type": "auction",
-            "drawableBalanceIds": [
-                "142000305654435840"
-            ],
-            "clickAttributionWindow": "30D",
-            "viewAttributionWindow": "1D",
-            "name": "Valentine Day Sale",
-            "budget": null,
-            "monthlyPacing": 50.00000000,
-            "dailyPacing": null,
-            "isAutoDailyPacing": false,
-            "startDate": "2024-02-12T00:00:00+00:00",
-            "endDate": "2024-02-15T00:00:00+00:00",
-            "clickAttributionScope": "sameSku",
-            "viewAttributionScope": "sameSku",
-            "companyName": "ABC Test Company",
-            "onBehalfCompanyName": "ABC Test Company"
-        }
+  "data": {
+    "id": "100000000000000001",
+    "type": "RetailMediaCampaignV202301",
+    "attributes": {
+      "accountId": "123",
+      "promotedBrandIds": [],
+      "budgetSpent": 0.0,
+      "budgetRemaining": null,
+      "status": "inactive",
+      "createdAt": "2026-05-29T20:00:47+00:00",
+      "updatedAt": "2026-05-29T20:00:47+00:00",
+      "type": "auction",
+      "drawableBalanceIds": ["100000000000000002"],
+      "clickAttributionWindow": "30D",
+      "viewAttributionWindow": "none",
+      "retailerId": 123,
+      "name": "Sample Name",
+      "budget": null,
+      "isAutoDailyPacing": false,
+      "startDate": "2026-06-01T00:00:00+00:00",
+      "endDate": null,
+      "clickAttributionScope": "sameSkuCategory",
+      "viewAttributionScope": "sameSkuCategory",
+      "companyName": null,
+      "onBehalfCompanyName": null
     }
+  }
 }
 ```
 
@@ -1772,164 +1415,26 @@ catch(HTTP_Request2_Exception $e) {
 
 ## Responses
 
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Response
-    </p>
-   </th>
-   <th>
-    <p>
-     Title
-    </p>
-   </th>
-   <th>
-    <p>
-     Description
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     🟢
-     <code>
-      200
-     </code>
-    </p>
-   </td>
-   <td>
-   </td>
-   <td>
-    <p>
-     Call completed with success
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     🟢
-     <code>
-      201
-     </code>
-    </p>
-   </td>
-   <td>
-   </td>
-   <td>
-    <p>
-     Campaign was created successfully
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     🔴
-     <code>
-      400
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     <b>
-      Invalid
-      <code>
-       isAutoDailyPacing
-      </code>
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     Cannot turn on
-     <code>
-      IsAutoDailyPacing
-     </code>
-     and add a
-     <code>
-      DailyPacing
-     </code>
-     value.
-     <code>
-      IsAutoDailyPacing
-     </code>
-     and
-     <code>
-      Daily Pacing
-     </code>
-     cannot be active at the same time.
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     🔴
-     <code>
-      400
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     <b>
-      Invalid budget
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     Budget is not allowed for the Preferred campaign.
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     🔴
-     <code>
-      400
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     <code>
-      RetailerMismatchWithBalance
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     Campaign
-     <code>
-      retailerId
-     </code>
-     does not match the balance
-     <code>
-      retailerId
-     </code>
-     . Ensure the
-     <code>
-      retailerId
-     </code>
-     in campaign settings matches the
-     <code>
-      retailerId
-     </code>
-     on the balance you are associating.
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
+<Info>
+  All validation errors on **campaign create** use `code: "validation-error"`.
+
+  The error type is identified by a bracketed prefix in the `title` field.
+</Info>
+
+| Status | Title | Description |
+| :----- | :---- | :---------- |
+| 🟢 `200` | | Call completed with success |
+| 🟢 `201` | | Campaign was created successfully |
+| 🔴 `400` | `[retailer-id-mismatch]` | The `retailerId` on the campaign doesn't match the `retailerId` on one of the balances in `drawableBalanceIds`. Also returned when balances from multiple retailers are included. |
+| 🔴 `400` | `[balance-type-mismatch]` | Billing type mismatch — e.g. retailer budget campaign with a Criteo budget balance. |
+| 🔴 `400` | `[account-mismatch]` | The balance in `drawableBalanceIds` belongs to a different demand account than the campaign being created. |
+| 🔴 `403` | `authorization-unknown` | The `retailerId` in the request is not recognized as an authorized retailer for this account. Use `GET /retailers/search` to discover eligible retailers first. |
+| 🔴 `400` | Invalid `isAutoDailyPacing` | Cannot turn on `IsAutoDailyPacing` and add a `DailyPacing` value. `IsAutoDailyPacing` and `Daily Pacing` cannot be active at the same time. |
+| 🔴 `400` | Invalid `Budget` | Budget is not allowed for the Preferred campaign. |
+| 🔴 `400` | `RetailerMismatchWithBalance` | Campaign `retailerId` does not match the balance `retailerId`. Ensure the `retailerId` in campaign settings matches the `retailerId` on the balance you are associating. |
+| 🔴 `400` | `BillingTypeMismatchWithBalance` | The billing type on the campaign doesn't match the billing type on the balance. |
+| 🔴 `400` | `AccountMismatchWithBalance` | The balance in `drawableBalanceIds` does not belong to the request account. |
+| 🔴 `400` | `RetailerMismatchWithCampaign` | The line item `targetRetailerId` does not match the campaign's `retailerId`. |
 
 ***
 

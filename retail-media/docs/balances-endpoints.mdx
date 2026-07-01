@@ -19,9 +19,9 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
   **Backward compatibility for balance endpoints:**
 
   * The `poNumber` field on balance responses is **removed** in `2026-01` and replaced by two separate fields: `retailerPoNumber` and `criteoPoNumber`. This is a breaking change for consumers of `GET /balances` on prior versions who rely on `poNumber`.
-  * All other new fields (`retailerId`, `privateMarketBillingType`) are additive. Retailer-billed balances are hidden by default on prior API versions.
+  * All other new fields (`retailerId`, `privateMarketBillingType`) are additive. Retailer budgets are hidden by default on prior API versions.
 
-  You can learn more about Retailer Billed [on this page](/retail-media/docs/retailer-billed).
+  You can learn more about retailer budgets [on this page](/retail-media/docs/retailer-budgets).
 </Warning>
 
 ***
@@ -550,6 +550,10 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       ended
      </code>
+     ,
+     <code>
+      unknown
+     </code>
     </p>
     <p>
      Writeable? N / Nullable? N
@@ -681,6 +685,10 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       uncapped
      </code>
+     ,
+     <code>
+      unknown
+     </code>
     </p>
     <p>
      Writeable? N / Nullable? N
@@ -711,6 +719,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       spendType
      </code>
+     <span>*</span>
     </p>
    </td>
    <td>
@@ -827,7 +836,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
    <td>
     <p>
      <code>
-      RetailerId
+      retailerId
      </code>
     </p>
    </td>
@@ -843,10 +852,10 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      Retailer this balance is scoped to.
     </p>
     <p>
-     Present only on retailer-billed balances.
+     Present only on retailer budgets.
     </p>
     <p>
-     Nullable? Y (null for non-retailer-billed)
+     Nullable? Y (null for balances without retailer budgets)
     </p>
    </td>
   </tr>
@@ -1070,7 +1079,7 @@ _*Required for Balance creation_
      Definition of the type of change in a balance
     </p>
     <p>
-     Accepted values:
+     Accepted values: <code>BalanceCreated</code>, <code>BalanceCapped</code>, <code>BalanceUncapped</code>, <code>EndDate</code>, <code>StartDate</code>, <code>RetailerPoNumber</code>, <code>ValueAdd</code>
     </p>
     <ul>
      <li>
@@ -1078,18 +1087,6 @@ _*Required for Balance creation_
        BalanceCreated
       </code>
       : new balance is created
-     </li>
-     <li>
-      <code>
-       BalanceAdded
-      </code>
-      : capped balance amount was increased by a certain amount
-     </li>
-     <li>
-      <code>
-       BalanceRemoved
-      </code>
-      : capped balance is decreased by a certain amount
      </li>
      <li>
       <code>
@@ -1114,30 +1111,6 @@ _*Required for Balance creation_
        EndDate
       </code>
       : end date is modified
-     </li>
-     <li>
-      <code>
-       BalanceName
-      </code>
-      : balance name is modified
-     </li>
-     <li>
-      <code>
-       PoNumber
-      </code>
-      : PO Number is modified
-     </li>
-     <li>
-      <code>
-       ValueAdd
-      </code>
-      : new additional amount is added to the balance
-     </li>
-     <li>
-      <code>
-       SalesforceId
-      </code>
-      : SalesForceID (internal Criteo ID) is modified by Criteo (this would appear for Criteo billed balances)
      </li>
     </ul>
    </td>
@@ -1204,8 +1177,10 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
 </EndpointBadge>
 
 <Warning>
-  On API version `2026-01` and later, retailer-billed balances are included and `retailerId`, `retailerPoNumber`, and `criteoPoNumber` are returned. The old `poNumber` field is removed.  
-  Learn more on Retailer Billed [here](/retail-media/docs/retailer-billed).
+  On API version `2026-07` and later, retailer budgets are included and `retailerId`, `retailerPoNumber`, and `criteoPoNumber` are returned. The old `poNumber` field is removed.  
+  Learn more on retailer budgets [here](/retail-media/docs/retailer-billed).
+
+  **Legacy version behavior (`2026-01` and earlier):** Only standard Criteo budget balances are returned. `retailerId`, `retailerPoNumber`, and `criteoPoNumber` are not present in the response. The legacy `poNumber` field is present.
 </Warning>
 
 **Sample Request**
@@ -1283,7 +1258,7 @@ catch(HTTP_Request2_Exception $e) {
 ```
 </CodeGroup>
 
-**Sample Response - Versions prior to `2026.01`**
+**Sample Response - Versions prior to `2026.07`**
 
 <CodeGroup>
 
@@ -1345,53 +1320,59 @@ catch(HTTP_Request2_Exception $e) {
 ```
 </CodeGroup>
 
-**Sample response - Versions `2026.01`onward**
+**Sample response - Versions `2026.07`onward**
 
 ```json expandable
 {
-  "meta": { "count": 2, "offset": 0, "limit": 25 },
+  "metadata": {
+    "totalItemsAcrossAllPages": 135,
+    "currentPageSize": 25,
+    "currentPageIndex": 0,
+    "totalPages": 6
+  },
   "data": [
     {
-      "id": "814283465675018240",
-      "type": "Balance",
+      "id": "100000000000000001",
+      "type": "BalanceV1",
       "attributes": {
-        "name": "Retailer Billed Q2 Budget",
-        "retailerId": "1298",
-        "retailerPoNumber": "A-5678",
-        "criteoPoNumber": null,
-        "memo": "Q2 retailer-billed campaign",
-        "deposited": 2000.00,
-        "spent": 0.00,
-        "remaining": 2000.00,
-        "startDate": "2026-07-01",
-        "endDate": "2026-12-31",
-        "status": "active",
+        "name": "Sample Name",
+        "retailerPoNumber": null,
+        "criteoPoNumber": "PO-CRITEO-123",
+        "retailerId": null,
+        "memo": "Sample memo",
+        "deposited": 10.0,
+        "spent": 10.0,
+        "remaining": 0.0,
+        "startDate": "2020-04-13",
+        "endDate": null,
+        "status": "ended",
+        "createdAt": "2020-04-13T15:39:48+00:00",
+        "updatedAt": "2023-06-13T13:35:53+00:00",
         "balanceType": "capped",
-        "spendType": "Onsite",
-        "privateMarketBillingType": "billByRetailer",
-        "createdAt": "2026-02-24T23:51:46+00:00",
-        "updatedAt": "2026-02-24T23:51:48+00:00"
+        "spendType": "onsite",
+        "privateMarketBillingType": "notApplicable"
       }
     },
     {
-      "id": "814313002113232896",
-      "type": "Balance",
+      "id": "100000000000000002",
+      "type": "BalanceV1",
       "attributes": {
-        "name": "Standard Advertiser Balance",
-        "retailerId": null,
-        "retailerPoNumber": null,
-        "criteoPoNumber": "A-1234",
-        "deposited": 2000.00,
-        "spent": 0.00,
-        "remaining": 2000.00,
-        "startDate": "2026-07-01",
-        "endDate": "2026-12-31",
+        "name": "Sample Name",
+        "retailerPoNumber": "PO-RETAILER-123",
+        "criteoPoNumber": "PO-CRITEO-123",
+        "retailerId": 123,
+        "memo": "Sample memo",
+        "deposited": 100.0,
+        "spent": 0.16,
+        "remaining": 99.84,
+        "startDate": "2026-03-24",
+        "endDate": null,
         "status": "active",
+        "createdAt": "2026-03-24T18:15:58+00:00",
+        "updatedAt": "2026-05-20T17:17:40+00:00",
         "balanceType": "capped",
         "spendType": "Onsite",
-        "privateMarketBillingType": "billByCriteo",
-        "createdAt": "2026-02-25T01:49:08+00:00",
-        "updatedAt": "2026-02-25T01:49:10+00:00"
+        "privateMarketBillingType": "notApplicable"
       }
     }
   ],
@@ -1405,6 +1386,12 @@ catch(HTTP_Request2_Exception $e) {
 ## Get Specific Balance
 
 Retrieves the balance details of one specific balances belonging to an account.
+
+<Warning>
+  Returns a single balance including the retailer scoping fields. The `poNumber` field present on prior API versions will be removed in `2026-07`.
+
+  **Legacy version behavior (`2026-01` and earlier):** Returns `400` with `"This version endpoint doesn't support retailer-sold balance. Use latest version instead."` when the requested balance is a retailer budget balance.
+</Warning>
 
 <EndpointBadge method="get">
 ```http
@@ -1424,28 +1411,30 @@ curl -L 'https://api.criteo.com/{version}/retail-media/accounts/1844674407370955
 
 ```json
 {
-    "data": {
-        "id": "4237496305219757554",
-        "type": "BalanceResponseV2",
-        "attributes": {
-            "name": "Balance 789",
-            "poNumber": "",
-            "memo": "10k for the special 2s-day promotion",
-            "deposited": 10000.0,
-            "spent": 923.4,
-            "remaining": 9076.6,
-            "startDate": "2025-02-01",
-            "endDate": null,
-            "status": "scheduled",
-            "createdAt": "2025-01-06T00:48:11+00:00",
-            "updatedAt": "2025-01-07T22:19:57+00:00",
-            "balanceType": "capped",
-            "spendType": "Onsite",
-            "privateMarketBillingType": "notApplicable"
-        }
-    },
-    "warnings": [],
-    "errors": []
+  "data": {
+    "id": "100000000000000001",
+    "type": "BalanceV1",
+    "attributes": {
+      "name": "Sample Name",
+      "retailerPoNumber": null,
+      "criteoPoNumber": "PO-CRITEO-123",
+      "retailerId": 123,
+      "memo": "Sample memo",
+      "deposited": 100.0,
+      "spent": 0.16,
+      "remaining": 99.84,
+      "startDate": "2026-03-24",
+      "endDate": null,
+      "status": "active",
+      "createdAt": "2026-03-24T18:15:58+00:00",
+      "updatedAt": "2026-05-20T17:17:40+00:00",
+      "balanceType": "capped",
+      "spendType": "onsite",
+      "privateMarketBillingType": "notApplicable"
+    }
+  },
+  "warnings": [],
+  "errors": []
 }
 ```
 
@@ -1601,9 +1590,11 @@ catch(HTTP_Request2_Exception $e) {
 
 This endpoint modifies the metadata of a specified balance, like `name`, `poNumber`, `startDate` or `endDate`. To modify deposited funds, check the following endpoint.
 
-<Info>
-  Only Balances created through the API can be modified through this endpoint, ie, with billing type `billByRetailer`
-</Info>
+<Warning>
+  Only Balances created through the API can be modified through this endpoint, i.e., with billing type `billByRetailer`.  
+  Retailer budget balances are **read-only via API**. Any `PATCH` request against a retailer budget balance returns `403` regardless of API version.  
+  Balance attributes (dates, PO numbers, amounts) are managed by Criteo on behalf of the retailer.
+</Warning>
 
 <EndpointBadge method="patch">
 ```http
@@ -1846,7 +1837,6 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
      <code>
       memo
      </code>
-     <span>*</span>
     </p>
    </td>
    <td>
@@ -2175,6 +2165,16 @@ catch(HTTP_Request2_Exception $e) {
 
 This endpoint adds one or more campaigns to the specified balance. The results are provided in a single page. In this example, a campaign had already existed on the balance before two new additions.
 
+<Warning>
+  The API enforces compatibility between the campaigns and the balance — all must share the same billing type, retailer (for retailer budget), and demand account. If any campaign in the request fails validation, **the entire request is rejected** and no campaigns are mapped.
+
+  **Validation rules:**
+
+  * All campaigns must be retailer budget campaigns when the balance is a retailer budget balance (and vice versa) — otherwise `BillingTypeMismatchWithBalance`
+  * The `retailerId` on every campaign must match the balance's `retailerId` — otherwise `RetailerMismatchWithBalance`
+  * All campaigns must belong to the same demand account as the balance — otherwise `403`
+</Warning>
+
 <EndpointBadge method="post">
 ```http
 https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/append
@@ -2239,134 +2239,33 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/app
 
 **Sample Request**
 
-<CodeGroup>
-
-```bash cURL
-curl -X POST "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/append" \
-    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-    -H "Content-Type: application/json" \
-    -d '{
-            "data": [
-                {
-                    "id": "3683145960016759663",
-                    "type": "RetailMediaCampaign"
-                },
-                {
-                    "id": "16108177282234788969",
-                    "type": "RetailMediaCampaign"
-                }
-            ]
-        }'
-```
-
-```python Python
-import requests
-import json
-
-url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/append"
-
-payload = json.dumps({
-  "data": [
-    {
-      "id": "3683145960016759663",
-      "type": "RetailMediaCampaign"
-    },
-    {
-      "id": "16108177282234788969",
-      "type": "RetailMediaCampaign"
+```bash
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/balances/{balanceId}/campaigns/append' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "AppendCampaignsRequest",
+    "attributes": {
+      "ids": ["100000000000000001", "100000000000000002"]
     }
-  ]
-})
-headers = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-}
-
-response = requests.request("POST", url, headers=headers, data=payload)
-
-print(response.text)
-```
-
-```java Java
-OkHttpClient client = new OkHttpClient().newBuilder()
-  .build();
-
-MediaType mediaType = MediaType.parse("application/json");
-
-RequestBody body = RequestBody.create(mediaType, "{\"data\":[{\"id\":\"3683145960016759663\",\"type\":\"RetailMediaCampaign\"},{\"id\":\"16108177282234788969\",\"type\":\"RetailMediaCampaign\"}]\n}");
-
-Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/append")
-  .method("POST", body)
-  .addHeader("Content-Type", "application/json")
-  .addHeader("Accept", "application/json")
-  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-  .build();
-
-Response response = client.newCall(request).execute();
-```
-
-```php PHP
-<?php
-require_once 'HTTP/Request2.php';
-$request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/append');
-$request->setMethod(HTTP_Request2::METHOD_POST);
-$request->setConfig(array(
-  'follow_redirects' => TRUE
-));
-
-$request->setHeader(array(
-  'Content-Type' => 'application/json',
-  'Accept' => 'application/json',
-  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-));
-
-$request->setBody('{"data":[{"id":"3683145960016759663","type":"RetailMediaCampaign"},{"id":"16108177282234788969","type":"RetailMediaCampaign"}]}');
-try {
-  $response = $request->send();
-  if ($response->getStatus() == 200) {
-    echo $response->getBody();
   }
-  
-  else {
-    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-    $response->getReasonPhrase();
-  }
-}
-catch(HTTP_Request2_Exception $e) {
-  echo 'Error: ' . $e->getMessage();
-}
+}'
 ```
-</CodeGroup>
 
 **Sample Response**
 
 ```json
 {
-    "data": [
-        {
-            "id": "8343086999167541140",
-            "type": "RetailMediaCampaign"
-        },
-        {
-            "id": "3683145960016759663",
-            "type": "RetailMediaCampaign"
-        },
-        {
-            "id": "16108177282234788969",
-            "type": "RetailMediaCampaign"
-        }
-    ],
-    "metadata": {
-        "totalItemsAcrossAllPages": 3,
-        "currentPageSize": 3,
-        "currentPageIndex": 0,
-        "totalPages": 1,
-        "nextPage": null,
-        "previousPage": null
+  "data": {
+    "type": "BalanceCampaignsV1",
+    "attributes": {
+      "ids": ["100000000000000001", "100000000000000002"]
     }
+  },
+  "warnings": [],
+  "errors": []
 }
 ```
 
@@ -2374,12 +2273,12 @@ catch(HTTP_Request2_Exception $e) {
 
 ## Remove Campaigns from a Specific Balance
 
-This endpoint removes one or more campaigns from the specified balance. The resulting state of the balance is returned as a single page.
+This endpoint removes one or more campaigns from the specified balance.
+
+The response contains the remaining mapped campaign IDs after removal.
 
 <Warning>
-  **Retailer-billed balances**
-
-  Attempting to remove a retailer-billed balance will return a `RetailerBilledBalanceImmutable` error. Learn more [here](/retail-media/docs/retailer-billed).
+  Legacy versions (`2025-10` and earlier) will return an error `500`.
 </Warning>
 
 <EndpointBadge method="post">
@@ -2446,124 +2345,33 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
 
 **Sample Request**
 
-<CodeGroup>
-
-```bash cURL
-curl -X POST "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/delete" \
-    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-    -H "Content-Type: application/json" \
-    -d '{
-            "data": [
-                {
-                    "id": "16108177282234788969",
-                    "type": "RetailMediaCampaign"
-                }
-            ]
-        }'
-```
-
-```python Python
-import requests
-import json
-
-
-url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/delete"
-
-payload = json.dumps({
-  "data": [
-    {
-      "id": "16108177282234788969",
-      "type": "RetailMediaCampaign"
+```bash
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/balances/{balanceId}/campaigns/delete' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "DeleteCampaignsRequest",
+    "attributes": {
+      "ids": ["100000000000000001"]
     }
-  ]
-})
-headers = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
-}
-
-response = requests.request("POST", url, headers=headers, data=payload)
-
-print(response.text)
-```
-
-```java Java
-OkHttpClient client = new OkHttpClient().newBuilder()
-  .build();
-
-MediaType mediaType = MediaType.parse("application/json");
-
-RequestBody body = RequestBody.create(mediaType, "{\"data\":[{\"id\":\"16108177282234788969\",\"type\":\"RetailMediaCampaign\"}]}");
-
-Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/delete")
-  .method("POST", body)
-  .addHeader("Content-Type", "application/json")
-  .addHeader("Accept", "application/json")
-  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-  .build();
-
-Response response = client.newCall(request).execute();
-```
-
-```php PHP expandable
-<?php
-require_once 'HTTP/Request2.php';
-$request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns/delete');
-$request->setMethod(HTTP_Request2::METHOD_POST);
-$request->setConfig(array(
-  'follow_redirects' => TRUE
-));
-
-$request->setHeader(array(
-  'Content-Type' => 'application/json',
-  'Accept' => 'application/json',
-  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
-));
-
-$request->setBody('{"data":[{"id":"16108177282234788969","type":"RetailMediaCampaign"}]}');
-try {
-  $response = $request->send();
-  if ($response->getStatus() == 200) {
-    echo $response->getBody();
   }
-  
-  else {
-    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
-    $response->getReasonPhrase();
-  }
-}
-
-catch(HTTP_Request2_Exception $e) {
-  echo 'Error: ' . $e->getMessage();
-}
+}'
 ```
-</CodeGroup>
 
 **Sample Response**
 
 ```json
 {
-    "data": [
-        {
-            "id": "8343086999167541140",
-            "type": "RetailMediaCampaign"
-        },
-        {
-            "id": "3683145960016759663",
-            "type": "RetailMediaCampaign"
-        }
-    ],
-    "metadata": {
-        "totalItemsAcrossAllPages": 2,
-        "currentPageSize": 2,
-        "currentPageIndex": 0,
-        "totalPages": 1,
-        "nextPage": null,
-        "previousPage": null
+  "data": {
+    "type": "BalanceCampaignsV1",
+    "attributes": {
+      "ids": ["100000000000000002"]
     }
+  },
+  "warnings": [],
+  "errors": []
 }
 ```
 
@@ -2577,6 +2385,22 @@ Results are paginated using `offset` and `limit` query parameters; if omitted, d
 
 Additional query parameter `limitToChangeTypes` can be used to inform a comma-separated list of `changeType` values.
 
+<Warning>
+  **Retailer Budgets**
+
+  Returns a chronological list of changes to a balance. PO number updates appear as separate entries keyed by `changeType` — not as field keys on every entry.
+
+  **Observed `changeType` values:** `BalanceCreated`, `BalanceCapped`, `BalanceUncapped`, `EndDate`, `StartDate`, `CriteoPoNumber`, `RetailerPoNumber`, `ValueAdd`
+
+  Each entry's `changeDetails` carries:
+
+  * `previousValue` — value before the change
+  * `currentValue` — value after the change
+  * `changeValue` — delta where applicable (e.g. `ValueAdd`); `null` otherwise
+
+  **Legacy version behavior (`2026-01` and earlier):** Returns `400` with `”This version endpoint doesn't support retailer-sold balance. Use latest version instead.”` when the requested balance is a retailer budget balance.
+</Warning>
+
 <Info>
   **Modified Users**
 
@@ -2585,7 +2409,7 @@ Additional query parameter `limitToChangeTypes` can be used to inform a comma-se
   If a balance is updated through the Criteo API, the name of the API application responsible for the change will be shown. For example, on 2024-03-20, the balance was updated by the API application **Retail Media API Application.**
 </Info>
 
-<EndpointBadge method="get">
+<EndpointBadge method=”get”>
 ```http
 https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history
 ```
@@ -2594,121 +2418,66 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history
 **Sample Request**: retrieve all changes
 
 ```bash
-curl -L 'https://api.criteo.com/{version}/retail-media/balances/697385288434028544/history?offset=0&limit=25' \
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history' \
 -H 'Accept: application/json' \
--H 'Authorization: Bearer &lt;TOKEN&gt;'
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
 ```
 
 **Sample Response**: retrieve all changes
 
-```json expandable
+```json
 {
-    "meta": {
-        "count": 5,
-        "offset": 0,
-        "limit": 25
+  “metadata”: {
+    “count”: 4,
+    “offset”: 0,
+    “limit”: 25
+  },
+  “data”: [
+    {
+      “type”: “BalanceHistoryChangeDataCaptureV1”,
+      “attributes”: {
+        “changeType”: “BalanceCreated”,
+        “changeDetails”: {
+          “previousValue”: null,
+          “currentValue”: “100.00”,
+          “changeValue”: null
+        },
+        “dateOfModification”: “2026-03-24T14:15:58-04:00”,
+        “modifiedByUser”: “User123”,
+        “memo”: null
+      }
     },
-    "data": [
-        {
-            "dateOfModification": "2025-02-15T12:24:49-04:00",
-            "modifiedByUser": "Retail Media API Application",
-            "changeType": "BalanceCreated",
-            "changeDetails": {
-                "previousValue": null,
-                "currentValue": "12500.00000000",
-                "changeValue": null
-            },
-            "memo": "Balance for campaigns in 2025 Q1"
+    {
+      “type”: “BalanceHistoryChangeDataCaptureV1”,
+      “attributes”: {
+        “changeType”: “CriteoPoNumber”,
+        “changeDetails”: {
+          “previousValue”: null,
+          “currentValue”: “PO-CRITEO-123”,
+          “changeValue”: null
         },
-        {
-            "dateOfModification": "2025-02-15T12:25:40-04:00",
-            "modifiedByUser": "Retail Media API Application",
-            "changeType": "EndDate",
-            "changeDetails": {
-                "previousValue": null,
-                "currentValue": "2025-04-01T23:59:59-04:00",
-                "changeValue": null
-            },
-            "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
-        },
-        {
-            "dateOfModification": "2025-02-15T12:25:40-04:00",
-            "modifiedByUser": "Retail Media API Application",
-            "changeType": "PoNumber",
-            "changeDetails": {
-                "previousValue": null,
-                "currentValue": "PO 12345",
-                "changeValue": null
-            },
-            "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
-        },
-        {
-            "dateOfModification": "2025-02-15T12:26:16-04:00",
-            "modifiedByUser": "Retail Media API Application",
-            "changeType": "BalanceRemoved",
-            "changeDetails": {
-                "previousValue": "12500.00000000",
-                "currentValue": "10000.00000000",
-                "changeValue": "-2500.00000000"
-            },
-            "memo": "Reduced balance for campaigns in 2025 Q1"
-        },
-        {
-            "dateOfModification": "2025-02-15T12:26:16-04:00",
-            "modifiedByUser": "Retail Media API Application",
-            "changeType": "PoNumber",
-            "changeDetails": {
-                "previousValue": "PO 12345",
-                "currentValue": "PO 12346",
-                "changeValue": null
-            },
-            "memo": "Reduced balance for campaigns in 2025 Q1"
-        }
-    ]
-}
-```
-
-**Sample Request**: retrieve only changes in balance values (added / removed)
-
-```bash
-curl -L 'https://api.criteo.com/{version}/retail-media/balances/697385288434028544/history?offset=0&limit=25&limitToChangeTypes=BalanceAdded,BalanceRemoved' \
--H 'Accept: application/json' \
--H 'Authorization: Bearer &lt;TOKEN&gt;'
-```
-
-**Sample Response**: retrieve only changes in balance values (added / removed)
-
-```json expandable
-{
-    "meta": {
-        "count": 2,
-        "offset": 0,
-        "limit": 25
+        “dateOfModification”: “2026-03-24T14:16:28-04:00”,
+        “modifiedByUser”: “User123”,
+        “memo”: null
+      }
     },
-    "data": [
-        {
-            "dateOfModification": "2024-02-15T12:10:11.2807153-04:00",
-            "modifiedByUser": "Retail Media API Application",
-            "changeType": "BalanceRemoved",
-            "changeDetails": {
-                "previousValue": "12500.00000000",
-                "currentValue": "10000.00000000",
-                "changeValue": "-2500.00000000"
-            },
-            "memo": "Reduced balance for campaigns in 2025 Q1"
+    {
+      “type”: “BalanceHistoryChangeDataCaptureV1”,
+      “attributes”: {
+        “changeType”: “RetailerPoNumber”,
+        “changeDetails”: {
+          “previousValue”: null,
+          “currentValue”: “PO-RETAILER-123”,
+          “changeValue”: null
         },
-        {
-            "dateOfModification": "2024-03-03T16:30:21.2807153-04:00",
-            "modifiedByUser": "Retail Media API Application",
-            "changeType": "BalanceAdded",
-            "changeDetails": {
-                "previousValue": "10000.00000000",
-                "currentValue": "15000.00000000",
-                "changeValue": "5000.00000000"
-            },
-            "memo": "Increased balance for campaigns in 2025 Q1"
-        }
-    ]
+        “dateOfModification”: “2026-03-24T14:16:45-04:00”,
+        “modifiedByUser”: “User123”,
+        “memo”: null
+      }
+    }
+  ],
+  “warnings”: [],
+  “errors”: []
 }
 ```
 
@@ -2980,33 +2749,6 @@ curl -L 'https://api.criteo.com/{version}/retail-media/balances/6973852884340285
     <p>
      🔴
      <code>
-      400
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     <code>
-      RetailerBilledBalanceImmutable
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     Cannot remove a retailer-billed balance from a campaign.
-    </p>
-   </td>
-   <td>
-    <p>
-     Retailer-billed balances cannot be removed via the API.
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     🔴
-     <code>
       403
      </code>
     </p>
@@ -3050,6 +2792,33 @@ curl -L 'https://api.criteo.com/{version}/retail-media/balances/6973852884340285
   </tr>
  </tbody>
 </table>
+
+### Balance Append Endpoint Errors
+
+<Warning>
+  The "append" endpoint uses a different error code from campaign create: `code: "campaigns-balance-mapping-validation-error"`, `title: "Validation error"`.
+
+  The specific mismatch type is identified by a bracketed prefix in the `detail` field.
+</Warning>
+
+| Status | `code` | `detail` prefix | Description |
+| :----- | :----- | :-------------- | :---------- |
+| 🔴`400` | `campaigns-balance-mapping-validation-error` | `[retailer-id-mismatch]` | The `retailerId` on one or more campaigns in `ids` doesn't match the balance's `retailerId`. Entire request rejected — no campaigns are mapped. |
+| 🔴`400` | `campaigns-balance-mapping-validation-error` | `[balance-type-mismatch]` | Billing type mismatch — e.g. retailer budget campaign appended to a Criteo budget balance, or vice versa. Entire request rejected. |
+| 🔴`403` | — | — | Campaigns in `ids` belong to a different demand account than the balance. |
+
+### Balance Modify Endpoint Error
+
+| Status | Body | Meaning |
+| :----- | :--- | :------ |
+| 🔴`403` | RFC 9110 HTTP Forbidden (no custom error body) | Retailer budget balances are read-only via API. `PATCH` is always rejected regardless of API version. |
+
+### Legacy Version Access
+
+| Status | `code` | `title` | When |
+| :----- | :----- | :------ | :--- |
+| 🔴`400` | `validation-error` | `"This version endpoint doesn't support retailer-sold balance. Use latest version instead."` | Accessing a retailer budget balance or its history via the account-scoped path on `2025-10` or earlier. |
+| 🔴`500` | (empty body) | — | `POST /balances/{balanceId}/campaigns/delete` on `2025-10` or earlier. |
 
 ***
 
