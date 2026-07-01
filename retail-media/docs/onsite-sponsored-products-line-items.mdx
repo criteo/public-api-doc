@@ -250,7 +250,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
    </td>
    <td>
     <p>
-     Retailer ID where the line item will serve ads on. For retailer-billed campaigns, must match the campaign's
+     Retailer ID where the line item will serve ads on. For retailer-budgets campaigns, must match the campaign's
      <code>
       retailerId
      </code>
@@ -554,7 +554,6 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       isAutoDailyPacing
      </code>
-     <span>*</span>
     </p>
    </td>
    <td>
@@ -643,6 +642,12 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      </code>
     </p>
     <p>
+     Default:
+     <code>
+      manual
+     </code>
+    </p>
+    <p>
      Writeable? Y / Nullable? N
     </p>
    </td>
@@ -695,12 +700,11 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       targetBid
      </code>
-     <span>*</span>
     </p>
    </td>
    <td>
     <p>
-     decimal
+     bidStrategy decimal
     </p>
    </td>
    <td>
@@ -751,7 +755,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      </code>
     </p>
     <p>
-     Writeable? Y / Nullable? N
+     Writeable? Y / Nullable? Y
     </p>
    </td>
   </tr>
@@ -1092,43 +1096,43 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
     <p>
      Accepted values:
      <code>
-      Sunday
+      sunday
      </code>
      ,
      <code>
-      Monday
+      monday
      </code>
      ,
      <code>
-      Tuesday
+      tuesday
      </code>
      ,
      <code>
-      Wednesday
+      wednesday
      </code>
      ,
      <code>
-      Thursday
+      thursday
      </code>
      ,
      <code>
-      Friday
+      friday
      </code>
      ,
      <code>
-      Saturday
+      saturday
      </code>
      ,
      <code>
-      Everyday
+      everyday
      </code>
      ,
      <code>
-      Weekdays
+      weekdays
      </code>
      ,
      <code>
-      Weekends
+      weekends
      </code>
     </p>
     <p>
@@ -1418,7 +1422,7 @@ try {
         "budget": null,
         "monthlyPacing": 744,
         "dailyPacing": 24.88888889,
-        "bidStrategy": "revenue",
+        "bidStrategy": "automated",
         "targetRetailerId": "1084",
         "status": "active",
         "targetBid": 0.6,
@@ -1444,9 +1448,13 @@ try {
 This endpoint creates a new Onsite Sponsored Products line item in the specified campaign.
 
 <Warning>
-  **Retailer-billed campaigns**
-  For retailer-billed campaigns, `targetRetailerId` must match the campaign's `retailerId`. Mismatched values will return a `RetailerMismatchWithCampaign` error.   
-  Learn more about Retailer Billed [here](/retail-media/docs/retailer-billed).
+  **Retailer Budgets Campaigns**
+
+  For retailer-budget campaigns, `targetRetailerId` must match the campaign's `retailerId`. Mismatched values will return a `RetailerMismatchWithCampaign` error.
+
+  Learn more about Retailer Budgets [here](/retail-media/docs/retailer-budgets).
+
+  **Note:** `bidStrategy: "automated"` requires `maxBid` to be set.
 </Warning>
 
 <EndpointBadge method="post">
@@ -1457,253 +1465,78 @@ https://api.criteo.com/{version}/retail-media/campaigns/{campaignId}/auction-lin
 
 **Sample Request**
 
-<CodeGroup>
-
-```bash cURL expandable
-curl -L -X POST "https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items" \
-    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
-    -H "Content-Type: application/json" \
-    -H "Accept: application/json" \
-    -d '{
-            "data": {
-                "attributes": {
-                    "name": "Product ABC Sponsored Weekend Conversions",
-                    "targetRetailerId": "12345",
-                    "status": "draft",
-                    "startDate": "2025-09-01T00:00:00-04:00",
-                    "endDate": "2025-12-31T23:59:59-04:00",
-                    "budget": 1000.0,
-                    "monthlyPacing": null,
-                    "isAutoDailyPacing": false,
-                    "targetBid": null,
-                    "maxBid": 5,
-                    "bidStrategy": "automated",
-                    "optimizationStrategy": "conversion",
-                    "flightSchedule": {
-                        "legs": [
-                            {
-                                "dayOfWeek": "Weekends",
-                                "startTime": "00:00",
-                                "endTime": "23:59"
-                            }
-                        ]
-                    },
-                    "keywordStrategy": "genericBrandedAndConquesting"
-                }
-            }
-        }'
-```
-
-```python Python expandable
-import http.client
-import json
-
-conn = http.client.HTTPSConnection("api.criteo.com")
-payload = json.dumps({
-    "data": {
-        "attributes": {
-            "name": "Product ABC Sponsored Weekend Conversions",
-            "targetRetailerId": "12345",
-            "status": "draft",
-            "startDate": "2025-09-01T00:00:00-04:00",
-            "endDate": "2025-12-31T23:59:59-04:00",
-            "budget": 1000.0,
-            "monthlyPacing": None,
-            "isAutoDailyPacing": False,
-            "targetBid": 1.0,
-            "maxBid": 5,
-            "bidStrategy": "automated",
-            "optimizationStrategy": "conversion",
-            "flightSchedule": {
-                "legs": [
-                    {
-                        "dayOfWeek": "Weekends",
-                        "startTime": "00:00",
-                        "endTime": "23:59"
-                    }
-                ]
-            },
-            "keywordStrategy": "genericBrandedAndConquesting"
-        }
+```bash cURL
+curl -L -X POST '{version}/retail-media/campaigns/{campaignId}/auction-line-items' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "SponsoredProductsLineItem",
+    "attributes": {
+      "name": "My Retailer Budget Line Item",
+      "targetRetailerId": "123",
+      "startDate": "2026-06-01T00:00:00+00:00",
+      "bidStrategy": "automated",
+      "maxBid": 5.0,
+      "optimizationStrategy": "conversion",
+      "keywordStrategy": "genericAndBranded"
     }
-})
-
-headers = {
-    'Authorization': 'Bearer <MY_ACCESS_TOKEN>',
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-}
-
-conn.request("POST", "/{version}/retail-media/campaigns/544937665113018368/auction-line-items", payload, headers)
-
-res = conn.getresponse()
-data = res.read()
-print(data.decode("utf-8"))
+  }
+}'
 ```
-
-```java Java expandable
-OkHttpClient client = new OkHttpClient().newBuilder()
-    .build();
-
-MediaType mediaType = MediaType.parse("application/json");
-
-RequestBody body = RequestBody.create(mediaType, """
-{
-    "data": {
-        "attributes": {
-            "name": "Product ABC Sponsored Weekend Conversions",
-            "targetRetailerId": "12345",
-            "status": "draft",
-            "startDate": "2025-09-01T00:00:00-04:00",
-            "endDate": "2025-12-31T23:59:59-04:00",
-            "budget": 1000.0,
-            "monthlyPacing": null,
-            "isAutoDailyPacing": false,
-            "targetBid": 1.0,
-            "maxBid": 5,
-            "bidStrategy": "automated",
-            "optimizationStrategy": "conversion",
-            "flightSchedule": {
-                "legs": [
-                    {
-                        "dayOfWeek": "Weekends",
-                        "startTime": "00:00",
-                        "endTime": "23:59"
-                    }
-                ]
-            },
-            "keywordStrategy": "genericBrandedAndConquesting"
-        }
-    }
-}
-""");
-
-Request request = new Request.Builder()
-    .url("https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items")
-    .method("POST", body)
-    .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
-    .addHeader("Content-Type", "application/json")
-    .addHeader("Accept", "application/json")
-    .build();
-
-Response response = client.newCall(request).execute();
-```
-
-```php PHP expandable
-<?php
-require_once 'HTTP/Request2.php';
-$request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/campaigns/544937665113018368/auction-line-items');
-$request->setMethod(HTTP_Request2::METHOD_POST);
-$request->setConfig([
-    'follow_redirects' => TRUE
-]);
-$request->setHeader([
-    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>',
-    'Content-Type' => 'application/json',
-    'Accept' => 'application/json'
-]);
-
-$request->setBody(json_encode([
-    "data" => [
-        "attributes" => [
-            "name" => "Product ABC Sponsored Weekend Conversions",
-            "targetRetailerId" => "12345",
-            "status" => "draft",
-            "startDate" => "2025-09-01T00:00:00-04:00",
-            "endDate" => "2025-12-31T23:59:59-04:00",
-            "budget" => 1000.0,
-            "monthlyPacing" => null,
-            "isAutoDailyPacing" => false,
-            "targetBid" => 1.0,
-            "maxBid" => 5,
-            "bidStrategy" => "automated",
-            "optimizationStrategy" => "conversion",
-            "flightSchedule" => [
-                "legs" => [
-                    [
-                        "dayOfWeek" => "Weekends",
-                        "startTime" => "00:00",
-                        "endTime" => "23:59"
-                    ]
-                ]
-            ],
-            "keywordStrategy" => "genericBrandedAndConquesting"
-        ]
-    ]
-], JSON_PRETTY_PRINT));
-
-try {
-    $response = $request->send();
-    if ($response->getStatus() == 200) {
-        echo $response->getBody();
-    } else {
-        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
-    }
-} catch(HTTP_Request2_Exception $e) {
-    echo 'Error: ' . $e->getMessage();
-}
-```
-</CodeGroup>
 
 **Sample Response**
 
 ```json expandable
 {
-    "data": {
-        "id": "764555166286684160",
-        "type": "SponsoredProductsLineItem",
-        "attributes": {
-            "name": "Product ABC Sponsored Weekend Conversions",
-            "startDate": "2025-09-01T04:00:00+00:00",
-            "endDate": "2026-01-01T03:59:59+00:00",
-            "status": "draft",
-            "targetBid": null,
-            "targetRetailerId": "12345",
-            "budget": 10.00,
-            "campaignId": "544937665113018368",
-            "budgetSpent": 0.00,
-            "budgetRemaining": 10.00,
-            "createdAt": "2025-10-10T18:29:16.3861275+00:00",
-            "updatedAt": "2025-10-10T18:29:16.3861275+00:00",
-            "maxBid": 0.0,
-            "monthlyPacing": 1000.00,
-            "dailyPacing": 0.00,
-            "bidStrategy": "automated",
-            "optimizationStrategy": "conversion",
-            "isAutoDailyPacing": false,
-            "flightSchedule": {
-                "legs": [
-                    {
-                        "dayOfWeek": "weekends",
-                        "startTime": "00:00",
-                        "endTime": "23:59"
-                    }
-                ]
-            },
-            "keywordStrategy": "genericAndBranded"
-        }
-    },
-    "warnings": [],
-    "errors": []
+  "data": {
+    "id": "100000000000000001",
+    "type": "SponsoredProductsLineItem",
+    "attributes": {
+      "name": "My Retailer Budget Line Item",
+      "startDate": "2026-06-01T00:00:00+00:00",
+      "endDate": null,
+      "status": "draft",
+      "targetBid": null,
+      "targetRetailerId": "123",
+      "budget": null,
+      "campaignId": "100000000000000001",
+      "budgetSpent": 0.0,
+      "budgetRemaining": null,
+      "createdAt": "2026-05-29T20:33:29+00:00",
+      "updatedAt": "2026-05-29T20:33:29+00:00",
+      "maxBid": 5.0,
+      "monthlyPacing": null,
+      "dailyPacing": null,
+      "optimizationStrategy": "conversion",
+      "isAutoDailyPacing": false,
+      "flightSchedule": null,
+      "keywordStrategy": "genericAndBranded",
+      "bidStrategy": "automated"
+    }
+  },
+  "warnings": [],
+  "errors": []
 }
 ```
 
 ***
 
-## Get a specific Onsite Sponsored Products Line Item
+## Get a Specific Onsite Sponsored Products Line Item
 
-This endpoint retrieves the specified Onsite Sponsored Products line item
+This endpoint returns the specified Onsite Sponsored Products line item.
+
+<Warning>
+  * This endpoint returns `null` in the `budgetRemaining` field for line items with uncapped budgets and line items with missing budgets.
+  * `targetRetailerId` is returned in the attributes for retailer budget line items.
+</Warning>
 
 <EndpointBadge method="get">
 ```http
 https://api.criteo.com/{version}/retail-media/auction-line-items/{lineItemId}
 ```
 </EndpointBadge>
-
-<Warning>
-  This endpoint now returns `null` in the `budgetRemaining` field for line items with uncapped budgets and line items with missing budgets.
-</Warning>
 
 **Sample Request**
 
@@ -1777,42 +1610,34 @@ try {
 
 ```json expandable
 {
-    "data": {
-        "id": "6854840188706902009",
-        "type": "SponsoredProductsLineItem",
-        "attributes": {
-            "name": "Line Item 456 - Weekends Only",
-            "campaignId": "544937665113018368",
-            "targetRetailerId": "6789",
-            "startDate": "2025-08-09T04:00:00+00:00",
-            "endDate": "2026-01-01T03:59:59+00:00",
-            "status": "draft",
-            "budget": 12000.00,
-            "budgetSpent": 0.00,
-            "budgetRemaining": 12000.00,
-            "maxBid": 5.0,
-            "targetBid": null,
-            "monthlyPacing": 0.00,
-            "dailyPacing": 0.00,
-            "bidStrategy": "automated",
-            "optimizationStrategy": "conversion",
-            "isAutoDailyPacing": false,
-            "flightSchedule": {
-                "legs": [
-                    {
-                        "dayOfWeek": "Weekends",
-                        "startTime": "00:00",
-                        "endTime": "23:59"
-                    }
-                ]
-            },
-            "keywordStrategy": "genericAndBranded",
-            "createdAt": "2025-07-24T15:46:45.7793506-04:00",
-            "updatedAt": "2025-08-12T08:02:36.9158515-04:00"
-        }
-    },
-    "warnings": [],
-    "errors": []
+  "data": {
+    "id": "100000000000000001",
+    "type": "SponsoredProductsLineItem",
+    "attributes": {
+      "name": "My Retailer Budget Line Item",
+      "startDate": "2026-06-01T00:00:00+00:00",
+      "endDate": null,
+      "status": "draft",
+      "targetBid": null,
+      "targetRetailerId": "123",
+      "budget": null,
+      "campaignId": "100000000000000001",
+      "budgetSpent": 0.0,
+      "budgetRemaining": null,
+      "createdAt": "2026-05-29T20:33:29+00:00",
+      "updatedAt": "2026-05-29T20:33:29+00:00",
+      "maxBid": 5.0,
+      "monthlyPacing": null,
+      "dailyPacing": null,
+      "optimizationStrategy": "conversion",
+      "isAutoDailyPacing": false,
+      "flightSchedule": null,
+      "keywordStrategy": "genericAndBranded",
+      "bidStrategy": "automated"
+    }
+  },
+  "warnings": [],
+  "errors": []
 }
 ```
 
@@ -2264,19 +2089,23 @@ try {
      <code>
       RetailerMismatchWithCampaign
      </code>
+     - Invalid Target Retailer
     </p>
    </td>
    <td>
     <p>
-     Line item
      <code>
       targetRetailerId
      </code>
-     does not match the campaign
+     on the line item doesn't match the parent campaign's
      <code>
       retailerId
      </code>
-     . Ensure
+     . The
+     <code>
+      detail
+     </code>
+     field names both IDs: "Line item's targetRetailerId {x} does not match the retailer-billed campaign's retailer ID {y}". Ensure
      <code>
       targetRetailerId
      </code>
