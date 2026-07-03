@@ -1,0 +1,97 @@
+---
+title: Offsite Add-on — FPM Identification Call
+---
+
+## Introduction
+
+If you already have a live Retail Media integration, you are close to running Offsite campaigns. The Offsite Add-on reuses your existing setup, product feed, API calls, and onsite events, and adds one new piece: an **identification call** that links your first-party user ID to Criteo's identity graph.
+
+`/fpm/init` is that identification call. It associates your first-party visitor ID (RVI) and your retailer account with Criteo's internal identifiers, so the Retail Media events you already send become available for Offsite targeting and measurement.
+
+## Prerequisites
+
+- Your onsite Retail Media solution is live and delivering ads.
+- You have a stable first-party user identifier (RVI).
+- The identification call must be triggered from the browser (not server-side).
+- You have received from your Criteo representative:
+  - **Retailer ID** (`retailer_id`)
+- On every identification call you pass (all required):
+  - `first_party_id`: your stable RVI (same value as in your Retail Media integration)
+  - `retailer_id`: Criteo-issued retailer identifier
+  - `first_party_name`: friendly name for your retailer or site (used in logs and diagnostics)
+
+## Concept definitions
+
+- **Onsite**: ads rendered on your site or app using your first-party traffic.
+- **Offsite**: ads delivered outside your site, using your first-party data to reach shoppers on external inventory.
+- **RVI** (Retailer Visitor ID): your stable, persisted first-party identifier for a visitor. Use it as `first_party_id` in calls to `/fpm/init`.
+
+## Retail Media API events (`full_url`)
+
+The Offsite add-on reuses the **Retail Media API events you already send**. In addition to the `/fpm/init` identification call, confirm that those event calls include `full_url` set to the **full page URL** where the event occurred (for example `https://shop.example.com/path?query=1`), not only the domain (for example `shop.example.com`). Many integrations send the domain alone; that is **not sufficient** for Offsite via this flow. Audit your payloads before go-live and validate with your Criteo contact in staging.
+
+## Consent
+
+You should apply **privacy by design**: when the user has **not** granted consent, your site must **not** load third-party tags, including the Criteo Offsite identification call to `https://gum.criteo.com/fpm/init`. Only when consent for Criteo is granted should that call be triggered.
+
+Make sure you have a solution in place that controls whether the Criteo call runs (for example your CMP, tag manager, or equivalent). If consent is not granted, the Criteo Offsite call must not run at all. If consent to Criteo is granted, then trigger the Offsite identification call.
+
+If you do not have such a solution in place, contact Criteo support, we can help you implement **Criteo's solution** for handling consent alongside this integration.
+
+**Note:** This guide does **not** document Criteo's server-side consent evaluation in detail. Customer-facing guidance is to **gate the call** on the client unless Criteo has agreed a different pattern with you. Query keys such as `gdpr`, `gdpr_consent`, `us_privacy`, `gpp`, and `gpp_sid` are intentionally omitted from this guide.
+
+<Info>
+  **Browser-only, cookies, and `fetch`** — `/fpm/init` must be triggered from the browser. Criteo relies on cookies and probabilistic signals only available in a browser context to complete identity resolution. Server-side calls alone will not work. Fire the call on every page load where your RVI is available, not just once per session. When using `fetch`, pass `credentials: "include"` so cookies can be sent on cross-site requests (same intent as `xhr.withCredentials = true`).
+</Info>
+
+## Endpoints Overview
+
+| Verb | Endpoint | Description |
+|------|----------|-------------|
+| **GET** | `https://gum.criteo.com/fpm/init` | Identification call that links your first-party visitor ID (RVI) to Criteo's identity graph for Offsite activation. |
+| **POST** | `https://gum.criteo.com/fpm/init` | Same as GET. Parameters are passed in the query string. |
+
+## Attributes
+
+**Required query parameters** (confirmed with R&D): `retailer_id`, `first_party_id`, and `first_party_name`. This guide documents only these three for the standard Offsite add-on flow.
+
+| Attribute | Data Type | Description |
+|-----------|-----------|-------------|
+| `first_party_id` \* | string | Your first-party visitor ID (RVI). Must be stable and consistent across calls; use the same value as in your existing Retail Media integration. **Accepted values:** non-empty string. Writeable? Y / Nullable? N |
+| `retailer_id` \* | string | Your retailer identifier in Criteo systems. Provided by Criteo. **Accepted values:** Criteo-issued retailer ID. Writeable? Y / Nullable? N |
+| `first_party_name` \* | string | Friendly name for your retailer or site (used in logs and diagnostics). **Accepted values:** non-empty string. Writeable? Y / Nullable? N |
+
+\*Required
+
+**Parameters not listed here:** Query keys such as `gdpr`, `gdpr_consent`, `us_privacy`, `gpp`, and `gpp_sid` are intentionally omitted from this guide. The documented integration uses **client-side consent gating** only (see Consent section above). Do not add other query fields unless Criteo Support gives you a written custom specification.
+
+## FPM identification call (`/fpm/init`)
+
+Links your RVI and your retailer account to Criteo's identity graph for Offsite activation.
+
+**HTTP METHOD:** GET (POST also supported; parameters remain in the query string).
+
+**Full URL:**
+
+```
+https://gum.criteo.com/fpm/init
+```
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://gum.criteo.com/fpm/init?first_party_id=<YOUR_RVI>&retailer_id=<YOUR_RETAILER_ID>&first_party_name=ShopExample' \
+-H 'Accept: */*' \
+-b cookies.txt -c cookies.txt
+```
+
+</CodeGroup>
+
+## Responses
+
+| Response | Title | Detail | Troubleshooting |
+|----------|-------|--------|-----------------|
+| 🟢 200 | Call executed with success | Your request succeeded. The server responded as required for this step. | Confirm you made the call from the browser with redirects enabled and credentials/cookies allowed. If identification still fails, check for the expected Criteo cookies in the response with your Criteo contact. |
+| 🔴 400 | Bad request | The server could not process the request (e.g. malformed URL, invalid or missing required parameters, or bad encoding). | Review your query parameter names and values: required fields `first_party_id`, `retailer_id`, and `first_party_name`; correct URL encoding. |
