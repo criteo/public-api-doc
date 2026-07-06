@@ -74,6 +74,30 @@ Each beacon URL returned by the [Delivery API response](/retailer-integration/do
   `[beacon-level]` is one of `product` or `placement`, and `[beacon-type]` is one of `onloadbeacon`, `onviewbeacon`, `onclickbeacon`, `onbasketchangebeacon`, and `onwishlistbeacon`.
 </Info>
 
+### Page Intelligence placements
+
+Placements returned from the [Page Intelligence `/optimize` endpoint](/retailer-integration/docs/page-intelligence) use a `StructuredBeacon` object for `onLoadBeacon` instead of a plain URL string. To pass the payload to BeaconSDK, set `data-criteo-placement-onloadbeacon` to the `url` value and add one `data-criteo-placement-onloadbeacon-payload-[key]` attribute per entry in the `payload` object:
+
+```html expandable
+<div class="page-intelligence-placement"
+  data-criteo-placement-onloadbeacon="//b.criteo.com/rm?u=1&ev=4"
+  data-criteo-placement-onloadbeacon-payload-rm_e="4cp0JZowKy"
+  data-criteo-placement-onloadbeacon-payload-sku="6887100|6887924"
+  data-criteo-placement-onloadbeacon-payload-slot="0|1"
+  data-criteo-placement-onloadbeacon-payload-ex="5454644"
+  data-criteo-placement-onloadbeacon-payload-st="organic"
+  data-criteo-placement-onviewbeacon="//b.criteo.com/rm?rm_e=rM9TNBqBpz"
+>
+  ...
+</div>
+```
+
+When `data-criteo-placement-onloadbeacon-payload-*` attributes are present, BeaconSDK fires the beacon using `navigator.sendBeacon(url, data)` where `data` is the `application/x-www-form-urlencoded` string of all payload parameters.
+
+<Info>
+  The `data-criteo-placement-onloadbeacon-payload-*` attributes apply only to placements from the `/optimize` endpoint. For placements from the Delivery API, use the standard `data-criteo-placement-onloadbeacon` attribute with the plain URL.
+</Info>
+
 ***
 
 ## Load BeaconSDK
