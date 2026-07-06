@@ -1,20 +1,21 @@
 ---
-title: DSP Reports API (v2)
-description: Unified flexible reporting with POST /reports/performance, plus dedicated endpoints for missed opportunities and attributed transactions.
+title: "DSP Reports API (v2)"
+description: "Unified flexible reporting with POST /reports/performance, plus dedicated endpoints for missed opportunities and attributed transactions."
+hidden: true
 ---
 
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
 ## Overview
 
-This page documents the redesigned DSP reporting surface, available in Preview and targeting Stable 2026.07.
+This page documents the redesigned DSP reporting surface, available in 2026 Preview.
 
 The three aggregation-level endpoints (`/reports/campaigns`, `/reports/line-items`, `/reports/accounts`) are replaced by a single flexible endpoint: `POST /reports/performance`. The `reportType` field is removed — metrics and dimensions are now specified explicitly in every request.
 
 Two report types previously available via `/reports/campaigns` are promoted to their own dedicated endpoints:
 
 | Old surface | New surface |
-| :---------- | :---------- |
+| :-- | :-- |
 | `POST /reports/campaigns` with `reportType: summary` (campaign level) | `POST /reports/performance` with `campaignIds` filter |
 | `POST /reports/campaigns` with `reportType: summary` (line-item level) | `POST /reports/performance` with `lineItemIds` filter |
 | `POST /reports/accounts` | `POST /reports/performance` with `accountIds` filter |
@@ -27,16 +28,16 @@ Two report types previously available via `/reports/campaigns` are promoted to t
 
 All three new endpoints are **asynchronous**: submit a request to receive a `reportId`, poll `/reports/{reportId}/status` until `status: "Success"`, then retrieve results from `/reports/{reportId}/output`.
 
-***
+---
 
 ## Endpoint: Unified performance report
 
 Replaces the three aggregation-level report endpoints. At least one of `accountIds`, `campaignIds`, or `lineItemIds` must be provided in `filters`.
 
 <EndpointBadge method="post">
-```http
-https://api.criteo.com/preview/retail-media/reports/performance
-```
+  ```http
+  https://api.criteo.com/preview/retail-media/reports/performance
+  ```
 </EndpointBadge>
 
 ### Filters
@@ -44,7 +45,7 @@ https://api.criteo.com/preview/retail-media/reports/performance
 All filter fields are optional arrays, but at least one of `accountIds`, `campaignIds`, or `lineItemIds` is required.
 
 | Filter | Type | Allowed values |
-| ------ | ---- | -------------- |
+| --- | --- | --- |
 | `accountIds` | `string[]` | Account IDs |
 | `campaignIds` | `string[]` | Campaign IDs |
 | `lineItemIds` | `string[]` | Line item IDs |
@@ -61,7 +62,7 @@ All filter fields are optional arrays, but at least one of `accountIds`, `campai
 ### Dimensions
 
 | Dimension | Description |
-| --------- | ----------- |
+| --- | --- |
 | `date` | Report date |
 | `hour` | Hour of day |
 | `accountId` / `accountName` | Account identifier and name |
@@ -94,7 +95,7 @@ All filter fields are optional arrays, but at least one of `accountIds`, `campai
 ### Metrics
 
 | Metric | Description |
-| ------ | ----------- |
+| --- | --- |
 | `impressions` | Total ad impressions |
 | `clicks` | Total ad clicks |
 | `spend` | Total spend |
@@ -134,7 +135,7 @@ All filter fields are optional arrays, but at least one of `accountIds`, `campai
 ### Request attributes
 
 | Attribute | Type | Required | Description |
-| --------- | ---- | :------: | ----------- |
+| --- | --- | :-: | --- |
 | `filters` | object | Yes | At least one of `accountIds`, `campaignIds`, or `lineItemIds` must be provided. See Filters table above. |
 | `dimensions` | `string[]` | Yes | One or more dimensions from the Dimensions table above. |
 | `metrics` | `string[]` | Yes | One or more metrics from the Metrics table above. |
@@ -273,7 +274,7 @@ echo $request->send()->getBody();
 
 Poll `/reports/{reportId}/status` until `status: "Success"`, then fetch results from `/reports/{reportId}/output`.
 
-***
+---
 
 ## Endpoint: Missed opportunities report
 
@@ -283,25 +284,25 @@ Dedicated endpoint replacing `reportType: capout` from `/reports/campaigns`. Pro
   Capout metrics have been renamed in this endpoint. The `capout` prefix has been dropped from all metrics except `capoutHour`:
 
   | Old name (legacy) | New name |
-  | :---------------- | :------- |
+  | :-- | :-- |
   | `capoutMissedClicks` | `missedClicks` |
   | `capoutMissedImpressions` | `missedImpressions` |
   | `capoutMissedSales` | `missedSales` |
   | `capoutMissedSpend` | `missedSpend` |
   | `capoutMissedTraffic` | `missedTraffic` |
-  | `capoutHour` | `capoutHour` *(retained)* |
+  | `capoutHour` | `capoutHour`_(retained)_ |
 </Warning>
 
 <EndpointBadge method="post">
-```http
-https://api.criteo.com/preview/retail-media/reports/missed-opportunities
-```
+  ```http
+  https://api.criteo.com/preview/retail-media/reports/missed-opportunities
+  ```
 </EndpointBadge>
 
 ### Filters
 
 | Filter | Type | Allowed values |
-| ------ | ---- | -------------- |
+| --- | --- | --- |
 | `accountIds` | `string[]` | Account IDs |
 | `campaignIds` | `string[]` | Campaign IDs |
 | `lineItemIds` | `string[]` | Line item IDs |
@@ -338,22 +339,22 @@ curl --request POST \
   }'
 ```
 
-***
+---
 
 ## Endpoint: Attributed transactions report
 
 Dedicated endpoint replacing `reportType: attributedTransactions` from `/reports/campaigns`. Provides hourly logs of each transaction attributable to an impression or click, with advanced attribution dimensions.
 
 <EndpointBadge method="post">
-```http
-https://api.criteo.com/preview/retail-media/reports/attributed-transactions
-```
+  ```http
+  https://api.criteo.com/preview/retail-media/reports/attributed-transactions
+  ```
 </EndpointBadge>
 
 ### Filters
 
 | Filter | Type | Allowed values |
-| ------ | ---- | -------------- |
+| --- | --- | --- |
 | `accountIds` | `string[]` | Account IDs |
 | `campaignIds` | `string[]` | Campaign IDs |
 | `lineItemIds` | `string[]` | Line item IDs |
@@ -370,7 +371,7 @@ https://api.criteo.com/preview/retail-media/reports/attributed-transactions
 ### Request attributes
 
 | Attribute | Type | Required | Description |
-| --------- | ---- | :------: | ----------- |
+| --- | --- | :-: | --- |
 | `filters` | object | Yes | See Filters table above. |
 | `dimensions` | `string[]` | Yes | One or more dimensions from the list above. |
 | `metrics` | `string[]` | Yes | `attributedUnits`, `attributedSales`, or both. |
@@ -411,13 +412,13 @@ curl --request POST \
   }'
 ```
 
-***
+---
 
 ## Report status and output
 
 All three endpoints follow the same async pattern. Use the shared status and output endpoints to retrieve results.
 
 | Verb | Endpoint | Description |
-| :--- | :------- | :---------- |
+| :-- | :-- | :-- |
 | `GET` | `/preview/retail-media/reports/{reportId}/status` | Poll until `status: "Success"` |
 | `GET` | `/preview/retail-media/reports/{reportId}/output` | Download report data |
