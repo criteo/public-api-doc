@@ -1628,7 +1628,7 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
    <td>
     <p>
      <code>
-      string
+      object
      </code>
     </p>
    </td>
@@ -1639,7 +1639,7 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
    </td>
    <td>
     <p>
-     URL to call when the placement is loaded.
+     Structured beacon to fire when the placement is loaded. See <a href="#structuredbeacon">StructuredBeacon</a> below.
     </p>
    </td>
   </tr>
@@ -1694,6 +1694,32 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
      URL to call when the placement is clicked.
     </p>
    </td>
+  </tr>
+ </tbody>
+</table>
+
+#### StructuredBeacon
+
+The placement `onLoadBeacon` returned from the `/optimize` endpoint is always a `StructuredBeacon` object — not a plain URL string. This format supports large payloads (up to 100 organic SKUs) by splitting the beacon into a base URL and a set of key-value parameters sent as the POST body.
+
+<table>
+ <thead>
+  <tr>
+   <th><p>Field</p></th>
+   <th><p>Type</p></th>
+   <th><p>Description</p></th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><p><code>url</code></p></td>
+   <td><p><code>string</code></p></td>
+   <td><p>Base beacon URL.</p></td>
+  </tr>
+  <tr>
+   <td><p><code>payload</code></p></td>
+   <td><p><code>object</code></p></td>
+   <td><p>Key-value pairs to send as the <code>application/x-www-form-urlencoded</code> POST body via <code>navigator.sendBeacon(url, data)</code>. Common keys include <code>rm_e</code> (encrypted beacon string), <code>sku</code> (rendered SKU IDs), <code>slot</code> (slot indices), <code>ex</code> (unrendered SKU IDs), and <code>st</code> (exclusion reasons).</p></td>
   </tr>
  </tbody>
 </table>
@@ -1866,7 +1892,14 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
             }
           ],
           "beacons": {
-            "onLoadBeacon": "//b.example/rm?...",
+            "onLoadBeacon": {
+              "url": "//b.example/rm?u=1&ev=4",
+              "payload": {
+                "rm_e": "4cp0JZowKy...",
+                "sku": "6887924",
+                "slot": "0"
+              }
+            },
             "onViewBeacon": "//b.example/rm?...",
             "onClickBeacon": "//b.example/rm?..."
           }
@@ -1913,7 +1946,16 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
             }
           ],
           "beacons": {
-            "onLoadBeacon": null,
+            "onLoadBeacon": {
+              "url": "//b.example/rm?u=1&ev=4",
+              "payload": {
+                "rm_e": "4cp0JZowKy...",
+                "ex": "5454644",
+                "st": "organic",
+                "sku": "6887100",
+                "slot": "0"
+              }
+            },
             "onViewBeacon": null,
             "onClickBeacon": null
           }
@@ -1931,7 +1973,8 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
 * Use this endpoint on pages where you want Criteo to optimize across organic and sponsored products together.
 * Include the relevant page context and `organicSkus` in `pageAdContext` for holistic optimization scenarios.
 * Render each placement exactly as returned.
-* Implement all beacons returned in the response.
+* Implement all beacons returned in the response. For placement `onLoadBeacon`, fire the beacon using `navigator.sendBeacon(url, data)` where `url` is `StructuredBeacon.url` and `data` is the `payload` serialized as `application/x-www-form-urlencoded`. If `navigator.sendBeacon` is not available, use a `POST` request with the same form-encoded body.
+* If using [BeaconSDK](/retailer-integration/docs/beacon-sdk), set `data-criteo-placement-onloadbeacon` to the `url` value and add one `data-criteo-placement-onloadbeacon-payload-[key]` attribute per entry in the `payload` object on the placement element. BeaconSDK handles the `navigator.sendBeacon(url, data)` call automatically.
 
 ## Response Codes
 
