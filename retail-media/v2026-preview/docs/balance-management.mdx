@@ -1,7 +1,7 @@
 ---
 title: Balance Management
 original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/balances/balance-management.md
-hidden: true
+hidden: false
 ---
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
@@ -181,10 +181,10 @@ The balance management endpoints are additional sets of balance apps that allow 
   **Values:** string
 </ParamField>
 
-<ParamField path="poNumber" type="string">
-  Purchase order number
+<ParamField path="retailerPoNumber" type="string">
+  Retailer-assigned purchase order number. Replaces the former `poNumber` field.
 
-  **Values:** string
+  **Values:** string, nullable
 </ParamField>
 
 <ParamField path="deposited" type="decimal">
@@ -211,10 +211,20 @@ The balance management endpoints are additional sets of balance apps that allow 
   **Values:** YYYY-MM-DD
 </ParamField>
 
-<ParamField path="endDate" type="date">
-  Balance end date in the [account](/retail-media/docs/accounts-endpoints) timeZone. If the balance has a `null` end date then it indicates that there is no expiration date and the balance will not stop spending until an end date is specified.
+<ParamField path="endDate" type="object">
+  Balance end date in the [account](/retail-media/docs/accounts-endpoints) timeZone, wrapped in a Nillable object to allow explicit clearing.
 
-  **Values:** YYYY-MM-DD
+  **Shape:** `{ "value": "YYYY-MM-DD" | null }`
+
+  | Value | Behavior |
+  |---|---|
+  | Field omitted | No change applied |
+  | `{ "value": "2026-12-31" }` | Updates the end date |
+  | `{ "value": null }` | Explicitly clears the end date (no expiration) |
+
+  <Warning>
+    Sending `{ "value": null }` actively clears the end date. This is different from omitting the field entirely, which leaves the existing value unchanged.
+  </Warning>
 </ParamField>
 
 <ParamField path="status" type="enum">
@@ -294,7 +304,7 @@ curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances' \
         {
             "attributes": {
                 "name": "Balance A",
-                "poNumber": "",
+                "retailerPoNumber": "",
                 "memo": "Spring marketing balance",
                 "deposited": 10.00000000,
                 "spent": 10.00000000,
@@ -316,7 +326,7 @@ curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances' \
         {
             "attributes": {
                 "name": "Balance B",
-                "poNumber": "",
+                "retailerPoNumber": "",
                 "memo": "Winter marketing balance",
                 "deposited": 0.01000000,
                 "spent": 0.00000000,
@@ -367,7 +377,7 @@ curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances/3' \
     "data": {
         "attributes": {
             "name": "Balance A",
-            "poNumber": "",
+            "retailerPoNumber": "",
             "memo": "Trade marketing balance for spring 2020",
             "deposited": 10.00000000,
             "spent": 10.00000000,
@@ -418,7 +428,7 @@ curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances' \
 			"endDate": "2023-08-29",
 			"spendType": "onsite",
 			"memo": "My API balance",
-			"poNumber": "123"
+			"retailerPoNumber": "123"
 		},
 		"id": "4",
 		"type": "RetailMediaBalanceCreation"
@@ -433,7 +443,7 @@ curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances' \
     "data": {
         "attributes": {
             "name": "Balance C - API",
-            "poNumber": "123",
+            "retailerPoNumber": "123",
             "memo": "My API balance",
             "deposited": 100.00000000,
             "spent": 0.00000000,
@@ -482,7 +492,7 @@ curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances/4753882
 		"attributes": {
 			"deltaAmount": "-10",
 			"memo": "Balance re-adjustment. Removing $10 from balance",
-			"poNumber": "123456"
+			"retailerPoNumber": "123456"
 		},
 		"id": "475388270283501568",
 		"type": "<string>"
@@ -497,7 +507,7 @@ curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances/4753882
     "data": {
         "attributes": {
             "name": "Balance C - API",
-            "poNumber": "123456",
+            "retailerPoNumber": "123456",
             "memo": "Balance re-adjustment. Removing $10 from balance",
             "deposited": 90.00000000,
             "spent": 0.00000000,
@@ -559,7 +569,7 @@ curl -L 'https://api.criteo.com/preview/retail-media/accounts/4/balances/4753882
     "data": {
         "attributes": {
             "name": "Balance C - API",
-            "poNumber": "123456",
+            "retailerPoNumber": "123456",
             "memo": "Updating the balance start and end dates",
             "deposited": 90.00000000,
             "spent": 0.00000000,
@@ -605,9 +615,9 @@ curl -L -X PATCH 'https://api.criteo.com/preview/retail-media/accounts/4/balance
 	"data": {
 		"attributes": {
 			"name": "Balance ABC",
-			"poNumber": "65432",
+			"retailerPoNumber": "65432",
 			"startDate": "2023-08-01",
-			"endDate": "2023-08-07",
+			"endDate": { "value": "2023-08-07" },
 			"memo": "Updating balance without changing the funds"
 		},
 		"id": "475388270283501568",
@@ -623,7 +633,7 @@ curl -L -X PATCH 'https://api.criteo.com/preview/retail-media/accounts/4/balance
     "data": {
         "attributes": {
             "name": "Balance ABC",
-            "poNumber": "65432",
+            "retailerPoNumber": "65432",
             "memo": "Updating balance without changing the funds",
             "deposited": 90.00000000,
             "spent": 0.00000000,
