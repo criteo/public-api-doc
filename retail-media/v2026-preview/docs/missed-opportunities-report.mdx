@@ -1,0 +1,134 @@
+---
+title: Missed Opportunity Report
+description: POST /reports/missed-opportunities — diagnose budget cap-out and estimate missed delivery for Retail Media DSP campaigns.
+---
+
+This endpoint enables Retail Media DSP partners to diagnose budget cap-out and estimate missed delivery for their campaigns and line items. Cap-out occurs when a line item exhausts its daily budget before the day ends, causing it to stop participating in eligible auctions. Missed traffic is reported for any line item that did not participate in all eligible auctions during the day.
+
+The response is aggregated — one row per day per line item (or per combination of dimensions you specify). All metrics relate to delivery shortfalls; no performance metrics (impressions served, clicks, revenue) are included. For performance metrics, use [`POST /reports/performance`](/retail-media/v2026-preview/docs/performance-report).
+
+**Primary audience:** Engineers and ops teams diagnosing delivery shortfalls. Not a campaign performance reporting surface.
+
+The endpoint supports asynchronous report generation. Submit a request, poll for status, and download the output when ready.
+
+***
+
+## Request
+
+```http
+POST /2026-07/retail-media/reports/missed-opportunities
+```
+
+### Required fields
+
+Exactly one of `accountId`, `campaignId`, or `lineItemId` must be provided.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `accountId` | string | Return data for all line items under this account. Mutually exclusive with `campaignId` and `lineItemId`. |
+| `campaignId` | string | Return data for all line items under this campaign. Mutually exclusive with `accountId` and `lineItemId`. |
+| `lineItemId` | string | Return data for this line item. Mutually exclusive with `accountId` and `campaignId`. |
+
+### Optional fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `startDate` | string | — | Start of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
+| `endDate` | string | — | End of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
+| `dimensions` | array of strings | — | Additional dimensions to include. See [Dimensions](#dimensions) below. |
+
+### Example request
+
+```http
+POST /2026-07/retail-media/reports/missed-opportunities
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "data": {
+    "type": "RetailMediaReportRequest",
+    "attributes": {
+      "lineItemId": "987654",
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-07"
+    }
+  }
+}
+```
+
+***
+
+## Response
+
+A successful request returns `202 Accepted` with a `reportId`. Poll for status until `status` is `success` or `failure`:
+
+```http
+GET /2026-07/retail-media/reports/{reportId}/status
+Authorization: Bearer {token}
+```
+
+Download the output when status is `success`:
+
+```http
+GET /2026-07/retail-media/reports/{reportId}/output
+Authorization: Bearer {token}
+```
+
+Each row in the report output represents one day (or one combination of dimensions, if dimensions were specified).
+
+***
+
+## Metrics
+
+The missed-opportunities metric set is always returned in full. No metric selection is required.
+
+| Metric | Description |
+|--------|-------------|
+| `capoutHour` | Hour of the day when the line item exhausted its daily budget, on average. A value of `14` means budget was exhausted around 2pm on average. |
+| `missedClicks` | Estimated clicks lost due to reduced auction participation. |
+| `missedImpressions` | Estimated impressions lost due to reduced auction participation. |
+| `missedSales` | Estimated revenue lost due to reduced auction participation, in the account's reporting currency. |
+| `missedSpend` | Estimated spend that would have occurred had the line item participated in all eligible auctions. |
+| `missedTraffic` | Percentage of the day's total eligible traffic the line item did not participate in. |
+
+All "missed" estimates are modeled — they represent what the line item would have delivered had it participated in all eligible auctions.
+
+***
+
+## Dimensions
+
+Optional dimensions can be added to the request to further break down the output.
+
+| Dimension | Description |
+|-----------|-------------|
+| `date` | Date events occurred. |
+| `campaignId` / `campaignName` | Campaign context. |
+| `lineItemId` / `lineItemName` | Line item context. |
+| `retailerId` / `retailerName` | Retailer where the line item served. |
+| `daypartingScheduled` | Binary: whether dayparting was active at the time of the cap-out event. |
+
+***
+
+## Migrating from `reportType: capout`
+
+Replace your existing call on `/reports/campaigns` or `/reports/line-items` with a call to this endpoint. The underlying data is unchanged.
+
+**Endpoint change:**
+
+```
+POST /reports/campaigns   →   POST /reports/missed-opportunities
+POST /reports/line-items  →   POST /reports/missed-opportunities
+```
+
+**Metric renames:**
+
+| Old name | New name |
+|----------|----------|
+| `capoutMissedClicks` | `missedClicks` |
+| `capoutMissedImpressions` | `missedImpressions` |
+| `capoutMissedSales` | `missedSales` |
+| `capoutMissedSpend` | `missedSpend` |
+| `capoutMissedTraffic` | `missedTraffic` |
+| `capoutHour` | `capoutHour` *(unchanged)* |
+
+Remove the `reportType: capout` field from your request body — it is not accepted on this endpoint.
