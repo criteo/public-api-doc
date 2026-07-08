@@ -3,7 +3,7 @@ title: Performance Report
 description: POST /reports/performance — flexible campaign performance reporting for Retail Media DSP partners.
 ---
 
-This endpoint enables Retail Media DSP partners to request flexible performance reporting across any level of granularity. Provide an `accountId`, `campaignId`, or `lineItemId` to filter the scope of data returned — the output granularity is then determined by the dimensions you include in the request.
+This endpoint enables Retail Media DSP partners to request flexible performance reporting across any level of granularity. Provide a scope filter under `filters` to define the data returned — the output granularity is then determined by the dimensions you include in the request.
 
 The endpoint supports asynchronous report generation and provides access to the full set of performance metrics and dimensions, including video, new-to-brand, and keyword data. Submit a request, poll for status, and download the output when ready.
 
@@ -17,13 +17,14 @@ POST /2026-07/retail-media/reports/performance
 
 ### Required fields
 
-Exactly one of `accountId`, `campaignId`, or `lineItemId` must be provided. Requests with none or more than one will return `400 Bad Request`.
+`filters` is required and must include exactly one scope filter. Requests with none or more than one scope filter will return `400 Bad Request`.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `accountId` | string | Scope the report to all campaigns under this account. Mutually exclusive with `campaignId` and `lineItemId`. |
-| `campaignId` | string | Scope the report to all line items under this campaign. Mutually exclusive with `accountId` and `lineItemId`. |
-| `lineItemId` | string | Scope the report to this line item. Mutually exclusive with `accountId` and `campaignId`. |
+| `filters` | object | Required. Must contain exactly one of the scope filters below. |
+| `filters.accountIds[]` | array of strings | Scope the report to all campaigns under this account. Mutually exclusive with `campaignIds` and `lineItemIds`. |
+| `filters.campaignIds[]` | array of strings | Scope the report to all line items under this campaign. Mutually exclusive with `accountIds` and `lineItemIds`. |
+| `filters.lineItemIds[]` | array of strings | Scope the report to this line item. Mutually exclusive with `accountIds` and `campaignIds`. |
 
 ### Optional fields
 
@@ -34,9 +35,11 @@ Exactly one of `accountId`, `campaignId`, or `lineItemId` must be provided. Requ
 | `metrics` | array of strings | — | One or more metric names. See [Metrics](#metrics) below. |
 | `dimensions` | array of strings | — | One or more dimension names. See [Dimensions](#dimensions) below. |
 | `timezone` | string | `UTC` | Timezone for date bucketing. IANA format (e.g. `America/New_York`). |
-| `currency` | string | Account default | ISO 4217 currency code for monetary metrics. |
 | `format` | string | `json` | Output format: `json` or `csv`. |
-| `lookbackWindow` | integer | — | Maximum days of history to query. Subject to retention limits — see [Data Retention](#data-retention). |
+| `clickAttributionWindow` | string | — | Attribution window for click-based conversions. |
+| `viewAttributionWindow` | string | — | Attribution window for view-based conversions. |
+| `clickMatchLevel` | string | — | Match level for click attribution. |
+| `viewMatchLevel` | string | — | Match level for view attribution. |
 
 ### Example request
 
@@ -49,7 +52,9 @@ Content-Type: application/json
   "data": {
     "type": "RetailMediaReportRequest",
     "attributes": {
-      "campaignId": "123456",
+      "filters": {
+        "campaignIds": ["123456"]
+      },
       "startDate": "2026-05-01",
       "endDate": "2026-05-07",
       "timezone": "America/New_York",
