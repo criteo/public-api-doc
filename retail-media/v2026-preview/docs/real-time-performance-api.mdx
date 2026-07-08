@@ -30,7 +30,7 @@ Typical use-cases for this endpoint include, for example:
   * about **15 minute latency** from impression/click to availability in the API,
   * a maximum **7-day look back window,**
   * **Onsite campaign** coverage only,
-  * A focused set of billable metrics: `billableImpressions`, `billableClicks`, `spend`.
+  * A focused set of metrics: `impressions`, `clicks`, `spend`.
 </Info>
 
 ***
@@ -69,7 +69,7 @@ Typical use-cases for this endpoint include, for example:
    <td>
     <p>
      <code>
-      /reports/sync/real-time-performance
+      /retail-media/reports/sync/real-time-performance
      </code>
     </p>
    </td>
@@ -373,9 +373,13 @@ Values in the `dimensions` array must be selected from:
 
 Values in the `metrics` array must be selected from:
 
-* `billableImpressions`,
-* `billableClicks`,
+* `impressions`,
+* `clicks`,
 * `spend`.
+
+<Note>
+  `billableImpressions` and `billableClicks` are still accepted for backward compatibility with existing preview integrations, but are redundant with `impressions`/`clicks` and should not be used in new integrations.
+</Note>
 
 ### Behavioral Notes
 
@@ -393,7 +397,7 @@ This endpoint retrieves real-time Retail Media performance metrics.
 
 <EndpointBadge method="post">
 ```http
-https://api.criteo.com/{version}/reports/sync/real-time-performance
+https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance
 ```
 </EndpointBadge>
 
@@ -404,14 +408,14 @@ https://api.criteo.com/{version}/reports/sync/real-time-performance
 <CodeGroup>
 
 ```bash cURL
-curl -L -X POST 'https://api.criteo.com/{version}/reports/sync/real-time-performance' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' -d '{
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' -d '{
   "data": {
     "attributes": {
       "startDate": "2026-03-01",
       "timezone": "America/New_York",
       "campaignIds": ["561627568743333888"],
       "dimensions": ["date", "hour", "campaignId", "campaignName"],
-      "metrics": ["billableImpressions", "billableClicks", "spend"]
+      "metrics": ["impressions", "clicks", "spend"]
     }
   }
 }'
@@ -430,7 +434,7 @@ payload = json.dumps({
       "timezone": "America/New_York",
       "campaignIds": ["561627568743333888"],
       "dimensions": ["date", "hour", "campaignId", "campaignName"],
-      "metrics": ["billableImpressions", "billableClicks", "spend"]
+      "metrics": ["impressions", "clicks", "spend"]
     }
   }
 })
@@ -441,7 +445,7 @@ headers = {
   'Authorization': 'Bearer &lt;TOKEN&gt;'
 }
 
-conn.request("POST", "/{version}/reports/sync/real-time-performance", payload, headers)
+conn.request("POST", "/{version}/retail-media/reports/sync/real-time-performance", payload, headers)
 res = conn.getresponse()
 data = res.read()
 print(data.decode("utf-8"))
@@ -451,10 +455,10 @@ print(data.decode("utf-8"))
 OkHttpClient client = new OkHttpClient().newBuilder().build();
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"ReportDataResponse\",\"attributes\":{\"startDate\":\"2026-03-01\",\"timezone\":\"America/New_York\",\"campaignIds\":[\"561627568743333888\"],\"dimensions\":[\"date\",\"hour\",\"campaignId\",\"campaignName\"],\"metrics\":[\"billableImpressions\",\"billableClicks\",\"spend\"]}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"ReportDataResponse\",\"attributes\":{\"startDate\":\"2026-03-01\",\"timezone\":\"America/New_York\",\"campaignIds\":[\"561627568743333888\"],\"dimensions\":[\"date\",\"hour\",\"campaignId\",\"campaignName\"],\"metrics\":[\"impressions\",\"clicks\",\"spend\"]}}}");
 
 Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/reports/sync/real-time-performance")
+  .url("https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance")
   .method("POST", body)
   .addHeader("Content-Type", "application/json")
   .addHeader("Accept", "application/json")
@@ -468,14 +472,14 @@ Response response = client.newCall(request).execute();
 <?php
 require_once 'HTTP/Request2.php';
 $request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/reports/sync/real-time-performance');
+$request->setUrl('https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance');
 $request->setMethod(HTTP_Request2::METHOD_POST);
 $request->setHeader(array(
   'Content-Type' => 'application/json',
   'Accept' => 'application/json',
   'Authorization' => 'Bearer &lt;TOKEN&gt;'
 ));
-$request->setBody('{"data":{"type":"ReportDataResponse","attributes":{"startDate":"2026-03-01","timezone":"America/New_York","campaignIds":["561627568743333888"],"dimensions":["date","hour","campaignId","campaignName"],"metrics":["billableImpressions","billableClicks","spend"]}}}');
+$request->setBody('{"data":{"type":"ReportDataResponse","attributes":{"startDate":"2026-03-01","timezone":"America/New_York","campaignIds":["561627568743333888"],"dimensions":["date","hour","campaignId","campaignName"],"metrics":["impressions","clicks","spend"]}}}');
 $response = $request->send();
 echo $response->getBody();
 ?>
@@ -507,7 +511,7 @@ echo $response->getBody();
         "timezone": "America/New_York"
       },
       {
-        "name": "billableImpressions",
+        "name": "impressions",
         "type": "Number",
         "role": "Metric"
       }
