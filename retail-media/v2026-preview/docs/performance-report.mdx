@@ -35,7 +35,7 @@ POST /2026-07/retail-media/reports/performance
 | `metrics` | array of strings | — | One or more metric names. See [Metrics](#metrics) below. |
 | `dimensions` | array of strings | — | One or more dimension names. See [Dimensions](#dimensions) below. |
 | `timezone` | string | `UTC` | Timezone for date bucketing. IANA format (e.g. `America/New_York`). |
-| `format` | string | `json` | Output format: `json` or `csv`. |
+| `format` | string | `json-compact` | Output format: `json`, `json-compact`, `json-newline`, or `csv`. |
 | `clickAttributionWindow` | string | — | Attribution window for click-based conversions. |
 | `viewAttributionWindow` | string | — | Attribution window for view-based conversions. |
 | `clickMatchLevel` | string | — | Match level for click attribution. |
@@ -139,9 +139,13 @@ Authorization: Bearer {token}
 | `videoUnmuted` | Count of video unmute button clicks. |
 | `videoPaused` | Count of video pause activations. |
 | `videoResumed` | Count of video resume activations. |
+| `videoImpressions` | Count of video ad impressions. |
+| `videoAvgInteractionRate` | Average interaction rate across video engagements. |
+| `videoCPC` | Average cost per video click. |
+| `videoCPCV` | Cost per completed video view. |
 
 <Warning>
-  The `winRate` metric is only supported for Sponsored Products campaigns. Include `campaignTypeName` in your dimensions or set `campaignType` to `sponsoredProducts`.
+  The `winRate` metric is only supported for Sponsored Products campaigns. Include `campaignType` in your dimensions or filter by Sponsored Products in your request.
 </Warning>
 
 ***
@@ -152,36 +156,40 @@ Authorization: Bearer {token}
 |-----------|-------------|
 | `date` | Date events occurred (`YYYY-MM-DD`). |
 | `hour` | Hour events occurred (0–23). |
-| `campaignId` | Campaign ID. |
-| `campaignName` | Campaign name. |
-| `campaignTypeName` | Campaign type: `Open Auction` or `Preferred Deals`. |
-| `lineItemId` | Line item ID. |
-| `lineItemName` | Line item name. |
 | `accountId` | Account ID. |
 | `accountName` | Account name. |
+| `campaignId` | Campaign ID. |
+| `campaignName` | Campaign name. |
+| `campaignType` | Campaign type. |
+| `lineItemId` | Line item ID. |
+| `lineItemName` | Line item name. |
 | `retailerId` | Retailer ID where the line item served. |
 | `retailerName` | Retailer name where the line item served. |
+| `brandId` | Brand ID of the advertised product. |
+| `brandName` | Brand name of the advertised product. |
+| `productCategory` | Category of the advertised product. Standardized categories. |
+| `productId` | Advertised product ID. References the Catalogs product ID. |
+| `productName` | Name of the advertised product. |
+| `salesChannel` | Purchase channel: `online` or `offline`. |
+| `mediaType` | Media type of the line item. |
+| `buyType` | Buy type of the line item. |
+| `budgetModel` | Budget model of the line item. |
+| `activationPlatform` | Activation platform of the line item. |
+| `environment` | Type of environment: `web`, `mobile`, `app`. |
+| `pageType` | Type of retailer page where the ad rendered: `home`, `search`, `category`, `productDetail`, `merchandising`, `deals`, `checkout`, `confirmation`. |
+| `pageCategory` | Retailer-defined category of the page where ads rendered. |
+| `servedCategory` | Category of the page where the ad was served. Retailer-specific taxonomy. |
+| `taxonomyBreadcrumb` | Category breadcrumb using retailer product taxonomies (L1 > L2 > L3). |
 | `keyword` | Keyword or phrase used on the search page where the ad rendered. |
 | `searchTerm` | Keyword or phrase searched by the shopper on the retailer site. |
-| `searchTermTargeting` | Targeting strategy: `Manual` or `Automatic`. |
 | `searchTermType` | Match type: `Entered`, `Searched`, or `Null`. |
-| `targetedKeywordType` | Conquesting strategy: `Conquesting`, `Branded`, `Generic`, or `Unknown`. |
-| `pageTypeName` | Type of retailer page where the ad rendered: `home`, `search`, `category`, `productDetail`, `merchandising`, `deals`, `checkout`, `confirmation`. |
-| `pageCategory` | Retailer-defined category of the page where ads rendered. |
-| `environment` | Type of environment: `web`, `mobile`, `app`. |
-| `servedCategory` | Category of the page where the ad was served. Retailer-specific taxonomy. |
-| `advProductId` | Advertised product ID. References the Catalogs product ID. |
-| `advProductName` | Name of the advertised product. |
-| `advProductCategory` | Category of the advertised product. Standardized categories. |
-| `taxonomyBreadcrumb` | Category breadcrumb using retailer product taxonomies (L1 > L2 > L3). |
-| `salesChannel` | Purchase channel: `online` or `offline`. |
-| `daypartingScheduled` | Binary: whether dayparting was scheduled at the time of the event. |
+| `searchTermTargeting` | Targeting strategy: `Manual` or `Automatic`. |
 | `creativeId` | Creative ID. Onsite display only. |
 | `creativeName` | Creative name. Onsite display only. |
+| `creativeType` | Creative type: Commerce Display, Commerce Video, Standard Display, Standard Video. Onsite display only. |
 | `creativeTemplateId` | Creative template ID. Onsite display only. |
 | `creativeTemplateName` | Ad format: Flagship, Showcase, SponsoredProducts, Butterfly, BundleBoost, IAB, DisplayPanel, DigitalShelfTalker, CommerceVideoSpotlight, Custom. |
-| `creativeTypeId` | Creative type ID. Onsite display only. |
-| `creativeTypeName` | Creative type: Commerce Display, Commerce Video, Standard Display, Standard Video. |
+| `targetedKeywordType` | Conquesting strategy: `Conquesting`, `Branded`, `Generic`, or `Unknown`. |
 
 ***
 
@@ -201,9 +209,9 @@ This endpoint supports a lookback window of up to **36 months**. Requests beyond
 | `reportType: summary` | Use `POST /reports/performance` with: `impressions`, `clicks`, `spend`, `roas`, `ctr`, `attributedSales`, `attributedUnits` |
 | `reportType: flexible` | Use `POST /reports/performance` — behavior is identical; only the endpoint path changes |
 | `reportType: keyword` | Add `keyword` to dimensions |
-| `reportType: pageType` | Add `pageTypeName` to dimensions |
-| `reportType: productCategory` | Add `advProductCategory` to dimensions |
-| `reportType: product` | Add `advProductId` and `advProductName` to dimensions |
+| `reportType: pageType` | Add `pageType` to dimensions |
+| `reportType: productCategory` | Add `productCategory` to dimensions |
+| `reportType: product` | Add `productId` and `productName` to dimensions |
 | `reportType: servedCategory` | Add `servedCategory` to dimensions |
 | `reportType: environment` | Add `environment` to dimensions |
 | `reportType: capout` | Use `POST /reports/missed-opportunities` — also note metric renames |
