@@ -1,0 +1,202 @@
+---
+title: Product Boost
+hidden: true
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+***
+
+## Endpoints
+
+| Verb | Endpoint | Description |
+|---|---|---|
+| `GET` | `/marketing-solutions/ads/{ad-id}/product-boost` | Fetch all boosting associations and configurations for an ad. |
+| `GET` | `/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}` | Fetch the boosting association and configuration for a specific product set. |
+| `POST` | `/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}` | Create or update a product boosting configuration. |
+| `DELETE` | `/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}` | Delete a boosting association and configuration. |
+| `GET` | `/marketing-solutions/dataset/{dataset-id}/product-boost` | Fetch boosting associations and configurations for a given partner. |
+
+***
+
+## Boosting Configuration Attributes
+
+### Request (`POST`)
+
+| Attribute | Type | Required | Description |
+|---|---|---|---|
+| `boostingFactor` | number (double) | Yes | {/* PM TODO: describe what this factor controls, valid range, and effect on delivery */} |
+
+### Response
+
+| Attribute | Type | Description |
+|---|---|---|
+| `adId` | string | ID of the ad associated with the boosting configuration. |
+| `productSetId` | string | ID of the product set associated with the boosting configuration. |
+| `boostingFactor` | number (double) | {/* PM TODO: describe the factor */} |
+| `modificationDate` | string | Timestamp of the last modification. |
+
+***
+
+## Get All Boosting Configurations for an Ad
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/{version}/marketing-solutions/ads/{ad-id}/product-boost
+```
+</EndpointBadge>
+
+Returns all product set boosting associations and their configurations for the specified ad.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `ad-id` | string | ID of the ad. |
+
+**Sample response**
+
+```json
+{
+  "data": [
+    {
+      "type": "BoostedAdProductSet",
+      "attributes": {
+        "adId": "12345",
+        "productSetId": "67890",
+        "boostingFactor": 1.5,
+        "modificationDate": "2026-07-01T10:00:00Z"
+      }
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}
+```
+
+***
+
+## Get Boosting Configuration for a Specific Product Set
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/{version}/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}
+```
+</EndpointBadge>
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `ad-id` | string | ID of the ad. |
+| `product-set-id` | string | ID of the product set. |
+
+**Sample response**
+
+```json
+{
+  "data": {
+    "type": "BoostedAdProductSet",
+    "attributes": {
+      "adId": "12345",
+      "productSetId": "67890",
+      "boostingFactor": 1.5,
+      "modificationDate": "2026-07-01T10:00:00Z"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}
+```
+
+***
+
+## Create or Update a Boosting Configuration
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}
+```
+</EndpointBadge>
+
+Creates a new boosting configuration or updates an existing one. Returns `201` on creation and `200` on update.
+
+**Sample request**
+
+```json
+{
+  "data": {
+    "type": "BoostingConfigurationRequest",
+    "attributes": {
+      "boostingFactor": 1.5
+    }
+  }
+}
+```
+
+**Sample response**
+
+```json
+{
+  "data": {
+    "type": "BoostedAdProductSet",
+    "attributes": {
+      "adId": "12345",
+      "productSetId": "67890",
+      "boostingFactor": 1.5,
+      "modificationDate": "2026-07-01T10:00:00Z"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}
+```
+
+***
+
+## Delete a Boosting Configuration
+
+<EndpointBadge method="delete">
+```http
+https://api.criteo.com/{version}/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}
+```
+</EndpointBadge>
+
+Deletes the boosting association and configuration for the specified product set.
+
+**Sample response**
+
+```json
+{
+  "data": {
+    "type": "BoostedAdProductSet",
+    "attributes": {
+      "adId": "12345",
+      "productSetId": "67890",
+      "boostingFactor": 1.5,
+      "modificationDate": "2026-07-01T10:15:00Z"
+    }
+  },
+  "errors": [],
+  "warnings": []
+}
+```
+
+***
+
+## Get Boosting Configurations by Dataset
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/{version}/marketing-solutions/dataset/{dataset-id}/product-boost
+```
+</EndpointBadge>
+
+Returns all boosting associations and configurations for a given partner, scoped to a dataset.
+
+**Path parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `dataset-id` | string | ID of the dataset. |
+| `client-type` | string | {/* PM TODO: describe valid values and effect */} |
