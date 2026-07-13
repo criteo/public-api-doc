@@ -1,13 +1,10 @@
 ---
 title: DSP Real-Time Performance API
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/demand-side-analytics/real-time-performance-api.md
+description: Retrieve near real-time campaign performance data synchronously using the Retail Media Real-Time Performance API
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
-<Info>
-  For more information about our DSP endpoints in Stable, please visit [this page](/retail-media/docs/demand-side-analytics-get-started). The Real-Time Performance API endpoint is currently available only in `preview`.
-</Info>
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
 ## Introduction
 
@@ -32,6 +29,10 @@ Typical use-cases for this endpoint include, for example:
   * **Onsite campaign** coverage only,
   * A focused set of metrics: `impressions`, `clicks`, `spend`.
 </Info>
+
+<Warning>
+  **Metric rename from Preview**: `billableImpressions` and `billableClicks` have been renamed to `impressions` and `clicks` in the stable API. These metrics now count total volume (billable + non-billable). If you were using this endpoint in Preview, update your field mappings before migrating to stable.
+</Warning>
 
 ***
 
@@ -384,7 +385,7 @@ Values in the `metrics` array must be selected from:
 ### Behavioral Notes
 
 * **Optional end date parameter**: The endpoint accepts an optional `endDate` parameter. If omitted, it will return data from `startDate` up to the current hour in the requested timezone.
-* **Look back limit**: The look back window is limited to 7 days relative to “now” in the requested timezone.  
+* **Look back limit**: The look back window is limited to 7 days relative to "now" in the requested timezone.  
   Requests with `startDate` older than this limit are rejected with a 400 Bad Request.
 * **Time zone handling**: All date/hour-based dimensions (date, hour) are computed in the requested timezone.  
   If timezone is omitted, UTC is used.
@@ -408,7 +409,11 @@ https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance
 <CodeGroup>
 
 ```bash cURL
-curl -L -X POST 'https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' -d '{
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
   "data": {
     "attributes": {
       "startDate": "2026-03-01",
@@ -442,7 +447,7 @@ payload = json.dumps({
 headers = {
   'Content-Type': 'application/json',
   'Accept': 'application/json',
-  'Authorization': 'Bearer &lt;TOKEN&gt;'
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
 }
 
 conn.request("POST", "/{version}/retail-media/reports/sync/real-time-performance", payload, headers)
@@ -455,14 +460,15 @@ print(data.decode("utf-8"))
 OkHttpClient client = new OkHttpClient().newBuilder().build();
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"ReportDataResponse\",\"attributes\":{\"startDate\":\"2026-03-01\",\"timezone\":\"America/New_York\",\"campaignIds\":[\"561627568743333888\"],\"dimensions\":[\"date\",\"hour\",\"campaignId\",\"campaignName\"],\"metrics\":[\"impressions\",\"clicks\",\"spend\"]}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"startDate\":\"2026-03-01\",\"timezone\":\"America/New_York\",\"campaignIds\":[\"561627568743333888\"],\"dimensions\":[\"date\",\"hour\",\"campaignId\",\"campaignName\"],\"metrics\":[\"impressions\",\"clicks\",\"spend\"]}}}");
+
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance")
   .method("POST", body)
   .addHeader("Content-Type", "application/json")
   .addHeader("Accept", "application/json")
-  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
   .build();
 
 Response response = client.newCall(request).execute();
@@ -477,9 +483,9 @@ $request->setMethod(HTTP_Request2::METHOD_POST);
 $request->setHeader(array(
   'Content-Type' => 'application/json',
   'Accept' => 'application/json',
-  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
-$request->setBody('{"data":{"type":"ReportDataResponse","attributes":{"startDate":"2026-03-01","timezone":"America/New_York","campaignIds":["561627568743333888"],"dimensions":["date","hour","campaignId","campaignName"],"metrics":["impressions","clicks","spend"]}}}');
+$request->setBody('{"data":{"attributes":{"startDate":"2026-03-01","timezone":"America/New_York","campaignIds":["561627568743333888"],"dimensions":["date","hour","campaignId","campaignName"],"metrics":["impressions","clicks","spend"]}}}');
 $response = $request->send();
 echo $response->getBody();
 ?>
@@ -844,7 +850,7 @@ echo $response->getBody();
       "traceIdentifier": "0b396e92adef8703a22dd5a5898e05b7",
       "type": "validation",
       "code": "invalid",
-      "instance": "/reports/sync/real-time-performance",
+      "instance": "/retail-media/reports/sync/real-time-performance",
       "title": "Time zone America/Paris is not valid. See criteo developer portal for supported time zones",
       "source": {
         "Data.Attributes.Timezone": "Data.Attributes.Timezone"
@@ -862,7 +868,7 @@ echo $response->getBody();
     {
       "type": "validation",
       "code": "invalid",
-      "instance": "/reports/sync/real-time-performance",
+      "instance": "/retail-media/reports/sync/real-time-performance",
       "title": "Exactly one of accountIds, campaignIds, or lineItemIds must be provided"
     }
   ]
@@ -877,7 +883,7 @@ echo $response->getBody();
     {
       "type": "validation",
       "code": "invalid",
-      "instance": "/reports/sync/real-time-performance",
+      "instance": "/retail-media/reports/sync/real-time-performance",
       "title": "You must provide at most 50 ids in 'CampaignIds', 73 were provided."
     }
   ]
@@ -892,7 +898,7 @@ echo $response->getBody();
     {
       "type": "validation",
       "code": "invalid",
-      "instance": "/reports/sync/real-time-performance",
+      "instance": "/retail-media/reports/sync/real-time-performance",
       "title": "At least one metric must be specified"
     }
   ]
@@ -907,7 +913,7 @@ echo $response->getBody();
     {
       "type": "validation",
       "code": "invalid",
-      "instance": "/reports/sync/real-time-performance",
+      "instance": "/retail-media/reports/sync/real-time-performance",
       "title": "At least one dimension must be specified"
     }
   ]
@@ -922,7 +928,7 @@ echo $response->getBody();
     {
       "type": "validation",
       "code": "invalid",
-      "instance": "/reports/sync/real-time-performance",
+      "instance": "/retail-media/reports/sync/real-time-performance",
       "title": "startDate cannot be more than 7 days in the past"
     }
   ]
@@ -937,7 +943,7 @@ echo $response->getBody();
     {
       "type": "validation",
       "code": "deserialization-error",
-      "instance": "/reports/sync/real-time-performance",
+      "instance": "/retail-media/reports/sync/real-time-performance",
       "title": "Deserialization error"
     }
   ]
@@ -952,7 +958,7 @@ echo $response->getBody();
     {
       "type": "Authorization",
       "code": "forbidden",
-      "instance": "/reports/sync/real-time-performance",
+      "instance": "/retail-media/reports/sync/real-time-performance",
       "title": "You are not authorized to access some of the requested resources.",
       "detail": "Please make sure you have the necessary permissions."
     }
