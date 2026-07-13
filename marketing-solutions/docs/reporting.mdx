@@ -1,25 +1,25 @@
 ---
-title: Reporting
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/reporting/index.md
+title: "Reporting"
+original_file: "to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/reporting/index.md"
 ---
 
 ## Introduction
 
 This article is the entry point for MPO reporting. It explains:
 
-* What types of reporting MPO supports.
-* When to use the [Standard Reporting API](/marketing-solutions/docs/mpo-standard-reporting-api) vs. the [Real-Time Asynchronous API](/marketing-solutions/docs/getting-realtime-mpo-statistics).
-* How to think about **identifiers** (`seller`, `campaign`, `seller-campaign`) and **time grains**.
-* Typical integration patterns for marketplaces.
+- What types of reporting MPO supports.
+- When to use the [Standard Reporting API](/marketing-solutions/docs/mpo-standard-reporting-api) vs. the [Real-Time Asynchronous API](/marketing-solutions/docs/getting-realtime-mpo-statistics).
+- How to think about **identifiers** (`seller`, `campaign`, `seller-campaign`) and **time grains**.
+- Typical integration patterns for marketplaces.
 
 <Info>
   You can find more information about each API in the following pages:
 
-  * **[MPO Standard Reporting API](/marketing-solutions/docs/mpo-standard-reporting-api)** for aggregated, historical statistics.
-  * **[MPO Real-Time Asynchronous API](/marketing-solutions/docs/getting-realtime-mpo-statistics)** for low-latency, asynchronous exports for operational monitoring.
+  - [**MPO Standard Reporting API**](/marketing-solutions/docs/mpo-standard-reporting-api) for aggregated, historical statistics.
+  - [**MPO Real-Time Asynchronous API**](/marketing-solutions/docs/getting-realtime-mpo-statistics) for low-latency, asynchronous exports for operational monitoring.
 </Info>
 
-***
+---
 
 ## 1. Reporting Building Blocks
 
@@ -29,23 +29,23 @@ MPO exposes a consistent set of concepts across both **Multi-Seller** and **Sing
 
 You will mainly work with:
 
-* `sellerId` – marketplace seller (independent of campaign model).
-* `campaignId` – MPO campaign (shared Multi-Seller campaign or Single-Seller template campaign).
-* (`sellerId`, `campaignId`) pairs – the **seller-campaign** view.
+- `sellerId` – marketplace seller (independent of campaign model).
+- `campaignId` – MPO campaign (shared Multi-Seller campaign or Single-Seller template campaign).
+- (`sellerId`, `campaignId`) pairs – the **seller-campaign** view.
 
 These map to three standard stats endpoints:
 
-* `/stats/sellers` – one row per seller per interval.
-* `/stats/campaigns` – one row per campaign per interval.
-* `/stats/seller-campaigns` – one row per (campaign, seller) per interval.
+- `/stats/sellers` – one row per seller per interval.
+- `/stats/campaigns` – one row per campaign per interval.
+- `/stats/seller-campaigns` – one row per (campaign, seller) per interval.
 
 ### 1.2 Core metrics
 
 All MPO stats endpoints share the same metric vocabulary:
 
-* **Volume:** `impressions`, `clicks`
-* **Spend & revenue:** `cost`, `saleUnits`, `revenue`
-* **Efficiency:** `cr`, `cpo`, `cos`, `roas`
+- **Volume:** `impressions`, `clicks`
+- **Spend & revenue:** `cost`, `saleUnits`, `revenue`
+- **Efficiency:** `cr`, `cpo`, `cos`, `roas`
 
 Metrics are defined identically for **Multi-Seller** and **Single-Seller**; only the **aggregation key** (seller, campaign, seller-campaign) changes.
 
@@ -53,273 +53,113 @@ Metrics are defined identically for **Multi-Seller** and **Single-Seller**; only
 
 Both reporting APIs let you choose the **time grain**, for example:
 
-* `Hour` – for short-window analysis.
-* `Day` – standard granularity for dashboards and exports.
-* `Month` / `Year` – long-term trend and finance views.
+- `Hour` – for short-window analysis.
+- `Day` – standard granularity for dashboards and exports.
+- `Month` / `Year` – long-term trend and finance views.
 
 Exact options and range limits depend on the endpoint and environment (see individual API pages).
 
-***
+---
 
 ## 2. Choosing between Standard and Real-Time reporting
 
 MPO offers two complementary reporting paths:
 
-* **Standard Reporting API** – aggregated, post-processed statistics.
-* **Real-Time Asynchronous API** – near real-time, asynchronous exports.
+- **Standard Reporting API** – aggregated, post-processed statistics.
+- **Real-Time Asynchronous API** – near real-time, asynchronous exports.
 
 ### 2.1 High-level comparison
-
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Aspect
-    </p>
-   </th>
-   <th>
-    <p>
-     Standard Reporting API
-    </p>
-   </th>
-   <th>
-    <p>
-     MPO Real-Time Asynchronous API
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     <b>
-      Primary purpose
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     Historical &amp; batch reporting
-    </p>
-   </td>
-   <td>
-    <p>
-     Short-window, operational monitoring
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <b>
-      Data latency
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     Hours to 1+ day (post-processed)
-    </p>
-   </td>
-   <td>
-    <p>
-     ~10 minutes
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <b>
-      Data quality
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     Cleaned &amp; stable (suitable for billing/finance)
-    </p>
-   </td>
-   <td>
-    <p>
-     Raw / operational (not for billing, pricing or invoicing)
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <b>
-      Typical time window
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     Days, weeks, months, quarters
-    </p>
-   </td>
-   <td>
-    <p>
-     Last minutes or hours (≤ 24h lookback)
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <b>
-      Access pattern
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     Direct
-     <code>
-      GET /stats/...
-     </code>
-     calls
-    </p>
-   </td>
-   <td>
-    <p>
-     Async job: create export → poll status → download CSV/JSON
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <b>
-      Consumers
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     BI teams, finance, marketplace analytics
-    </p>
-   </td>
-   <td>
-    <p>
-     Ops teams, monitoring, experimentation dashboards
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <b>
-      Recommended uses
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     Dashboards, DWH loads, seller performance packs
-    </p>
-   </td>
-   <td>
-    <p>
-     Launch monitoring, anomaly detection, rapid checks after config changes
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
 
 ### 2.2 When to use which
 
 Use the **Standard Reporting API** when you need:
 
-* Aggregated metrics over longer periods (for example, **last 30 days**, **last quarter**).
-* Stable data for **billing**, **margin analysis**, and **long-term trends**.
-* Scheduled **batch exports** into your own reporting stack.
+- Aggregated metrics over longer periods (for example, **last 30 days**, **last quarter**).
+- Stable data for **billing**, **margin analysis**, and **long-term trends**.
+- Scheduled **batch exports** into your own reporting stack.
 
 Use the **Real-Time Asynchronous API** when you need:
 
-* Short-window metrics for **live monitoring** (for example, last 60–120 minutes).
-* Visibility right after **budget changes**, **campaign launches**, or **template updates**.
-* Near real-time dashboards and alerts for operations teams.
+- Short-window metrics for **live monitoring** (for example, last 60–120 minutes).
+- Visibility right after **budget changes**, **campaign launches**, or **template updates**.
+- Near real-time dashboards and alerts for operations teams.
 
 <Info>
   Most integrations rely on both data types:
 
-  * **Real-Time** endpoints for monitoring current system behavior,
-  * **Standard** endpoints for aggregated reporting and revenue analysis over defined time periods.
+  - **Real-Time** endpoints for monitoring current system behavior,
+  - **Standard** endpoints for aggregated reporting and revenue analysis over defined time periods.
 </Info>
 
-***
+---
 
 ## 3. How Multi-Seller and Single-Seller reporting fit together
 
 The **reporting surface is shared** across Multi-Seller and Single-Seller:
 
-* **Same endpoints** – `/stats/sellers`, `/stats/campaigns`, `/stats/seller-campaigns`.
-* **Same metrics** – `impressions`, `clicks`, `cost`, `saleUnits`, `revenue`, `cr`, `cpo`, `cos`, `roas`.
-* **Different interpretation of IDs:**
-  * **Multi-Seller:**
-    * `campaignId` → shared MPO campaign across many sellers.
-    * `sellerId` → marketplace seller within that pooled campaign.
-  * **Single-Seller:**
-    * `campaignId` → usually the template campaign ID.
-    * `sellerId` → remains the primary key for seller-level performance.
-    * In some APIs you also see a dedicated `sellerCampaignId` that identifies the per-seller instance.
+- **Same endpoints** – `/stats/sellers`, `/stats/campaigns`, `/stats/seller-campaigns`.
+- **Same metrics** – `impressions`, `clicks`, `cost`, `saleUnits`, `revenue`, `cr`, `cpo`, `cos`, `roas`.
+- **Different interpretation of IDs:**
+  - **Multi-Seller:**
+    - `campaignId` → shared MPO campaign across many sellers.
+    - `sellerId` → marketplace seller within that pooled campaign.
+  - **Single-Seller:**
+    - `campaignId` → usually the template campaign ID.
+    - `sellerId` → remains the primary key for seller-level performance.
+    - In some APIs you also see a dedicated `sellerCampaignId` that identifies the per-seller instance.
 
 From a reporting perspective:
 
-* Use **Seller Stats** when your question is _“How is this seller performing overall?”_
-* Use **Campaign Stats** when your question is _“How is this MPO campaign or template performing?”_
-* Use **Seller-Campaign Stats** when your question is _“How is this seller performing inside this campaign?”_
+- Use **Seller Stats** when your question is _“How is this seller performing overall?”_
+- Use **Campaign Stats** when your question is _“How is this MPO campaign or template performing?”_
+- Use **Seller-Campaign Stats** when your question is _“How is this seller performing inside this campaign?”_
 
-***
+---
 
 ## 4. Click Attribution Policy
 
 For derived metrics (`saleUnits`, `revenue`, `cr`, `cpo`, `cos`, `roas`), you can control how sales are attributed to clicks using `clickAttributionPolicy`:
 
-* `SameSeller` – only count sales where the purchased product’s seller matches the seller that was clicked.
-* `AnySeller` – count sales that follow a click on **any** seller’s product (cross-seller attribution).
-* `Both` – return both perspectives where supported.
+- `SameSeller` – only count sales where the purchased product’s seller matches the seller that was clicked.
+- `AnySeller` – count sales that follow a click on **any** seller’s product (cross-seller attribution).
+- `Both` – return both perspectives where supported.
 
 This policy is available across the **Standard Reporting API** endpoints. Use it to align MPO reporting with your internal business rules for marketplace attribution.
 
-***
+---
 
 ## 5. Typical integration patterns
 
 ### 5.1 Daily batch export for BI and finance
 
-* Once per day (or more), call **Seller Stats** and **Campaign Stats** from the **Standard Reporting API** for the previous day.
-* Load results into your **data warehouse** and join with internal catalog and seller metadata.
-* Use this layer for:
-  * Finance and invoicing.
-  * Marketplace P&L and margin analysis.
-  * Executive dashboards and long-term trend analysis.
+- Once per day (or more), call **Seller Stats** and **Campaign Stats** from the **Standard Reporting API** for the previous day.
+- Load results into your **data warehouse** and join with internal catalog and seller metadata.
+- Use this layer for:
+  - Finance and invoicing.
+  - Marketplace P&L and margin analysis.
+  - Executive dashboards and long-term trend analysis.
 
 ### 5.2 Seller-facing reporting
 
-* Use **Seller Stats** and, when needed, **Seller-Campaign Stats** (Standard Reporting).
-* Filter by `sellerId` and aggregate over windows such as **last 7 days** or **last 30 days**.
-* Surface these metrics in your **seller portal**, aligned with internal KPIs (GMV, ROAS, spend caps, etc.).
+- Use **Seller Stats** and, when needed, **Seller-Campaign Stats** (Standard Reporting).
+- Filter by `sellerId` and aggregate over windows such as **last 7 days** or **last 30 days**.
+- Surface these metrics in your **seller portal**, aligned with internal KPIs (GMV, ROAS, spend caps, etc.).
 
 ### 5.3 Operational monitoring and diagnostics
 
 Combine both reporting paths:
 
-* Use the **Real-Time Asynchronous API** to:
-  * Confirm **today’s** changes (new budgets, `productSet` updates, activations) start generating clicks and spend within minutes.
-  * Power live **NOC-style dashboards** and alerts.
-* Use **Seller-Campaign Stats** (Standard Reporting) to:
-  * Drill into **under-performing sellers** within a campaign.
-  * Compare sellers before and after configuration changes.
-  * Understand whether issues are campaign-wide or isolated to specific sellers.
+- Use the **Real-Time Asynchronous API** to:
+  - Confirm **today’s** changes (new budgets, `productSet` updates, activations) start generating clicks and spend within minutes.
+  - Power live **NOC-style dashboards** and alerts.
+- Use **Seller-Campaign Stats** (Standard Reporting) to:
+  - Drill into **under-performing sellers** within a campaign.
+  - Compare sellers before and after configuration changes.
+  - Understand whether issues are campaign-wide or isolated to specific sellers.
 
 <br />
+
 ## What's next
 
-* [MPO Real-Time Asynchronous API](/marketing-solutions/docs/getting-realtime-mpo-statistics)
-* [MPO Standard Reporting API](/marketing-solutions/docs/mpo-standard-reporting-api)
+- [MPO Real-Time Asynchronous API](/marketing-solutions/docs/getting-realtime-mpo-statistics)
+- [MPO Standard Reporting API](/marketing-solutions/docs/mpo-standard-reporting-api)
