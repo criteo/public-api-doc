@@ -1,0 +1,175 @@
+---
+title: Attributed Transactions Report
+description: POST /reports/attributed-transactions — transaction-level log of every purchase event attributed to Retail Media DSP campaigns.
+---
+
+This endpoint enables Retail Media DSP partners to retrieve a transaction-level log of every purchase event attributed to their campaigns. Each row represents a single attributed transaction and captures the product advertised, the product purchased, the attribution rule applied, and the time elapsed between ad delivery and purchase.
+
+<Info>
+  **This is not a performance report.** Aggregated metrics — impressions, clicks, spend, attributed sales totals — are not available here. Use [`POST /reports/performance`](/retail-media/docs/performance-report) for those.
+</Info>
+
+**Primary audience:** Data scientists and analysts auditing attribution methodology, understanding cross-sell and halo effects, or analyzing purchase behavior at the transaction level. Not a day-to-day campaign monitoring workflow.
+
+The endpoint supports asynchronous report generation. Submit a request, poll for status, and download the output when ready.
+
+***
+
+## Request
+
+```http
+POST /2026-07/retail-media/reports/attributed-transactions
+```
+
+### Required fields
+
+Exactly one of `campaignId` or `lineItemId` must be provided.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `campaignId` | string | Return attributed transactions for all line items under this campaign. Mutually exclusive with `lineItemId`. |
+| `lineItemId` | string | Return attributed transactions for this line item. Mutually exclusive with `campaignId`. |
+
+### Optional fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `startDate` | string | Start of the reporting period. ISO 8601 date (`YYYY-MM-DD`). Based on ad delivery date (`advDate`). |
+| `endDate` | string | End of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
+| `timezone` | string | Timezone for date fields. IANA format (e.g. `America/New_York`). Defaults to `UTC`. |
+| `attributionWindow` | string | Lookback window for attribution. Format: `C{days}V{days}` (e.g. `C14V07` = 14-day click, 7-day view). Defaults to the line item's attribution window setting. |
+| `clickMatchLevel` | string | Match level for click attribution. |
+| `viewMatchLevel` | string | Match level for view attribution. |
+
+### Example request
+
+```http
+POST /2026-07/retail-media/reports/attributed-transactions
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "data": {
+    "type": "RetailMediaReportRequest",
+    "attributes": {
+      "campaignId": "123456",
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-07"
+    }
+  }
+}
+```
+
+***
+
+## Response
+
+A successful request returns `202 Accepted` with a `reportId`. Poll for status until `status` is `success` or `failure`:
+
+```http
+GET /2026-07/retail-media/reports/{reportId}/status
+Authorization: Bearer {token}
+```
+
+Download the output when status is `success`:
+
+```http
+GET /2026-07/retail-media/reports/{reportId}/output
+Authorization: Bearer {token}
+```
+
+Each row in the report output represents one attributed purchase event.
+
+***
+
+## Response schema
+
+### Ad delivery fields
+
+| Field | Type | Description | Example |
+|-------|------|-------------|---------|
+| `advDate` | string | Date the ad was delivered. | `2026-05-03` |
+| `advHour` | integer | Hour the ad was delivered (0–23). | `14` |
+| `advEngagement` | string | Type of engagement that triggered attribution: `imp` (impression) or `click`. | `click` |
+
+### Attribution fields
+
+| Field | Type | Description | Example |
+|-------|------|-------------|---------|
+| `attributionWindow` | string | Lookback window applied to this transaction. Format: `C{days}V{days}`. | `C14V07` |
+| `daysDifference` | integer | Days between ad delivery and the attributed purchase. | `2` |
+| `advToPurchasedProductRelationship` | string | Attribution rule that connected the ad to the purchase: `same sku`, `same parent sku`, `same taxonomy`, `same brand`, `same seller`. | `same brand` |
+
+### Advertised product fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `advProductId` | string | ID of the product that was advertised. References the Catalogs product ID. |
+| `advProductName` | string | Name of the advertised product. |
+| `advProductCategory` | string | Category of the advertised product. Standardized categories. |
+| `advProductGtin` | string | GTIN/EAN/UPC of the advertised product, if available. |
+| `advProductMpn` | string | Manufacturer Part Number of the advertised product, if available. |
+
+### Purchased product fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `purchasedDate` | string | Date the attributed purchase occurred. |
+| `purchasedHour` | integer | Hour the attributed purchase occurred (0–23). |
+| `purchasedProductId` | string | ID of the product that was purchased. |
+| `purchasedProductName` | string | Name of the purchased product. |
+| `purchasedProductCategory` | string | Category of the purchased product. Standardized categories. |
+| `purchasedProductGtin` | string | GTIN/EAN/UPC of the purchased product, if available. |
+| `purchasedProductMpn` | string | Manufacturer Part Number of the purchased product, if available. |
+
+### Attribution result fields
+
+| Field | Type | Description | Example |
+|-------|------|-------------|---------|
+| `attributedSales` | number | Revenue attributed to this transaction in the account's reporting currency. | `8.68` |
+| `attributedUnits` | integer | Units sold in this attributed transaction. | `1` |
+| `salesChannel` | string | Channel through which the purchase was made: `online` or `offline`. | `online` |
+
+### Context fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `campaignId` | string | Campaign ID. |
+| `campaignName` | string | Campaign name. |
+| `lineItemId` | string | Line item ID. |
+| `lineItemName` | string | Line item name. |
+| `retailerName` | string | Retailer where the line item served. |
+| `pageTypeName` | string | Type of retailer page where the ad rendered: `home`, `search`, `productDetail`, `category`, `confirmation`, `checkout`, `merchandising`, `deals`. |
+| `keyword` | string | Keyword on the search page where the ad rendered, if applicable. |
+| `activitySellerId` | string | ID of the seller responsible for the advertising event. |
+| `activitySellerName` | string | Name of the seller responsible for the advertising event. |
+| `saleSellerId` | string | ID of the seller responsible for the sale. |
+| `saleSellerName` | string | Name of the seller responsible for the sale. |
+
+***
+
+## Understanding the advertised vs. purchased product fields
+
+The advertised product (`advProduct*`) and purchased product (`purchasedProduct*`) are often the same — but not always. When the attribution rule is `same brand`, `same taxonomy`, or `same seller`, the ad may have driven a purchase of a related product rather than the exact item advertised.
+
+**Example:** An ad for a camping jacket is served. The shopper purchases a different jacket from the same brand. The row will show:
+- `advProductId`: the advertised jacket
+- `purchasedProductId`: the purchased jacket
+- `advToPurchasedProductRelationship`: `same brand`
+
+This bilateral product structure makes this endpoint useful for cross-sell and halo analysis — you can see exactly which advertised products drove purchases of which other products, and under which attribution rule.
+
+***
+
+## Migrating from `reportType: attributedTransactions`
+
+Replace your existing call on `/reports/campaigns` or `/reports/line-items` with a call to this endpoint. The response schema is unchanged.
+
+**Endpoint change:**
+
+```
+POST /reports/campaigns   →   POST /reports/attributed-transactions
+POST /reports/line-items  →   POST /reports/attributed-transactions
+```
+
+Remove the `reportType: attributedTransactions` field from your request body — it is not accepted on this endpoint. All other request parameters remain the same.
