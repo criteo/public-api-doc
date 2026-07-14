@@ -1,0 +1,252 @@
+---
+title: Troubleshooting Guide
+
+---
+
+import CachingLogic from "/snippets/retail-media/CachingLogic.mdx";
+import ReportRetention from "/snippets/retail-media/ReportRetention.mdx";
+
+
+
+## Introduction
+
+This guide covers basic checks to identify the source of errors, common issue types, and data latency/discrepancy considerations. If the issue cannot be resolved after these steps, please see our [Escalation Guidelines](/criteo-apis/docs/escalation-guidelines).
+
+***
+
+## Does The Error Come From My app or the Criteo Server?
+
+These simple checks will help you to separate client-side issues from server bugs.
+
+### Connectivity
+
+Requests failing at the origin or blocked by the firewall configurations are surprisingly common. Check your connection by attempting to open a page in your web browser or run the `curl` command in the terminal.
+
+<Warning>
+  Ensure your personal or organizational firewall is set up to allow connection to Criteo services.
+</Warning>
+
+Here are the Criteo subnetworks to be whitelisted by region:
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     EMEA
+    </p>
+   </th>
+   <th>
+    <p>
+     APAC
+    </p>
+   </th>
+   <th>
+    <p>
+     Americas
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     178.250.0.0/21 185.235.84.0/22 91.212.98.0/24 91.199.242.0/24
+    </p>
+    <p>
+     2a02:2638::/32
+    </p>
+   </td>
+   <td>
+    <p>
+     74.119.116.0/22
+    </p>
+    <p>
+     199.204.168.0/22
+    </p>
+    <p>
+     177.73.128.0/21
+    </p>
+    <p>
+     2620: 100:a000::/44
+    </p>
+   </td>
+   <td>
+    <p>
+     116.213.20.0/22
+    </p>
+    <p>
+     182.161.72.0/22
+    </p>
+    <p>
+     2406:2600::/32
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+> 👍 Tip
+>
+> For best results, our recommendation is to **whitelist the ranges for all DCs** even if your server is located only in one of the regions.
+
+In some cases, connectivity issues can arise when persistent `HTTP/2` connection's termination command is either not issued properly by the server, or not correctly processed by the client. Typically, this results in a time-out from the endpoint. In such cases, turning off the `keep-alive` property of a connection may help.
+
+Here is an example for Python:
+
+```python
+s=requests.session(), 
+s.keep_alive = False; 
+....
+/// add a parameter into requests: 
+headers={'Connection':'close'}, req=requests(url, headers)
+...
+```
+
+***
+
+### Incorrect request URLs
+
+If you are using variables or path parameters with your request, make sure that the final address is structured correctly. Variables lacking initialization can result in the response code `404`.
+
+***
+
+### Transient Issues
+
+Transient issues can be resolved by properly implemented retry mechanisms, such as [the exponential backoff](https://en.wikipedia.org/wiki/Exponential_backoff) technique.
+
+***
+
+### Consent issues
+
+Usually, if the advertiser hasn't given a consent to your app, you will get an error in `4xx` range.
+
+In order to perform a quick check whether an advertiser has given consent to the app, you can query the `[/retail-media/accounts](/criteo-apis/docs/accounts-endpoints)` and see if it returns the advertiser ID that you expected.
+
+***
+
+### Implementation errors
+
+If the request is not formed according to the specification or an invalid request header is provided, the server will respond with an error in the `400` code series.
+
+If you are using variables or path parameters with your request, this would require making sure that the raw request is in expected format.
+
+To get more details on the next steps, you can turn on `verbose output` of your application.
+
+Here is how to turn the debug mode on for the Python3 _requests_ library:
+
+```python
+import requests
+import logging
+
+# Enabling debugging at http.client level (requests->urllib3->http.client)
+# you will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
+# the only thing missing will be the response.body which is not logged.
+try: # for Python 3
+    from http.client import HTTPConnection
+except ImportError:
+    from httplib import HTTPConnection
+HTTPConnection.debuglevel = 1
+
+logging.basicConfig() # you need to initialize logging, otherwise you will not see anything from requests
+logging.getLogger().setLevel(logging.DEBUG)
+requests_log = logging.getLogger("urllib3")
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
+
+requests.get('https://httpbin.org/headers')
+```
+
+See the next section to understand which additional information is helpful when submitting an investigation request to Criteo.
+
+***
+
+### Server bugs
+
+If you are getting an error in the `500` series consistently, this could indicate an issue on the Criteo server-side.
+
+You can always check the latest service availability status by visiting [this page.](https://status.criteo.com/)
+
+If the status page does not explain your issue, please get in touch with your Criteo contact.
+
+In your post, please share the following information:
+
+* `RequestId` or `TraceId`, if available
+* Endpoint and its version,
+* App name or `app ID`,
+* Payload without any identifiers or sensitive information,
+* Response message without any identifiers or sensitive information.
+
+If your query contains private or sensitive information, we will strive to get back to you in a timely fashion via email. In this case, we will also need the advertiser ID, the full payload, and the full response message.
+
+***
+
+## Is The Issue Due to Data Latency?
+
+Data latency can also be mistaken for causing issues. Some metrics may have several hours of latency, while others may seem to have longer delays. The following table provides the delays ranges for different metric groups.
+
+<Info>
+  Different types of activity and attribution data become available at different times after the event or sale:
+
+  * **Onsite activity data** is typically available within **6–8 hours** of the event.
+  * **Offsite activity data** is typically available within **24 hours** of the event.
+  * **Initial attribution data** is available within **7–9 hours** of the sale.
+  * **Final attribution data** is processed and posted within **74 hours** after the sale.
+  * Please note that potential minor updates can occur up to **120 hours** before finalization
+</Info>
+
+<CachingLogic />
+
+<ReportRetention />
+
+<Warning>
+  Data freshness guidelines on this page are not official SLAs and therefore maximum delay values are not guaranteed. 
+
+  They reflect **the 95th and 50th percentile latency based on the last two weeks of import data**. 
+
+  It is your responsibility to assess the precision-error trade-off of your application based on the snapshot of historical data provided above. Official SLAs will be shared at a later date.
+</Warning>
+
+***
+
+## Is the Issue Caused by a Data Discrepancy?
+
+Whether you are building an aggregator service with Criteo as one of the sources or simply trying to compare the numbers in the Commerce Max/Yield [Analytics UI](https://help.retailmedia.criteo.com/kb/guide/en/introduction-to-analytics-BkpzEf9F7t/Steps/1020437) and the API, you may have encountered a situation where the reported numbers in the UI and API are not the same.
+
+As a first step, we need to make sure we have an apples-to-apples comparison by making sure our views are closely aligned.
+
+<Info>
+  Please visit our [Reporting Diagnostic Guide](/retail-media/docs/reporting-overview-diagnostic-guide) for more insights into UI vs API reporting discrepancies.
+</Info>
+
+***
+
+### Dates
+
+Aligning the timezones and the date ranges in the API request body and the platform UI (whether Criteo Commerce Max/Yield or a third-party platform) will resolve the issue most of the time.
+
+***
+
+### Attribution scope
+
+The naming pattern provided on [the metrics page](/criteo-apis/docs/metrics-and-dimensions) will help you understand how you're comparing the data in different systems. Ask yourself:
+
+* `[AttributionModel]`: Am I comparing custom attribution sales or default attribution sales?
+* `[LookbackWindow]`: Am I selecting the same attribution lookback period?
+
+In general, the Criteo API allows you to retrieve all possible metrics, while Commerce Max/Yield Analytics module is more focused on the metrics that are deemed relevant to a specific account and its settings.
+
+***
+
+### Technical
+
+Due to the specifics of the billing mechanism, the cost data for the day immediately preceding the current day may be adjusted within a 5% threshold soon after midnight. Please take this into account when determining the refresh window of your connector.
+
+***
+
+### Compliance
+
+In some cases, the metrics could be updated several days after a click occurs. For example, this can happen after removing IVT (invalid traffic).
+
+***
