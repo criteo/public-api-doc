@@ -1,5 +1,5 @@
 ---
-title: Criteo Integration via AppsFlyer
+title: AppsFlyer — Dashboard Integration
 description: Set up your Criteo app campaigns (App Install or App Retargeting) with AppsFlyer.
 ---
 
@@ -7,236 +7,150 @@ description: Set up your Criteo app campaigns (App Install or App Retargeting) w
 
 This page will guide you in setting up your Criteo App campaign(s) with AppsFlyer, either App Install or App Retargeting campaigns.
 
----
-
 ## Dashboard Configuration
 
 ### App Settings
 
-Under **Settings > App Settings**, please follow these steps:
+Under **Settings** > **App Settings**, please follow these steps:
 
-1. Enable **View-through attribution via probabilistic modeling**
-2. Enable **Re-engagement attribution**
-3. Leave default option **None** for Minimum time between re-engagement conversions
-4. Hit **Save settings**
+1. **Enable view-through attribution via probabilistic modeling**
+1. Enable **Re-engagement attribution**
+   * When enabled, AppsFlyer can attribute users who already have the app installed to a retargeting campaign if they engage with the campaign and then return to the app.
+1. Leave default option **None** for **Minimum time between re-engagement conversions**
+   * On re-engagement a window opens to attribute re-engagement in-app events to the retargeting network. This helps you to measure the effectiveness of retargeting campaigns. However, if another network brings a new re-engagement during this window, it replaces the last re-engagement, and all subsequent events are attributed to the new network. By using the **Minimum time between re-engagement conversions** set to **none**, you can stop this from occurring. You can find more information [here](https://support.appsflyer.com/hc/en-us/articles/207033786-Retargeting-attribution-guide#exclusion-windows).
+1. Hit **Save settings**
 
-<Warning>
-  If Enabling retargeting attribution is left disabled, Criteo won't have any in-app conversion/sales attributed to our Retargeting campaigns.
-</Warning>
+![](/images/mobile-integrations/appsflyer/app-settings.png)
+
+<Warning>In case **Re-engagement attribution** is left disabled, Criteo won't have any in-app conversion/sales attributed to our Retargeting campaigns.</Warning>
 
 ### Partner Configuration
 
 To proceed with Criteo-specific configurations:
 
-1. Under **Collaborate > Partner Marketplace**, search for Criteo
+1. Navigate to **Collaborate** > **Partner Integrations** > **Marketplace** and search for **Criteo**
+1. Select **Integrate**
 
-   <img src="/images/mobile-integrations/appsflyer/marketplace.png" alt="AppsFlyer Partner Marketplace" />
+   ![](/images/mobile-integrations/appsflyer/marketplace.png)
 
-2. If not enabled, choose to **Set up integration**
+1. You will be automatically redirected to the **Integration** tab, where you should switch on the toggle **Activate partner**.
 
-3. Under the **Integration** tab, enable **Activate partner**
+   ![](/images/mobile-integrations/appsflyer/activate_partner.png)
 
-   <img src="/images/mobile-integrations/appsflyer/activate_partner.png" alt="Activate partner" />
+1. [Optional] Enable **Install view-through attribution**
+     * Enable only if you consider view-through attribution. By default set to **ON**. It attributes installs to a media source after the user sees an impression. You can find more information [here](https://support.appsflyer.com/hc/en-us/articles/210084473-Measure-view-through-engagements).
 
-4. Enable **Install view-through attribution**
+1. [Recommended] Leave **Re-engagement view-through attribution** disabled
+     * Set to **OFF** by default to avoid cross-platform discrepancies. It determines whether a retargeting partner can receive credit when a user sees a retargeting ad (but does not click it) and later opens or engages with the app. When it is **off**, AppsFlyer requires a click for re-engagement attribution.
 
-   <img src="/images/mobile-integrations/appsflyer/vt-attributions2.png" alt="View-through attribution settings" />
+   ![](/images/mobile-integrations/appsflyer/vt-attributions2.png)
 
-   - Recommended: leave Re-engagement View-Through attribution **disabled** (to avoid discrepancies cross-platforms)
+1. **Default postbacks** — Defines the sources of users sending postbacks. You can find more info [here](https://support.appsflyer.com/hc/en-us/articles/4410395957521-Set-up-an-integrated-partner#default%20postbacks).
 
-5. Select **All media sources, including organic** for Install.
+     * **Install: All media sources, including organic**
+       * To share with Criteo the full MMP install stream (including installs not attributed to Criteo) in order to perform troubleshooting and discrepancy analysis. Criteo knows from the postbacks which ones are attributed to it and which ones are not.
+     * **Rejected Install: This partner only**
+       * It is a separate rejected-events / fraud-quality stream, not the general install stream. Keeping it partner only means Criteo receives its own rejected installs for fraud/troubleshooting, rather than all rejected installs from every media source.
+     * **Re-engagement: This partner only**
+       * AppsFlyer sends re-engagement postbacks only when Criteo is credited for the re-engagement.
 
-6. To configure the Criteo postbacks, set **In-App Events Postbacks** to ON:
+   ![](/images/mobile-integrations/appsflyer/default-postbacks.png)
 
-   <img src="/images/mobile-integrations/appsflyer/default-postbacks.png" alt="Default postbacks configuration" />
+1. To configure the Criteo postbacks, set **In-App Events Postbacks** to **ON**:
+      * Set **In-App Events Postback Window** to **Lifetime**, so that Criteo can receive postbacks from all active app users
+      * Map all relevant **AppsFlyer events** to **CriteoData**
+      * As sending option, select **All media sources, including organic**
+      * Include **Values & revenue** to forward all available event parameters
+      * **Save** the integration
 
-   - Set **In-App Events Postback Window** to **Lifetime**, so that Criteo can receive postbacks from all active app users
-   - Perform the mapping of all AppsFlyer events to **CriteoData**
+   ![](/images/mobile-integrations/appsflyer/events-criteodata.png)
 
-   <img src="/images/mobile-integrations/appsflyer/events-criteodata.png" alt="Event mapping to CriteoData" />
-
-   - As **Sending Option**, choose **All media sources, including organic**
-   - As **Send revenue**, choose **Values & revenue** to forward all event parameters available
-   - Save it.
-
-<Note>
-  See the section [Recommended Events per Vertical](#recommended-events-per-vertical) below for the list of recommended events per vertical.
-</Note>
+<Note>Please see the section [Recommended Events per Vertical](#recommended-events-per-vertical) below for the list of recommended events per vertical.</Note>
 
 ### Criteo Permissions
 
 Under the **Permissions** tab, it is highly recommended to:
 
-<img src="/images/mobile-integrations/appsflyer/4-permission-network-updated.png" alt="Permission settings" />
-
 1. Enable **Ad Network Permissions** for Criteo to see your app in the dashboard
-2. Grant, at least, the following permissions to the Criteo team:
-   - Configure integration
-   - Configure In-app event postbacks
-   - Access retention report
-   - Access aggregate conversion data
-   - Access aggregate in-app events data
-3. Please don't forget to **Save**.
+1. Grant, at least, the following permissions to the Criteo team:
+   * Configure integration
+   * Configure In-app event postbacks
+   * Access retention report
+   * Access aggregated conversion data
+   * Access aggregate in-app events data
+1. Please don't forget to **Save**.
 
-<Note>
-  Allowing Criteo to configure the integration and in-app event postbacks can increase the efficiency in the partner setup and allow quicker troubleshooting.
-</Note>
+<Note>Allowing Criteo to configure the integration and in-app event postbacks can increase the efficiency in the partner setup and allow quicker troubleshooting.</Note>
 
----
+![](/images/mobile-integrations/appsflyer/4-permission-network-updated.png)
 
 ## Tracking in AppsFlyer
 
 ### Tracking Generation
 
-Under the **Attribution Link** tab, generate the Click Tracking Link and send it to your Criteo contact.
-
-<img src="/images/mobile-integrations/appsflyer/attribution-link1.png" alt="Attribution link tab" />
+Under the **Attribution Link** tab, generate the **Click Tracking Link** and send it to your Criteo contact.
 
 Some typical settings:
 
-1. Add **campaign name**
+* Add campaign name
 
-2. Enable **Retargeting settings** (if applicable)
+![](/images/mobile-integrations/appsflyer/attribution-link1.png)
 
-   <img src="/images/mobile-integrations/appsflyer/attribution-link2.png" alt="Retargeting settings" />
+* Enable **Retargeting settings** (if applicable)
+  * Provide **URI scheme** deeplink
+  * Leave **Ignore active users for retargeting** OFF (recommended)
+    * This is a retargeting setting that determines whether users who are already active in your app can be counted as retargeting conversions. When set to **OFF**, AppsFlyer does not exclude active users. This means an active user can still be attributed to a retargeting campaign if they engage with a retargeting ad and meet the attribution criteria.
+  * Define **Re-engagement window** (recommended **30 days**)
+    * The re-engagement window is the period of time after a user interacts with a retargeting ad during which subsequent app opens and in-app events can be attributed to that retargeting campaign.
 
-   - Provide URI scheme deeplink
-   - Leave **Ignore active users for retargeting** OFF (recommended)
-   - Define **Re-engagement window** (recommended 30 days)
+![](/images/mobile-integrations/appsflyer/attribution-link2.png)
 
-3. Define **Click-through attribution** (recommended 7 days)
-4. Define **View-through attribution** (recommended 24 hours)
+  * Define **Click-through attribution** (recommended **7 days**)
+    * Credits installs to the media source when users click an ad.
+  * Define **View-through attribution** (recommended **24 hours**)
+    * Attributes installs to a media source after a user sees an ad impression but doesn't click.
+  * Hit **Save Attribution link** and share with your Criteo contact the generated links
 
-   <img src="/images/mobile-integrations/appsflyer/attribution-link3.png" alt="Attribution windows" />
-
-5. Hit **Save Attribution link** and share the generated links with your Criteo contact.
-
----
+![](/images/mobile-integrations/appsflyer/attribution-link3.png)
 
 ## Recommended Events per Vertical
 
-The recommendation is to send all events that describe the "user-flow" in the app. Select your vertical below to see the recommended events:
+The recommendation is to send all events that describe the "user-flow" in the app. The table below shows the recommended events per vertical:
 
-<Tabs>
-  <Tab title="Retail">
-    | Event | Description |
-    |---|---|
-    | app open / app launch | When user installs the app |
-    | home page / app open | When user opens the app or arrives on the home page |
-    | view item list / listing | When a user sees a list of items/products |
-    | view item | When a user sees one specific item/product |
-    | add to cart | When a user adds an item/product to the cart |
-    | basket | When user is on the basket page |
-    | purchase | When user makes a purchase |
-    | add to wish list | When a user adds an item/product to the wish list |
-    | complete registration / sign up | When a user creates an account or completes registration |
-    | login | When a user logs in |
-    | add payment info | When a user adds payment info |
-    | begin checkout | When a user starts the purchase flow |
-    | purchase cancelled / refund | When a user cancels a purchase or requests a refund |
-    | subscribe | When a user subscribes (e.g. prime membership program) |
-  </Tab>
-  <Tab title="Travel">
-    | Event | Description |
-    |---|---|
-    | app open / app launch | When user installs the app |
-    | home page / app open | When user opens the app or arrives on the home page |
-    | view item list / listing | When a user sees a list of items/products |
-    | view item | When a user sees one specific item/product |
-    | add to cart | When a user adds an item/product to the cart |
-    | basket | When user is on the basket page |
-    | purchase | When user makes a purchase |
-    | add to wish list | When a user adds an item/product to the wish list |
-    | complete registration / sign up | When a user creates an account or completes registration |
-    | login | When a user logs in |
-    | add payment info | When a user adds payment info |
-    | begin checkout | When a user starts the purchase flow |
-    | purchase cancelled / refund | When a user cancels a purchase or requests a refund |
-  </Tab>
-  <Tab title="Classified">
-    | Event | Description |
-    |---|---|
-    | app open / app launch | When user installs the app |
-    | home page / app open | When user opens the app or arrives on the home page |
-    | view item list / listing | When a user sees a list of items/products |
-    | view item | When a user sees one specific item/product |
-    | purchase | When user makes a purchase |
-    | complete registration / sign up | When a user creates an account or completes registration |
-    | login | When a user logs in |
-    | generate lead | When a user generates a lead (contact request, message sent) |
-    | search | Search event |
-  </Tab>
-  <Tab title="Gaming">
-    | Event | Description |
-    |---|---|
-    | app open / app launch | When user installs the app |
-    | home page / app open | When user opens the app or arrives on the home page |
-    | view item | When a user sees one specific item/product |
-    | purchase | When user makes a purchase |
-    | complete registration / sign up | When a user creates an account or completes registration |
-    | login | When a user logs in |
-    | start trial | When a user starts the trial version |
-    | select item | When a user has selected content in an app |
-    | earn virtual currency | When a user earns virtual currency |
-    | level up | When a user passes a level |
-    | spend virtual currency | When a user spends virtual currency |
-    | tutorial begin | When a user starts the tutorial |
-    | tutorial complete | When a user completes the tutorial |
-    | unlock achievement | When a user unlocks an achievement |
-  </Tab>
-  <Tab title="Streaming">
-    | Event | Description |
-    |---|---|
-    | app open / app launch | When user installs the app |
-    | home page / app open | When user opens the app or arrives on the home page |
-    | view item list / listing | When a user sees a list of items/products |
-    | view item | When a user sees one specific item/product |
-    | complete registration / sign up | When a user creates an account or completes registration |
-    | login | When a user logs in |
-    | start trial | When a user starts the trial version |
-    | subscribe | When a user subscribes (recurring payment) |
-    | video/audio start | When user starts to play a media in the app |
-  </Tab>
-  <Tab title="Finance">
-    | Event | Description |
-    |---|---|
-    | app open / app launch | When user installs the app |
-    | home page / app open | When user opens the app or arrives on the home page |
-    | view item | When a user sees one specific item/product |
-    | purchase | When user makes a purchase |
-    | complete registration / sign up | When a user creates an account or completes registration |
-    | login | When a user logs in |
-    | add payment info | When a user adds payment info |
-    | begin checkout | When a user starts the purchase flow |
-    | start trial | When a user starts the trial version |
-    | subscribe | When a user subscribes (recurring payment) |
-  </Tab>
-  <Tab title="Dating / Social">
-    | Event | Description |
-    |---|---|
-    | app open / app launch | When user installs the app |
-    | home page / app open | When user opens the app or arrives on the home page |
-    | complete registration / sign up | When a user creates an account or completes registration |
-    | login | When a user logs in |
-    | start trial | When a user starts the trial version |
-    | subscribe | When a user subscribes (recurring payment) |
-  </Tab>
-  <Tab title="Ride Hailing">
-    | Event | Description |
-    |---|---|
-    | app open / app launch | When user installs the app |
-    | home page / app open | When user opens the app or arrives on the home page |
-    | view item list / listing | When a user sees a list of items/products |
-    | purchase | When user makes a purchase |
-    | complete registration / sign up | When a user creates an account or completes registration |
-    | login | When a user logs in |
-    | add payment info | When a user adds payment info |
-    | purchase cancelled / refund | When a user cancels a purchase or requests a refund |
-    | select item | When a user has selected content in an app |
-  </Tab>
-</Tabs>
+| Event Name | Description | Retail | Travel | Classified | Gaming | Streaming Entertainment | Finance | Dating Social | RideHailing |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| app open/app launch | when user installs the app | Y | Y | Y | Y | Y | Y | Y | Y |
+| home page / App open | when user opens the app or arrives on the home page | Y | Y | Y | Y | Y | Y | Y | Y |
+| view item list / listing | when a user sees list of items/products/offering | Y | Y | Y | | Y | | | Y |
+| view item | when a user sees one specific item/products/offering | Y | Y | Y | Y | Y | Y | | |
+| add to cart | when a user adds an item/product to the cart | Y | Y | | | | | | |
+| basket | when user is on the basket page | Y | Y | | | | | | |
+| purchase | when user makes a purchase | Y | Y | Y | Y | | Y | | Y |
+| add to wish list | when a user adds an item/product to the wish list | Y | Y | | | | | | |
+| complete registration / create an account / sign up | when a user creates an account, signs up or completes registration | Y | Y | Y | Y | Y | Y | Y | Y |
+| login | when a user logs in | Y | Y | Y | Y | Y | Y | Y | Y |
+| add payment info | when a user adds payment info | Y | Y | | | | Y | | Y |
+| begin checkout | when a user starts the purchase flow | Y | Y | | | | Y | | |
+| purchase cancelled / purchase refund | when a user cancels a purchase or asks for a refund | Y | Y | | | | | | Y |
+| generate lead | when a user generates a lead | | | Y | | | | | |
+| start trial | when a user starts the trial version of the app | | | | Y | Y | Y | Y | |
+| subscribe | when a user subscribes (recurring payment) | Y | | | | Y | Y | Y | |
+| select item | when a user has selected content in an app | | | | Y | | | | Y |
+| earn virtual currency | when a user earns virtual currency | | | | Y | | | | |
+| level up | when a user passes a level | | | | Y | | | | |
+| spend virtual currency/credit | when a user spends virtual currency | | | | Y | | | | |
+| tutorial begin | when a user starts the tutorial | | | | Y | | | | |
+| tutorial complete | when a user completes the tutorial | | | | Y | | | | |
+| unlock achievement | when a user unlocks an achievement | | | | Y | | | | |
+| search | | | Y | | | | | | |
+| video/audio start or media play | when user starts to play media in the app | | | | | Y | | | |
 
----
+## Adding Additional In-App Events
+
+In case you need to create or modify in-app events, please see the iOS and Android guides for how to implement them in your app:
+
+* [AppsFlyer iOS](/mobile-integrations/docs/appsflyer-ios)
+* [AppsFlyer Android](/mobile-integrations/docs/appsflyer-android)
 
 ## Additional Features
 
@@ -244,66 +158,69 @@ The recommendation is to send all events that describe the "user-flow" in the ap
 
 Criteo has the ability to share Cost Data from our campaigns with AppsFlyer.
 
-This feature is currently available only for accounts with **AppsFlyer ROI360**. The activation is straightforward:
+This feature is currently available only for accounts with **AppsFlyer ROI360** and, if this is your case, the activation is very simple:
 
 1. Select the **Cost** tab under our integration module
-2. If available, enable the checkbox **Get cost data**
+1. If available, enable the checkbox **Get cost data**
+1. Hit **Save Cost** to confirm the change
 
-   <img src="/images/mobile-integrations/appsflyer/cost-data.png" alt="Cost data configuration" />
+![](/images/mobile-integrations/appsflyer/cost-data.png)
 
-3. Hit **Save Cost** to confirm the change
+The data is synchronized 2x per day and populates the cost of all your app campaigns in AppsFlyer dashboards, enabling other cost-dependent metrics like Avg eCPI, ROI, etc.
 
-The data is synchronized **2x per day** and populates the cost of all your app campaigns in AppsFlyer dashboards, enabling cost-dependent metrics like Avg eCPI, ROI, etc.
-
-For more info, see [AppsFlyer ROI360 cost aggregation overview](https://support.appsflyer.com/hc/en-us/articles/207040526-ROI360-cost-aggregation-overview).
+For more info, check: [AppsFlyer ROI360 cost aggregation overview](https://support.appsflyer.com/hc/en-us/articles/207040526-ROI360-cost-aggregation-overview)
 
 ### Audiences
 
-Criteo is connected with AppsFlyer Audiences, which allows our platform to receive and work with your audiences seamlessly.
+Criteo is connected with [AppsFlyer Audiences](https://www.appsflyer.com/products/audiences/), which allows our platform to receive and work with your audiences seamlessly with our campaigns.
 
-If this feature is available in your AppsFlyer plan and you already have Audiences built, follow the steps below:
+If this feature is available in your AppsFlyer plan and you already have Audiences built, follow the steps below to create an outgoing connection with our Criteo Commerce Growth platform:
 
-1. Under **Engage > Audiences > Connections**, click **+ New Connection**
+* Under **Engage** > **Audiences** > **Connections**, click in **+ New Connection**
+* Search for **Criteo** in **Partner name**
+* Define an arbitrary **Connection name** of your choice
 
-   <img src="/images/mobile-integrations/appsflyer/audience-new-connection.webp" alt="New audience connection" />
+![](/images/mobile-integrations/appsflyer/audience-new-connection.webp)
 
-2. Search for **Criteo** in Partner name
-3. Define an arbitrary **Connection name** of your choice
-4. Click **Log in with Criteo** — you will be redirected to a Criteo page to review permissions:
+* Click in **Log in with Criteo**
+  * With it, you'll be redirected to a Criteo page where you can review the permissions for AppsFlyer's API app to access your account on Criteo platform
+      * *Audience*: `Manage` access, to create/update audiences in our Criteo account on your behalf
+      * *Analytics*: `Read` access, to read statistics about your campaigns and enrich AppsFlyer dashboard
+      * *Campaign*: `Read` access, to read your campaigns status
+  * Under **Portfolio access**, make sure to **Select all entities** to allow AppsFlyer to access all your advertisers accounts (if applicable)
+  * **Approve** it!
 
-   <img src="/images/mobile-integrations/appsflyer/audience-consent-dialog.webp" alt="Audience consent dialog" />
+![](/images/mobile-integrations/appsflyer/audience-consent-dialog.webp)
 
-   - **Audience**: Manage access, to create/update audiences in your Criteo account
-   - **Analytics**: Read access, to read campaign statistics
-   - **Campaign**: Read access, to read campaign status
-   - Under **Portfolio access**, select all entities to allow AppsFlyer to access all your advertiser accounts
+* Back to the previous screen, make sure to select all **User Identifiers** available: *IDFA*, *GAID*, *Email*, etc.
+* **Save** it to complete the connection creation!
 
-5. Approve it, then select all **User Identifiers** available: IDFA, GAID, Email, etc.
-6. **Save** to complete the connection.
-
-For more info, see [AppsFlyer Audiences](https://support.appsflyer.com/hc/en-us/sections/6551336428945-Audiences).
+For more info, check: [AppsFlyer Audiences](https://support.appsflyer.com/hc/en-us/sections/6551336428945-Audiences)
 
 ### Agency-Managed Setups
 
-For agency teams managing app campaigns on behalf of marketer clients, it is important to follow these instructions:
+AppsFlyer allows agency teams to manage app marketing campaigns on behalf of marketer clients (app owners) with different ad networks and have their data/measurement shared between all the entities.
 
-1. The integration module must be configured by an **Agency user**, not users connected to the app-owner team — even if the module is already pre-configured by the app owner, an agency user must repeat the module setup
-2. Ad trackings must include the correct **Agency ID** (parameter `af_prt` — case-sensitive) on both click and impression trackings
-   - If the integration module is correctly enabled by the agency, `af_prt` will be automatically included during tracking generation
-3. Your **Agency ID must be added to Criteo's allowlist** before campaign launch — ask your Criteo contact to add your Agency ID if this is your first campaign with AppsFlyer
+For those setups to work seamlessly for the client, agency, and Criteo, it's very important to follow the instructions below:
 
-<Warning>
-  Not following one of the points above may lead to incorrect attribution from AppsFlyer to Criteo campaigns, directly impacting the results measured on both platforms.
-</Warning>
+1. **Our integration module needs to be configured by an Agency user**, not users connected to the app-owner team (described in section [Partner Configuration](#partner-configuration) above)
+   * Even if the module is already pre-configured by the app owner, an agency user is required to repeat the module setup to ensure that the postbacks sent to Criteo are sent respecting the attribution settings made to your agency account.
+1. **The ad trackings need to include the correct Agency ID** (`af_prt` parameter — case-sensitive) on both click and impression trackings, if applicable.
+   * `af_prt` stands for Agency Partner ID (or agency account identifier). It's a parameter added to attribution links to indicate that the traffic is being managed by a specific agency account rather than directly by the advertiser.
+   * If the integration module is correctly enabled by the agency, your respective `af_prt` parameter will be automatically included during the [Tracking Generation](#tracking-generation).
+1. **Your Agency ID needs to be included in Criteo's list of authorized agencies** before the launch of the campaign(s)
+   * If you believe it's the first time Criteo and your Agency is running campaigns with AppsFlyer, make sure to ask your Criteo contact to add your Agency ID to our allowlist.
 
-For more info, see [About agency accounts](https://support.appsflyer.com/hc/en-us/articles/207034106-About-agency-accounts).
+<Warning>Not following one of the points above might lead to incorrect attribution from AppsFlyer to our campaigns, which will directly impact the results measured on both platforms.</Warning>
 
-### Product Catalog for Dynamic Campaigns
+For more info, check: [About agency accounts](https://support.appsflyer.com/hc/en-us/articles/207034106-About-agency-accounts)
 
-A catalog feed is an XML or CSV file containing product information (name, price, deep link, image link, etc.) that allows Criteo to dynamically generate product-recommendation banners.
+## Products Catalog for Dynamic Campaigns
 
-<Tip>
-  Criteo may already have the product catalog in some cases (e.g., advertisers already live on web campaigns).
-</Tip>
+A catalog feed is an XML or a CSV file containing product information (name, price, deep link, image link, etc.) that allows Criteo to dynamically generate the product-recommendation banners. Therefore, it is important to keep this file up to date for Criteo to show the right data in your banners.
 
-Criteo recommends having both **Native Deeplinks** (URI Scheme links) and **Universal/App Links** whenever possible.
+<Tip>Criteo may already have the products catalog in some cases (i.e., advertisers already live on web campaigns).</Tip>
+
+Criteo **recommends** to have both Native Deeplinks (aka "URI Scheme" links) and Universal/App Links whenever possible.
+
+For more information, please follow [AppsFlyer's deep linking guide](https://www.appsflyer.com/resources/guides/deep-linking-for-mobile-marketers/).

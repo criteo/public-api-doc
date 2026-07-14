@@ -1,0 +1,384 @@
+---
+title: Branch iOS — In-App Events
+description: Implement Criteo in-app events for iOS using the Branch SDK.
+---
+
+## Overview
+
+Criteo serves personalized ads to mobile app users that have high probability of clicking through and making a purchase. Criteo technology is based on real-time product recommendation optimization and prediction engines.
+
+In order to enable its technology, Criteo needs:
+
+* App Events — App events and relevant data correctly captured on your mobile app.
+* Deep Linking Capability — Product level deep link capabilities in app to take users back to the products they clicked on.
+* Catalog Feed — A CSV or XML file (called Catalog Feed) containing product information of a large portion of your mobile app's offers.
+
+This document provides detailed information on the following:
+
+* Integration
+* Required events and parameters
+* Implementation guidelines
+
+## Integration Steps
+
+| Steps to Follow | Where to Integrate |
+| --- | --- |
+| Integration Kickoff Call | Criteo & client technical teams |
+| Integration Questionnaire | Client-side |
+| Catalog Feed Integration | Client-side |
+| Criteo Event Implementation | Client-side |
+| Dashboard Configuration | Client-side |
+| Testing Phase | Criteo & client technical teams |
+| App Submission & Release | Client-side |
+| Pre-Launch Checks | Client-side |
+| Campaign Launch | Client-side |
+
+## App Events & Data
+
+### SDK Initialization
+
+Set up and initialize the Branch SDK as recommended by the Branch standard documentation.
+
+<Note>Find additional SDK Setup documentation [here](https://docs.branch.io/pages/apps/ios/#initialize-branch).</Note>
+
+#### Branch SDK Initialization
+
+Ensure that the Branch SDK is initialized in `didFinishLaunching`.
+
+```objc
+#import "Branch/Branch.h"
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    Branch *branch = [Branch getInstance];
+    [branch initSessionWithLaunchOptions:launchOptions andRegisterDeepLinkHandler:^(NSDictionary *params, NSError *error) {
+        if (!error && params) {
+            // params are the deep linked params associated with the link that the user clicked -> was re-directed to this app
+            // params will be empty if no data found
+            // ... insert custom logic here ...
+            NSLog(@"params: %@", params.description);
+        }
+    }];
+    
+    [branch setIdentity:@"customerid123"]; // set customer ID
+    
+    return YES;
+}
+```
+
+#### Track Session Start and App Deeplink Launch
+
+Ensure to track the App Launch and App Deeplink Launch events.
+
+```objc
+- (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray * _Nullable))restorationHandler {
+    // handler for Universal Links    
+    [[Branch getInstance] setRequestMetadataKey:@"$criteo_deep_link_url" value:userActivity.webpageURL.absoluteString]; // collect deeplink
+
+    [branch continueUserActivity:userActivity];
+    return YES;
+}
+
+// ...
+
+@import Branch
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+    
+    [[Branch getInstance] setRequestMetadataKey:@"$criteo_deep_link_url" value:url.absoluteString]; // collect deeplink
+    
+    // handler for URI Schemes (depreciated in iOS 9.2+, but still used by some apps)
+    Branch *branch = [Branch getInstance];
+    [branch application:app openURL:url options:options];
+    return YES;
+}
+```
+
+### Events Implementation in the App
+
+Criteo requires the implementation of the following events:
+
+| Event Name | Retail Event Description | Travel Event Description |
+| --- | --- | --- |
+| viewHome | App open / app brought to the foreground. | |
+| viewListing | View of a list of products. | View of a list of hotels or flights, usually after a search. |
+| viewProduct | View of a specific product. | View of a specific hotel or flight. |
+| viewBasket | View of shopping basket. | Begin booking process. |
+| trackTransaction | Purchase of one or more products. | Purchase / booking confirmation. |
+
+Below is a table of Branch Event Name constants and how they map to Criteo events.
+
+| Branch Event | Criteo Event |
+| --- | --- |
+| `BranchStandardEventViewItems` | viewListing |
+| `BranchStandardEventViewItem` | viewProduct |
+| `BranchStandardEventViewCart` | viewBasket |
+| `BranchStandardEventPurchase` | trackTransaction |
+
+#### Branch Universal Objects
+
+The Criteo integration with Branch relies on the creation of `BranchUniversalObjects` through the Branch SDK. An array of `BranchUniversalObjects` should be sent with all events (except `app open`). `BranchUniversalObject` represent the product that the user has viewed or purchased and have an associated product **id**, **price**, and **quantity**.
+
+<Warning>If an equivalent of a required Criteo event is already implemented in the app, then either the `BranchUniversalObjects` array needs to be implemented in that event or else a new event needs to be created.</Warning>
+
+#### View Home
+
+The `viewHome` event is automatically sent once Criteo has been activated on the app. It is triggered for each new user session.
+
+#### View Listing
+
+The `viewListing` event should be triggered on pages displaying product lists like a category page or a search results page for Retail, and travel search results page for Travel. You must include the IDs of the top three products displayed in the list by setting the `BranchUniversalObject` name to the ID. These IDs must match those passed in the catalog feed.
+
+For **travel** apps, you must send check in (Date1) and check out (Date2) information along with the event.
+
+```objc
+BranchUniversalObject *buo = [BranchUniversalObject new];
+BranchUniversalObject *buo2 = [BranchUniversalObject new];
+
+buo.contentMetadata.sku = @"item1";
+buo.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"1.5"];
+buo.contentMetadata.quantity = 1;
+
+buo2.contentMetadata.sku = @"item2";
+buo2.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"2.5"];
+buo2.contentMetadata.quantity = 2;
+
+buo3.contentMetadata.sku = @"item2";
+buo3.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"3.5"];
+buo3.contentMetadata.quantity = 3;
+
+// ...
+
+BranchEvent *event = [BranchEvent standardEvent:BranchStandardEventViewItems];
+    
+event.contentItems = (id) @[ buo, buo2, buo3 ];
+
+event.customData = (NSMutableDictionary*) @{ @"sha256_hashed_email": @"insert_hashed_email_value", // sha256 hashed email
+                                             @"din": @"2025-02-21", // for travel
+                                             @"dout": @"2025-02-27" }; // for travel
+
+// Log Event
+[event logEvent];
+```
+
+#### View Product
+
+The `viewProduct` event should be triggered on all product-details pages. You must include the ID of the product detailed on the page via the `BranchUniversalObject` name, and send the `BranchUniversalObject` with the event. It must be the same ID as used in the catalog feed, and must be unique.
+
+```objc
+BranchUniversalObject *buo = [BranchUniversalObject new];
+buo.contentMetadata.sku = @"item1";
+buo.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"1.5"];
+buo.contentMetadata.quantity = 1;
+
+BranchEvent *event = [BranchEvent standardEvent:BranchStandardEventViewItem];
+
+event.contentItems = (id) @[ buo ];
+
+event.customData = (NSMutableDictionary*) @{ @"sha256_hashed_email": @"insert_hashed_email_value", // sha256 hashed email
+                                             @"din": @"2025-02-21", // for travel
+                                             @"dout": @"2025-02-27" }; // for travel
+
+// Log Event
+[event logEvent];
+```
+
+#### View Basket
+
+The viewBasket event should be triggered on the basket-details pages for Retail and when a user begins entering booking details for Travel. You must include the IDs, prices, and quantities of the basket's products via the `BranchUniversalObjects` array.
+
+```objc
+BranchUniversalObject *buo = [BranchUniversalObject new];
+BranchUniversalObject *buo2 = [BranchUniversalObject new];
+BranchUniversalObject *buo3 = [BranchUniversalObject new];
+
+buo.contentMetadata.sku = @"item1";
+buo.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"1.5"];
+buo.contentMetadata.quantity = 1;
+
+buo2.contentMetadata.sku = @"item2";
+buo2.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"2.5"];
+buo2.contentMetadata.quantity = 2;
+
+buo3.contentMetadata.sku = @"item2";
+buo3.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"3.5"];
+buo3.contentMetadata.quantity = 3;
+
+// ...
+
+BranchEvent *event = [BranchEvent standardEvent:BranchStandardEventViewCart];
+
+event.contentItems = (id) @[ buo, buo2, buo3 ];
+
+event.customData = (NSMutableDictionary*) @{ @"sha256_hashed_email": @"insert_hashed_email_value", // sha256 hashed email
+                                             @"din": @"2025-02-21", // for travel
+                                             @"dout": @"2025-02-27" }; // for travel
+
+// Log Event
+[event logEvent];
+```
+
+#### Track Transaction
+
+The trackTransaction event should be triggered on order confirmation pages for Retail and booking confirmation pages for Travel. For Retail, you must include a unique transaction ID as well as the IDs, prices, and quantities of the products bought in the transaction via the `BranchUniversalObjects` array. For Travel, transaction ID is not required.
+
+```objc
+BranchUniversalObject *buo = [BranchUniversalObject new];
+BranchUniversalObject *buo2 = [BranchUniversalObject new];
+BranchUniversalObject *buo3 = [BranchUniversalObject new];
+
+buo.contentMetadata.sku = @"item1";
+buo.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"1.5"];
+buo.contentMetadata.quantity = 1;
+
+buo2.contentMetadata.sku = @"item2";
+buo2.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"2.5"];
+buo2.contentMetadata.quantity = 2;
+
+buo3.contentMetadata.sku = @"item3";
+buo3.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"3.5"];
+buo3.contentMetadata.quantity = 3;
+
+// Create an event and add the BranchUniversalObject to it.
+BranchEvent *event = [BranchEvent standardEvent:BranchStandardEventPurchase];
+
+// Add the BranchUniversalObjects with the content:
+event.contentItems = (id) @[ buo, buo2, buo3 ];
+
+// Unique Transaction ID
+event.transactionID = @"12344555";
+
+event.customData = (NSMutableDictionary*) @{ @"sha256_hashed_email": @"insert_hashed_email_value", // sha256 hashed email
+                                             @"din": @"2025-02-21", // for travel
+                                             @"dout": @"2025-02-27" }; // for travel
+
+// Log Event
+[event logEvent];
+```
+
+#### UI Status
+
+The `Status` should be triggered every time the user opens the app or user status has changed. You must include the status value of the updated status with the event.
+
+```objc
+BranchEvent *event = [BranchEvent customEventWithName:@"UI_STATUS"];
+event.customData = (NSMutableDictionary*) @{ @"ui_status": @"vip_user" }; 
+
+[event logEvent];
+```
+
+#### UI Level
+
+The `Level` event should be triggered every time the user opens the app or levels up. You must include the level value of the new incremental level reached.
+
+```objc
+BranchEvent *event = [BranchEvent customEventWithName:@"ACHIEVE_LEVEL"];
+event.customData = (NSMutableDictionary*) @{ @"ui_level": @"42" }; 
+
+[event logEvent];
+```
+
+#### UI Achievement
+
+The `Achievement` event should be triggered every time the user unlocks a new achievement. You must include the name of the achievement.
+
+```objc
+BranchEvent *event = [BranchEvent customEventWithName:@"UI_ACHIEVEMENT"];
+event.customData = (NSMutableDictionary*) @{ @"ui_achievement": @"abc123" }; 
+
+[event logEvent];
+```
+
+#### Extra Data
+
+The Branch Event allows you to add any key-value pairs via the `addCustomDataProperty` method. To include extra data in the Criteo postback, you must add the extra data in the event. For example, to send the extra data `ui_custom` in the `viewProduct` event:
+
+```objc
+BranchUniversalObject *buo = [BranchUniversalObject new];
+buo.contentMetadata.sku = @"item1";
+buo.contentMetadata.price = [NSDecimalNumber decimalNumberWithString:@"1.5"];
+buo.contentMetadata.quantity = 1;
+
+BranchEvent *event = [BranchEvent standardEvent:BranchStandardEventViewItem];
+
+event.contentItems = (id) @[ buo ];
+
+event.customData = (NSMutableDictionary*) @{ @"ui_custom": @"customValue" }; // add custom data
+
+// Log Event
+[event logEvent];
+```
+
+After this is added to the event, you must also modify the event's postback configuration in Branch's dashboard, referencing this extra data parameter, in order for it to be passed in the event.
+
+![](/images/mobile-integrations/branch/branchExtraData1.png)
+
+<Warning>It is highly recommended to [give Branch Dashboard access](https://docs.branch.io/pages/dashboard/access-level/) to your Criteo Technical Solutions Engineer to modify the postback configuration on your behalf.</Warning>
+
+### Customer ID
+
+A Customer ID can be provided in all events. Use the following code snippet to implement:
+
+```objc
+[branch setIdentity:@"userId"];
+```
+
+If the user is logged in to the advertiser's app, the user ID should be passed.
+
+<Warning>User ID is an optional parameter and should not be set if the user is logged out or the User ID is unavailable.</Warning>
+
+Customer ID can be any string, as long as it does not contain any Personally Identifiable Information.
+
+## Recommended Events per Vertical
+
+| Event Name | Description | Retail | Travel | Classified | Gaming | Streaming Entertainment | Finance | Dating Social | RideHailing |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| app open/app launch | when user installs the app | Y | Y | Y | Y | Y | Y | Y | Y |
+| home page / App open | when user opens the app or arrives on the home page | Y | Y | Y | Y | Y | Y | Y | Y |
+| view item list / listing | when a user sees list of items/products/offering | Y | Y | Y | | Y | | | Y |
+| view item | when a user sees one specific item/products/offering | Y | Y | Y | Y | Y | Y | | |
+| add to cart | when a user adds an item/product to the cart | Y | Y | | | | | | |
+| basket | when user is on the basket page | Y | Y | | | | | | |
+| purchase | when user makes a purchase | Y | Y | Y | Y | | Y | | Y |
+| add to wish list | when a user adds an item/product to the wish list | Y | Y | | | | | | |
+| complete registration / create an account / sign up | when a user creates an account, signs up or completes registration | Y | Y | Y | Y | Y | Y | Y | Y |
+| login | when a user logs in | Y | Y | Y | Y | Y | Y | Y | Y |
+| add payment info | when a user adds payment info | Y | Y | | | | Y | | Y |
+| begin checkout | when a user starts the purchase flow | Y | Y | | | | Y | | |
+| purchase cancelled / purchase refund | when a user cancels a purchase or asks for a refund | Y | Y | | | | | | Y |
+| generate lead | when a user generates a lead | | | Y | | | | | |
+| start trial | when a user starts the trial version of the app | | | | Y | Y | Y | Y | |
+| subscribe | when a user subscribes (recurring payment) | Y | | | | Y | Y | Y | |
+| select item | when a user has selected content in an app | | | | Y | | | | Y |
+| earn virtual currency | when a user earns virtual currency | | | | Y | | | | |
+| level up | when a user passes a level | | | | Y | | | | |
+| spend virtual currency/credit | when a user spends virtual currency | | | | Y | | | | |
+| tutorial begin | when a user starts the tutorial | | | | Y | | | | |
+| tutorial complete | when a user completes the tutorial | | | | Y | | | | |
+| unlock achievement | when a user unlocks an achievement | | | | Y | | | | |
+| search | | | Y | | | | | | |
+| video/audio start or media play | when user starts to play media in the app | | | | | Y | | | |
+
+## Catalog Feed
+
+A catalog feed is an XML or a CSV file containing product information (name, price, deep link, image link…) that allows Criteo to dynamically generate the product recommendation banners. Therefore, it is important to keep this file up to date in order for Criteo to show the right data in your banners.
+
+The following points need to be kept in mind:
+
+* Each product must have a unique ID that must be identical to the one passed in the events.
+* The catalog feed must contain all or at least most of your site's products.
+* Recommended image resolution is 300x300 pixels to 400x400 pixels.
+
+<Note>Criteo will already have the catalog feed in some instances (i.e. live campaigns on mobile, web, or desktop).</Note>
+
+For more information, please request the dedicated guide from your contact.
+
+## Testing Process
+
+Once all events have been implemented, you should contact your Criteo representative to begin the testing phase.
+
+<Warning>Please allow sufficient time (at least a week before) for testing **prior** to the app submission in order to ensure that the data you are sending is complete.</Warning>
+
+Criteo requires the following elements:
+
+* App build to test the collection of events on Criteo side.
+* If testing remotely, the IDFA of the test device.
+* Deep link example (homepage & product detail).

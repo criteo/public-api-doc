@@ -1,0 +1,152 @@
+---
+title: AppsFlyer iOS — In-App Events
+description: Implement Criteo in-app events and deep links for iOS using the AppsFlyer SDK.
+---
+
+## About this Guide
+
+This document provides detailed information on the following:
+
+- Recommended events and parameters
+- Deep link implementation
+- Testing process
+
+## Recommended Events per Vertical
+
+The recommendation is to send all events that describe the "user-flow" in the app.
+
+| Event Name | Description | Retail | Travel | Classified | Gaming | Streaming Entertainment | Finance | Dating Social | RideHailing |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| app open/app launch | when user installs the app | Y | Y | Y | Y | Y | Y | Y | Y |
+| home page / App open | when user opens the app or arrives on the home page | Y | Y | Y | Y | Y | Y | Y | Y |
+| view item list / listing | when a user sees list of items/products/offering | Y | Y | Y | | Y | | | Y |
+| view item | when a user sees one specific item/products/offering | Y | Y | Y | Y | Y | Y | | |
+| add to cart | when a user adds an item/product to the cart | Y | Y | | | | | | |
+| basket | when user is on the basket page | Y | Y | | | | | | |
+| purchase | when user makes a purchase | Y | Y | Y | Y | | Y | | Y |
+| add to wish list | when a user adds an item/product to the wish list | Y | Y | | | | | | |
+| complete registration / sign up | when a user creates an account | Y | Y | Y | Y | Y | Y | Y | Y |
+| login | when a user logs in | Y | Y | Y | Y | Y | Y | Y | Y |
+| add payment info | when a user adds payment info | Y | Y | | | | Y | | Y |
+| begin checkout | when a user starts the purchase flow | Y | Y | | | | Y | | |
+| purchase cancelled / refund | when a user cancels a purchase or asks for a refund | Y | Y | | | | | | Y |
+| generate lead | when a user generates a lead | | | Y | | | | | |
+| start trial | when a user starts the trial version of the app | | | | Y | Y | Y | Y | |
+| subscribe | when a user subscribes (recurring payment) | Y | | | | Y | Y | Y | |
+| select item | when a user has selected content in an app | | | | Y | | | | Y |
+| earn virtual currency | when a user earns virtual currency | | | | Y | | | | |
+| level up | when a user passes a level | | | | Y | | | | |
+| spend virtual currency | when a user spends virtual currency | | | | Y | | | | |
+| tutorial begin | when a user starts the tutorial | | | | Y | | | | |
+| tutorial complete | when a user completes the tutorial | | | | Y | | | | |
+| unlock achievement | when a user unlocks an achievement | | | | Y | | | | |
+| search | | | Y | | | | | | |
+| video/audio start | when user starts to play media in the app | | | | | Y | | | |
+
+## In-App Events Implementation
+
+### viewHome
+
+The `viewHome` event is automatically tracked once the AppsFlyer SDK initializes. This event is fired for each user session.
+
+### viewListing
+
+The `viewListing` event should be fired on pages displaying product lists such as a category page or a search results page. You can use `AFEventListView` to represent this event. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+```objc
+[[AppsFlyerTracker sharedTracker] trackEvent:AFEventListView
+                                  withValues:@{
+                                    AFEventParamCurrency: @"USD",
+                                    AFEventParamContentList: @[@"4", @"5", @"6"],
+                                    AFEventParamDateA: @"2017-05-05",
+                                    AFEventParamDateB: @"2017-05-06"
+                                  }
+];
+```
+
+### viewProduct
+
+The `viewProduct` event should be fired on all product-details pages. You can use AppsFlyer's `AFEventContentView` constant for this event. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+```objc
+[[AppsFlyerTracker sharedTracker] trackEvent:AFEventContentView
+                                  withValues:@{
+                                    AFEventParamCurrency: @"USD",
+                                    AFEventParamContentId: @"4",
+                                    AFEventParamDateA: @"2017-05-05",
+                                    AFEventParamDateB: @"2017-05-06"
+                                  }
+];
+```
+
+### viewBasket
+
+The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+```objc
+[[AppsFlyerTracker sharedTracker] trackEvent:AFEventInitiatedCheckout
+                                  withValues:@{
+                                    AFEventParamCurrency: @"USD",
+                                    AFEventParamContentId: @[@"5",@"6",@"7"],
+                                    AFEventParamPrice: @[@5.40,@6.20,@2.45],
+                                    AFEventParamQuantity: @[@2,@5,@1],
+                                    AFEventParamDateA: @"2017-05-05",
+                                    AFEventParamDateB: @"2017-05-06"
+                                  }
+];
+```
+
+### trackTransaction
+
+The `trackTransaction` event should be fired on order-confirmation pages. You can use AppsFlyer's `AFEventPurchase` constant for this event. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+```objc
+[[AppsFlyerTracker sharedTracker] trackEvent:AFEventPurchase
+                                  withValues:@{
+                                    AFEventParamCurrency: @"USD",
+                                    AFEventParamReceiptId: @"unique-transaction-id",
+                                    AFEventParamRevenue: @58.9,
+                                    AFEventParamContentId: @[@"5",@"6",@"7"],
+                                    AFEventParamPrice: @[@10.2,@15.99,@12.50],
+                                    AFEventParamQuantity: @[@1,@3,@5],
+                                    AFEventParamDateA: @"2017-05-05",
+                                    AFEventParamDateB: @"2017-05-06"
+                                  }
+];
+```
+
+### Hashed Email for Cross-Device Targeting
+
+Clients should send Criteo the hashed email address of the app user when available, to enable cross-device targeting.
+
+Steps to generate a hash of an email address:
+1. Convert all characters to lower case
+2. Remove any blank spaces
+3. Convert to UTF-8
+4. Hash using **SHA256** algorithm
+
+```objc
+// You can pass one email...
+[[AppsFlyerTracker sharedTracker] setUserEmails:@"email2@mydomain.com"
+                                  withCryptType:EmailCryptTypeSHA256
+];
+
+// ...or multiple emails
+[[AppsFlyerTracker sharedTracker] setUserEmails:@[@"email1@mydomain.com", @"email2@mydomain.com"]
+                                  withCryptType:EmailCryptTypeSHA256
+];
+```
+
+## Testing Process
+
+Once all events have been implemented, you should contact your Criteo representative to begin the testing phase.
+
+<Warning>
+Please allow sufficient time (at least a week before) for testing **prior** to the app submission in order to ensure that the data you are sending is complete.
+</Warning>
+
+Criteo requires the following elements:
+
+- App build to test the collection of events on Criteo side.
+- If testing remotely, the IDFA of the test device.
+- Deep link example (homepage & product detail).

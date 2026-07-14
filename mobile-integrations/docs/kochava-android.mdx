@@ -1,0 +1,439 @@
+---
+title: Kochava Android — Integration Guide
+description: Integrate Criteo app campaigns with Kochava for Android, including events, dashboard configuration, and tracking links.
+---
+
+## Overview
+
+Criteo serves personalized ads to mobile app users that have a high probability of clicking through and either installing your app or making an in-app purchase. Criteo technology is based on real-time product recommendation optimization and prediction engines.
+
+In order to enable its technology, Criteo needs:
+
+* App Events — App events and relevant data correctly captured on your mobile app
+* Catalog Feed — A CSV or XML file (called a Catalog Feed) containing product information of a large portion of your mobile app's offers
+* (For Retargeting) Deeplink and Universal Link capability — Product level deep link capabilities in app to take users to the products they clicked on
+
+This document provides detailed information on the following integration stages:
+
+* App events and parameters
+* Kochava dashboard configuration, including postbacks
+* Generation of tracking links
+* Catalog feed integration (for product-level ads)
+* Deeplinking & Universal Linking (for Retargeting)
+* Testing process
+
+## Integration Steps
+
+| Steps to Follow | Where to Integrate |
+| --- | --- |
+| Integration Questionnaire | Client |
+| Integration Kickoff Call | Criteo & client technical teams |
+| Dashboard Configuration | Client-side or (recommended) on call |
+| (for product-level ads) Catalog Feed Integration | Criteo & client technical teams |
+| (only if needed) Criteo Event Integration | Client-side |
+| (only if needed) Testing events | Criteo & client technical teams |
+| (only if needed) App Submission & Release | Client-side |
+| Pre-Launch Checks | Criteo |
+| Campaign Launch | Criteo (with client's authorization) |
+
+## App Events & Data
+
+If you already have Kochava events configured, please skip this section.
+
+To integrate the Kochava SDK and events from scratch, or add additional ones, please expand this section.
+
+<Accordion title="Expand">
+
+### SDK Initialization
+
+<Tip>Please ensure the 'language' parameter in the identity link is the two character language code (lower case) and matches the language of the app to ensure the events are sent to the correct endpoint.</Tip>
+
+Use the following code snippet at the app launch:
+
+```java
+HashMap<String, Object> datamap = new HashMap<String, Object>();
+datamap.put(Feature.INPUTITEMS.KOCHAVA_APP_ID, "YOUR_APP_ID_FROM_KOCHAVA_DASHBOARD");
+datamap.put(Feature.INPUTITEMS.CURRENCY, Feature.CURRENCIES.USD);
+Feature kTracker = new Feature(getApplicationContext(), datamap);
+HashMap<String, String> kData = new HashMap<String, String>();
+kData.put( "language" , "en" );
+kTracker.linkIdentity(kData);
+```
+
+### Events Implementation in the App
+
+Below are examples of the different event types Criteo recommends that you integrate using the Kochava SDK:
+
+| Kochava event | Description |
+| --- | --- |
+| SessionBegin | App open/brought to the foreground |
+| View Listing | View of a list of products |
+| View Product | View of a specific product details page |
+| View Basket | View of the shopping basket, or an addition made to it |
+| Purchase | Purchase of one or more products |
+| Level Achieved | User Level (for Gaming apps) |
+| Status | User's Subscription Status (i.e. subscriber, free, premium) |
+| Achievement Unlocked | Major milestone reached within a game (for Gaming apps) |
+
+#### SessionBegin
+
+The `sessionBegin` event should be sent to Kochava with each new session, after Kochava SDK initialization. *SessionBegin* is a standard event supported by the Kochava SDK.
+
+```java
+kTracker.event("SessionBegin", "");
+```
+
+#### View Listing
+
+The `viewListing` event should be triggered on pages displaying product lists like a category page or a search results page. You should include in the array the **IDs of the top 3 products** (it's fine to include more). These IDs must match those passed in the catalog feed. Note that *viewListing* is not supported out of the box using Kochava's SDK and must be implemented as a custom event.
+
+```java
+JSONObject viewListing = new JSONObject();
+
+JSONArray products = new JSONArray();
+products.put("productId1");
+products.put("productId2");
+products.put("productId3");
+// number of products in search results, category page, etc.
+
+viewListing.put("product", products);
+kTracker.event("viewListing", viewListing.toString());
+```
+
+#### View Product
+
+The `View` event should be triggered on all product details pages. You should include the ID of the product detailed on the page by the Event Item name, and send the Event Item with the event. It must be the same ID as used in the catalog feed, and must be unique. *View* is a standard event supported by the Kochava SDK.
+
+```java
+JSONObject obj = new JSONObject();
+obj.put("product", "productId1");
+
+kTracker.event("View", obj.toString());
+```
+
+#### View Basket
+
+The `viewBasket` event should be triggered on the basket-details pages. You must include the IDs, prices, and quantities of the basket's products by the Event Items array. Note that *viewBasket* is not supported out of the box using Kochava's SDK and must be implemented as a custom event.
+
+```java
+JSONArray products = new JSONArray();
+
+JSONObject product1 = new JSONObject();
+JSONObject product2 = new JSONObject();
+// ... add an object for each product in basket
+
+JSONObject viewBasket = new JSONObject();
+
+product1.put("id", "productId1");
+product1.put("price", 2.95);
+product1.put("quantity", 5);
+
+product2.put("id", "productId2");
+product2.put("price", 19.95);
+product2.put("quantity", 1);
+
+products.put(product1);
+products.put(product2);
+
+viewBasket.put("currency", "USD"); // currency of basket
+viewBasket.put("product", products);
+
+MainActivity.kTracker.event("viewBasket", viewBasket.toString());
+```
+
+<Note>din/dout parameters are only required for Travel apps (Flights/Hotels/Car Booking) clients.</Note>
+
+#### Purchase
+
+The `Purchase` event should be triggered on order confirmation pages. You should include a unique transaction ID and place the IDs, prices, and quantities of the products bought in the transaction into the Event Items array. *Purchase* is a standard event supported by the Kochava SDK.
+
+```java
+JSONArray products = new JSONArray();
+
+JSONObject product1 = new JSONObject();
+JSONObject product2 = new JSONObject();
+// ... add an object for each product purchased
+
+JSONObject trackTransaction = new JSONObject();
+
+product1.put("id", "productId1");
+product1.put("price", 2.95);
+product1.put("quantity", 5);
+
+product2.put("id", "productId2");
+product2.put("price", 19.95);
+product2.put("quantity", 1);
+
+products.put(product1);
+products.put(product2);
+
+trackTransaction.put("id", "<<INSERT TRANSACTION ID>>"); // order ID
+trackTransaction.put("nc", 1); // to indicate a new customer 1, else 0
+trackTransaction.put("currency", "USD"); // currency of transaction
+trackTransaction.put("product", products);
+
+kTracker.event("Purchase", trackTransaction.toString());
+```
+
+#### Level Achieved
+
+The `userLevel` event allows Kochava to identify the highest level achieved by a user. This event is specific to the Gaming vertical. It should be triggered every time the user levels up. *userLevel* is a standard event supported by the Kochava SDK.
+
+```java
+JSONObject uiLevel = new JSONObject();
+uiLevel.put("ui_level", 5);
+kTracker.event("userLevel", uiLevel.toString());
+```
+
+#### Status
+
+The `userStatus` event allows Kochava to identify a user's subscription status (i.e. free, subscriber, premium). This event should be triggered to initialize the user's status and every time when their status changes. Note that *userStatus* is not supported out of the box using Kochava's SDK and must be implemented as a custom event.
+
+```java
+JSONObject uiStatus = new JSONObject();
+uiStatus.put("ui_status", "subscriber");
+kTracker.event("userStatus", uiStatus.toString());
+```
+
+#### Achievement Unlocked
+
+The `achievementUnlocked` event allows Kochava to identify whether a user has reached a specific milestone within the game. *achievementUnlocked* is a standard event supported by the Kochava SDK.
+
+```java
+JSONObject uiAchievement = new JSONObject();
+uiAchievement.put("ui_status", "subscriber");
+kTracker.event("achievementUnlocked", uiStatus.toString());
+```
+
+</Accordion>
+
+## Hashed Email for Cross-Device Targeting (Recommended)
+
+Clients have the option of sending Criteo the email address of app users when available. This will enable the cross-device Criteo targeting feature.
+
+<Accordion title="Expand">
+
+To generate a SHA256 hash of an email address:
+
+1. Convert all characters to lower case
+2. Remove any blank spaces
+3. Convert to UTF-8
+4. Hash using SHA256 algorithm
+
+The email can be sent to Criteo by associating it with the identity link during SDK initialization.
+
+Use the following code snippet as an example of sending a SHA256 hashed email:
+
+```java
+kTracker = new Feature(getApplicationContext(), datamap);
+HashMap<String, String> kData = new HashMap<String, String>();
+kData.put( "language" , "en" );
+kData.put( "email_sha256" ,  "46457bb078c674176a72c3a9ac40ba666244652f1b813f8bd839d529285cfa47" );
+kTracker.linkIdentity(kData);
+```
+
+Kochava's SDK also allows client apps an option to send email in clear text. Kochava servers will hash this email address before forwarding it to Criteo.
+
+Use the following code snippet as an example of how to send raw email addresses:
+
+```java
+kTracker = new Feature(getApplicationContext(), datamap);
+HashMap<String, String> kData = new HashMap<String, String>();
+kData.put( "language" , "en" );
+kData.put( "email_raw" , "kochava@criteo.com" );
+kTracker.linkIdentity(kData);
+```
+
+</Accordion>
+
+## Kochava Dashboard Configuration
+
+### Adding the 'Criteo New' Network
+
+To add 'Criteo New' as a partner on Kochava's dashboard:
+
+1. Login to Kochava Dashboard
+2. Select your App
+3. Under App Configurations, go to the **Partner Configurations** tab
+4. Click **Add Configuration** button
+
+![](/images/mobile-integrations/kochava/kochava_partner_config_1.png)
+
+Finally, input 'Criteo New' into the Media Partner text field and select the 'Criteo New' network option when it appears below the text field. To save Criteo as a partner, click on the Go button.
+
+![](/images/mobile-integrations/kochava/criteo_new_add_publisher_network.png)
+
+### Configuring Criteo Postbacks
+
+Once the partner is configured, postbacks can be set up for each event type.
+
+1. Expand the 'Criteo New' module and go to the **Postbacks** tab.
+
+    ![](/images/mobile-integrations/kochava/kochava_postback_setup_1_android.png)
+
+2. *Install* is automatically listed and its status is **Configured Postback**, however, it still needs additional setup (please see step 4 below for details). *SessionBegin* and the other post-install events will be listed once received by Kochava. All the events (except Install) are initially in status **Active Event**, meaning the postback is available but is not sending to Criteo yet. Once a postback is configured, its status becomes **Configured Postback**.
+
+    ![](/images/mobile-integrations/kochava/kochava_postback_setup_2.png)
+
+3. Click the **+** icon next to an event to create a postback for it.
+   * The postbacks need to be configured for: **Install**, **SessionBegin**, and all other relevant events for the campaign, such as post-install **KPI events**.
+   * For Retargeting, it's highly recommended to also postback the key stages of the purchase funnel (for a retail app this would be events similar to SessionBegin, Search/Category Results, Item Details, Add to Cart, Basket View, Purchase Confirmation).
+
+    ![](/images/mobile-integrations/kochava/kochava_postback_setup_3.png)
+
+4. All the following settings are **required** for postbacks to function well:
+
+    * **CRITEO BUNDLE ID**: Unique bundle ID of the app (this uniquely identifies the app to Criteo)
+    * **SEND ALL EVENT DATA**: Switch the toggle **ON** to send all data to Criteo. Essential for harnessing Criteo's machine learning at its full potential (predictive bidding and product recommendations), and useful for other use cases such as audience segmentation and custom reporting.
+    * **DELIVERY DELAY**: Select **Realtime Delivery**
+    * **DELIVERY METHOD**: Select **All** to send attributed, unattributed and organic events to Criteo. Essential for the same machine learning purposes mentioned above, and also to better suppress installed users from your App Install campaigns.
+
+    Then, click **Save**.
+
+    ![](/images/mobile-integrations/kochava/kochava_postback_setup_4_android.png)
+
+    <Note>For **Install**, there is no **Send All Event Data** option to toggle.</Note>
+
+### Attribution Settings — Partner Level
+
+1. Under App Configurations, go to **Partner Configurations**
+2. To the right side of the 'Criteo New' module, select the three-dots menu
+3. Click **Reconciliation**
+
+    ![](/images/mobile-integrations/kochava/reconciliation_menu_android.png)
+
+4. Configure the windows below according to your attribution model, or these suggested defaults:
+
+**[Optional] Impression Reconciliation**
+
+The Impression Reconciliation settings control how Kochava attributes installs/conversions to impression (view-through) ads when no click is available.
+
+* **Device Lookback** — Uses a device identifier to match an ad impression to an install/conversion. If the install/conversion happens within 24 hours after the impression, attribution is allowed.
+* **Fingerprint Lookback** — Uses device fingerprinting when a device ID isn't available. Attribution is allowed if the install/conversion occurs within 24 hours of the impression.
+* **IP Lookback** — Matches users using only the full IP address. Disabled here, meaning Kochava will not use IP-only matching for impression attribution.
+* **Partial IP Lookback** — Uses a less precise version of the IP address. Disabled to avoid less accurate attributions.
+* **Device Attribution Behavior** — Setting it to Standard means that Kochava uses its default attribution logic and prioritization rules.
+
+<Note>Setting up **Impression** based attribution is optional and should be enabled only if taken into account.</Note>
+
+![](/images/mobile-integrations/kochava/reconciliation_impression.png)
+
+**Click Reconciliation**
+
+The Click Reconciliation settings control how Kochava attributes installs/conversions to actual ad clicks.
+
+* **Device Lookback** — Uses device IDs to match clicks to installs/conversions. If the install/conversion happens within 30 days after clicking the ad, attribution is allowed.
+* **Fingerprint Lookback** — Uses fingerprinting when device IDs aren't available. Attribution is allowed if the install/conversion occurs within 7 days after the click.
+* **IP and Partial IP Lookback** — Set to disabled means that Kochava won't use IP-only or partial-IP matching for click attribution.
+* **Device Attribution Behavior** — Setting it to Standard means that Kochava uses its default attribution logic and prioritization rules.
+* **Fingerprint Attribution Behavior** — Setting it to Standard means that Kochava uses its default fingerprint attribution logic. No special prioritization or custom matching rules.
+
+![](/images/mobile-integrations/kochava/reconciliation_click.png)
+
+## Tracking Links
+
+### Install Tracking
+
+<Accordion title="Click to Expand">
+
+1. **Add Tracking to the Campaign**
+    * Log in to Kochava
+    * Select the desired App
+    * Go to Engagement > Campaign Manager
+    * Click 'Add a Tracker' or Select Segment > 'Add a Tracker'
+
+    ![](/images/mobile-integrations/kochava/tracking_1_campaign_manager_android.png)
+
+2. **Set the Tracking**
+    * **Required:**
+        * Select Campaign
+        * Select Segment
+        * Set Tracker Name
+        * Select Tracker Type: **Acquisition**
+        * Select Media Partner: **Criteo New - Android**
+        * Check the box for **Share with Publisher**
+        * Set Destination URL: Custom / Landing page / Google Referrer
+
+        ![](/images/mobile-integrations/kochava/tracking_2_set_tracking_install_android.png)
+
+    * **Optional:**
+        * Agency Partner
+        * UTM Parameters
+        * Custom Parameters
+        * Pricing
+
+3. **Copy Click URL and Impression URL**
+
+    ![](/images/mobile-integrations/kochava/tracking_3_copy_links_install.png)
+
+</Accordion>
+
+### Retargeting Tracking
+
+<Accordion title="Click to Expand">
+
+1. **Add Tracking to the Campaign**
+    * Log in to Kochava
+    * Select the desired App
+    * Go to Engagement > Campaign Manager
+    * Click 'Add a Tracker' or Select Segment > 'Add a Tracker'
+
+    ![](/images/mobile-integrations/kochava/tracking_1_campaign_manager_android.png)
+
+2. **Set the Tracking**
+    * **Required:**
+        * Select Campaign
+        * Select Segment
+        * Set Tracker name
+        * Select Tracker Type: Reengagement
+        * Select Media Partner: **Criteo New - Android**
+        * Check the box for **Share with Publisher**
+        * Set Destination URL: Custom / Landing page / Google Referrer
+
+        ![](/images/mobile-integrations/kochava/tracking_2_set_tracking_rt_android.png)
+
+        * Select Event(s) for Reengagement: 'All'
+        (if All is not selected and an event is not in the list, Criteo will not be able to effectively optimize toward the KPI events).
+
+         ![](/images/mobile-integrations/kochava/tracking_3_event_matching_rt.png)
+
+    * **Optional:**
+        * Agency Partner
+        * UTM Parameters
+        * Custom Parameters
+        * Pricing
+
+3. **Set a custom lookback window**
+    * Tracker-level lookback windows can be set within Power Editor → Tracker Overrides, however this is a paid feature of Kochava.
+
+4. **Copy Click URL and Impression URL and send to your Criteo contact**
+
+    ![](/images/mobile-integrations/kochava/tracking_4_copy_links_rt.png)
+
+</Accordion>
+
+## Catalog Feed
+
+A catalog feed is an XML or a CSV file containing product information (name, price, deep link, image link…) that allows Criteo to dynamically generate product-level banners tailored to each user. Therefore, it is important to keep this file up to date in order for Criteo to show the right data in your banners.
+
+The following points need to be kept in mind:
+
+* Each product must have a unique ID that must be identical to the one passed in the events.
+* The catalog feed must contain all or at least most of your apps' products for Retail apps, and hotels/airline routes for Travel apps.
+* Recommended image resolution is 300x300 pixels to 400x400 pixels.
+
+Note: In some instances (i.e. live campaigns on mobile web or desktop), Criteo will already have the catalog feed.
+
+For more information, please request the dedicated guide from your contact.
+
+## Testing Process
+
+Once all events and postbacks have been implemented, you should contact your Criteo representative to begin the testing phase.
+
+<Warning>If you are adding/updating Kochava app events, this will require a release to the app store. In this case, please allow sufficient time (at least a week) for testing **prior** to the app submission in order to ensure that the data you are sending is complete.</Warning>
+
+Criteo requires the following elements:
+
+* App build to test the collection of events on Criteo side.
+* If testing remotely, the GAID of the test device.
+* (For Retargeting) Deeplink and Universal Link examples — homepage & product details page.
