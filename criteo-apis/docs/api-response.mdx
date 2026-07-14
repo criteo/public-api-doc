@@ -1,0 +1,892 @@
+---
+title: API Response
+
+---
+
+
+
+## Introduction
+
+Our APIs respond with  `data`, `errors`, and  `meta`/`metadata` blocks where appropriate.
+
+For example:
+
+* `{entityId}` are unique across all Retail Media entities
+
+* `data` and `errors` blocks may be contained in responses expected to return multiple entities
+
+* `meta` (or `metadata`) appears only for paginated responses
+
+### Response example
+
+```json JSON expandable
+{
+    "data": [
+        {
+            "id": "{entityId}",
+            "type": "{entityType}",
+            "attributes": {
+                "{fieldName}": {numericValue},
+                "{fieldName}": "{stringValue}",
+                // ...
+            }
+        },
+        
+        // ...
+        
+    ],
+    "errors": [
+        {
+            "traceId": "{traceId}",
+            "type": "{errorType}",
+            "code": "{errorCode}",
+            "instance": "{uri}",
+            "title": "{errorTitle}",
+            "detail": "{errorDetail}",
+            "source": {
+                "{fieldName}": "{fieldPath}",
+                // ...
+            }
+        },
+ 
+        // ...
+         
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": {numberOfEntities},
+        "currentPageSize": {pageSize},
+        "currentPageIndex": {pageIndex},
+        "totalPages": {numberOfPages},
+        "nextPage": "https://api.criteo.com/{endpoint}?pageIndex={pageIndex}&pageSize={pageSize}",
+        "previousPage": "https://api.criteo.com/{endpoint}?pageIndex={pageIndex}&pageSize={pageSize}"
+    }
+```
+
+***
+
+## Data Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique ID for the entity.
+     <code>
+      Entity IDs
+     </code>
+     are unique across all Retail Media entities
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      type
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Resource data type returned in the response body (for example,
+     <code>
+      RetailMediaRetailer
+     </code>
+     )
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      attributes
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     object
+    </p>
+   </td>
+   <td>
+    <p>
+     Entity attributes - may be omitted entirely if an entity does not have additional attributes
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Error Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      traceId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique ID for the error response
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      type
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Error category; machine-readable (e.g.
+     <code>
+      validation
+     </code>
+     )
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      code
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Short machine-readable string for the error (e.g.
+     <code>
+      required-field
+     </code>
+     )
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      instance
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     URI referencing the endpoint that caused the error
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      title
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Short human-readable string that summarizes the issue
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      detail
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Human-readable explanation of the issue
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      source
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     object
+    </p>
+   </td>
+   <td>
+    <p>
+     Object referencing the field that caused the error
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Pagination
+
+Endpoints that retrieve all entities under a specific context supports pagination to navigate through all existing elements. Currently, there are two different formats to access the different pages that are based on different sets of query parameters and response blocks. Results are returned in ascending order by `id`
+
+Examples of endpoints:
+
+1. List all Accounts associated with your API credentials
+
+2. List all Brands associated with the Account
+
+3. List all Retailers associated with the Account
+
+### Offset & Limit
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Query Parameters
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      offset
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Defines the starting point from which records should be returned, i.e., will skip the first
+     <code>
+      offset
+     </code>
+     records (ordered by
+     <code>
+      id
+     </code>
+     ) and return the subsequent ones; defaults to
+     <code>
+      0
+     </code>
+     if omitted
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      limit
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Specifies the maximum number of entities returned in a single page; defaults to
+     <code>
+      500
+     </code>
+     entities per page (if no other value is specified at endpoint-level)
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+#### Response example
+
+```json
+{
+    "data": [
+        {
+            "id": "{entityId}",
+            "type": "{entityType}",
+            "attributes": {
+                "{fieldName}": {numericValue},
+                "{fieldName}": "{stringValue}",
+                // ...
+            }
+        },
+        // ...
+        
+    ],
+    "meta": {
+        "count": {numberOfEntities},
+        "offset": {offset},
+        "limit": {limit}
+    }
+}
+```
+
+### `pageIndex` & `pageSize`
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Query Parameters
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageIndex
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Returns the specified page of results given a
+     <code>
+      pageSize
+     </code>
+     ; pages are 0-indexed
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      pageSize
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Specifies the maximum number of entities returned in a single page; defaults to
+     <code>
+      25
+     </code>
+     entities per page
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Response example
+
+```json
+{
+    "data": [
+        {
+            "id": "{entityId}",
+            "type": "{entityType}",
+            "attributes": {
+                "{fieldName}": {numericValue},
+                "{fieldName}": "{stringValue}",
+                // ...
+            }
+        },
+        // ...
+        
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": {numberOfEntities},
+        "currentPageSize": {pageSize},
+        "currentPageIndex": {pageIndex},
+        "totalPages": {numberOfPages},
+        "nextPage": "https://api.criteo.com/{endpoint}?pageIndex={pageIndex}&pageSize={pageSize}",
+        "previousPage": "https://api.criteo.com/{endpoint}?pageIndex={pageIndex}&pageSize={pageSize}"
+    }
+}
+```
+
+***
+
+## Understanding `type`
+
+In the `data` block, `type` describes the resource data type returned in the response body. For example, retailer responses can return `type: "RetailMediaRetailer"`.
+
+The technical definition of each response type is contained in the machine-readable [OpenAPI specification](/criteo-apis/docs/criteo-api-swagger). The `type` field inside `errors` is different: it identifies the error category, such as `validation`.
+
+### Example
+
+```json
+{
+  "data": [
+    {
+      "id": "1234",
+      "type": "RetailMediaRetailer",
+      "attributes": {
+        "name": "{retailerName}"
+      }
+    }
+  ]
+}
+```
+
+<br />
+
+## Filter by ID
+
+All endpoints that retrieve all entities under a specific context supports an optional query parameter `limitToId` that can be used to retrieve the respective element. This param can also be combined multiple times to retrieve multiple elements at the same time.
+
+Examples:
+
+1. Retrieve specific Account(s) from endpoint that lists all Accounts
+
+2. Retrieve specific Brand(s) from endpoint that lists all Brands associated with the Account
+
+3. Retrieve specific Retailer(s) from endpoint that lists all Retailers associated with the Account
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Query Parameters
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      limitToId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Limits results to the entity IDs specified; parameter key is repeated, e.g.
+     <code>
+      limitToId=1&amp;limitToId=2
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Response example
+
+```json
+{
+    "data": [
+        {
+            "id": "1",
+            "type": "{entityType}",
+            "attributes": {
+                "{fieldName}": {numericValue},
+                "{fieldName}": "{stringValue}",
+                // ...
+            }
+        },
+        {
+            "id": "2",
+            "type": "{entityType}",
+            "attributes": {
+                "{fieldName}": {numericValue},
+                "{fieldName}": "{stringValue}",
+                // ...
+            }
+        },
+        
+    ],
+    "meta": {
+        "count": 2,
+        "offset": 0,
+        "limit": 500
+    }
+}
+```
+
+<br />
+
+***
+
+## HTTP Response Codes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🔵
+    </p>
+    <p>
+     <code>
+      200 OK
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Request successful
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔵
+    </p>
+    <p>
+     <code>
+      201 Created
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The new entity was successfully created
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔵
+    </p>
+    <p>
+     <code>
+      204 No Content
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Request succeeded and no returned content should be expected
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🟡
+    </p>
+    <p>
+     <code>
+      207 Multi-Status
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     This may occur when operating on multiple entities, such as the call resulting in some successes but also some failures
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      400 Bad Request
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     For improper syntax, check your call structure
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      401 Unauthorized
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     If unauthenticated, refresh your access token
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      403 Forbidden
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Insufficient rights to perform this action
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      404 Not Found
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Resource not found, check your entity IDs in the call
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      408 Timeout
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Request timed out
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      409 Conflict
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Request conflicts with something, such as a campaign name that already exists
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      429 Too Many Requests
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Too many requests
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+    </p>
+    <p>
+     <code>
+      5xx
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Something's wrong on Criteo's end...
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
