@@ -1,0 +1,189 @@
+---
+title: Sync Campaigns & Line Items Report
+description: POST /reports/sync/campaigns and POST /reports/sync/line-items — synchronous performance reports for Retail Media DSP partners.
+---
+
+These endpoints return campaign or line item performance data synchronously — the response contains the report data directly, with no polling required.
+
+Use these endpoints when you need results immediately, for example in live dashboards or alerting workflows. For large date ranges or high-volume accounts where synchronous requests may time out, use the asynchronous [`POST /reports/campaigns` and `POST /reports/line-items`](/retail-media/docs/demand-side-analytics-get-started) instead.
+
+***
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/2026-07/retail-media/reports/sync/campaigns` | Performance report scoped to campaigns |
+| `POST` | `/2026-07/retail-media/reports/sync/line-items` | Performance report scoped to line items |
+
+The two endpoints share the same request schema. The line items endpoint accepts one additional optional filter: `lineItemIds[]`.
+
+***
+
+## Request
+
+### Required fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `accountId` | string | Account ID to report on. |
+| `startDate` | string | Start of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
+| `endDate` | string | End of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
+
+### Optional fields
+
+| Field | Type | Default | Endpoint | Description |
+|-------|------|---------|----------|-------------|
+| `campaignIds[]` | array of strings | — | Both | Filter to specific campaign IDs. |
+| `lineItemIds[]` | array of strings | — | Line items only | Filter to specific line item IDs. |
+| `campaignType` | string | `all` | Both | Filter by campaign type: `sponsoredProducts`, `onSiteDisplays`, or `all`. |
+| `salesChannel` | string | `all` | Both | Filter by sales channel: `online`, `offline`, or `all`. |
+| `clickAttributionWindow` | string | `none` | Both | Post-click attribution window: `none`, `7D`, `14D`, or `30D`. |
+| `viewAttributionWindow` | string | `none` | Both | Post-view attribution window: `none`, `1D`, `7D`, `14D`, or `30D`. |
+| `reportType` | string | `summary` | Both | Pre-packaged breakdown if no `dimensions` provided: `summary`, `pageType`, `productCategory`, `product`, `environment`, or `servedCategory`. Ignored when `dimensions` is set. |
+| `dimensions[]` | array of strings | — | Both | Grouping dimensions. See [Dimensions](#dimensions) below. Overrides `reportType` when provided. |
+| `metrics[]` | array of strings | — | Both | Metrics to include. See [Metrics](#metrics) below. |
+| `timezone` | string | `UTC` | Both | Timezone for date bucketing. IANA format (e.g. `America/New_York`). |
+
+### Example request — campaigns
+
+```http
+POST /2026-07/retail-media/reports/sync/campaigns
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "data": {
+    "type": "RetailMediaReportRequest",
+    "attributes": {
+      "accountId": "123456",
+      "startDate": "2026-07-01",
+      "endDate": "2026-07-07",
+      "timezone": "America/New_York",
+      "dimensions": ["date", "campaignId", "campaignName"],
+      "metrics": ["impressions", "clicks", "spend", "roas"]
+    }
+  }
+}
+```
+
+### Example request — line items
+
+```http
+POST /2026-07/retail-media/reports/sync/line-items
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "data": {
+    "type": "RetailMediaReportRequest",
+    "attributes": {
+      "accountId": "123456",
+      "startDate": "2026-07-01",
+      "endDate": "2026-07-07",
+      "timezone": "America/New_York",
+      "dimensions": ["date", "lineItemId", "lineItemName"],
+      "metrics": ["impressions", "clicks", "spend", "attributedSales"]
+    }
+  }
+}
+```
+
+***
+
+## Response
+
+A successful request returns `200 OK` with the report data inline.
+
+```json
+{
+  "data": {
+    "type": "ReportDataResponse",
+    "attributes": [
+      ["2026-07-01", "789012", "Summer Sale", 14320, 203, 97.40, 4.21],
+      ["2026-07-02", "789012", "Summer Sale", 15680, 231, 108.20, 3.95]
+    ]
+  },
+  "meta": {
+    "columns": [
+      { "name": "date", "type": "Date", "role": "Dimension" },
+      { "name": "campaignId", "type": "String", "role": "Dimension" },
+      { "name": "campaignName", "type": "String", "role": "Dimension" },
+      { "name": "impressions", "type": "Number", "role": "Metric" },
+      { "name": "clicks", "type": "Number", "role": "Metric" },
+      { "name": "spend", "type": "Number", "role": "Metric" },
+      { "name": "roas", "type": "Number", "role": "Metric" }
+    ],
+    "rows": 2
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+Each row in `data.attributes` is an array of values corresponding to the columns in `meta.columns`, in the same order.
+
+***
+
+## Metrics
+
+| Metric | Description |
+|--------|-------------|
+| `impressions` | Ad impressions delivered. |
+| `clicks` | Clicks on ad creatives. |
+| `spend` | Total media spend. |
+| `attributedSales` | Revenue attributed to the campaign per your attribution settings. |
+| `attributedUnits` | Units sold attributed to the campaign. Excludes assisted units. |
+| `attributedOrders` | Orders attributed per your attribution settings. |
+| `assistedSales` | Revenue from ads that contributed to a conversion but were not the last ad before purchase. |
+| `assistedUnits` | Units sold through assisted conversions. Excluded from `attributedUnits`. |
+| `ctr` | Click-through rate: clicks / impressions. |
+| `cpc` | Average cost per click. Sponsored products only. |
+| `cpo` | Cost per order: spend / attributed orders. |
+| `cpm` | Average cost per 1,000 impressions. Onsite display only. |
+| `roas` | Return on ad spend: attributed sales / spend. |
+| `uniqueVisitors` | Distinct shoppers exposed to an ad in the reporting period. |
+| `frequency` | Average number of times the same user saw an impression in the reporting period. |
+
+***
+
+## Dimensions
+
+| Dimension | Description |
+|-----------|-------------|
+| `date` | Date events occurred (`YYYY-MM-DD`). |
+| `hour` | Hour events occurred (0–23). |
+| `accountId` | Account ID. |
+| `accountName` | Account name. |
+| `campaignId` | Campaign ID. |
+| `campaignName` | Campaign name. |
+| `campaignTypeName` | Campaign type. |
+| `lineItemId` | Line item ID. |
+| `lineItemName` | Line item name. |
+| `retailerId` | Retailer ID where the line item served. |
+| `retailerName` | Retailer name where the line item served. |
+| `brandId` | Brand ID of the advertised product. |
+| `brandName` | Brand name of the advertised product. |
+| `advProductId` | Advertised product ID. |
+| `advProductName` | Advertised product name. |
+| `advProductCategory` | Category of the advertised product. |
+| `salesChannel` | Purchase channel: `online` or `offline`. |
+| `environment` | Environment type: `web`, `mobile`, or `app`. |
+| `pageTypeName` | Retailer page type where the ad rendered. |
+| `pageCategory` | Retailer-defined page category. |
+| `servedCategory` | Category of the page where the ad was served. |
+| `taxonomyBreadcrumb` | Category breadcrumb using retailer product taxonomies. |
+
+***
+
+## Migrating from async endpoints
+
+| Async pattern | Sync equivalent |
+|---------------|-----------------|
+| `POST /reports/campaigns` → poll → download | `POST /reports/sync/campaigns` → data in response |
+| `POST /reports/line-items` → poll → download | `POST /reports/sync/line-items` → data in response |
+| `id` / `ids` (entity-scoped) | `accountId` (required) + optional `campaignIds[]` or `lineItemIds[]` |
+| `timeZone` (camelCase) | `timezone` (lowercase) |
+| `reportType: summary` | Default behavior when no `dimensions` provided |
+
+The `reportType` field is still accepted for backward compatibility but is ignored when `dimensions` is specified.
