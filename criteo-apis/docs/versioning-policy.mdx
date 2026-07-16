@@ -1,10 +1,10 @@
 ---
-title: "API Versioning Policy"
-description: "How Criteo API versions work, what the different version types mean, and how to know when you need to take action."
+title: API Versioning Policy
+description: How Criteo API versions work, what the different version types mean, and how to know when you need to take action.
 ---
 
 <Info>
-  Criteo releases two stable API versions per year — in **January** and **July**. Each version is supported for **12 months**. The final 3 months of that period serve as a deprecation window as notice to migrate before decommission.
+  Criteo releases two stable API versions per year — in **January** and **July**. Each version is supported for **12 months**. The final 3 months of that period serve as a deprecation window — `Deprecation: true` appears in response headers as notice to migrate before decommission.
 </Info>
 
 ## How API versions work
@@ -12,7 +12,7 @@ description: "How Criteo API versions work, what the different version types mea
 Every API endpoint follows the same lifecycle from initial release to decommission:
 
 | Stage | Duration | Description |
-| --- | --- | --- |
+|-------|----------|-------------|
 | **Release Candidate** | Up to 6 months | Production-ready. Will roll directly into the next stable release. |
 | **Stable** | 12 months | Fully supported. No breaking changes — ever. In the final 3 months (months 9–12), `Deprecation: true` appears in response headers and the `Sunset` header shows your exact decommission date. |
 | **Decommissioned** | — | Returns `410 Gone`. Fall-forward applies. |
@@ -21,7 +21,7 @@ Every API endpoint follows the same lifecycle from initial release to decommissi
   **Fall-forward:** When a version is decommissioned, any endpoint whose contract hasn't changed is automatically routed to the current stable version — so you won't always need to update your code. Only endpoints with breaking changes require an explicit migration.
 </Info>
 
----
+***
 
 ## The three version types
 
@@ -29,13 +29,12 @@ Every API endpoint follows the same lifecycle from initial release to decommissi
   <Card title="Experimental" icon="flask">
     **For early exploration**
 
-    - Test brand-new features before they're finalized
+    - Test brand-new features before they're finalised
     - Contracts may change significantly at any time
     - Not suitable for production use
 
     URL: `api.criteo.com/experimental/...`
   </Card>
-
   <Card title="Release Candidate" icon="code-branch">
     **For integrating early**
 
@@ -46,7 +45,6 @@ Every API endpoint follows the same lifecycle from initial release to decommissi
 
     URL: e.g. `api.criteo.com/2026-07/...` (before July 2026)
   </Card>
-
   <Card title="Stable" icon="check-circle">
     **For production use**
 
@@ -63,33 +61,45 @@ Every API endpoint follows the same lifecycle from initial release to decommissi
   **Why use a Release Candidate?** The RC and the upcoming stable version share the same URL. If you integrate `2026-07` while it's still a Release Candidate, you are already on the right version the moment it goes stable — zero migration effort. This replaces the old preview system where integrations had to be re-done once a version became stable.
 </Info>
 
----
+***
 
 ## Keeping your integration current
+
+### Check your status in 30 seconds
+
+Make any API call and look at the response headers:
+
+```http
+# This header is on every response — it tells you your current version:
+Criteo-API-Version: 2025-10
+
+# These headers only appear when your version is being deprecated:
+Deprecation: true
+Sunset: Thu, 01 Jan 2027 00:00:00 GMT  # ← your hard deadline
+```
+
+If you see `Deprecation: true`, action is needed. The `Sunset` date is the exact date your version stops working.
 
 ### What does my status mean?
 
 <CardGroup cols={2}>
-  <Card title="Active " color="#4ade80" icon="circle-check">
+  <Card title="Active — no Deprecation header" icon="circle-check" color="#4ade80">
     You're in good shape. No action needed right now. Keep an eye on the release schedule so you can plan your next upgrade with plenty of lead time.
   </Card>
-
-  <Card title="Active — within 3 months of decommission" color="#facc15" icon="clock">
-    You're entering the deprecation window. Start planning your migration now.
+  <Card title="Active — within 3 months of decommission" icon="clock" color="#facc15">
+    You're entering the deprecation window. `Deprecation: true` will appear in your response headers. Check the `Sunset` header for your exact deadline and start planning your migration now.
   </Card>
-
-  <Card title="Deprecated " color="#fb923c" icon="triangle-exclamation">
-    Your version is in its final 3 months.  Migrate to the current stable version before that date.
+  <Card title="Deprecated — Deprecation: true in responses" icon="triangle-exclamation" color="#fb923c">
+    Your version is in its final 3 months. The `Sunset` header shows your exact decommission date. Migrate to the current stable version before that date.
   </Card>
-
-  <Card title="Decommissioned — calls returning 410" color="#f87171" icon="circle-xmark">
+  <Card title="Decommissioned — calls returning 410" icon="circle-xmark" color="#f87171">
     Your version is no longer active. Update your base URL to the current stable version immediately. Endpoints that haven't changed may fall forward automatically — check the changelog to confirm which ones need manual updates.
   </Card>
 </CardGroup>
 
 ### Migrating to a new version
 
-1. **Find your current version** — check your API call URL.
+1. **Find your current version** — check your API call URL or read `Criteo-API-Version` from any response.
 2. **Find your deadline** — look up your version in the Release Schedule below. The Decommission date is your hard deadline.
 3. **Check what's changed** — review the changelog for your API ([Retail Media](/retail-media/changelog/index) · [Marketing Solutions](/marketing-solutions/changelog/index)) to identify any breaking changes between your version and the target. Non-breaking additions require no code changes.
 4. **Update your base URL** — change the version in your URL (e.g. `2025-10` → `2026-07`). That's usually the only change needed.
@@ -100,14 +110,31 @@ Every API endpoint follows the same lifecycle from initial release to decommissi
   **The easiest migration is one you don't have to rush.** The Release Candidate for the next version is available up to 6 months before its stable release. Integrating early means you upgrade on your own schedule — not against a deadline.
 </Info>
 
----
+<Accordion title="Set up automated deprecation alerts in your code">
+  Rather than checking manually, monitor for the `Deprecation` header on your responses and trigger an alert the first time you see it. This gives you the full 3-month window to plan a migration without any manual monitoring.
+
+  ```http
+  # Normal active response — no action needed:
+  Criteo-API-Version: 2025-10
+
+  # Version entering deprecation — act before the Sunset date:
+  Criteo-API-Version: 2025-10
+  Deprecation: true
+  Sunset: Wed, 01 Oct 2026 00:00:00 GMT
+
+  # After decommission:
+  HTTP/1.1 410 Gone
+  ```
+</Accordion>
+
+***
 
 ## Release schedule
 
 Stable versions release every **January** and **July**. Each version is supported for 12 months — deprecation begins at month 9, decommission at month 12.
 
 | Version | Stable release | Deprecated from | Decommission | Status |
-| --- | --- | --- | --- | --- |
+|---------|---------------|-----------------|--------------|--------|
 | 2025-07 | Jul 2025 | Apr 2026 | **Jul 2026** | DECOMMISSIONED |
 | 2025-10 | Oct 2025 | Jul 2026 | **Oct 2026** | DEPRECATED |
 | 2026-01 | Jan 2026 | Oct 2026 | **Jan 2027** | ACTIVE |
