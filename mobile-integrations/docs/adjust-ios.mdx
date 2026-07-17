@@ -1,0 +1,221 @@
+---
+title: Adjust iOS — In-App Events
+description: Implement Criteo in-app events and deep links for iOS using the Adjust SDK.
+---
+
+## Overview
+
+This document provides detailed information on the following implementation steps related to the source code of the app (if required):
+
+* Recommended events and parameters
+* Deep link implementation
+* Testing requirements
+
+For general integration steps, check [Adjust Dashboard Integration](/mobile-integrations/docs/adjust-criteo-integration).
+
+## In-App Events Implementation
+
+### View Home
+
+The viewHome event is automatically sent once Criteo has been activated on the app. It is triggered for each new user session.
+
+### App Deeplink
+
+The AppDeeplink event should be triggered every time the app is opened with a deeplink. For each activity that accepts deeplinks, add the following call:
+
+```swift
+func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+    ...
+    let event = ADJEvent(eventToken: "{deeplinkEventToken}")
+    event.addPartnerParameter("criteo_deeplink", value: url.toString(data));
+    Adjust.trackEvent(event);
+    ...
+    // Apply your logic to determine the return value of this method
+    return true;
+    // or
+    // return false;
+}
+
+func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+    ...
+    if userActivity.activityType == NSUserActivityTypeBrowsingWeb {
+        let event = ADJEvent(eventToken: "{deeplinkEventToken}")
+        let url = userActivity.webpageURL!
+        event?.addPartnerParameter("criteo_deeplink", value: url.toString(data));
+        Adjust.trackEvent(event);
+    }
+    // Apply your logic to determine the return value of this method
+    return true;
+    // or
+    // return false;
+    ...
+}
+```
+
+### View Listing
+
+The viewListing event should be triggered on pages displaying product lists, like category or search results screens. To allow our platform to identify the type of products the user is interested in, you must include the IDs of the top three products displayed in the list, which should match those passed in the catalog feed.
+
+```swift
+let event = ADJEvent(eventToken: "{viewListingEventToken}")
+let productIds = ["productId1", "productId2", "productId3"]
+event?.addPartnerParameter("products", value: String(describing: productIds))
+Adjust.trackEvent(event)
+```
+
+### View Product
+
+The viewProduct event should be triggered on all product-details screens. You must include the ID of the product detailed on the screen, which must be the same one provided in the catalog feed.
+
+```swift
+let event = ADJEvent(eventToken: "{viewProductEventToken}")
+event?.addPartnerParameter("product", value: "productId")
+Adjust.trackEvent(event)
+```
+
+### View Basket
+
+The viewBasket event should be triggered on the basket-details screens. You must include the IDs, unit prices, and quantities of the products available in the basket.
+
+```swift
+let event = ADJEvent(eventToken: "{cartEventToken}")
+let productIds = ["productId1", "productId2", "productId3"]
+let productPrice = ["1200","2500","200"]
+let productQuantity = ["1","2","3"]
+event?.addPartnerParameter("productids", value: String(describing: productIds))
+event?.addPartnerParameter("productPrice", value: String(describing: productPrice))
+event?.addPartnerParameter("productQuantity", value: String(describing: productQuantity))
+Adjust.trackEvent(event)
+```
+
+### Track Transaction
+
+The trackTransaction event should be triggered on order confirmation screens after checkout. You must include a unique transaction ID as well as the IDs, unit prices, and quantities of the products contained in the transaction.
+
+```swift
+let event = ADJEvent(eventToken: "{transactionConfirmedEventToken}")
+let productIds = ["productId1", "productId2", "productId3"]
+let productPrice = [12.0, 25.0, 2.0]
+let productQuantity = [1, 2, 3]
+event?.addPartnerParameter("productids", value: String(describing: productIds))
+event?.addPartnerParameter("productPrice", value: String(describing: productPrice))
+event?.addPartnerParameter("productQuantity", value: String(describing: productQuantity))
+event?.addPartnerParameter("transactionId", value: "abc123")
+event?.addPartnerParameter("currency", value: "EUR")
+event?.addPartnerParameter("setRevenue", value: "68.0")
+Adjust.trackEvent(event)
+```
+
+### Dates for Travel
+
+It's possible to attach check-in and check-out dates to every Criteo event with the parameter keys `din` & `dout`. The format of the dates is `"yyyy-mm-dd"` and it has to be set every time a user enters new search dates. For example:
+
+```swift
+event?.addPartnerParameter("din", value: "2021-01-01")
+event?.addPartnerParameter("dout", value: "2021-01-07")
+```
+
+The dates will be sent with every Criteo event for the duration of the application lifecycle, so they must be set again when the app is re-launched. The search dates can be removed by setting the parameter keys `din` & `dout` to null.
+
+<Note>For flight, if no checkout date has been selected then the same date should be provided in the check-in and checkout dates.</Note>
+
+### Hashed Email for Cross-Device Targeting
+
+Clients have the option of sending Criteo the email address of app users when available. This will enable the cross-device Criteo targeting feature.
+
+For instance, if the email is "*j.doe@gmail.com*", it can be sent in the format of [SHA-256](https://en.wikipedia.org/wiki/SHA-2) (preferred) or [MD5](https://en.wikipedia.org/wiki/MD5) hashed strings in the events as below:
+
+SHA-256:
+
+```swift
+event?.addPartnerParameter("criteo_email_hash_sha256", value: "3ce6f3866c13320081cd44f40402527b94f4c2ef24ea1ee163e83650b8f04d01")
+```
+
+MD5:
+
+```swift
+event?.addPartnerParameter("criteo_email_hash_md5", value: "8115b7da7fff37aeaec18779411a1042")
+```
+
+The hashed email will be sent with every Criteo event for the duration of the application lifecycle, so it must be set again when the app is relaunched. The hashed email can be removed by setting the value to an empty string:
+
+```swift
+event?.addPartnerParameter("criteo_email_hash", value: "")
+```
+
+Following are the steps to generate a hashed email address for Criteo:
+
+* Convert all characters to lower case
+* Remove any blank spaces
+* Convert to UTF-8
+* Hash using SHA-256 or MD5 algorithm
+* Email addresses need to be hashed before setting them in the event parameter. You can use existing libraries in Objective-C/Swift or create your own function for it.
+
+### Customer ID
+
+A Customer ID can be provided in all events. If the user is logged in to the advertiser's app, the user ID should be passed.
+
+<Note>User ID is an optional parameter and should be left as an empty string if the user is logged out or the User ID is unavailable.</Note>
+
+Customer ID can be any string, as long as it does not contain any Personally Identifiable Information.
+
+```swift
+event?.addPartnerParameter("customer_id", value: "12323dsvhdsb23")
+```
+
+## Enabling Reattribution via Deeplink
+
+### Adjust SDK v4.11.4+
+
+Adjust enables you to run re-engagement campaigns with usage of deep links. If you are using the Adjust SDK v4.11.4 and above, this feature is enabled within the SDK. Once you have received deep link content information in your app, you must call the `appWillOpenUrl` method. By making this call, the Adjust SDK will try to find if there is any new attribution info inside of the deep link and if any, it will be sent to the Adjust backend.
+
+See below for implementation of `appWillOpenUrl` for `openURL` & `continueUserActivity`:
+
+```swift
+func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+
+    Adjust.appWillOpen(url)
+
+    // Apply your logic to determine the return value of this method
+    return true;
+    // or
+    // return false;
+}
+```
+
+```swift
+func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+    ...
+    if userActivity.activityType == NSUserActivityTypeBrowsingWeb {
+        let url = userActivity.webpageURL!
+        Adjust.appWillOpen(url)
+
+    }
+    // Apply your logic to determine the return value of this method
+    return true;
+    // or
+    // return false;
+    ...
+}
+```
+
+For more info, check Adjust Help Center: [Set up direct deep linking](https://help.adjust.com/en/article/set-up-direct-deep-linking-ios#modify-your-ios-app)
+
+## Testing Process
+
+You should contact Criteo to start the testing phase as soon as the events are implemented.
+
+<Warning>Please allow sufficient time (at least a week before) for testing prior to the app submission in order to ensure that the data you are sending is complete.</Warning>
+
+Criteo will require the following elements:
+
+* App build to test the collection of events on Criteo side.
+* It is recommended to set the Sandbox environment and the logs level to verbose on your app as shown:
+
+```swift
+let appToken = "{YourAppToken}"
+let environment = ADJEnvironmentSandbox
+let adjustConfig = ADJConfig(appToken: appToken, environment: environment)
+adjustConfig?.logLevel = ADJLogLevelVerbose
+Adjust.appDidLaunch(adjustConfig!)
+```
