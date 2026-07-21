@@ -13,121 +13,30 @@ With the introduction of this new version, the base URL changes to:
 https://api.criteo.com/2026-07/retail-media/{endpoint}
 ```
 
-This version introduces new capabilities to the Criteo Retail Media API and changes to existing endpoints. **Only endpoints with changes are listed here.**
+<Update label="2026.07 Version" description="Breaking changes to reporting endpoints and Retailer Search, plus new stable endpoints for real-time performance, store inventory, and balance management." tags={["New releases", "Breaking Change"]}>
 
-***
+## Breaking Changes
 
-<Update label="Retailer Search" description="isAvailable removed; budgetModelAvailabilities and aiAssistant pageType added." tags={["Breaking Change", "Enhancement"]}>
+- **Retailer Search** — Targeting eligibility is now reported per budget model. `isAvailable` has been removed; use `budgetModelAvailabilities` to see which combinations of budget model, page type, and environment are available for each retailer. → [Retailer Search](/retail-media/docs/retailer-search)
 
-<Warning>
-  **Breaking change:** The `isAvailable` field has been removed from Retailer Search responses. Use `budgetModelAvailabilities` to determine targeting eligibility by budget model.
-</Warning>
+- **AI Assistant Page Type** — You can now target AI Assistant placements by including `aiAssistant` as a value in the `pageTypes` field when creating or updating line items. → [Retailer Search](/retail-media/docs/retailer-search)
 
-- `isAvailable` has been removed from responses.
-- `budgetModelAvailabilities` now returns an array of objects indicating availability per budget model, with their valid `pageType` and environment combinations.
-- `aiAssistant` has been added as an accepted value for the `pageTypes` field.
+- **Real-Time Performance — Metric Renaming** — `billableImpressions` and `billableClicks` have been renamed to `impressions` and `clicks`. Update your integration to use the new names before upgrading to `2026.07`. → [Real-Time Performance Report](/retail-media/docs/real-time-performance-api)
 
-<Info>
-  See the full documentation for the [Retailer Search endpoint](/retail-media/docs/retailer-search).
-</Info>
+- **DSP Analytics Reporting Redesign** — The three legacy endpoints (`/reports/campaigns`, `/reports/line-items`, `/reports/accounts`) and the `reportType` field have been replaced by a unified set of purpose-built endpoints where you explicitly declare `metrics` and `dimensions`. See the migration guide. → [Analytics Overview](/retail-media/docs/demand-side-analytics-overview), [Performance Report](/retail-media/docs/performance-report), [Missed Opportunities](/retail-media/docs/missed-opportunities-report), [Attributed Transactions](/retail-media/docs/attributed-transactions-report)
 
-</Update>
+## New in Stable
 
-<Update label="Real-Time Performance — Metric Renaming" description="billableImpressions and billableClicks renamed to impressions and clicks." tags={["Breaking Change", "Analytics"]}>
+- **Commerce Max — Retailer Budgets Expansion** — Retailer budget management is now fully supported in stable, covering budget visibility, field naming, and eligibility rules across campaigns, line items, and balances. → [Retailer Budgets](/retail-media/docs/retailer-budgets)
 
-<Warning>
-  The following metrics have been renamed. The old names are deprecated as of this version:
+- **Real-Time Performance Report** — The synchronous real-time performance report (Phases 2 & 3) is now available in stable, returning live campaign data immediately without polling. → [Real-Time Performance Report](/retail-media/docs/real-time-performance-api)
 
-  | Old name | New name |
-  |---|---|
-  | `billableImpressions` | `impressions` |
-  | `billableClicks` | `clicks` |
+- **Store Inventory** — You can now programmatically upsert and delete store inventory records in stable, enabling automated inventory management workflows. → [Store Inventory](/retail-media/docs/store-inventory)
 
-  Update your integrations to use the new metric names.
-</Warning>
+- **Balance Management — PATCH Endpoint** — A new `PATCH` endpoint lets you partially update existing balances without replacing the full record. `retailerPoNumber` replaces `poNumber`, and `endDate` now accepts a Nillable wrapper so you can explicitly set, clear, or leave a date unchanged. → [Balance Management](/retail-media/docs/balance-management)
 
-<Info>
-  See the full documentation for the [Real-Time Performance Report](/retail-media/docs/real-time-performance-api).
-</Info>
+## Enhancements
 
-</Update>
-
-<Update label="DSP Analytics Reporting — API Redesign" description="New unified /reports/performance endpoint replaces three legacy endpoints; reportType field removed." tags={["Breaking Change", "Analytics"]}>
-
-<Warning>
-  **This version introduces a major redesign of the Demand Side Analytics reporting API.** Integrations built against the previous `/reports/campaigns`, `/reports/line-items`, or `/reports/accounts` endpoints will not work unchanged. See the [migration guide](/retail-media/docs/demand-side-analytics-overview#migrating-from-the-legacy-reporting-api) before upgrading.
-</Warning>
-
-Three aggregation-level endpoints and the `reportType` field have been replaced by three explicit, purpose-built endpoints:
-
-| New endpoint | Replaces |
-|---|---|
-| [`POST /reports/performance`](/retail-media/docs/performance-report) | `/reports/campaigns`, `/reports/line-items`, `/reports/accounts` — and all `reportType` values |
-| [`POST /reports/missed-opportunities`](/retail-media/docs/missed-opportunities-report) | `reportType: capout` |
-| [`POST /reports/attributed-transactions`](/retail-media/docs/attributed-transactions-report) | `reportType: attributedTransactions` |
-
-Key changes:
-
-- Scope is now provided in a `filters` object: pass exactly one of `filters.campaignIds[]`, `filters.lineItemIds[]`, or `filters.accountIds[]`.
-- `metrics` and `dimensions` are now required on every request; preset `reportType` values are gone.
-- `startDate`, `endDate`, `filters`, `metrics`, and `dimensions` are all required fields.
-
-</Update>
-
-<Update label="SSP Revenue Report" description="Three new fields added: authorizedBuyer, budgetModels, activationPlatforms." tags={["Enhancement", "Analytics"]}>
-
-The SSP Revenue Report now includes three additional fields:
-
-- `authorizedBuyer` — added as a new value in the `soldBy` enum
-- `budgetModels` — new array field indicating applicable budget models (`CriteoBudget`, `RetailerBudget`)
-- `activationPlatforms` — new array field indicating applicable activation platforms (`CommerceMax`, `PrivateMarket`)
-
-<Info>
-  See the full documentation for the [Revenue Report (SSP)](/retail-media/docs/revenue-report-ssp).
-</Info>
-
-</Update>
-
-<Update label="Real-Time Performance Report" description="Synchronous real-time performance reporting endpoint promoted from preview to stable 2026.07." tags={["New in Stable", "Analytics"]}>
-
-The synchronous Real-Time Performance reporting endpoint is now available in stable `2026.07`.
-
-| Verb | Endpoint | Description |
-|---|---|---|
-| **POST** | `/retail-media/reports/sync/real-time-performance` | Request a synchronous real-time performance report |
-
-<Info>
-  See the full documentation for the [Real-Time Performance Report](/retail-media/docs/real-time-performance-api).
-</Info>
-
-</Update>
-
-<Update label="Store Inventory" description="Store inventory upsert and delete endpoints promoted from preview to stable 2026.07." tags={["New in Stable"]}>
-
-Store Inventory management endpoints are now available in stable `2026.07`, allowing programmatic upsert and deletion of store inventory records.
-
-<Info>
-  See the full documentation for [Store Inventory](/retail-media/docs/store-inventory).
-</Info>
-
-</Update>
-
-<Update label="Balance Management — PATCH Endpoint" description="New PATCH endpoint for partial balance updates; retailerPoNumber replaces poNumber; endDate accepts Nillable wrapper." tags={["New in Experimental"]}>
-
-A new PATCH endpoint is now available in the Experimental version, enabling partial updates to existing balances. This release also includes the following field-level changes across all balance endpoints:
-
-- `retailerPoNumber` replaces `poNumber` in all balance request and response payloads.
-- `endDate` now accepts a Nillable wrapper object to support three-state behavior:
-  - `{ "value": "YYYY-MM-DD" }` — sets the end date
-  - `{ "value": null }` — actively clears the end date
-  - Omitting the field — leaves the current value unchanged
-
-<Warning>
-  Sending `{ "value": null }` for `endDate` is a destructive operation that actively clears the date. It is distinct from omitting the field.
-</Warning>
-
-<Info>
-  See the full documentation for [Balance Management](/retail-media/docs/balance-management).
-</Info>
+- **SSP Revenue Report** — Three new fields added: `authorizedBuyer` as a new value in the `soldBy` enum, and `budgetModels` and `activationPlatforms` arrays to identify how inventory was monetized. → [Revenue Report (SSP)](/retail-media/docs/revenue-report-ssp)
 
 </Update>
