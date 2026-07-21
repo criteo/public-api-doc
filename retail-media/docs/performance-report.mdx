@@ -17,7 +17,7 @@ POST /2026-07/retail-media/reports/performance
 
 ### Required fields
 
-`filters` is required and must include exactly one scope filter. Requests with none or more than one scope filter will return `400 Bad Request`.
+`filters` (with exactly one scope filter), `startDate`, `endDate`, `metrics`, and `dimensions` are all required. Requests with no scope filter (or more than one) will return `400 Bad Request`.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -25,15 +25,15 @@ POST /2026-07/retail-media/reports/performance
 | `filters.accountIds[]` | array of strings | Scope the report to all campaigns under this account. Mutually exclusive with `campaignIds` and `lineItemIds`. |
 | `filters.campaignIds[]` | array of strings | Scope the report to all line items under this campaign. Mutually exclusive with `accountIds` and `lineItemIds`. |
 | `filters.lineItemIds[]` | array of strings | Scope the report to this line item. Mutually exclusive with `accountIds` and `campaignIds`. |
+| `startDate` | string | Start of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
+| `endDate` | string | End of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
+| `metrics` | array of strings | One or more metric names. See [Metrics](#metrics) below. |
+| `dimensions` | array of strings | One or more dimension names. See [Dimensions](#dimensions) below. |
 
 ### Optional fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `startDate` | string | — | Start of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
-| `endDate` | string | — | End of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
-| `metrics` | array of strings | — | One or more metric names. See [Metrics](#metrics) below. |
-| `dimensions` | array of strings | — | One or more dimension names. See [Dimensions](#dimensions) below. |
 | `timezone` | string | `UTC` | Timezone for date bucketing. IANA format (e.g. `America/New_York`). |
 | `format` | string | `json-compact` | Output format: `json`, `json-compact`, `json-newline`, or `csv`. |
 | `clickAttributionWindow` | string | — | Attribution window for click-based conversions: `none`, `7D`, `14D`, or `30D`. |
@@ -59,7 +59,7 @@ Content-Type: application/json
 
 {
   "data": {
-    "type": "RetailMediaReportRequest",
+    "type": "AsyncPerformanceReport",
     "attributes": {
       "filters": {
         "campaignIds": ["123456"]
@@ -78,15 +78,19 @@ Content-Type: application/json
 
 ## Response
 
-A successful request returns `202 Accepted` with a `reportId`. Use this ID to poll for status and retrieve the output.
+A successful request returns `200 OK` with a `reportId`. Use this ID to poll for status and retrieve the output.
 
 ```json
 {
   "data": {
-    "type": "RetailMediaReportResponse",
-    "id": "rpt_abc123",
+    "type": "StatusResponse",
+    "id": "3a4f0b7d-f606-47de-8d53-9e1dd8de5b9f",
     "attributes": {
-      "status": "pending"
+      "status": "pending",
+      "rowCount": 0,
+      "fileSizeBytes": 0,
+      "createdAt": "2026-05-01T12:00:00Z",
+      "id": "3a4f0b7d-f606-47de-8d53-9e1dd8de5b9f"
     }
   }
 }
@@ -110,6 +114,10 @@ Authorization: Bearer {token}
 
 ## Metrics
 
+<Note>
+  Fields marked **Retailer catalog only** are available only for retailers that provide a product catalog to Criteo. For retailers without a catalog, they are not populated.
+</Note>
+
 | Metric | Description |
 |--------|-------------|
 | `impressions` | Counted once per ad creative render on a page. |
@@ -125,10 +133,10 @@ Authorization: Bearer {token}
 | `attributedOrders` | Orders attributed per your attribution settings. |
 | `assistedSales` | Revenue from ads that were not the final ad before purchase but contributed to the conversion. |
 | `assistedUnits` | Units sold through assisted conversions. Excluded from `attributedUnits`. |
-| `newToBrandAttributedSales` | Attributed sales from customers who had not purchased from this brand in the prior 12 months. |
-| `newToBrandAttributedSalesRate` | `newToBrandAttributedSales` / `attributedSales`. |
-| `newToBrandAttributedUnits` | Attributed units from new-to-brand customers. |
-| `newToBrandAttributedUnitsRate` | `newToBrandAttributedUnits` / `attributedUnits`. |
+| `newToBrandAttributedSales` | Attributed sales from customers who had not purchased from this brand in the prior 12 months. **Retailer catalog only.** |
+| `newToBrandAttributedSalesRate` | `newToBrandAttributedSales` / `attributedSales`. **Retailer catalog only.** |
+| `newToBrandAttributedUnits` | Attributed units from new-to-brand customers. **Retailer catalog only.** |
+| `newToBrandAttributedUnitsRate` | `newToBrandAttributedUnits` / `attributedUnits`. **Retailer catalog only.** |
 | `frequency` | Average number of times the same user saw an impression in the reporting period. |
 | `uniqueVisitors` | Distinct shoppers exposed to an ad in the reporting period. |
 | `winRate` | Bids won divided by bids participated. Based on a 25% sample. Sponsored products only. |
@@ -153,13 +161,17 @@ Authorization: Bearer {token}
 | `videoCPC` | Average cost per video click. |
 | `videoCPCV` | Cost per completed video view. |
 
-<Warning>
-  The `winRate` metric is only supported for Sponsored Products campaigns. Include `campaignType` in your dimensions or filter by Sponsored Products in your request.
-</Warning>
+<Note>
+  The `winRate` metric is meaningful only for Sponsored Products campaigns. For accounts that also run other campaign types, include `campaignType` in your `dimensions` (or filter to Sponsored Products) so `winRate` can be attributed to the right campaigns.
+</Note>
 
 ***
 
 ## Dimensions
+
+<Note>
+  Fields marked **Retailer catalog only** are available only for retailers that provide a product catalog to Criteo. For retailers without a catalog, they are not populated.
+</Note>
 
 | Dimension | Description |
 |-----------|-------------|
@@ -174,9 +186,9 @@ Authorization: Bearer {token}
 | `lineItemName` | Line item name. |
 | `retailerId` | Retailer ID where the line item served. |
 | `retailerName` | Retailer name where the line item served. |
-| `brandId` | Brand ID of the advertised product. |
-| `brandName` | Brand name of the advertised product. |
-| `productCategory` | Category of the advertised product. Standardized categories. |
+| `brandId` | Brand ID of the advertised product. **Retailer catalog only.** |
+| `brandName` | Brand name of the advertised product. **Retailer catalog only.** |
+| `productCategory` | Category of the advertised product. Standardized categories. **Retailer catalog only.** |
 | `productId` | Advertised product ID. References the Catalogs product ID. |
 | `productName` | Name of the advertised product. |
 | `salesChannel` | Purchase channel: `online` or `offline`. |
@@ -186,9 +198,8 @@ Authorization: Bearer {token}
 | `activationPlatform` | Activation platform of the line item. |
 | `environment` | Type of environment: `web`, `mobile`, `app`. |
 | `pageType` | Type of retailer page where the ad rendered: `home`, `search`, `category`, `productDetail`, `merchandising`, `deals`, `checkout`, `confirmation`. |
-| `pageCategory` | Retailer-defined category of the page where ads rendered. |
-| `servedCategory` | Category of the page where the ad was served. Retailer-specific taxonomy. |
-| `taxonomyBreadcrumb` | Category breadcrumb using retailer product taxonomies (L1 > L2 > L3). |
+| `pageCategory` | Retailer-defined category of the page where ads rendered. **Retailer catalog only.** |
+| `servedCategory` | Category of the page where the ad was served. Retailer-specific taxonomy. **Retailer catalog only.** |
 | `keyword` | Keyword or phrase used on the search page where the ad rendered. |
 | `searchTerm` | Keyword or phrase searched by the shopper on the retailer site. |
 | `searchTermType` | Match type: `Entered`, `Searched`, or `Null`. |
@@ -204,24 +215,10 @@ Authorization: Bearer {token}
 
 ## Data Retention
 
-This endpoint supports a lookback window of up to **36 months**. Requests beyond this limit will return a `400 Bad Request` error indicating the maximum allowed date range.
+This endpoint supports a lookback window of up to **3 years** (36 months). A request with a `startDate` older than that returns `400 Bad Request` — `StartDate cannot be older than 3 years.` Separately, a single report may span at most **100 days** between `startDate` and `endDate`.
 
 ***
 
 ## Migrating from legacy endpoints
 
-| Old pattern | New equivalent |
-|-------------|---------------|
-| `POST /reports/campaigns` | `POST /reports/performance` with `campaignId`; drop `reportType`; add explicit `metrics` + `dimensions` |
-| `POST /reports/line-items` | `POST /reports/performance` with `lineItemId` |
-| `POST /reports/accounts` | `POST /reports/performance` with `accountId` |
-| `reportType: summary` | Use `POST /reports/performance` with: `impressions`, `clicks`, `spend`, `roas`, `ctr`, `attributedSales`, `attributedUnits` |
-| `reportType: flexible` | Use `POST /reports/performance` — behavior is identical; only the endpoint path changes |
-| `reportType: keyword` | Add `keyword` to dimensions |
-| `reportType: pageType` | Add `pageType` to dimensions |
-| `reportType: productCategory` | Add `productCategory` to dimensions |
-| `reportType: product` | Add `productId` and `productName` to dimensions |
-| `reportType: servedCategory` | Add `servedCategory` to dimensions |
-| `reportType: environment` | Add `environment` to dimensions |
-| `reportType: capout` | Use `POST /reports/missed-opportunities` — also note metric renames |
-| `reportType: attributedTransactions` | Use `POST /reports/attributed-transactions` |
+The full legacy → new mapping (all endpoints and every `reportType` value) is documented in the [Analytics Overview — Migrating from the legacy reporting API](/retail-media/docs/demand-side-analytics-overview#migrating-from-the-legacy-reporting-api).

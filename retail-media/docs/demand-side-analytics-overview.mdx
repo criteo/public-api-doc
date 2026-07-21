@@ -1,6 +1,5 @@
 ---
 title: Overview
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/analytics/demand-side-analytics-overview.md
 ---
 
 import AttributionDelays from "/snippets/retail-media/AttributionDelays.mdx";
@@ -57,11 +56,46 @@ Please refer to [our troubleshooting guide](/retail-media/docs/api-troubleshooti
 
 ***
 
-<br />
+## What changed in this version
 
+<Warning>
+  **This version introduces a major redesign of the Demand Side Analytics reporting API.** If you have an integration built against a previous version, it will **not** work unchanged: the endpoints, the request shape, and the `reportType` field have all changed. Read this section and the migration guide below before upgrading.
+</Warning>
 
-## What's next
+Previous versions exposed three aggregation-level endpoints — `POST /reports/campaigns`, `POST /reports/line-items`, and `POST /reports/accounts` — together with a `reportType` field that selected a preset report shape (`summary`, `keyword`, `pageType`, `capout`, `attributedTransactions`, and so on). That model has been replaced by a smaller, explicit, and more predictable set of endpoints.
 
-* [DSP Analytics Endpoints](/retail-media/docs/demand-side-analytics-get-started)
-* [Report Types](/retail-media/docs/report-types)
-* [Metrics and Dimensions](/retail-media/docs/metrics-and-dimensions)
+| Purpose | New endpoint |
+|---------|--------------|
+| Flexible performance reporting, at any account / campaign / line-item granularity | [`POST /reports/performance`](/retail-media/docs/performance-report) |
+| Budget cap-out and missed-delivery diagnostics (formerly `reportType: capout`) | [`POST /reports/missed-opportunities`](/retail-media/docs/missed-opportunities-report) |
+| Transaction-level attribution log (formerly `reportType: attributedTransactions`) | [`POST /reports/attributed-transactions`](/retail-media/docs/attributed-transactions-report) |
+
+**What is different from the previous model:**
+
+* **One performance endpoint instead of three.** `/reports/campaigns`, `/reports/line-items`, and `/reports/accounts` are all replaced by `POST /reports/performance`. You choose the scope by which ID array you pass under `filters`, and the output granularity by the dimensions you select.
+* **`reportType` is gone.** You now always specify `metrics` and `dimensions` explicitly. The preset report types (`keyword`, `pageType`, `productCategory`, `product`, `servedCategory`, `environment`, …) are reproduced simply by adding the corresponding dimension to your request.
+* **Scope moved into a `filters` object.** Instead of top-level `accountId` / `campaignId` / `lineItemId`, provide exactly one of `filters.accountIds[]`, `filters.campaignIds[]`, or `filters.lineItemIds[]`.
+* **`startDate`, `endDate`, `filters`, `metrics`, and `dimensions` are all required** on the new endpoints.
+* **Two purpose-built use cases are split into their own endpoints.** `capout` and `attributedTransactions` are no longer `reportType` values — they are dedicated endpoints, each with a few field/metric renames documented on its own page.
+
+## Migrating from the legacy reporting API
+
+Map your existing calls to the new endpoints using the table below. In every case you also need to update the request shape as described above: move the scope into a `filters` object, add explicit `metrics` and `dimensions`, and remove `reportType`.
+
+| Old pattern | New equivalent |
+|-------------|----------------|
+| `POST /reports/campaigns` | `POST /reports/performance` scoped by `filters.campaignIds[]`; drop `reportType`; add explicit `metrics` + `dimensions` |
+| `POST /reports/line-items` | `POST /reports/performance` scoped by `filters.lineItemIds[]` |
+| `POST /reports/accounts` | `POST /reports/performance` scoped by `filters.accountIds[]` |
+| `reportType: summary` | `POST /reports/performance` with: `impressions`, `clicks`, `spend`, `roas`, `ctr`, `attributedSales`, `attributedUnits` |
+| `reportType: flexible` | `POST /reports/performance` — behavior is identical; only the endpoint path and request shape change |
+| `reportType: keyword` | Add `keyword` to `dimensions` |
+| `reportType: pageType` | Add `pageType` to `dimensions` |
+| `reportType: productCategory` | Add `productCategory` to `dimensions` |
+| `reportType: product` | Add `productId` and `productName` to `dimensions` |
+| `reportType: servedCategory` | Add `servedCategory` to `dimensions` |
+| `reportType: environment` | Add `environment` to `dimensions` |
+| `reportType: capout` | Use [`POST /reports/missed-opportunities`](/retail-media/docs/missed-opportunities-report) — note the `capoutMissed*` → `missed*` metric renames |
+| `reportType: attributedTransactions` | Use [`POST /reports/attributed-transactions`](/retail-media/docs/attributed-transactions-report) — note the `adv*` → `advertised*` field renames |
+
+Endpoint-specific rename details live on each endpoint page: see [Missed Opportunities Report](/retail-media/docs/missed-opportunities-report#migrating-from-reporttype-capout) and [Attributed Transactions Report](/retail-media/docs/attributed-transactions-report#migrating-from-reporttype-attributedtransactions).

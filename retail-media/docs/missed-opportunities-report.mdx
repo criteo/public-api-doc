@@ -21,25 +21,26 @@ POST /2026-07/retail-media/reports/missed-opportunities
 
 ### Required fields
 
-`startDate`, `endDate`, `filters`, `dimensions`, and `metrics` are all required. At least one scope filter (`filters.accountIds[]`, `filters.campaignIds[]`, or `filters.lineItemIds[]`) must be provided. At least one of `dimensions` or `metrics` must be non-empty.
+`startDate`, `endDate`, `filters`, `dimensions`, and `metrics` are all required. `filters` must contain exactly one scope filter (`filters.accountIds[]`, `filters.campaignIds[]`, or `filters.lineItemIds[]`).
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `startDate` | string | Inclusive report start date. ISO 8601 date (`YYYY-MM-DD`). |
-| `endDate` | string | Inclusive report end date. ISO 8601 date (`YYYY-MM-DD`). Must be ≥ `startDate`. Max range: 100 days. Dates are interpreted in UTC. |
-| `filters` | object | Required. Must contain at least one scope filter. |
-| `filters.accountIds[]` | array of strings | Scope to all line items under this account. Up to 5 IDs per request. |
-| `filters.campaignIds[]` | array of strings | Scope to all line items under this campaign. Up to 50 IDs per request. |
-| `filters.lineItemIds[]` | array of strings | Scope to this line item. Up to 50 IDs per request. |
-| `dimensions` | array of strings | Required output grouping fields. Empty array (`[]`) means no grouping. At least one of `dimensions` or `metrics` must be non-empty. |
-| `metrics` | array of strings | Required output measure fields. Empty array (`[]`) means no measures. At least one of `dimensions` or `metrics` must be non-empty. |
+| `endDate` | string | Inclusive report end date. ISO 8601 date (`YYYY-MM-DD`). Must be ≥ `startDate`. Dates are interpreted in UTC. |
+| `filters` | object | Required. Must contain exactly one of the scope filters below. |
+| `filters.accountIds[]` | array of strings | Scope to all line items under this account. Mutually exclusive with `campaignIds` and `lineItemIds`. |
+| `filters.campaignIds[]` | array of strings | Scope to all line items under this campaign. Mutually exclusive with `accountIds` and `lineItemIds`. |
+| `filters.lineItemIds[]` | array of strings | Scope to this line item. Mutually exclusive with `accountIds` and `campaignIds`. |
+| `dimensions` | array of strings | Required. Output grouping fields. See [Dimensions](#dimensions) below. |
+| `metrics` | array of strings | Required. Output measure fields. See [Metrics](#metrics) below. |
 
 ### Optional fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `format` | string | `json-compact` | Output format: `json`, `json-compact`, `json-newline`, or `csv`. |
-| `filters.campaignTypes[]` | array of strings | — | Filter by campaign type. |
+| `filters.salesChannels[]` | array of strings | — | Filter by sales channel. |
+| `filters.mediaTypes[]` | array of strings | — | Filter by media type. |
 
 ### Example request
 
@@ -50,7 +51,7 @@ Content-Type: application/json
 
 {
   "data": {
-    "type": "RetailMediaReportRequest",
+    "type": "AsyncMissedOpportunitiesReport",
     "attributes": {
       "startDate": "2026-05-01",
       "endDate": "2026-05-07",
@@ -68,7 +69,7 @@ Content-Type: application/json
 
 ## Response
 
-A successful request returns `202 Accepted` with a `reportId`. Poll for status until `status` is `success` or `failure`:
+A successful request returns `200 OK` with a `reportId`. Poll for status until `status` is `success` or `failure`:
 
 ```http
 GET /2026-07/retail-media/reports/{reportId}/status
@@ -88,7 +89,7 @@ Each row in the report output represents one day (or one combination of dimensio
 
 ## Metrics
 
-Select metrics using the `metrics[]` array in your request. At least one of `dimensions` or `metrics` must be non-empty.
+Select metrics using the `metrics[]` array in your request. `metrics` is required.
 
 | Metric | Description |
 |--------|-------------|
@@ -114,7 +115,7 @@ All "missed" estimates are modeled — they represent what the line item would h
 
 ## Dimensions
 
-Optional dimensions can be added to the request to further break down the output.
+Select grouping dimensions using the `dimensions[]` array in your request. `dimensions` is required.
 
 | Dimension | Description |
 |-----------|-------------|
