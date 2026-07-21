@@ -1,0 +1,182 @@
+---
+title: "Best Practices for MPO API Integration"
+description: "Recommended patterns and key considerations for integrating with the Marketplace Performance Outcomes (MPO) API, covering activation model, entity mapping, budgets, bids, error handling, reporting, and seller lifecycle."
+sidebarTitle: "Best Practices for MPO API Integration"
+---
+
+This article outlines the recommended patterns and key considerations for integrating with the Marketplace Performance Outcomes (MPO) API. Following these practices helps ensure a stable, scalable, and operationally efficient implementation.
+
+Successful MPO implementations begin with commercial and technical design before development starts. We recommend following this sequence:
+
+1. Define how you sell MPO — bundled as part of a larger ad package, or as a standalone offsite product.
+2. Complete the MPO Integration Design Template (PRD) with Criteo to validate your architecture, surface unsupported requirements early, and align on best practices.
+3. Begin API implementation once your selling model and architecture are agreed.
+
+<Note>
+  Completing the PRD before implementation reduces rework during development.
+</Note>
+
+## Before you start: decide how you'll sell MPO
+
+Before writing a single API call, define which MPO activation model you are implementing:
+
+- **Bundle Extension** — offsite advertising is sold as part of a larger ad package (for example, bundled with an onsite ad platform, or combined with other offsite products). This model is recommended when you already operate an onsite advertising platform or a broader media offering.
+- **Standalone Offsite** — offsite advertising is offered as a separate product or campaign, independent from onsite.
+
+The activation model determines how you design your entity mapping, budget structure, and reporting setup. Choosing the wrong model or starting implementation before aligning with Criteo is the most common cause of rework.
+
+The table below shows how each model shapes key implementation decisions:
+
+| Implementation area | Bundle Extension | Standalone Offsite |
+| --- | --- | --- |
+| Entity mapping | Seller maps to an existing onsite campaign or product | Seller maps to a dedicated offsite product or campaign |
+| Budget structure | Shared budgets across seller-campaigns are common | Individual budgets per seller-campaign are typical |
+| Reporting | Aggregated view alongside onsite metrics is often required | Separate offsite reporting unit required |
+| Activation | Offsite activated as an add-on to an existing product | Offsite onboarded independently, no onsite dependency |
+
+<Warning>
+  Do not start implementation without first aligning your chosen model with Criteo.
+</Warning>
+
+## Entity mapping
+
+Map your internal structure to MPO entities before implementing any workflow:
+
+| Your internal concept | MPO entity |
+| --- | --- |
+| Advertiser | account |
+| Marketplace seller | Seller |
+| Per-seller campaign | Seller-Campaign |
+| Advertising budget | Budget |
+| Product inventory | Catalog |
+
+Getting this mapping wrong is the most common source of post-launch issues. Confirm with Criteo that your mapping is correct before proceeding.
+
+## Seller ingestion
+
+Sellers in MPO are not created via API in the standard flow. They are automatically extracted from your product catalog.
+
+- Each product in your catalog must include the `SellerId` field (the raw seller identifier from your system) and `SellerName` (the display name).
+- A Seller-Campaign is automatically created for every seller × campaign pair after ingestion.
+- Ingestion runs hourly, but the end-to-end process takes 24–48 hours from the time you upload your catalog.
+
+<Tip>
+  **Best practice:** Do not attempt to activate seller-campaigns immediately after catalog upload. Instead, poll `GET /marketplace-performance-outcomes/sellers` and match returned records using `sellerName` — this corresponds to the seller identifier you sent through the catalog. Once matched, use the `id` field returned by Criteo as the stable seller ID for all subsequent API calls.
+</Tip>
+
+## Budget management
+
+### Choose the right budget type
+
+| Budget type | Use when |
+| --- | --- |
+| Capped | You want a fixed total spend limit over a date range |
+| Uncapped | You want unlimited spend with no total cap |
+| Daily | You want to limit daily spend — requires an active Capped or Uncapped budget to also be present |
+
+### Shared vs. individual budgets
+
+A budget can be shared across multiple Seller-Campaigns belonging to the same seller. Use shared budgets when:
+
+- The seller operates across multiple campaigns (for example, web and app).
+- You want unified budget control across those campaigns.
+
+Use individual budgets when you need per-campaign spend accountability.
+
+<Note>
+  Shared budgets are only available in the Multi-Seller model. They are not supported in Single-Seller Campaigns.
+</Note>
+
+### Budget refresh and timezone
+
+By default, all dates and times in the MPO API are in UTC. Local timezone configuration is supported but must be set up by Criteo. Budget refresh timing is based on the configured timezone. If your operations require a local timezone, contact your Criteo point of contact to request this configuration.
+
+### Overspend protection
+
+If you implement a daily spend hard limit, you are responsible for monitoring spend via the statistics endpoints and suspending budgets or setting CPC to 0 when the threshold is reached. MPO does not enforce client-defined hard limits automatically.
+
+Recommended approach for hard limit enforcement:
+
+1. Poll `GET /stats/seller-campaigns` at a defined cadence (for example, every 15–30 minutes).
+2. Compare cost against your threshold.
+3. If exceeded, call `PATCH /budgets/{budgetId}` with `isSuspended: true` or `PATCH /seller-campaigns/{sellerCampaignId}` with `bid: 0`.
+
+Unlike onsite advertising, where spend is tightly controlled by auction mechanics, offsite campaigns can overdeliver against a set budget within a given time window. This is because ad serving and billing events are not always processed in real time, meaning a campaign can continue to serve briefly after a budget threshold is reached.
+
+The MPO budget amount sets a ceiling on what will be billed to the client: actual billed spend will not exceed the configured budget amount. However, actual delivery may briefly exceed it before the system catches up.
+
+To monitor budget consumption, use the budget endpoint, not the statistics endpoints:
+
+- `GET /budgets/{budgetId}` returns the `spend` field for the given budget.
+- If you need to check actual delivery spend at seller-campaign level, use the statistics endpoints (`GET /stats/seller-campaigns`). These two figures may differ and that is expected.
+
+To enforce a hard limit, suspend the budget when your threshold is reached:
+
+- `PATCH /budgets/{budgetId}` with `isSuspended: true`
+
+## Bid management
+
+Bids are set at the Seller-Campaign level. Key principles:
+
+- Setting a bid to 0 effectively pauses the Seller-Campaign without suspending the budget.
+- If the Seller-Campaign uses a shared budget, set bid to 0 to pause without affecting other Seller-Campaigns sharing that budget.
+- If the Seller-Campaign uses an individual budget, suspending the budget directly is the cleaner approach.
+
+**Dynamic bid adjustment pattern:**
+
+- If spend is running too fast → decrease the bid via `PATCH /seller-campaigns/{sellerCampaignId}`.
+- If spend is running too slow → increase the bid via the same endpoint.
+
+## Error handling and resilience
+
+- Implement exponential back-off for HTTP 500 and 503 responses. These are typically transient network errors.
+- The API supports up to 2,000 budgets per call (0.5 MB payload limit).
+- Partial failure is not supported in bulk operations. If a call fails, check the `errors` array in the response for per-record issue detail.
+- Use circuit breakers on write operations (budget creation, budget update, seller-campaign update) to protect your system from burst failures.
+
+## Reporting and statistics
+
+Three statistics endpoints are available:
+
+| Endpoint | Granularity |
+| --- | --- |
+| `GET /stats/sellers` | Per seller, per time interval |
+| `GET /stats/campaigns` | Per campaign, per time interval |
+| `GET /stats/seller-campaigns` | Per (seller, campaign) pair, per time interval |
+
+Key reporting considerations:
+
+- Statistics are returned in UTC. Apply timezone conversion on your side if needed.
+- Use `clickAttributionPolicy` (`SameSeller`, `AnySeller`, or `Both`) to control how post-click conversions are attributed at the seller level.
+- The default attribution window is PC30 (30-day post-click). Specify a different window explicitly if your reporting standard differs.
+- Attribution-insensitive metrics (impressions, clicks, CTR, cost) are stable regardless of attribution settings. Attribution-sensitive metrics (`saleUnits`, `revenue`, CR, CPO, COS, ROAS) change depending on the attribution window and policy used.
+
+## Seller lifecycle operations
+
+### Pausing a seller
+
+- If using an individual budget: `PATCH /budgets/{budgetId}` with `isSuspended: true`.
+- If using a shared budget: `PATCH /seller-campaigns/{sellerCampaignId}` with `bid: 0`.
+
+### Offboarding a seller
+
+1. Suspend all active budgets associated with the seller.
+2. If the seller is not expected to relaunch soon, remove their products from the catalog.
+3. Seller-Campaign budgets are archived after 6 months.
+
+### Re-onboarding a seller
+
+1. Ensure the seller's products are present in the catalog with the correct `externalSellerId`.
+2. Wait for the ingestion job to process (24–48 hours).
+3. Verify seller availability via `GET /sellers/{sellerId}`.
+4. Reactivate the budget or create a new one, then reset the bid.
+
+## Common mistakes to avoid
+
+| Mistake | Impact | Correct approach |
+| --- | --- | --- |
+| Assuming sellers appear immediately after catalog upload | API returns no seller data | Wait 24–48 hours and poll `GET /sellers` |
+| Setting budget before bid | `NoCpcDefined` suspension | Always set bid first, then budget |
+| Treating `sellerName` as the stable seller identifier | `sellerName` is deprecated | Use `sellerId` (numeric hashed value) |
+| Assuming all suspension reasons are surfaced in every environment | Missing suspension data | Check config-as-code flag availability with Criteo |
+| Building product-level reporting into MVP | Delivery delays | Separate product-level reporting to a future phase |

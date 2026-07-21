@@ -1,0 +1,120 @@
+---
+title: "API Versioning Policy"
+description: "How Criteo API versions work, what the different version types mean, and how to know when you need to take action."
+---
+
+<Info>
+  Criteo releases two stable API versions per year — in **January** and **July**. Each version is supported for **12 months**. The final 3 months of that period serve as a deprecation window as notice to migrate before decommission.
+</Info>
+
+## How API versions work
+
+Every API endpoint follows the same lifecycle from initial release to decommission:
+
+| Stage | Duration | Description |
+| --- | --- | --- |
+| **Release Candidate** | Up to 6 months | Production-ready. Will roll directly into the next stable release. |
+| **Stable** | 12 months | Fully supported. No breaking changes — ever. In the final 3 months (months 9–12) we email deprecation reminders. |
+| **Decommissioned** | — | Returns `410 Gone`. Fall-forward applies. |
+
+<Info>
+  **Fall-forward:** When a version is decommissioned, any endpoint whose contract hasn't changed is automatically routed to the current stable version — so you won't always need to update your code. Only endpoints with breaking changes require an explicit migration.
+</Info>
+
+---
+
+## The three version types
+
+<CardGroup cols={1}>
+  <Card title="Experimental" icon="flask">
+    **For early exploration**
+
+    - Test brand-new features before they're finalized
+    - Contracts may change significantly at any time
+    - Not suitable for production use
+
+    URL: `api.criteo.com/experimental/...`
+  </Card>
+
+  <Card title="Release Candidate" icon="code-branch">
+    **For integrating early**
+
+    - Production-ready — will roll directly into the next stable release
+    - Uses the **same URL** as the upcoming stable version
+    - Integrate now, no changes needed when stable ships
+    - Only minor changes possible (bug fixes)
+
+    URL: e.g. `api.criteo.com/2026-07/...` (before July 2026)
+  </Card>
+
+  <Card title="Stable" icon="check-circle">
+    **For production use**
+
+    - Fully supported for 12 months
+    - No breaking changes — ever
+    - Released every January and July
+    - Deprecation notice in the final 3 months (months 9–12)
+
+    URL: e.g. `api.criteo.com/2026-07/...` (from July 2026)
+  </Card>
+</CardGroup>
+
+<Info>
+  **Why use a Release Candidate?** The RC and the upcoming stable version share the same URL. If you integrate `2026-07` while it's still a Release Candidate, you are already on the right version the moment it goes stable — zero migration effort. This replaces the old preview system where integrations had to be re-done once a version became stable.
+</Info>
+
+---
+
+## Keeping your integration current
+
+### What does my status mean?
+
+<CardGroup cols={2}>
+  <Card title="Active " color="#4ade80" icon="circle-check">
+    You're in good shape. No action needed right now. Keep an eye on the release schedule so you can plan your next upgrade with plenty of lead time.
+  </Card>
+
+  <Card title="Active — within 3 months of decommission" color="#facc15" icon="clock">
+    You're entering the deprecation window. Start planning your migration now.
+  </Card>
+
+  <Card title="Deprecated " color="#fb923c" icon="triangle-exclamation">
+    Your version is in its final 3 months.  Migrate to the current stable version before that date.
+  </Card>
+
+  <Card title="Decommissioned — calls returning 410" color="#f87171" icon="circle-xmark">
+    Your version is no longer active. Update your base URL to the current stable version immediately. Endpoints that haven't changed may fall forward automatically — check the changelog to confirm which ones need manual updates.
+  </Card>
+</CardGroup>
+
+### Migrating to a new version
+
+1. **Find your current version** — check your API call URL.
+2. **Find your deadline** — look up your version in the Release Schedule below. The Decommission date is your hard deadline.
+3. **Check what's changed** — review the changelog for your API ([Retail Media](/retail-media/changelog/index) · [Marketing Solutions](/marketing-solutions/changelog/index)) to identify any breaking changes between your version and the target. Non-breaking additions require no code changes.
+4. **Update your base URL** — change the version in your URL (e.g. `2025-10` → `2026-07`). That's usually the only change needed.
+5. **Test before switching** — validate in a test environment before routing production traffic.
+6. **Monitor after switching** — watch for `4xx` / `5xx` errors in the first 48 hours. Your old version is still live until its decommission date if you need to roll back.
+
+<Info>
+  **The easiest migration is one you don't have to rush.** The Release Candidate for the next version is available up to 6 months before its stable release. Integrating early means you upgrade on your own schedule — not against a deadline.
+</Info>
+
+---
+
+## Release schedule
+
+Stable versions release every **January** and **July**. Each version is supported for 12 months — deprecation begins at month 9, decommission at month 12.
+
+| Version | Stable release | Deprecated from | Decommission | Status |
+| --- | --- | --- | --- | --- |
+| 2025-07 | Jul 2025 | Apr 2026 | **Jul 2026** | DECOMMISSIONED |
+| 2025-10 | Oct 2025 | Jul 2026 | **Oct 2026** | DEPRECATED |
+| 2026-01 | Jan 2026 | Oct 2026 | **Jan 2027** | ACTIVE |
+| 2026-07 | Jul 2026 | Apr 2027 | **Jul 2027** | UPCOMING |
+| 2027-01 | Jan 2027 | Oct 2027 | **Jan 2028** | PLANNED |
+| 2027-07 | Jul 2027 | Apr 2028 | **Jul 2028** | PLANNED |
+
+<Note>
+  **Migrating from Preview?** The legacy `preview` version is being deprecated in 2026. Move any preview integrations to `2026-01` (stable now) or start on the `2026-07` Release Candidate today to be auto-rolled over into the newest stable version.
+</Note>
