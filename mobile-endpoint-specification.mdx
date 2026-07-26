@@ -1,0 +1,1582 @@
+---
+title: "Criteo Mobile Endpoint Specification"
+description: "The Criteo Mobile Endpoint Specification for user events integrations. This content can be used for: S2S integrations, direct endpoint integrations from the app and hybrid apps."
+---
+
+## Overview
+
+Criteo serves personalized ads to mobile app users who have a high probability of clicking through and engaging with the app. In order to make an accurate prediction on the user's intent and likelihood of conversion, Criteo captures app events and collects relevant data associated with each event from the mobile device.
+
+This document provides detailed specifications of the mobile app events, required parameters, and implementation guidelines for mobile data partners, so they can forward the relevant data in the correct format to Criteo.
+
+The table below describes what classifies as a product for various business verticals. Ultimately, the product ID sent to Criteo should match the product ID in the product catalog feed of the advertiser imported in our platform:
+
+| Business Vertical | Description of Product ID |
+| --- | --- |
+| Retail / Classified | Unique Product ID / SKU for the purchasable item |
+| Flights | Airport IATA codes for the flight route |
+| Hotels | Hotel ID – unique identifier for each hotel in the catalog |
+| Restaurant Booking | Restaurant ID – unique identifier for each restaurant in the catalog |
+| Cars | Vehicle ID – unique identifier defining car type and rental company |
+
+{/*  | Gaming                      | Unique Product ID / SKU for the purchasable item, i.e. coins, credits, life  |
+  | Subscription Based Services | Unique ID associated with the subscription type for each membership level (examples include: standard, premium, multiple-screens) |  */}
+
+## Implementation
+
+Mobile event data needs to be transmitted to Criteo endpoints as URL encoded JSON objects. The data should preferably be sent to the Criteo endpoint as an **HTTP POST** request with the body as a JSON data structure.
+
+**HTTP GET** requests are also supported. In this case, the JSON data should be sent as the value of the single query parameter `?data=` (in URL-encoded format — see cURL examples below).
+
+### Criteo Endpoints
+
+All events should be sent to this endpoint:
+
+| Region | Criteo Endpoint URL |
+| --- | --- |
+| ALL | `https://widget.criteo.com/m/event` |
+
+Depending on the region of the data center, it might respond with an HTTP `307` redirect.
+
+If you are not able to follow redirections, you need to determine the user's location and select the corresponding regional endpoint:
+
+| Region | Criteo Endpoint URL |
+| --- | --- |
+| EMEA | `http://widget.eu.criteo.com/m/event` |
+| AMER | `http://widget.us.criteo.com/m/event` |
+| APAC | `http://widget.as.criteo.com/m/event` |
+
+<Note>
+  For the list of countries associated with each region in the table above, see [Appendix B. Criteo Country to Geographic Region Mapping](#appendix-b-criteo-country-to-geographic-region-mapping).
+</Note>
+
+### Event Parameters
+
+Following is the list of parameters required for each Criteo event.
+
+<Note>
+  For a more detailed description of each event parameter, see [Appendix A. Criteo App Events Parameters Summary](#appendix-a-criteo-app-events-parameters-summary).
+</Note>
+
+| Parameter Name | Description |
+| --- | --- |
+| `account` | Account specific information. This parameter includes the following three elements:<br />`an`: Account Name or the name of the app bundle<br />`cn`: 2-letter country code, in lower case<br />`ln`: 2-letter language code, in lower case |
+| `site_type` | OS environment, `"aa"` for App Android or `"aios"` for App iOS |
+| `id` | JSON object with device IDs of the mobile device:<br /><br />For **iOS**: IDFA (Apple Identifier For Advertisers) and IDFV (Identifier for Vendors — optional)<br />For **Android**: GAID (Google Advertising ID)<br /><br />If any of the IDs above is not available, send an empty string instead, i.e.: `"id":{"gaid": ""}` |
+| `ci` (optional) | Customer ID. If the user is logged in to the advertiser's app, the user ID should be passed. Customer ID can be any string, as long as it does not contain any PII (name, email address, real address, phone number, etc.) |
+| `events` | Array of JSON objects, each containing the event name and required parameters associated with that event.<br />See below for the complete list of event types and required parameters for each event |
+| `ip` | User IP address (IPv4 only) |
+| `version` | Arbitrary integration version — example: `"s2s_v1.0.0"` |
+| `source` | Arbitrary integration source identifier — example: `"criteo"` |
+| `device_info` (optional) | JSON object with device information |
+| `device_manufacturer` (optional) | Device manufacturer — examples: `"Samsung"`, `"Apple"` |
+| `device_model` (optional) | Device model — examples: `"Galaxy A21s"`, `"iPhone11"` |
+| `os_name` (optional) | OS name — examples: `"Android"`, `"iOS"` |
+| `os_version` (optional) | OS version — examples: `"10"`, `"15.2.1"` |
+| `user_agent` (optional) | User-agent — example: `"Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"` |
+
+Sample event data structure:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln ": "en"
+    },
+    "site_type ": "aa",
+    "id": {
+        "gaid": "322fe8ee-4bb1-4718-beab-7b7ba5cd9399"
+    },
+    "ci": "usr123",
+    "events": [
+        {
+            "event": "viewProduct",
+            "product": "324334591"
+        }
+    ],
+    "device_info": {
+        "device_manufacturer": "Samsung",
+        "device_model": "SM-G780F",
+        "os_name": "Android",
+        "os_version": "14"
+    },
+    "ip": "118.101.198.164",
+    "timestamp": "2024-04-10 13:30:00Z",
+    "version": "s2s_v1.0.0",
+    "source": "s2s",
+    "user_agent": "Dalvik/2.1.0 (Linux; U; Android 34; SM-G780F Build/RP1A.200720.012)"
+}
+```
+
+### HTTP Call Examples
+
+Sample raw event call using the **HTTP POST** method (recommended):
+
+```bash
+curl -L 'https://widget.criteo.com/m/event' \
+ -X POST \
+ -H 'Content-Type: application/json' \
+ -H 'Accept: application/json' \
+ -d '{
+        "account": {
+            "an": "com.myapp",
+            "cn": "us",
+            "ln": "en"
+        },
+        "site_type": "aa",
+        "id": {
+            "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+        },
+        "ci": "usr123",
+        "events": [
+            {
+                "event": "viewHome"
+            }
+        ],
+        "device_info": {
+            "device_manufacturer": "Samsung",
+            "device_model": "SM-G780F",
+            "os_name": "Android",
+            "os_version": "14"
+        },
+        "ip": "118.101.198.164",
+        "timestamp": "2024-04-10 13:30:00Z",
+        "version": "s2s_v1.0.0",
+        "source": "s2s",
+        "user_agent": "Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"
+    }'
+```
+
+Sample raw event call using the **HTTP GET** method:
+
+```bash
+curl -L 'https://widget.criteo.com/m/event?data=%7B%22account%22%3A%7B%22an%22%3A%22com.myapp%22%2C%22cn%22%3A%22us%22%2C%22ln%22%3A%22en%22%7D%2C%22site_type%22%3A%22aa%22%2C%22id%22%3A%7B%22gaid%22%3A%22e16332c1-dd78-4288-a4e3-6190ed632b7e%22%7D%2C%22ci%22%3A%22usr123%22%2C%22events%22%3A%5B%7B%22event%22%3A%22viewHome%22%7D%5D%2C%22device_info%22%3A%7B%22device_manufacturer%22%3A%22Samsung%22%2C%22device_model%22%3A%22SM-G780F%22%2C%22os_name%22%3A%22Android%22%2C%22os_version%22%3A%2214%22%7D%2C%22ip%22%3A%22118.101.198.164%22%2C%22timestamp%22%3A%222024-04-10%2013%3A30%3A00Z%22%2C%22version%22%3A%22s2s_v1.0.0%22%2C%22source%22%3A%22criteo%22%2C%22user_agent%22%3A%22Dalvik%2F2.1.0%20%28Linux%3B%20U%3B%20Android%2024%3B%20SM-G780F%20Build%2FRP1A.200720.012%29%22%7D'
+```
+
+## Event Specifications
+
+The following lists standard Criteo app events and required parameters associated with each event.
+
+### View Home
+
+This event captures app launch or the default home page view of the mobile app:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "ci": "usr123",
+    "events": [
+        {
+            "event": "viewHome"
+        }
+    ],
+    "device_info": {
+        "device_manufacturer": "Samsung",
+        "device_model": "SM-G780F",
+        "os_name": "Android",
+        "os_version": "14"
+    },
+    "ip": "118.101.198.164",
+    "timestamp": "2024-04-10 13:30:00Z",
+    "version": "s2s_v1.0.0",
+    "source": "s2s",
+    "user_agent": "Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"
+}
+```
+
+| Attribute Name | Type | Description |
+| --- | --- | --- |
+| `event` | string | Event name, must be `viewHome` |
+
+### App Deeplink
+
+This event captures app launches that were invoked through Native Deeplinks or Universal Link / Android App Links:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "ci": "usr123",
+    "events": [
+        {
+            "event": "appDeeplink",
+            "deeplink_uri": "myapp://path/to/content?key1=val1&key2=val2"
+        }
+    ],
+    "device_info": {
+        "device_manufacturer": "Samsung",
+        "device_model": "SM-G780F",
+        "os_name": "Android",
+        "os_version": "14"
+    },
+    "ip": "118.101.198.164",
+    "timestamp": "2024-04-10 13:30:00Z",
+    "version": "s2s_v1.0.0",
+    "source": "s2s",
+    "user_agent": "Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"
+}
+```
+
+| Attribute Name | Type | Description |
+| --- | --- | --- |
+| `event` | string | Event name, must be `appDeeplink` |
+| `deeplink_uri` | string | Should inform the entire link responsible for invoking the app (with custom URI scheme and query tracking parameters, if applicable).<br />For more info about App Deeplinking, check [Deep Linking Configuration and Requirements](/general/deeplinking/) |
+
+<Warning>
+  This is important to enrich Criteo's measurement capabilities, mostly in terms of Web \+ App cross-environment landings.
+</Warning>
+
+### View Listing
+
+This event captures the user's action of viewing a list of product items and should be fired, ideally, when the user accesses category or search screens:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "ci": "usr123",
+    "events": [
+        {
+            "event": "viewListing",
+            "product": ["324219284", "324346544", "324242096"]
+        }
+    ],
+    "device_info": {
+        "device_manufacturer": "Samsung",
+        "device_model": "SM-G780F",
+        "os_name": "Android",
+        "os_version": "14"
+    },
+    "ip": "118.101.198.164",
+    "timestamp": "2024-04-10 13:30:00Z",
+    "version": "s2s_v1.0.0",
+    "source": "s2s",
+    "user_agent": "Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"
+}
+```
+
+| Attribute Name | Type | Description |
+| --- | --- | --- |
+| `event` | string | Event name, must be `"viewListing"` |
+| `product` | array | List of the first 3 product IDs displayed on the screen (required — these should match the product IDs in the catalog feed imported into Criteo platform) |
+
+### View Product
+
+This event captures the user's action of viewing a specific product:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "ci": "usr123",
+    "events": [
+        {
+            "event": "viewProduct",
+            "product": "324219284"
+        }
+    ],
+    "device_info": {
+        "device_manufacturer": "Samsung",
+        "device_model": "SM-G780F",
+        "os_name": "Android",
+        "os_version": "14"
+    },
+    "ip": "118.101.198.164",
+    "timestamp": "2024-04-10 13:30:00Z",
+    "version": "s2s_v1.0.0",
+    "source": "s2s",
+    "user_agent": "Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"
+}
+```
+
+| Attribute Name | Type | Description |
+| --- | --- | --- |
+| `event` | string | Event name, must be `viewProduct` |
+| `product` | string / integer | Product ID accessed (required — these should match the product IDs in the catalog feed imported into Criteo platform) |
+
+### View Basket
+
+This event captures the user's action of visiting the basket/cart and reviewing the items before checkout:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "ci": "usr123",
+    "events": [
+        {
+            "event": "viewBasket",
+            "currency": "USD",
+            "product": [
+                {
+                    "id": "1234",
+                    "price": 10.2,
+                    "quantity": 1
+                },
+                {
+                    "id": "3456",
+                    "price": 1.1,
+                    "quantity": 2
+                },
+                {
+                    "id": "2345",
+                    "price": 9.3,
+                    "quantity": 5
+                }
+            ]
+        }
+    ],
+    "device_info": {
+        "device_manufacturer": "Samsung",
+        "device_model": "SM-G780F",
+        "os_name": "Android",
+        "os_version": "14"
+    },
+    "ip": "118.101.198.164",
+    "timestamp": "2024-04-10 13:30:00Z",
+    "version": "s2s_v1.0.0",
+    "source": "s2s",
+    "user_agent": "Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"
+}
+```
+
+| Attribute Name | Type | Description |
+| --- | --- | --- |
+| `event` | string | Event name, must be `viewBasket` |
+| `currency` (optional) | string | 3-letter ISO 4217 currency code (required for multi-currency apps)<br />For more details, check: [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) |
+| `product` | array | List of product attributes below |
+| product `id` | string / integer | Product ID from the product catalog imported into Criteo platform |
+| product `price` | double | Product unit price, final value applied in the basket (with discounts, etc.) |
+| product `quantity` | integer | Product items quantity in the transaction |
+
+### Track Transaction
+
+This event should be fired when the user has completed the purchase:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "events": [{
+        "event": "trackTransaction",
+        "id": "b8dec919-d8b0-418b-bb95-988ab4870672",
+        "dd": 1,
+        "currency": "USD",
+        "product": [
+            {
+                "id": "1234",
+                "price": 10.2,
+                "quantity": 1
+            },
+            {
+                "id": "2345",
+                "price": 11.2,
+                "quantity": 2
+            }
+        ]
+    }],
+    "device_info": {
+        "device_manufacturer": "Samsung",
+        "device_model": "SM-G780F",
+        "os_name": "Android",
+        "os_version": "14"
+    },
+    "ip": "118.101.198.164",
+    "timestamp": "2024-04-10 13:30:00Z",
+    "version": "s2s_v1.0.0",
+    "source": "s2s",
+    "user_agent": "Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"
+}
+```
+
+| Attribute Name | Type | Description |
+| --- | --- | --- |
+| `event` | string | Event name, must be `trackTransaction` |
+| `id` | string | Client-side transaction/order ID, used for reporting and de-duplication purposes |
+| `dd` (optional) | integer | De-duplication flag indicating if the transaction should be attributed to Criteo: `"dd": 1` is attributed to Criteo, `"dd": 0` otherwise |
+| `currency` (optional) | string | 3-letter ISO 4217 currency code (required for multi-currency apps)<br />For more details, check: [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) |
+| `product` | array | List of product attributes below |
+| product `id` | string / integer | Product ID from the product catalog imported into Criteo platform |
+| product `price` | double | Product unit price, final value applied in the transaction (with discounts, etc.) |
+| product `quantity` | integer | Product items quantity in the transaction |
+
+{/*  | nc (optional)      | integer | New Customer flag indicating whether this is a first sale recorded for a given user. **(1: New Customer, 0: Returning customer)** |  */}
+
+## Additional Data for the Travel Vertical
+
+Criteo recommends advertisers in the Travel vertical (Flights/Hotels/Car/Restaurant Booking sites) send check-in and check-out dates related to the booking search to help improve our optimization learnings.
+
+Those dates can be sent to Criteo as an additional event called `"vs"` in the events array, as in the View Product event example below:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "events": [
+        {
+            "event": "viewProduct",
+            "product": "324334591"
+        },
+        {
+            "event": "vs",
+            "din": "2024-06-20",
+            "dout": "2024-07-30"
+        }
+    ],
+    "device_info": {
+        "device_manufacturer": "Samsung",
+        "device_model": "SM-G780F",
+        "os_name": "Android",
+        "os_version": "14"
+    },
+    "ip": "118.101.198.164",
+    "timestamp": "2024-04-10 13:30:00Z",
+    "version": "s2s_v1.0.0",
+    "source": "s2s",
+    "user_agent": "Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"
+}
+```
+
+| Attribute Name | Type | Description |
+| --- | --- | --- |
+| `din` | string | Check-in / departure date selected by the user in the booking search |
+| `dout` | string | Check-out / return date selected by the user in the booking search<br />Note: if the `dout` value is not available (i.e. one-way ticket), inform only `din` |
+
+<Note>
+  Date values must be sent to Criteo in the format `YYYY-MM-DD`.
+</Note>
+
+## Hashed Email for Cross-Device Targeting
+
+Mobile advertisers should send Criteo the email address of the app user whenever available, either in SHA-256 hashed format (recommended) or plain-text, to enable our cross-device targeting capabilities and allow for better cross-environment measurement. The hashed email can be added to any of the event types above.
+
+Following are the steps to generate a valid hashed email address:
+
+- Convert all characters to lower case
+- Remove any blank spaces
+- Ensure to use UTF-8 encoding
+- Hash using the SHA-256 algorithm
+
+There are two ways advertisers can append a hashed email to Criteo:
+
+- Using the `alternate_ids` structure, or
+- Using the dedicated `setEmail` event type
+
+<Note>
+  SHA-256 is the industry standard hash algorithm and is currently the only hash method supported by Criteo.
+</Note>
+
+### Sending Email as `alternate_ids`
+
+Following are examples of sending an email address as one of the alternate IDs, in the JSON root:
+
+SHA-256 hashed format:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "alternate_ids": [
+        {
+            "type": "email",
+            "hash_method": "sha256",
+            "value": "66f933bcd8b699c746ce89757ec9b0ff8de9510b5f6e92ae8ccb26e0324ac8a0"
+        }
+    ],
+    "events": [ /* events */ ],
+    // ...
+}
+```
+
+Plain-text format:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "alternate_ids": [
+        {
+            "type": "email",
+            "hash_method": "none",
+            "value": "test@mydomain.com"
+        }
+    ],
+    "events": [ /* events */ ],
+    // ...
+}
+```
+
+### Sending Email as Event `setEmail`
+
+Following are examples of sending an email address in the dedicated `setEmail` event, as part of the events structure:
+
+SHA-256 hashed format:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "events": [
+        {
+            "event": "viewHome"
+        },
+        {
+            "event": "setEmail",
+            "email": "66f933bcd8b699c746ce89757ec9b0ff8de9510b5f6e92ae8ccb26e0324ac8a0",
+            "hash_method": "sha256"
+        }
+    ],
+    // ...
+}
+```
+
+Plain-text format:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "alternate_ids": [
+        {
+            "type": "email",
+            "hash_method": "none",
+            "value": "test@mydomain.com"
+        }
+    ],
+    "events": [
+        {
+            "event": "viewHome"
+        },
+        {
+            "event": "setEmail",
+            "email": "test@mydomain.com",
+            "hash_method": "none"
+        }
+    ],
+    // ...
+}
+```
+
+## Extra Data
+
+The Criteo Endpoint accepts generic extra data through the `"events"` structure in the format of key-value pairs. This extra data can be applied to different advanced purposes, like audience segmentation and special tracking needs, among others, and can be added to the events structure as below:
+
+```json
+{
+    "account": {
+        "an": "com.myapp",
+        "cn": "us",
+        "ln": "en"
+    },
+    "site_type": "aa",
+    "id": {
+        "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+    },
+    "events": [
+        {
+            "event": "viewHome",
+            "generic_extra_data": "data_123"
+        }
+    ],
+    // ...
+}
+```
+
+<Warning>
+  Discuss with your Criteo Technical Solutions Engineer about the usage and implementation of this extra data.
+</Warning>
+
+## New Event Taxonomy Specifications
+
+The event types above were designed primarily considering clients from the Retail, Travel, and Classified business verticals. For other verticals, it may be useful to collect additional event types to enrich our reporting capabilities.
+
+<Warning>
+  The event types above are our primary source for campaign optimization, so we recommend prioritizing their implementation over the additional event types below (as of today, used only for reporting purposes).
+</Warning>
+
+### Recommended Events per Vertical
+
+The recommendation is to send all events that describe the "user-flow" in the app. The table below shows the recommended events per vertical:
+
+| Event Name | Description | Retail | Travel | Classified | Gaming | Streaming Entertainment | Finance | Dating Social | RideHailing |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| app open/app launch | when user installs the app | Y | Y | Y | Y | Y | Y | Y | Y |
+| home page / App open | when user opens the app or arrives on the home page | Y | Y | Y | Y | Y | Y | Y | Y |
+| view item list / listing | when user sees list of items/products/offering | Y | Y | Y |  | Y |  |  | Y |
+| view item | when user sees one specific item/products/offering | Y | Y | Y | Y | Y | Y |  |  |
+| add to cart | when user adds an item/product to the cart | Y | Y |  |  |  |  |  |  |
+| basket | when user is on the basket page | Y | Y |  |  |  |  |  |  |
+| purchase | when user makes a purchase | Y | Y | Y | Y |  | Y |  | Y |
+| add to wish list | when user adds an item/product to the wish list | Y | Y |  |  |  |  |  |  |
+| complete registration / sign up | when user creates an account, signs up, or completes registration | Y | Y | Y | Y | Y | Y | Y | Y |
+| login | when user logs in | Y | Y | Y | Y | Y | Y | Y | Y |
+| add payment info | when user adds payment info | Y | Y |  |  |  | Y |  | Y |
+| begin checkout | when user starts the purchase flow | Y | Y |  |  |  | Y |  |  |
+| purchase cancelled / purchase refund | when user cancels a purchase or asks for a refund | Y | Y |  |  |  |  |  | Y |
+| generate lead | when user generates a lead: asks for contact details / sends a message (classified / jobs app, Education, Local Deals, Real Estate) |  |  | Y |  |  |  |  |  |
+| start trial | when user starts the trial version of the app |  |  |  | Y | Y | Y | Y |  |
+| subscribe | when user subscribes (recurring payment) | Y (subscribe to a prime membership program) |  |  |  | Y | Y | Y |  |
+| select item | when user has selected content in an app |  |  |  | Y |  |  |  | Y |
+| earn virtual currency | when user earns virtual currency (Gaming apps) |  |  |  | Y |  |  |  |  |
+| level up | when user passes a level (Gaming apps) |  |  |  | Y |  |  |  |  |
+| spend virtual currency/credit | when user spends virtual currency (Gaming apps) |  |  |  | Y |  |  |  |  |
+| tutorial begin | when user starts the tutorial (Gaming app) |  |  |  | Y |  |  |  |  |
+| tutorial complete | when user completes the tutorial (Gaming app) |  |  |  | Y |  |  |  |  |
+| unlock achievement | when user unlocks an achievement (Gaming app) |  |  |  | Y |  |  |  |  |
+| search |  |  | Y |  |  |  |  |  |  |
+| video/audio start or media play | when user starts to play media in the app (i.e. music/video streaming app...) |  |  |  |  | Y |  |  |  |
+
+### Complete Registration
+
+Event informing when user registers in the app:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "completeRegistration"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `completeRegistration` |
+</Accordion>
+
+### Login
+
+Event informing when user logs in:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "login"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `login` |
+</Accordion>
+
+### Add Payment Info
+
+Event informing when user adds payment info:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "addPaymentInfo"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `addPaymentInfo` |
+</Accordion>
+
+### Select Product
+
+Event informing when user selects a specific product variant within the app:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "selectProduct",
+              "item_id": "ABC1234"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `selectProduct` |
+  | `item_id` | string | Product ID from the product catalog imported into Criteo platform |
+</Accordion>
+
+### Begin Checkout
+
+Event informing when user starts the checkout:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "beginCheckout",
+              "currency": "USD",
+              "product": [{
+                      "id": "1234",
+                      "price": 10.2,
+                      "quantity": 1
+                  },
+                  {
+                      "id": "2345",
+                      "price": 11.2,
+                      "quantity": 2
+                  }
+              ]
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `beginCheckout` |
+  | `currency` | string | 3-letter ISO 4217 currency code (required for multi-currency apps)<br />For more details, check: [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) |
+  | `product` | array | List of product attributes below |
+  | product `id` | string | Product ID from the product catalog imported into Criteo platform |
+  | product `price` | double | Product unit price, final value applied in the checkout (with discounts, etc.) |
+  | product `quantity` | integer | Product items quantity in the transaction |
+</Accordion>
+
+### Add to Cart
+
+Event informing when user adds an item/product to the cart:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "addToCart",
+              "currency": "USD",
+              "product": [
+                  {
+                      "id": "1234",
+                      "price": 10.2,
+                      "quantity": 1
+                  },
+                  {
+                      "id": "3456",
+                      "price": 1.1,
+                      "quantity": 2
+                  },
+                  {
+                      "id": "2345",
+                      "price": 9.3,
+                      "quantity": 5
+                  }
+              ]
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `addToCart` |
+  | `currency` | string | 3-letter ISO 4217 currency code (required for multi-currency apps)<br />For more details, check: [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) |
+  | `product` | array | List of product attributes below |
+  | product `id` | string | Product ID from the product catalog imported into Criteo platform |
+  | product `price` | double | Product unit price, final value applied in the basket/transaction (with discounts, etc.) |
+  | product `quantity` | integer | Product items quantity in the transaction |
+</Accordion>
+
+### Add to Wishlist
+
+Event informing that user adds an item/product to the wishlist:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [{
+          "event": "addToWishList",
+          "currency": "USD",
+          "product": [
+              {
+                  "id": "1234",
+                  "price": 10.2,
+                  "quantity": 1
+              },
+              {
+                  "id": "3456",
+                  "price": 1.1,
+                  "quantity": 2
+              },
+              {
+                  "id": "2345",
+                  "price": 9.3,
+                  "quantity": 5
+              }
+          ]
+      }],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `addToWishList` |
+  | `currency` | string | 3-letter ISO 4217 currency code (required for multi-currency apps)<br />For more details, check: [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) |
+  | `product` | array | List of product attributes below |
+  | product `id` | string | Product ID from the product catalog imported into Criteo platform |
+  | product `price` | double | Product unit price, final value applied when added to the wishlist (with discounts, etc.) |
+  | product `quantity` | integer | Product items quantity in the transaction |
+</Accordion>
+
+### Cancel Transaction
+
+Event informing that the user cancels a transaction:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "cancelTransaction",
+              "id": "23fe73be-61c0-4af2-a692-b0383eec9d22",
+              "currency": "USD",
+              "product": [
+                  {
+                      "id": "1234",
+                      "price": 10.2,
+                      "quantity": 1
+                  },
+                  {
+                      "id": "2345",
+                      "price": 11.2,
+                      "quantity": 2
+                  }
+              ]
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `cancelTransaction` |
+  | `id` | string | Client-side transaction/order ID, used for reporting and de-duplication purposes |
+  | `currency` | string | 3-letter ISO 4217 currency code (required for multi-currency apps)<br />For more details, check: [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) |
+  | `product` | array | List of product attributes below |
+  | product `id` | string | Product ID from the product catalog imported into Criteo platform |
+  | product `price` | double | Product unit price, final value applied in the transaction (with discounts, etc.) |
+  | product `quantity` | integer | Product items quantity in the transaction |
+</Accordion>
+
+### Start Trial
+
+Event informing that user starts a service trial:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "startTrial"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `startTrial` |
+</Accordion>
+
+### Subscribe
+
+Event informing that user subscribes to a service:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "subscribe",
+              "currency": "USD",
+              "total_amount ": "100.50"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `subscribe` |
+  | `item_id` | string | The value should be an item ID |
+</Accordion>
+
+### Play Media
+
+Event informing when user achieves a new level within the game:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "playMedia",
+              "item_id": "ABC1234"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `playMedia` |
+  | `item_id` | string | The value should be an item ID |
+</Accordion>
+
+### Begin Tutorial
+
+Event informing when user has completed the tutorial within the game:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "beginTutorial",
+              "tutorial_id": "ab1234"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `beginTutorial` |
+  | `tutorial_id` | string | Tutorial ID |
+</Accordion>
+
+### Complete Tutorial
+
+Event informing when user has completed the tutorial within the game:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "completeTutorial",
+              "tutorial_id": "ab1234"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `completeTutorial` |
+  | `tutorial_id` | string | Tutorial ID |
+</Accordion>
+
+### Level-Up
+
+Event informing when user achieves a new level within the game:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [{
+          "event": "levelUp",
+          "level_id": "10",
+          "character_id": "A1234",
+          "score": "10"
+      }],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `levelUp` |
+  | `level_id` | string | The level in the game |
+  | `score` | double | The score in the game |
+  | `character_id` | integer | ID of the character in the game |
+</Accordion>
+
+### Earn Virtual Currency
+
+Event informing when user earns virtual currency within the game:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "earnVirtualCurrency",
+              "virtual_currency_name": "virtual_coin",
+              "total_amount ": "10"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `earnVirtualCurrency` |
+  | `virtual_currency_name` | string | Virtual currency name |
+  | `total_amount` | string | Virtual currency total amount |
+</Accordion>
+
+### Unlock Achievement
+
+Event informing when user has reached a key milestone within the game:
+
+<Accordion title="Expand">
+  ```json
+  {
+      "account": {
+          "an": "com.myapp",
+          "cn": "us",
+          "ln": "en"
+      },
+      "site_type": "aa",
+      "id": {
+          "gaid": "e16332c1-dd78-4288-a4e3-6190ed632b7e"
+      },
+      "events": [
+          {
+              "event": "unlockAchievement",
+              "achievement_id": "ab1234"
+          }
+      ],
+      // ...
+  }
+  ```
+
+  | Attribute Name | Type | Description |
+  | --- | --- | --- |
+  | `event` | string | Event name, must be `unlockAchievement` |
+  | `achievement_id` | string | Add an identifier for the achievement |
+</Accordion>
+
+## Appendix A: Criteo App Events Parameters Summary
+
+| Parameter | Description |
+| --- | --- |
+| `an` | App name (client identifier), typically Bundle ID or Package Name of the App |
+| `cn` | Country of the user in ISO 3166 two-letter country code (empty string `""` if not available)<br />For more details, check: [List of ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) |
+| `ln` | Language of the app in ISO 639 two-letter language code (empty string `""` if not available)<br />For more details, check: [List of ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) |
+| `gaid` | Google Advertising Identifier, required in Android events (empty string `""` if not available) |
+| `idfa` | Apple Identifier For Advertisers, required for iOS events (for opt-in users, after ATT dialog consent — empty string `""` if not available) |
+| `idfv` | IDFV of the device (empty string `""` or omit this parameter if not available) |
+| `product` | Product ID from the product catalog imported into Criteo platform |
+| `price` | Product unit price, final value applied in the basket/transaction (with discounts, etc.) |
+| `quantity` | Product items quantity in the basket/transaction |
+| `site_type` | OS environment, `"aa"` for App Android or `"aios"` for App iOS |
+| `dd` | De-duplication flag indicating if the transaction should be attributed to Criteo: `"dd": 1` is attributed to Criteo, `"dd": 0` otherwise |
+| `id` | Client-side transaction/order ID, used for reporting and de-duplication purposes |
+| `currency` | 3-letter ISO 4217 currency code (required for multi-currency apps)<br />For more details, check: [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) |
+| `ip` | User IP address (IPv4 only) |
+| `version` | Arbitrary integration version — example: `"s2s_v1.0.0"` |
+| `source` | Arbitrary integration source identifier — example: `"s2s"` |
+| `timestamp` | Accepted format: `yyyy-MM-ddTHH:mm:ssZ`.<br />For more details, check: [.NET Standard date and time format strings](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings) |
+| `ci` | Customer ID. If the user is logged in to the advertiser's app, the user ID should be passed. Customer ID can be any string, as long as it does not contain any PII (name, email address, real address, phone number, etc.) |
+| `email` | SHA-256 hashed (or plain-text) email collected whenever the user is logged in — example: `"66f933bcd8b699c746ce89757ec9b0ff8de9510b5f6e92ae8ccb26e0324ac8a0"` |
+| `din` | Check-in / departure date selected by the user in the booking search |
+| `dout` | Check-out / return date selected by the user in the booking search |
+| `user_agent` | User-agent — example: `"Dalvik/2.1.0 (Linux; U; Android 24; SM-G780F Build/RP1A.200720.012)"` |
+| `device_info` | JSON object with device information |
+| `device_manufacturer` | Device manufacturer — examples: `"Samsung"`, `"Apple"` |
+| `device_model` | Device model — examples: `"Galaxy A21s"`, `"iPhone11"` |
+| `os_name` | OS name — examples: `"Android"`, `"iOS"` |
+| `os_version` | OS version — examples: `"10"`, `"15.2.1"` |
+
+{/*  | `nc`         | New Customer flag indicating whether this is a first sale recorded for a given user (1: New Customer, 0: Returning customer) |  */}
+
+{/*  | si           | User segment i.e. "si": 1                                    |  */}
+
+## Appendix B: Criteo Country to Geographic Region Mapping
+
+| Country Code | Country Name | Criteo Datacenter Mapping |
+| --- | --- | --- |
+| AP | Asia/Pacific Region | APAC |
+| EU | Europe | EMEA |
+| AD | Andorra | EMEA |
+| AE | United Arab Emirates | EMEA |
+| AF | Afghanistan | EMEA |
+| AG | Antigua and Barbuda | AMER |
+| AI | Anguilla | AMER |
+| AL | Albania | EMEA |
+| AM | Armenia | EMEA |
+| CW | Curacao | AMER |
+| AO | Angola | EMEA |
+| AQ | Antarctica | AMER |
+| AR | Argentina | AMER |
+| AS | American Samoa | APAC |
+| AT | Austria | EMEA |
+| AU | Australia | APAC |
+| AW | Aruba | AMER |
+| AZ | Azerbaijan | EMEA |
+| BA | Bosnia and Herzegovina | EMEA |
+| BB | Barbados | AMER |
+| BD | Bangladesh | APAC |
+| BE | Belgium | EMEA |
+| BF | Burkina Faso | EMEA |
+| BG | Bulgaria | EMEA |
+| BH | Bahrain | EMEA |
+| BI | Burundi | EMEA |
+| BJ | Benin | EMEA |
+| BM | Bermuda | AMER |
+| BN | Brunei Darussalam | APAC |
+| BO | Bolivia | AMER |
+| BR | Brazil | AMER |
+| BS | Bahamas | AMER |
+| BT | Bhutan | APAC |
+| BV | Bouvet Island | AMER |
+| BW | Botswana | EMEA |
+| BY | Belarus | EMEA |
+| BZ | Belize | AMER |
+| CA | Canada | AMER |
+| CC | Cocos (Keeling) Islands | APAC |
+| CD | Congo, The Democratic Republic of the | EMEA |
+| CF | Central African Republic | EMEA |
+| CG | Congo | EMEA |
+| CH | Switzerland | EMEA |
+| CI | Cote D'Ivoire | EMEA |
+| CK | Cook Islands | APAC |
+| CL | Chile | AMER |
+| CM | Cameroon | EMEA |
+| CN | China | China |
+| CO | Colombia | AMER |
+| CR | Costa Rica | AMER |
+| CU | Cuba | AMER |
+| CV | Cape Verde | EMEA |
+| CX | Christmas Island | APAC |
+| CY | Cyprus | EMEA |
+| CZ | Czech Republic | EMEA |
+| DE | Germany | EMEA |
+| DJ | Djibouti | EMEA |
+| DK | Denmark | EMEA |
+| DM | Dominica | AMER |
+| DO | Dominican Republic | AMER |
+| DZ | Algeria | EMEA |
+| EC | Ecuador | AMER |
+| EE | Estonia | EMEA |
+| EG | Egypt | EMEA |
+| EH | Western Sahara | EMEA |
+| ER | Eritrea | EMEA |
+| ES | Spain | EMEA |
+| ET | Ethiopia | EMEA |
+| FI | Finland | EMEA |
+| FJ | Fiji | APAC |
+| FK | Falkland Islands (Malvinas) | AMER |
+| FM | Micronesia, Federated States of | APAC |
+| FO | Faroe Islands | EMEA |
+| FR | France | EMEA |
+| SX | Sint Maarten (Dutch part) | AMER |
+| GA | Gabon | EMEA |
+| GB | United Kingdom | EMEA |
+| GD | Grenada | AMER |
+| GE | Georgia | EMEA |
+| GF | French Guiana | AMER |
+| GH | Ghana | EMEA |
+| GI | Gibraltar | EMEA |
+| GL | Greenland | AMER |
+| GM | Gambia | EMEA |
+| GN | Guinea | EMEA |
+| GP | Guadeloupe | AMER |
+| GQ | Equatorial Guinea | EMEA |
+| GR | Greece | EMEA |
+| GS | South Georgia and the South Sandwich Islands | AMER |
+| GT | Guatemala | AMER |
+| GU | Guam | APAC |
+| GW | Guinea-Bissau | EMEA |
+| GY | Guyana | AMER |
+| HK | Hong Kong | APAC |
+| HM | Heard Island and McDonald Islands | AMER |
+| HN | Honduras | AMER |
+| HR | Croatia | EMEA |
+| HT | Haiti | AMER |
+| HU | Hungary | EMEA |
+| ID | Indonesia | APAC |
+| IE | Ireland | EMEA |
+| IL | Israel | EMEA |
+| IN | India | APAC |
+| IO | British Indian Ocean Territory | EMEA |
+| IQ | Iraq | EMEA |
+| IR | Iran, Islamic Republic of | EMEA |
+| IS | Iceland | EMEA |
+| IT | Italy | EMEA |
+| JM | Jamaica | AMER |
+| JO | Jordan | EMEA |
+| JP | Japan | APAC |
+| KE | Kenya | EMEA |
+| KG | Kyrgyzstan | EMEA |
+| KH | Cambodia | APAC |
+| KI | Kiribati | APAC |
+| KM | Comoros | EMEA |
+| KN | Saint Kitts and Nevis | AMER |
+| KP | Korea, Democratic People's Republic of | APAC |
+| KR | Korea, Republic of | APAC |
+| KW | Kuwait | EMEA |
+| KY | Cayman Islands | AMER |
+| KZ | Kazakhstan | EMEA |
+| LA | Lao People's Democratic Republic | APAC |
+| LB | Lebanon | EMEA |
+| LC | Saint Lucia | AMER |
+| LI | Liechtenstein | EMEA |
+| LK | Sri Lanka | APAC |
+| LR | Liberia | EMEA |
+| LS | Lesotho | EMEA |
+| LT | Lithuania | EMEA |
+| LU | Luxembourg | EMEA |
+| LV | Latvia | EMEA |
+| LY | Libyan Arab Jamahiriya | EMEA |
+| MA | Morocco | EMEA |
+| MC | Monaco | EMEA |
+| MD | Moldova, Republic of | EMEA |
+| MG | Madagascar | EMEA |
+| MH | Marshall Islands | APAC |
+| MK | Macedonia | EMEA |
+| ML | Mali | EMEA |
+| MM | Myanmar | APAC |
+| MN | Mongolia | APAC |
+| MO | Macau | China |
+| MP | Northern Mariana Islands | APAC |
+| MQ | Martinique | AMER |
+| MR | Mauritania | EMEA |
+| MS | Montserrat | AMER |
+| MT | Malta | EMEA |
+| MU | Mauritius | EMEA |
+| MV | Maldives | APAC |
+| MW | Malawi | EMEA |
+| MX | Mexico | AMER |
+| MY | Malaysia | APAC |
+| MZ | Mozambique | EMEA |
+| NA | Namibia | EMEA |
+| NC | New Caledonia | APAC |
+| NE | Niger | EMEA |
+| NF | Norfolk Island | APAC |
+| NG | Nigeria | EMEA |
+| NI | Nicaragua | AMER |
+| NL | Netherlands | EMEA |
+| NO | Norway | EMEA |
+| NP | Nepal | APAC |
+| NR | Nauru | APAC |
+| NU | Niue | APAC |
+| NZ | New Zealand | APAC |
+| OM | Oman | EMEA |
+| PA | Panama | AMER |
+| PE | Peru | AMER |
+| PF | French Polynesia | APAC |
+| PG | Papua New Guinea | APAC |
+| PH | Philippines | APAC |
+| PK | Pakistan | EMEA |
+| PL | Poland | EMEA |
+| PM | Saint Pierre and Miquelon | AMER |
+| PN | Pitcairn Islands | APAC |
+| PR | Puerto Rico | AMER |
+| PS | Palestinian Territory | EMEA |
+| PT | Portugal | EMEA |
+| PW | Palau | APAC |
+| PY | Paraguay | AMER |
+| QA | Qatar | EMEA |
+| RE | Reunion | EMEA |
+| RO | Romania | EMEA |
+| RU | Russian Federation | EMEA |
+| RW | Rwanda | EMEA |
+| SA | Saudi Arabia | EMEA |
+| SB | Solomon Islands | APAC |
+| SC | Seychelles | EMEA |
+| SD | Sudan | EMEA |
+| SE | Sweden | EMEA |
+| SG | Singapore | APAC |
+| SH | Saint Helena | EMEA |
+| SI | Slovenia | EMEA |
+| SJ | Svalbard and Jan Mayen | EMEA |
+| SK | Slovakia | EMEA |
+| SL | Sierra Leone | EMEA |
+| SM | San Marino | EMEA |
+| SN | Senegal | EMEA |
+| SO | Somalia | EMEA |
+| SR | Suriname | AMER |
+| ST | Sao Tome and Principe | EMEA |
+| SV | El Salvador | AMER |
+| SY | Syrian Arab Republic | EMEA |
+| SZ | Swaziland | EMEA |
+| TC | Turks and Caicos Islands | AMER |
+| TD | Chad | EMEA |
+| TF | French Southern Territories | AMER |
+| TG | Togo | EMEA |
+| TH | Thailand | APAC |
+| TJ | Tajikistan | APAC |
+| TK | Tokelau | APAC |
+| TM | Turkmenistan | EMEA |
+| TN | Tunisia | EMEA |
+| TO | Tonga | APAC |
+| TL | Timor-Leste | APAC |
+| TR | Turkey | EMEA |
+| TT | Trinidad and Tobago | AMER |
+| TV | Tuvalu | APAC |
+| TW | Taiwan | APAC |
+| TZ | Tanzania, United Republic of | EMEA |
+| UA | Ukraine | EMEA |
+| UG | Uganda | EMEA |
+| UM | United States Minor Outlying Islands | APAC |
+| US | United States | AMER |
+| UY | Uruguay | AMER |
+| UZ | Uzbekistan | EMEA |
+| VA | Holy See (Vatican City State) | EMEA |
+| VC | Saint Vincent and the Grenadines | AMER |
+| VE | Venezuela | AMER |
+| VG | Virgin Islands, British | AMER |
+| VI | Virgin Islands, U.S. | AMER |
+| VN | Vietnam | APAC |
+| VU | Vanuatu | APAC |
+| WF | Wallis and Futuna | APAC |
+| WS | Samoa | APAC |
+| YE | Yemen | EMEA |
+| YT | Mayotte | EMEA |
+| RS | Serbia | EMEA |
+| ZA | South Africa | EMEA |
+| ZM | Zambia | EMEA |
+| ME | Montenegro | EMEA |
+| ZW | Zimbabwe | EMEA |
+| A1 | Anonymous Proxy | AMER |
+| A2 | Satellite Provider | AMER |
+| O1 | Other | AMER |
+| AX | Aland Islands | EMEA |
+| GG | Guernsey | EMEA |
+| IM | Isle of Man | EMEA |
+| JE | Jersey | EMEA |
+| BL | Saint Barthelemy | AMER |
+| MF | Saint Martin | AMER |
+| BQ | Bonaire, Saint Eustatius and Saba | AMER |
