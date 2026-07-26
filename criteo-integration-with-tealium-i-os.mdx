@@ -1,0 +1,851 @@
+---
+title: "Criteo Integration With Tealium [iOS]"
+description: "Configure your Criteo App campaign for iOS with Tealium."
+---
+
+## Overview
+
+Criteo serves personalized ads to mobile app users that have a high probability of clicking through and making a purchase. Criteo technology is based on real-time product-recommendation optimization and prediction engines.
+
+In order to enable its technology, Criteo needs:
+
+- **App events** — App events and relevant data correctly captured on your mobile app.
+- **Deep Link Capability** — Product level deep link capabilities in app to take users back to the products they clicked on.
+- **Catalog Feed** — A CSV or XML file, called Catalog Feed, containing product information of a large portion of your mobile app's offers.
+
+This document provides detailed information on the following:
+
+- Integration
+- Required events and data
+- Dashboard configuration
+- Catalog feed
+- Deep link implementation
+- Testing process
+
+## Integration
+
+The table below describes the steps to follow during this integration.
+
+| Steps to Follow | Where to Integrate |
+| --- | --- |
+| Integration Kickoff Call | Criteo & client technical teams |
+| Catalog Feed Integration | Client-side |
+| Dashboard Configuration | Client-side |
+| Testing Phase | Criteo & client technical teams |
+| App Submission & Release | Client-side |
+| Campaign Launch | Criteo & client technical teams |
+
+## Required Events and Data
+
+### SDK Initialization
+
+The following code snippet must be placed at app launch:
+
+```objc
+TEALConfiguration *tealConfig = [TEALConfiguration configurationWithAccount:@"ACCOUNT" 
+                                                   profile:@"PROFILE" 
+                                                   environment:@"ENV" 
+                                                   datasource:@"DATASOURCE"];
+    
+Tealium *tealium = [Tealium newInstanceForKey:@"tealium" configuration:tealConfig];
+```
+
+### Events Implementation in the App
+
+Criteo requires the implementation of a set of events. The exact required/optional events and sample code differ depending on your business vertical — select yours below.
+
+<Tabs>
+  <Tab title="All Events">
+    <Card title="Full list of events:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of a list of products. |
+      | viewProduct | View of a specific product. |
+      | viewBasket | View of shopping basket. |
+      | trackTransaction | Purchase of one or more products. |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | User Level | Every time the user opens the app or levels up. |
+      | Achievement Unlocked | Every time the user unlocks a new achievement. |
+      | Custom event | To capture generic extra data. |
+      | Custom event 2 | To capture generic extra data. |
+
+      #### **viewHome and appDeeplink**
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and Universal Links (ex: `https://myapp.com/deeplink/ios`).
+
+      ```objc
+      NSDictionary *viewHome_data = @{ @"idfa":@"INSERT_IDFA",
+                                       @"email":@"user@example.com",
+                                       @"ci":@"INSERT_CUSTOMER_ID",
+                                       @"deeplink_uri": @"<<INSERT DEEPLINK URI>>" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:viewHome_data];
+      ```
+
+      #### viewListing
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewListing_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1", @"product2",@"product3"],
+                                          @"din":@"12-25-2017", @"dout":@"12-31-2017",
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewListing" dataSources:viewListing_data];
+      ```
+
+      #### viewProduct
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewProduct_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1",@"product2",@"product3"],
+                                          @"din":@"12-25-2017", @"dout":@"12-31-2017",
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewProduct" dataSources:viewProduct_data];
+      ```
+
+      #### viewBasket
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewBasket_data = @{ @"idfa":@"INSERT_IDFA",
+                                         @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                         @"product_prices":@[@20.99,@10.99,@5.99],
+                                         @"product_quantities":@[@4,@5,@6],
+                                         @"din":@"12-25-2017", @"dout":@"12-31-2017",
+                                         @"email":@"INSERT_CUSTOMER_EMAIL",
+                                         @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewBasket" dataSources:viewBasket_data];
+      ```
+
+      #### trackTransaction
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *trackTransaction_data = @{ @"idfa":@"INSERT_IDFA",
+                                               @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                               @"product_prices":@[@20.99,@10.99,@5.99],
+                                               @"product_quantities":@[@4,@5,@6],
+                                               @"order_id":@"INSERT_ORDER_ID",
+                                               @"currency":@"USD",
+                                               @"ui_revenue": @37.97,
+                                               @"din":@"12-25-2017", @"dout":@"12-31-2017",
+                                               @"email":@"INSERT_USER_EMAIL",
+                                               @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"trackTransaction" dataSources:trackTransaction_data];
+      ```
+
+      #### UI Status
+
+      The `UI Status` should be triggered every time the user opens the app or the user's status has changed. You must include the status value of the updated status with the event.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *userStatus_data = @{ @"idfa":@"INSERT_IDFA",
+                                         @"ui_status":"INSERT_USER_STATUS",
+                                         @"email":@"INSERT_USER_EMAIL",
+                                         @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"userStatus" dataSources:userStatus_data];
+      ```
+
+      #### UI Level
+
+      The `UI Level` event should be triggered every time the user opens the app or levels up. You must include the level value of the new incremental level reached.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *userLevel_data = @{ @"idfa":@"INSERT_IDFA",
+                                        @"ui_level":"INSERT_USER_LEVEL",
+                                        @"email":@"INSERT_USER_EMAIL",
+                                        @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"userStatus" dataSources:userLevel_data];
+      ```
+
+      #### UI Achievement
+
+      The `achievement` event should be triggered every time the user unlocks a new achievement. You must include the name of the achievement.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *userAchievement_data = @{ @"idfa":@"INSERT_IDFA",
+                                              @"ui_achievement":"INSERT_USER_ACHIEVEMENT",
+                                              @"email":@"INSERT_USER_EMAIL",
+                                              @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"userAchievement" dataSources:userAchievement_data];
+      ```
+
+      #### Custom Event
+
+      Custom Event allows you to pass one extra piece of data in the event. This is useful when tagging unique users with a specific piece of data. The data parameter must be `ui_data`.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *extra1_data = @{ @"idfa":@"INSERT_IDFA",
+                                     @"ui_data":"INSERT_EXTRA_DATA",
+                                     @"email":@"INSERT_USER_EMAIL",
+                                     @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:extra1_data];
+      ```
+
+      #### Custom Event (2)
+
+      Custom Event allows you to pass two pieces of extra data in a single event. This is useful when tagging unique users with two pieces of data. The data must be passed using `ui_data` and/or `ui_data2`.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *extra2_data = @{ @"idfa":@"INSERT_IDFA",
+                                     @"ui_data":"INSERT_EXTRA_DATA_1",
+                                     @"ui_data2":"INSERT_EXTRA_DATA_2",
+                                     @"email":@"INSERT_USER_EMAIL",
+                                     @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:extra2_data];
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Retail">
+    <Card title="Events for Retail vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of a list of products. |
+      | viewProduct | View of a specific product. |
+      | viewBasket | View of shopping basket. |
+      | trackTransaction | Purchase of one or more products. |
+
+      | Optional Event | Description |
+      | --- | --- |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | Custom event | To capture generic extra data. |
+
+      <Note>
+        Criteo does not currently provide sample implementations for User Status or Custom Event in the Retail vertical — reach out to your Criteo contact if you need to send them.
+      </Note>
+
+      #### viewHome and appDeeplink
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and Universal Links (ex: `https://myapp.com/deeplink/ios`).
+
+      ```objc
+      NSDictionary *viewHome_data = @{ @"idfa":@"INSERT_IDFA",
+                                       @"email":@"user@example.com",
+                                       @"ci":@"INSERT_CUSTOMER_ID",
+                                       @"deeplink_uri": @"<<INSERT DEEPLINK URI>>" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:viewHome_data];
+      ```
+
+      #### viewListing
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewListing_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1", @"product2",@"product3"],
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewListing" dataSources:viewListing_data];
+      ```
+
+      #### viewProduct
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewProduct_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1",@"product2",@"product3"],
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewProduct" dataSources:viewProduct_data];
+      ```
+
+      #### viewBasket
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewBasket_data = @{ @"idfa":@"INSERT_IDFA",
+                                         @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                         @"product_prices":@[@20.99,@10.99,@5.99],
+                                         @"product_quantities":@[@4,@5,@6],
+                                         @"email":@"INSERT_CUSTOMER_EMAIL",
+                                         @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewBasket" dataSources:viewBasket_data];
+      ```
+
+      #### trackTransaction
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *trackTransaction_data = @{ @"idfa":@"INSERT_IDFA",
+                                               @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                               @"product_prices":@[@20.99,@10.99,@5.99],
+                                               @"product_quantities":@[@4,@5,@6],
+                                               @"order_id":@"INSERT_ORDER_ID",
+                                               @"currency":@"USD",
+                                               @"ui_revenue": @37.97,
+                                               @"email":@"INSERT_USER_EMAIL",
+                                               @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"trackTransaction" dataSources:trackTransaction_data];
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Travel">
+    <Card title="Events for Travel vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of a list of products. |
+      | viewProduct | View of a specific product. |
+      | viewBasket | Before the confirmation page. |
+      | trackTransaction | Purchase of one or more products. |
+
+      | Optional Event | Description |
+      | --- | --- |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | Custom event | To capture generic extra data. |
+
+      <Note>
+        Criteo does not currently provide sample implementations for User Status or Custom Event in the Travel vertical — reach out to your Criteo contact if you need to send them.
+      </Note>
+
+      #### viewHome and appDeeplink
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and Universal Links (ex: `https://myapp.com/deeplink/ios`).
+
+      ```objc
+      NSDictionary *viewHome_data = @{ @"idfa":@"INSERT_IDFA",
+                                       @"email":@"user@example.com",
+                                       @"ci":@"INSERT_CUSTOMER_ID",
+                                       @"deeplink_uri": @"<<INSERT DEEPLINK URI>>" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:viewHome_data];
+      ```
+
+      #### viewListing
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewListing_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1", @"product2",@"product3"],
+                                          @"din":@"12-25-2017", @"dout":@"12-31-2017",
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewListing" dataSources:viewListing_data];
+      ```
+
+      #### viewProduct
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewProduct_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1",@"product2",@"product3"],
+                                          @"din":@"12-25-2017", @"dout":@"12-31-2017",
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewProduct" dataSources:viewProduct_data];
+      ```
+
+      #### viewBasket
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewBasket_data = @{ @"idfa":@"INSERT_IDFA",
+                                         @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                         @"product_prices":@[@20.99,@10.99,@5.99],
+                                         @"product_quantities":@[@4,@5,@6],
+                                         @"din":@"12-25-2017", @"dout":@"12-31-2017",
+                                         @"email":@"INSERT_CUSTOMER_EMAIL",
+                                         @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewBasket" dataSources:viewBasket_data];
+      ```
+
+      #### trackTransaction
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *trackTransaction_data = @{ @"idfa":@"INSERT_IDFA",
+                                               @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                               @"product_prices":@[@20.99,@10.99,@5.99],
+                                               @"product_quantities":@[@4,@5,@6],
+                                               @"order_id":@"INSERT_ORDER_ID",
+                                               @"currency":@"USD",
+                                               @"ui_revenue": @37.97,
+                                               @"din":@"12-25-2017", @"dout":@"12-31-2017",
+                                               @"email":@"INSERT_USER_EMAIL",
+                                               @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"trackTransaction" dataSources:trackTransaction_data];
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Classified">
+    <Card title="Events for Classified vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of a list of products. |
+      | viewProduct | View of a specific product. |
+      | trackTransaction | Purchase of one or more products. |
+
+      | Optional Event | Description |
+      | --- | --- |
+      | viewBasket | Before the confirmation page. |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | Custom event | To capture generic extra data. |
+
+      <Note>
+        Criteo does not currently provide a sample implementation for Custom Event in the Classified vertical — reach out to your Criteo contact if you need to send it.
+      </Note>
+
+      #### viewHome and appDeeplink
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and Universal Links (ex: `https://myapp.com/deeplink/ios`).
+
+      ```objc
+      NSDictionary *viewHome_data = @{ @"idfa":@"INSERT_IDFA",
+                                       @"email":@"user@example.com",
+                                       @"ci":@"INSERT_CUSTOMER_ID",
+                                       @"deeplink_uri": @"<<INSERT DEEPLINK URI>>" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:viewHome_data];
+      ```
+
+      #### viewListing
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewListing_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1", @"product2",@"product3"],
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewListing" dataSources:viewListing_data];
+      ```
+
+      #### viewProduct
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewProduct_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1",@"product2",@"product3"],
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewProduct" dataSources:viewProduct_data];
+      ```
+
+      #### viewBasket
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewBasket_data = @{ @"idfa":@"INSERT_IDFA",
+                                         @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                         @"product_prices":@[@20.99,@10.99,@5.99],
+                                         @"product_quantities":@[@4,@5,@6],
+                                         @"email":@"INSERT_CUSTOMER_EMAIL",
+                                         @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewBasket" dataSources:viewBasket_data];
+      ```
+
+      #### trackTransaction
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *trackTransaction_data = @{ @"idfa":@"INSERT_IDFA",
+                                               @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                               @"product_prices":@[@20.99,@10.99,@5.99],
+                                               @"product_quantities":@[@4,@5,@6],
+                                               @"order_id":@"INSERT_ORDER_ID",
+                                               @"currency":@"USD",
+                                               @"ui_revenue": @37.97,
+                                               @"email":@"INSERT_USER_EMAIL",
+                                               @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"trackTransaction" dataSources:trackTransaction_data];
+      ```
+
+      #### UI Status
+
+      The `UI Status` should be triggered every time the user opens the app or the user's status has changed. You must include the status value of the updated status with the event.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *userStatus_data = @{ @"idfa":@"INSERT_IDFA",
+                                         @"ui_status":"INSERT_USER_STATUS",
+                                         @"email":@"INSERT_USER_EMAIL",
+                                         @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"userStatus" dataSources:userStatus_data];
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Gaming">
+    <Card title="Events for Gaming vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of the shop. |
+      | viewProduct | View of a specific product. |
+      | trackTransaction | Purchase of one or more products. |
+      | User Level | Every time the user opens the app or levels up. |
+
+      | Optional Event | Description |
+      | --- | --- |
+      | viewBasket | Abandon the purchase. |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | Achievement Unlocked | Every time the user unlocks a new achievement. |
+      | Custom event | To capture generic extra data. |
+      | Custom event 2 | To capture generic extra data. |
+
+      <Note>
+        Criteo does not currently provide a sample implementation for the single "Custom event" in the Gaming vertical — only Custom Event (2), shown below, has sample code.
+      </Note>
+
+      #### viewHome and appDeeplink
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and Universal Links (ex: `https://myapp.com/deeplink/ios`).
+
+      ```objc
+      NSDictionary *viewHome_data = @{ @"idfa":@"INSERT_IDFA",
+                                       @"email":@"user@example.com",
+                                       @"ci":@"INSERT_CUSTOMER_ID",
+                                       @"deeplink_uri": @"<<INSERT DEEPLINK URI>>" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:viewHome_data];
+      ```
+
+      #### viewListing
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewListing_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1", @"product2",@"product3"],
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewListing" dataSources:viewListing_data];
+      ```
+
+      #### viewProduct
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewProduct_data = @{ @"idfa":@"INSERT_IDFA",
+                                          @"product": @[@"product1",@"product2",@"product3"],
+                                          @"email":@"INSERT_CUSTOMER_EMAIL",
+                                          @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewProduct" dataSources:viewProduct_data];
+      ```
+
+      #### viewBasket
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *viewBasket_data = @{ @"idfa":@"INSERT_IDFA",
+                                         @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                         @"product_prices":@[@20.99,@10.99,@5.99],
+                                         @"product_quantities":@[@4,@5,@6],
+                                         @"email":@"INSERT_CUSTOMER_EMAIL",
+                                         @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewBasket" dataSources:viewBasket_data];
+      ```
+
+      #### trackTransaction
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *trackTransaction_data = @{ @"idfa":@"INSERT_IDFA",
+                                               @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                               @"product_prices":@[@20.99,@10.99,@5.99],
+                                               @"product_quantities":@[@4,@5,@6],
+                                               @"order_id":@"INSERT_ORDER_ID",
+                                               @"currency":@"USD",
+                                               @"ui_revenue": @37.97,
+                                               @"email":@"INSERT_USER_EMAIL",
+                                               @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"trackTransaction" dataSources:trackTransaction_data];
+      ```
+
+      #### UI Status
+
+      The `UI Status` should be triggered every time the user opens the app or the user's status has changed. You must include the status value of the updated status with the event.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *userStatus_data = @{ @"idfa":@"INSERT_IDFA",
+                                         @"ui_status":"INSERT_USER_STATUS",
+                                         @"email":@"INSERT_USER_EMAIL",
+                                         @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"userStatus" dataSources:userStatus_data];
+      ```
+
+      #### UI Level
+
+      The `UI Level` event should be triggered every time the user opens the app or levels up. You must include the level value of the new incremental level reached.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *userLevel_data = @{ @"idfa":@"INSERT_IDFA",
+                                        @"ui_level":"INSERT_USER_LEVEL",
+                                        @"email":@"INSERT_USER_EMAIL",
+                                        @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"userStatus" dataSources:userLevel_data];
+      ```
+
+      #### UI Achievement
+
+      The `achievement` event should be triggered every time the user unlocks a new achievement. You must include the name of the achievement.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *userAchievement_data = @{ @"idfa":@"INSERT_IDFA",
+                                              @"ui_achievement":"INSERT_USER_ACHIEVEMENT",
+                                              @"email":@"INSERT_USER_EMAIL",
+                                              @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"userAchievement" dataSources:userAchievement_data];
+      ```
+
+      #### Custom Event (2)
+
+      Custom Event allows you to pass two pieces of extra data in a single event. This is useful when tagging unique users with two pieces of data. The data must be passed using `ui_data` and/or `ui_data2`.
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *extra2_data = @{ @"idfa":@"INSERT_IDFA",
+                                     @"ui_data":"INSERT_EXTRA_DATA_1",
+                                     @"ui_data2":"INSERT_EXTRA_DATA_2",
+                                     @"email":@"INSERT_USER_EMAIL",
+                                     @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:extra2_data];
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Static">
+    <Card title="Events for Static verical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | trackTransaction | Purchase of one or more products. |
+
+      <Note>
+        Static-ad campaigns don't display individual products, so `viewListing`, `viewProduct`, and `viewBasket` are not applicable for this vertical.
+      </Note>
+
+      #### viewHome and appDeeplink
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and Universal Links (ex: `https://myapp.com/deeplink/ios`).
+
+      ```objc
+      NSDictionary *viewHome_data = @{ @"idfa":@"INSERT_IDFA",
+                                       @"email":@"user@example.com",
+                                       @"ci":@"INSERT_CUSTOMER_ID",
+                                       @"deeplink_uri": @"<<INSERT DEEPLINK URI>>" };
+      
+      [tealium trackEventWithTitle:@"viewHome" dataSources:viewHome_data];
+      ```
+
+      #### trackTransaction
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```objc
+      Tealium *tealium = [Tealium instanceForKey:@"tealium"];
+      
+      NSDictionary *trackTransaction_data = @{ @"idfa":@"INSERT_IDFA",
+                                               @"product_ids":@[@"productid1",@"productid2",@"productid3"],
+                                               @"product_prices":@[@20.99,@10.99,@5.99],
+                                               @"product_quantities":@[@4,@5,@6],
+                                               @"order_id":@"INSERT_ORDER_ID",
+                                               @"currency":@"USD",
+                                               @"ui_revenue": @37.97,
+                                               @"email":@"INSERT_USER_EMAIL",
+                                               @"ci":@"INSERT_CUSTOMER_ID" };
+      
+      [tealium trackEventWithTitle:@"trackTransaction" dataSources:trackTransaction_data];
+      ```
+    </Card>
+  </Tab>
+</Tabs>
+
+### Custom Partner Name Override
+
+For advertisers who have multiple Criteo partners in a single application, it is important to specify which event belongs to which Criteo partner.
+
+To change the value used for the Account Name in the Criteo postback, you must map the account name parameter used to differentiate each set of events in the Tealium Dashboard. For example, if you have a travel application that has a **flights** and **car rentals** section of the app, you must also have different account names for each set of events. For flights, you can use `com.myapp.flights` and for cars you can use `com.myapp.cars`.
+
+<Frame>
+  ![Image](/images/image-88.png "Image")
+</Frame>
+
+### Hashed Email for Cross-Device Targeting
+
+Clients should send Criteo a hashed email address of the app user when available, to enable cross-device targeting.
+
+<Warning>
+  Before sending or hashing the email, make sure to: _convert all characters to lower case_, _remove any/all blank spaces_ & _convert to UTF-8_.
+</Warning>
+
+Tealium offers a **Crypto Extension** which allows you to convert the plain (non-hashed) email sent in the event into MD5 format. See the screenshot below for an example.
+
+<Frame>
+  ![Image](/images/image-89.png "Image")
+</Frame>
+
+## Dashboard Configuration
+
+You must map the necessary variables in the Tealium Dashboard in order for Tealium to know what value to use for each event. It's also highly recommended for you to enable Tealium's E-Commerce extension as it maps directly with our product collection convention.
+
+<Frame>
+  ![Image](/images/image-90.png "Image")
+</Frame>
+
+Below are the "mappable" parameters in the Tealium Dashboard:
+
+| Recommended Variables | Description |
+| --- | --- |
+| iOS Device Identifier | Apple Identifier For Advertisers, it must be provided in all iOS events. (**MANDATORY**) |
+| Event Name | Name of the event being sent from the application (**MANDATORY**) |
+| List of Product IDs (product\_id) (Overrides \_cprod) | Mapping made available by the Tealium E-Commerce extension. Must be an array of product IDs / SKUs |
+| List of Quantities (product\_quantity) (Overrides \_cquan) | Mapping made available by the Tealium E-Commerce extension. Must be an array of product quantities |
+| List of Prices (product\_unit\_price) (Overrides \_cprice) | Mapping made available by the Tealium E-Commerce extension. Must be an array of each product's unit price |
+| Order ID | Unique order ID sent with the purchase / transaction event |
+| Email | User's email |
+| Customer ID | Customer / CRM ID of user |
+
+| Optional Parameters | Description |
+| --- | --- |
+| Email Hash Method | If you intend to hash the user's email before sending to Criteo, you must indicate the hashing method used. Criteo supports two formats: MD5 & SHA256 of the MD5. For MD5 hashing, please use "**md5**". For SHA256 of MD5, please use "**s2m**". |
+| De-duplication Flag (dd) | For Criteo to optimize to your attribution logic, please map a value of 1 for attributed purchases / transactions. Otherwise, map 0. |
+| New Customer Flag (nc) | New Customer flag indicating whether this is a first sale recorded for a given user. (1: New Customer, 0: Returning customer) |
+| Travel Date In (din) (YYYY-MM-DD) | Check-in / departure date entered by the user for a booking event (flight/hotel/car). |
+| Travel Date Out (dout) (YYYY-MM-DD) | Check-out / arrival date entered by the user for a booking event (flight/hotel/car). |
+| UI Level | User Level — Maximum Level achieved by the user on a Game App. |
+| UI Status | User Status — Status of the user, typically the subscription status of a user. |
+| UI Achievement | Unlocked Achievement of the user on a Game App (ex: secret key...). |
+| UI Data & UI Data 2 | Extra Data passed in with an event. Used to segment users in a unique way. Please reach out to your Criteo TS for more information. |
+
+## Catalog Feed
+
+A catalog feed is an XML or a CSV file containing product information (name, price, deep link, image link…) that allows Criteo to dynamically generate the product-recommendation banners. Therefore, it is important to keep this file up to date for Criteo to show the right data in your banners.
+
+The following points need to be kept in mind:
+
+- Each product must have a unique ID that must be identical to the one passed in the events.
+- The catalog feed must contain all or at least most of your site's products.
+- Recommended image resolution is 300x300 pixels to 400x400 pixels.
+
+<Note>
+  Criteo will already have the catalog feed in some instances (i.e. live campaigns on mobile, web, or desktop).
+</Note>
+
+For more information, please request the dedicated guide from your contact.
+
+For deep link testing requirements specific to iOS \+ Tealium integrations, see [Deep Linking Configuration and Requirements](/general/deeplinking/).
+
+## Testing Process
+
+Once all events have been implemented, you should contact your Criteo representative to begin the testing phase.
+
+<Warning>
+  Please allow sufficient time (at least a week before) for testing **prior** to the app submission in order to ensure that the data you are sending is complete.
+</Warning>
+
+Criteo requires the following elements:
+
+- App build to test the collection of events on Criteo's side.
+- If testing remotely, the IDFA of the test device.
+- Deep link example (homepage & product detail).
