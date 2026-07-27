@@ -1,0 +1,164 @@
+---
+title: Async Reports
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026-preview/docs/Preview Endpoints/analytics/async-reports.md
+---
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 1 of 3**
+
+  * First, create a request from one of the async endpoints with the desired attributes
+  * This generates a `reportId` representing the report
+</Info>
+
+## Create a Report Request
+
+This endpoint creates a request for [Campaign Statistics](/marketing-solutions/experimental/docs/campaign-statistics) or [Audience Performance](/marketing-solutions/experimental/docs/audience-performance) report:
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/reports/async-statistics
+```
+</EndpointBadge>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/reports/async-audience-performance
+```
+</EndpointBadge>
+
+**Sample Request**
+
+```bash
+curl -X POST "https://api.criteo.com/experimental/reports/async-statistics" \
+    -H "Authorization: Bearer myaccesstoken" \
+    -H "Content-Type: application/json" \
+    -d '{
+       "data": {
+           "type": "StatisticsReport",
+           "attributes": {
+                "startDate": "2022-01-01",
+                "endDate": "2022-01-02",
+                "dimensions": ["CampaignId", "Campaign", "Day"],
+                "metrics": ["Clicks", "Displays", "AdvertiserCost"],
+                "advertiserIds": ["1111", "2222"],
+                "currency": "EUR",
+                "timezone": "Europe/Paris",
+                "adSetNames": ["myAdSet1", "myAdSet2"],
+                "adSetIds": ["789", "456"],
+                "adSetStatus": ["Active", "NotRunning"]
+            }
+        }
+    }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "MarketingSolutionsReportStatus",
+        "id": "OWVmNDE3OTMtYTZlZC00YjQ4LThiNjUtYjZkOTE1OGViYjIzfEVVUnxFdXJvcGUvUGFyaXM=",
+        "attributes": {
+            "status": "pending",
+            "message": null
+        }
+    }
+}
+```
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 2 of 3**
+
+  * Next, use the reportId to poll the report status endpoint until one is successfully computed
+</Info>
+
+## Get Status of a Specific Report
+
+This endpoint retrieves the status of a specific report. Status can be `pending`, `done`, `failure`, or `expired`
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/reports/{reportId}/status
+```
+</EndpointBadge>
+
+**Sample Request**
+
+```bash cURL
+curl -X GET "https://api.criteo.com/experimental/reports/ZWQ1ZDYxY2EtUWNlNy00Nyk0LWFkN1ktY2Q5ZWGyMzA0ZTU0fEzVUnxFdXMvcGZvUGFaaXM=/status" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json JSON
+{
+  "data": {
+    "type": "MarketingSolutionsReportStatus",
+    "id": "OWVmNDE3OTMtYTZlZC00YjQ4LThiNjUtYjZkOTE1OGViYjIzfEVVUnxFdXJvcGUvUGFyaXM=",
+    "attributes": {
+      "status": "Done",
+      "message": rows_count=123
+    }
+  },
+  "errors": [],
+  "warnings": []
+}
+```
+
+<Info>
+  **Reporting Asynchronous Workflow: Step 3 of 3**
+
+  * Finally, download the report using the report output endpoint
+</Info>
+
+## Download Output of a Specific Report
+
+This endpoint returns the specific report in the requested format
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/reports/{reportId}/output
+```
+</EndpointBadge>
+
+**Sample Request**
+
+```bash cURL
+curl -X GET "https://api.criteo.com/experimental/reports/ZWQ1ZDYxY2EtUWNlNy00Nyk0LWFkN1ktY2Q5ZWGyMzA0ZTU0fEzVUnxFdXMvcGZvUGFaaXM=/output" \
+    -H "Authorization: Bearer myaccesstoken"
+```
+
+**Sample Response**
+
+```json JSON
+{
+  "data": {
+    "metaData": {
+      "columns": [
+        { "name": "CampaignId", "type": "String", "role": "Dimension" },
+        { "name": "Campaign", "type": "String", "role": "Property", "relatedTo": "CampaignId" },
+        { "name": "Day", "type": "String", "role": "Interval", "timezone": "Europe/Paris"},
+        { "name": "Clicks", "type": "Number", "role": "Metric" },
+        { "name": "Displays", "type": "Number", "role": "Metric" },
+        { "name": "AdvertiserCost", "type": "Money", "role": "Metric", "currency": "EUR" }
+      ],
+      "rows": 4
+    },
+    "data": [
+      [ 1111, "CampaignName1", "2022-01-01", 876, 1234, 20 ],
+      // ....
+      [ 2222, "CampaignName2", "2022-01-02", 678, 4321, 22 ]
+    ]
+  }
+}
+```
+
+## Insights on Data Latency and Storage
+
+* It is typical for data latency to take 2-8 hours, but there may be minor adjustments made up until the 120th hour before finalization.
+
+* Data is processed in batches every hour, and some data from the same day may only be partially available.
+
+* Reports are stored in cache for a minimum of 1 hour before they expire.
