@@ -1,0 +1,1077 @@
+---
+title: Audiences Size
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/audiences/audience-size.md
+---
+
+import FieldDefinitionsCallout from "/snippets/retail-media/v2026-preview/FieldDefinitionsCallout.mdx";
+
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Introduction
+
+The "audiences sizes" endpoints allow estimating (`estimate` endpoint) and retrieving (`compute`endpoint) the size of one or more audiences.
+
+***
+
+### Comparative use of `estimate` VS `compute` endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Feature
+    </p>
+   </th>
+   <th>
+    <p>
+     <code>
+      compute
+     </code>
+     Audience Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     <code>
+      estimate
+     </code>
+     Audience Endpoint
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Purpose
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Computes size for one or more previously saved audiences by ID.
+    </p>
+   </td>
+   <td>
+    <p>
+     Provides a quick size estimation for a dynamically defined audience.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Input Definition
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Requires a list of saved audience IDs.
+    </p>
+   </td>
+   <td>
+    <p>
+     Audience is defined inline using logical structure (
+     <code>
+      algebra
+     </code>
+     ).
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Use Case
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Used for analyzing reach of known, existing audience resources.
+    </p>
+   </td>
+   <td>
+    <p>
+     Ideal for previewing potential audience reach during design.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Audience Composition
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Audience composition is already stored in the system.
+    </p>
+   </td>
+   <td>
+    <p>
+     Expressed directly in the request payload using
+     <code>
+      and
+     </code>
+     ,
+     <code>
+      or
+     </code>
+     ,
+     <code>
+      not
+     </code>
+     .
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Response Format
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Returns an array of audience sizes, one per provided ID.
+    </p>
+   </td>
+   <td>
+    <p>
+     Returns a single audience size object.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Channel Specification
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Required in the request payload.
+    </p>
+   </td>
+   <td>
+    <p>
+     Required in the request payload.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Method
+    </p>
+   </th>
+   <th>
+    <p>
+     Path
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/audiences/compute-sizes
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Compute audience(s) sizes
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/audiences/estimate-size
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Estimate audience sizes
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Compute Audience(s) sizes
+
+This endpoint returns the size computation for one or multiple audiences (if available and if supported). If the size cannot be estimated, an error is returned.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{accountId}/audiences/compute-sizes
+```
+</EndpointBadge>
+
+***
+
+### **Audience Size Computation Attributes**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Format
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+     /
+     <code>
+      ids
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     string / list\
+    </p>
+   </td>
+   <td>
+    <p>
+     Audience ID(s), generated internally by Criteo, to which the computation(s) are required
+    </p>
+    <p>
+     Accepted values: string of int64 / list of strings of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/account">
+      Account
+     </a>
+     ID associated with the Audience, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      channel
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Channels associated to the audience
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      Onsite
+     </code>
+     ,
+     <code>
+      Offsite
+     </code>
+     (case-insensitive)
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      size
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Reach in absolute number of users (e.g., 150,300 users). Not returned if the user lacks permission to view it.
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      size
+     </code>
+     ≥ 0 (or
+     <code>
+      null
+     </code>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      relativeSize
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Reach in number of users relative to the retailer’s total audience (e.g., 0.5523 = 55.23%).
+    </p>
+    <p>
+     Accepted values: 0.0 ≤
+     <code>
+      relativeSize
+     </code>
+     ≤ 1.0
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_(*) Required in body when requesting computation_
+
+<FieldDefinitionsCallout />
+
+**Sample request**
+
+<CodeGroup>
+
+```json JSON
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/campaigns/625702934721171442/audiences/compute-sizes' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+        "data": {
+          "attributes": {
+            "ids": [
+              "1001", 
+              "1002", 
+              "1003"
+            ],
+            "channel": "Onsite"
+          }
+        }
+      }' 
+```
+
+```python Python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "attributes": {
+      "ids": [
+        "1001", 
+        "1002", 
+        "1003"
+      ],
+      "channel": "Onsite"
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/experimental/retail-media/accounts/625702934721171442/audiences/compute-sizes", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "\"data\":{\"attributes\":{\"ids\":[\"1001\",\"1002\",\"1003\"],\"channel\":\"Onsite\"}}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/experimental/retail-media/accounts/625702934721171442/audiences/compute-sizes")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/experimental/retail-media/accounts/625702934721171442/audiences/compute-sizes');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{"data":{"attributes":{"ids":["1001","1002","1003"],"channel":"Onsite"}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status:' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error:' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample response**: audience size computations returned successfully
+
+```json
+{
+    "data": [
+        {
+            "id": "1001", 
+            "type": "RetailMediaAudience",
+            "attributes": {
+                "size": 194730,
+                "relativeSize" : 0.5523
+            }
+        },
+        {
+            "id": "1002", 
+            "type": "RetailMediaAudience",
+            "attributes": {
+                "size": 4285,
+                "relativeSize" : 0.5523
+            }
+        },
+        {
+            "id": "1003", 
+            "type": "RetailMediaAudience",
+            "attributes": {
+                "size": 978597,
+                "relativeSize" : 0.5523
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+**Sample response**: different errors at audience-level returned from response code 200
+
+```json
+{
+    "data": [],
+    "warnings": [],
+    "errors": [
+        {
+            "type": "validation",
+            "code": "audience-not-found",
+            "instance": "@data/0",
+            // ...
+        },
+        {
+            "type": "validation",
+            "code": "audience-size-not-available",
+            "instance": "@data/1",
+            // ...
+        },
+        {
+            "type": "validation",
+            "code": "audience-size-not-supported",
+            "instance": "@data/2",
+            // ...
+        }
+    ]
+}
+```
+
+***
+
+## Estimate Audience size
+
+<Warning>
+  The `Estimate` endpoints are resource-intensive; therefore, bulk processing is not supported.
+</Warning>
+
+Returns the size estimation for an audience (if available and if supported). If the size cannot be estimated, an error is returned.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{accountId}/audiences/estimate-size
+```
+</EndpointBadge>
+
+***
+
+### Audience Size Estimation Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Format
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/account">
+      Account
+     </a>
+     ID associated with the Audience, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/retailers">
+      Retailer
+     </a>
+     ID associated with the Audience, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      algebra
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     object
+    </p>
+   </td>
+   <td>
+    <p>
+     Algebra node with the definition of how the different audience segments are combined to create the audience, using logical operators
+     <code>
+      and
+     </code>
+     ,
+     <code>
+      or
+     </code>
+     and
+     <code>
+      not
+     </code>
+    </p>
+    <p>
+     Accepted values: see
+     <a href="/retail-media/docs/algebra-nodes">
+      Algebra Nodes
+     </a>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      channel
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Channels associated to the Audience
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      Onsite
+     </code>
+     ,
+     <code>
+      Offsite
+     </code>
+     (case-insensitive)
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      size
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     Reach in absolute number of users (e.g., 150,300 users). Not returned if the user lacks permission to view it.
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      size
+     </code>
+     ≥ 0 (or
+     <code>
+      null
+     </code>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      relativeSize
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Reach in number of users relative to the retailer’s total audience (e.g., 0.5523 = 55.23%).
+    </p>
+    <p>
+     Accepted values: 0.0 ≤
+     <code>
+      relativeSize
+     </code>
+     ≤ 1.0
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_(*) Required in body when requesting size estimation_
+
+<FieldDefinitionsCallout />
+
+***
+
+**Sample request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/experimental/retail-media/accounts/625702934721171442/audiences/estimate-size' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+        "data": {
+          "attributes": {
+            "algebra": {
+              "audienceSegmentId": "731050100467716096"
+            },
+            "retailerId": "1234",
+            "channel": "Onsite"
+          }
+        }
+      }' 
+```
+
+```python Python
+import http.client
+import json
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": {
+    "attributes": {
+      "algebra": {
+        "audienceSegmentId": "731050100467716096"
+      },
+      "retailerId": "1234",
+      "channel": "Onsite"
+    }
+  }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/experimental/retail-media/accounts/625702934721171442/audiences/estimate-size", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"algebra\":{\"audienceSegmentId\":\"731050100467716096\"},\"retailerId\":\"1234\",\"channel\":\"Onsite\"}}}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/experimental/retail-media/accounts/625702934721171442/audiences/estimate-size")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/experimental/retail-media/accounts/625702934721171442/audiences/estimate-size');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{"data":{"attributes":{"algebra":{"audienceSegmentId":"731050100467716096"},"retailerId":"1234","channel":"Onsite"}}      }');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status:' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error:' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample response**: audience size estimation returned successfully
+
+```json
+{
+    "data": {
+        "type": "ExternalRMAudienceSizeEstimationV1",
+        "attributes": {
+            "size": 194730,
+            "relativeSize": 0.01260
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+**Sample response**: estimation error returned from response code 200
+
+```json
+{
+    "errors": [
+        {
+            "type": "validation",
+            "code": "audience-size-too-small",
+            "instance": "/accounts/625702934721171442/audiences/estimate-size",
+            // ...
+        }
+    ],
+    "warnings": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call completed successfully (or audience-level errors returned with specific details)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer must be authorized in provided account. Review the retailer ID provided
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      403
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     One of the permission levels was not respected. Make sure that the respective API app has access to:
+    </p>
+    <ul>
+     <li>
+      Read/Manage the domain "Audiences" (depending on the requested action). Review the Types of Permissions in
+      <a href="/retail-media/experimental/docs/authorization-requests">
+       Authorization Requests
+      </a>
+     </li>
+     <li>
+      the account or audience ID(s) provided in the request
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Errors and Warnings
+
+#### `audience-size-not-available`
+
+**Error**: Audience size not available  
+**Message**: The audience size is currently not available.
+
+#### `audience-size-too-small`
+
+**Error**: Audience size is too small  
+**Message**: Size is below the minimum: 20.
+
+***
+
+<br />
+
+
+## What's next
+
+* [Audience-segments size](/retail-media/experimental/docs/audience-segments-size)
