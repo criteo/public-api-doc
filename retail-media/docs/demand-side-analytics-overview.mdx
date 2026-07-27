@@ -13,7 +13,15 @@ The following information is important to know regarding Demand Side Analytics.
 
 ### Asynchronous Workflow
 
-Reports are requested and retrieved using **asynchronous endpoints**.
+`POST /reports/performance`, `POST /reports/missed-opportunities`, and `POST /reports/attributed-transactions` are all **asynchronous**: you submit a request, poll the returned `reportId` for status, and download the output once processing succeeds.
+
+1. **Submit** the report request — a successful call returns `200 OK` with a `reportId` and a `status` of `pending`.
+2. **Poll for status** at `GET /reports/{reportId}/status` until `status` is `success` or `failure`.
+3. **Download the output** at `GET /reports/{reportId}/output` once `status` is `success`.
+
+<Note>
+  The [Real-Time Performance API](/retail-media/docs/real-time-performance-api) is the exception: it is a **synchronous** endpoint (`POST /retail-media/reports/sync/real-time-performance`) that returns data directly in the response, with no `reportId`, polling, or output step.
+</Note>
 
 ### Granularity
 
@@ -21,11 +29,11 @@ Most reports are generated at a **daily granularity**, except for the Attributed
 
 ### Report Date Range
 
-The report date range supports a maximum window of **100 days** for campaign and line-item reports, and **31 days** for account-level reports, with data retained for up to **3 years**.
+The report date range supports a maximum window of **100 days** per report, regardless of whether you scope by account, campaign, or line item, with data retained for up to **3 years**.
 
 ### Report Row Limits
 
-Reports are limited to **100,000 rows**. If a report reaches this limit, the data may be incomplete due to truncation. To avoid this, consider reviewing the following parameters for bulk requests:
+Reports are limited to **10MM rows**. If a report reaches this limit, the data may be incomplete due to truncation. To avoid this, consider reviewing the following parameters for bulk requests:
 
 * Number of campaign or line item IDs
 * Start and end date range
@@ -59,7 +67,7 @@ Please refer to [our troubleshooting guide](/criteo-apis/docs/api-troubleshootin
 ## What changed in this version
 
 <Warning>
-  **This version introduces a major redesign of the Demand Side Analytics reporting API.** If you have an integration built against a previous version, it will **not** work unchanged: the endpoints, the request shape, and the `reportType` field have all changed. Read this section and the migration guide below before upgrading.
+  **This version introduces a major redesign of the Demand Side Analytics reporting API.** If you have an integration built against a previous version, it will **not** work unchanged: the endpoints, the request shape, and the `reportType` field have all changed. See the [migration guide](/retail-media/docs/dsp-analytics-migration-guide) before upgrading.
 </Warning>
 
 Previous versions exposed three aggregation-level endpoints — `POST /reports/campaigns`, `POST /reports/line-items`, and `POST /reports/accounts` — together with a `reportType` field that selected a preset report shape (`summary`, `keyword`, `pageType`, `capout`, `attributedTransactions`, and so on). That model has been replaced by a smaller, explicit, and more predictable set of endpoints.
@@ -78,24 +86,4 @@ Previous versions exposed three aggregation-level endpoints — `POST /reports/c
 * **`startDate`, `endDate`, `filters`, `metrics`, and `dimensions` are all required** on the new endpoints.
 * **Two purpose-built use cases are split into their own endpoints.** `capout` and `attributedTransactions` are no longer `reportType` values — they are dedicated endpoints, each with a few field/metric renames documented on its own page.
 
-## Migrating from the legacy reporting API
-
-Map your existing calls to the new endpoints using the table below. In every case you also need to update the request shape as described above: move the scope into a `filters` object, add explicit `metrics` and `dimensions`, and remove `reportType`.
-
-| Old pattern | New equivalent |
-|-------------|----------------|
-| `POST /reports/campaigns` | `POST /reports/performance` scoped by `filters.campaignIds[]`; drop `reportType`; add explicit `metrics` + `dimensions` |
-| `POST /reports/line-items` | `POST /reports/performance` scoped by `filters.lineItemIds[]` |
-| `POST /reports/accounts` | `POST /reports/performance` scoped by `filters.accountIds[]` |
-| `reportType: summary` | `POST /reports/performance` with: `impressions`, `clicks`, `spend`, `roas`, `ctr`, `attributedSales`, `attributedUnits` |
-| `reportType: flexible` | `POST /reports/performance` — behavior is identical; only the endpoint path and request shape change |
-| `reportType: keyword` | Add `keyword` to `dimensions` |
-| `reportType: pageType` | Add `pageType` to `dimensions` |
-| `reportType: productCategory` | Add `productCategory` to `dimensions` |
-| `reportType: product` | Add `productId` and `productName` to `dimensions` |
-| `reportType: servedCategory` | Add `servedCategory` to `dimensions` |
-| `reportType: environment` | Add `environment` to `dimensions` |
-| `reportType: capout` | Use [`POST /reports/missed-opportunities`](/retail-media/docs/missed-opportunities-report) — note the `capoutMissed*` → `missed*` metric renames |
-| `reportType: attributedTransactions` | Use [`POST /reports/attributed-transactions`](/retail-media/docs/attributed-transactions-report) — note the `adv*` → `advertised*` field renames |
-
-Endpoint-specific rename details live on each endpoint page: see [Missed Opportunities Report](/retail-media/docs/missed-opportunities-report#migrating-from-reporttype-capout) and [Attributed Transactions Report](/retail-media/docs/attributed-transactions-report#migrating-from-reporttype-attributedtransactions).
+For the full old → new endpoint mapping, every `reportType` value, before/after request examples, and the legacy support timeline, see [Migrating from the Legacy Reporting API](/retail-media/docs/dsp-analytics-migration-guide).
