@@ -62,7 +62,7 @@ Content-Type: application/json
       "startDate": "2026-05-01",
       "endDate": "2026-05-07",
       "filters": {
-        "campaignIds": ["123456"]
+        "campaignIds": ["301234567890123456"]
       },
       "dimensions": ["advertisedDate", "advertisedProductName", "purchasedProductName", "advertisedToPurchasedProductRelationship"],
       "metrics": ["attributedSales", "attributedUnits"]
@@ -75,11 +75,51 @@ Content-Type: application/json
 
 ## Response
 
-A successful request returns `200 OK` with a `reportId`. Poll for status until `status` is `success` or `failure`:
+A successful request returns `200 OK` with a `reportId`:
+
+```json
+{
+  "data": {
+    "type": "StatusResponse",
+    "id": "345a530c-923a-4571-b4c9-18e7e3e0f3ca",
+    "attributes": {
+      "status": "pending",
+      "rowCount": 0,
+      "fileSizeBytes": 0,
+      "md5CheckSum": null,
+      "createdAt": "2026-07-28T13:37:26.000Z",
+      "expiresAt": null,
+      "message": null,
+      "id": "345a530c-923a-4571-b4c9-18e7e3e0f3ca"
+    }
+  }
+}
+```
+
+Poll for status until `status` is `success` or `failure`:
 
 ```http
 GET /2026-07/retail-media/reports/{reportId}/status
 Authorization: Bearer {token}
+```
+
+```json
+{
+  "data": {
+    "type": "StatusResponse",
+    "id": "345a530c-923a-4571-b4c9-18e7e3e0f3ca",
+    "attributes": {
+      "status": "success",
+      "rowCount": 1221,
+      "fileSizeBytes": 329013,
+      "md5CheckSum": "25406ca38f9e9b7c9dde2136ec0a5739",
+      "createdAt": "2026-07-28T13:37:26.000Z",
+      "expiresAt": "2026-08-04T13:37:27.000Z",
+      "message": "rows_count=1221",
+      "id": "345a530c-923a-4571-b4c9-18e7e3e0f3ca"
+    }
+  }
+}
 ```
 
 Download the output when status is `success`:
@@ -89,7 +129,33 @@ GET /2026-07/retail-media/reports/{reportId}/output
 Authorization: Bearer {token}
 ```
 
+**Output (first 5 of 1,221 rows):**
+
+```json
+{
+  "columns": ["advertisedDate", "advertisedProductName", "purchasedProductName", "advertisedToPurchasedProductRelationship", "attributedSales", "attributedUnits"],
+  "data": [
+    ["2026-04-17", "Brand X 36-in French Door Refrigerator - Stainless Steel", "Brand X Front Load Washer - Matte Black", "same brand", 879.99, 1],
+    ["2026-04-17", "Brand X 36-in French Door Refrigerator - Stainless Steel", "Brand X Electric Dryer - Matte Black", "same brand", 879.99, 1],
+    ["2026-04-17", "Brand X Front Load Washer & Dryer WashTower - Graphite Steel", "Brand X Laundry Pedestal with Storage Drawer - White", "same brand", 539.98, 2],
+    ["2026-04-17", "Brand X Front Load Washer & Dryer WashTower - Graphite Steel", "Brand X Stackable Front Load Washer - White", "same category", 829.99, 1],
+    ["2026-04-17", "Brand X Front Load Washer & Dryer WashTower - Graphite Steel", "Brand X Gas Dryer with Wrinkle Care - White", "same brand", 929.99, 1]
+  ],
+  "rows": 1221
+}
+```
+
+<Note>
+  `advertisedDate` reflects when the ad engagement (impression or click) happened, not when the purchase occurred. Because attribution can span several days (per your `clickAttributionWindow` / `viewAttributionWindow`), `advertisedDate` values in the output can fall outside the requested `startDate`/`endDate` range — the date range filters on the transaction date, not `advertisedDate`.
+</Note>
+
 Each row in the report output represents one attributed purchase event.
+
+***
+
+## Response Codes
+
+For the full list of status and error codes for this endpoint — including `404` (report not found) and `410` (report expired) — see [Response Codes](/retail-media/docs/demand-side-analytics-overview#response-codes) in the Overview.
 
 ***
 

@@ -56,7 +56,7 @@ Content-Type: application/json
       "startDate": "2026-05-01",
       "endDate": "2026-05-07",
       "filters": {
-        "lineItemIds": ["987654"]
+        "lineItemIds": ["301234567890123457"]
       },
       "dimensions": ["date", "lineItemId", "lineItemName"],
       "metrics": ["missedTraffic", "missedSpend", "capoutHour"]
@@ -69,11 +69,51 @@ Content-Type: application/json
 
 ## Response
 
-A successful request returns `200 OK` with a `reportId`. Poll for status until `status` is `success` or `failure`:
+A successful request returns `200 OK` with a `reportId`:
+
+```json
+{
+  "data": {
+    "type": "StatusResponse",
+    "id": "4ddbf658-e588-41b7-bd21-82b0f93bec32",
+    "attributes": {
+      "status": "pending",
+      "rowCount": 0,
+      "fileSizeBytes": 0,
+      "md5CheckSum": null,
+      "createdAt": "2026-07-28T13:37:21.000Z",
+      "expiresAt": null,
+      "message": null,
+      "id": "4ddbf658-e588-41b7-bd21-82b0f93bec32"
+    }
+  }
+}
+```
+
+Poll for status until `status` is `success` or `failure`:
 
 ```http
 GET /2026-07/retail-media/reports/{reportId}/status
 Authorization: Bearer {token}
+```
+
+```json
+{
+  "data": {
+    "type": "StatusResponse",
+    "id": "4ddbf658-e588-41b7-bd21-82b0f93bec32",
+    "attributes": {
+      "status": "success",
+      "rowCount": 7,
+      "fileSizeBytes": 937,
+      "md5CheckSum": "a7113a91e30cc0b0de3827703280fe8f",
+      "createdAt": "2026-07-28T13:37:21.000Z",
+      "expiresAt": "2026-08-04T13:37:22.000Z",
+      "message": "rows_count=7",
+      "id": "4ddbf658-e588-41b7-bd21-82b0f93bec32"
+    }
+  }
+}
 ```
 
 Download the output when status is `success`:
@@ -83,7 +123,29 @@ GET /2026-07/retail-media/reports/{reportId}/output
 Authorization: Bearer {token}
 ```
 
+```json
+{
+  "columns": ["date", "lineItemId", "lineItemName", "missedTraffic", "missedSpend", "capoutHour"],
+  "data": [
+    ["2026-05-01", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.0, 0.0, "No cap-out"],
+    ["2026-05-02", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.148558, 2676.70, "20:00"],
+    ["2026-05-03", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.155921, 2813.52, "20:00"],
+    ["2026-05-04", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.099693, 1686.55, "21:00"],
+    ["2026-05-05", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.01672, 251.76, "23:00"],
+    ["2026-05-06", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.001905, 29.17, "23:00"],
+    ["2026-05-07", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.014384, 222.97, "23:00"]
+  ],
+  "rows": 7
+}
+```
+
 Each row in the report output represents one day (or one combination of dimensions, if dimensions were specified).
+
+***
+
+## Response Codes
+
+For the full list of status and error codes for this endpoint — including `404` (report not found) and `410` (report expired) — see [Response Codes](/retail-media/docs/demand-side-analytics-overview#response-codes) in the Overview.
 
 ***
 
@@ -93,7 +155,7 @@ Select metrics using the `metrics[]` array in your request. `metrics` is require
 
 | Metric | Description |
 |--------|-------------|
-| `capoutHour` | Hour of the day when the line item exhausted its daily budget, on average. A value of `14` means budget was exhausted around 2pm on average. |
+| `capoutHour` | Hour of the day when the line item exhausted its daily budget, on average, formatted as `HH:00` (e.g. `14:00` means budget was exhausted around 2pm on average). Returns the string `"No cap-out"` — not `null` or a numeric hour — for a day where the line item didn't cap out. |
 | `missedClicks` | Estimated clicks lost due to reduced auction participation. |
 | `missedImpressions` | Estimated impressions lost due to reduced auction participation. |
 | `missedSales` | Estimated revenue lost due to reduced auction participation, in the account's reporting currency. |
