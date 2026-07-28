@@ -62,7 +62,7 @@ Content-Type: application/json
     "type": "AsyncPerformanceReport",
     "attributes": {
       "filters": {
-        "campaignIds": ["123456"]
+        "campaignIds": ["301234567890123456"]
       },
       "startDate": "2026-05-01",
       "endDate": "2026-05-07",
@@ -84,16 +84,16 @@ A successful request returns `200 OK` with a `reportId`. Use this ID to poll for
 {
   "data": {
     "type": "StatusResponse",
-    "id": "3a4f0b7d-f606-47de-8d53-9e1dd8de5b9f",
+    "id": "c378da57-960e-4ce4-a297-770f9512af56",
     "attributes": {
       "status": "pending",
       "rowCount": 0,
       "fileSizeBytes": 0,
       "md5CheckSum": null,
-      "createdAt": "2026-05-01T12:00:00Z",
+      "createdAt": "2026-07-28T13:37:17.000Z",
       "expiresAt": null,
       "message": null,
-      "id": "3a4f0b7d-f606-47de-8d53-9e1dd8de5b9f"
+      "id": "c378da57-960e-4ce4-a297-770f9512af56"
     }
   }
 }
@@ -105,16 +105,16 @@ Once the report finishes processing, the status response is fully populated:
 {
   "data": {
     "type": "StatusResponse",
-    "id": "3a4f0b7d-f606-47de-8d53-9e1dd8de5b9f",
+    "id": "c378da57-960e-4ce4-a297-770f9512af56",
     "attributes": {
       "status": "success",
-      "rowCount": 1520,
-      "fileSizeBytes": 84213,
-      "md5CheckSum": "b92bf24cd899f172907f8b001b8a5edb",
-      "createdAt": "2026-05-01T12:00:00Z",
-      "expiresAt": "2026-05-08T12:00:00Z",
-      "message": "rows_count=1520",
-      "id": "3a4f0b7d-f606-47de-8d53-9e1dd8de5b9f"
+      "rowCount": 7,
+      "fileSizeBytes": 1125,
+      "md5CheckSum": "cb448a82ac773d48672cdf30c4fae9de",
+      "createdAt": "2026-07-28T13:37:17.000Z",
+      "expiresAt": "2026-08-04T13:37:18.000Z",
+      "message": "rows_count=7",
+      "id": "c378da57-960e-4ce4-a297-770f9512af56"
     }
   }
 }
@@ -133,6 +133,30 @@ Authorization: Bearer {token}
 GET /2026-07/retail-media/reports/{reportId}/output
 Authorization: Bearer {token}
 ```
+
+With no `format` specified, the output defaults to `json-compact` — a `columns`/`data` array shape rather than an array of row objects:
+
+```json
+{
+  "columns": ["date", "campaignName", "lineItemName", "impressions", "clicks", "spend", "roas"],
+  "data": [
+    ["2026-05-01", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 2176050, 6461, 15506.65, 22.14],
+    ["2026-05-02", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 1902829, 6396, 15295.60, 20.36],
+    ["2026-05-03", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 2061778, 6782, 16234.17, 21.70],
+    ["2026-05-04", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 1965894, 6287, 15034.17, 24.13],
+    ["2026-05-05", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 1968091, 6261, 12959.99, 30.44],
+    ["2026-05-06", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 2075084, 6648, 14762.81, 25.46],
+    ["2026-05-07", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 2089278, 6551, 15127.54, 20.34]
+  ],
+  "rows": 7
+}
+```
+
+***
+
+## Response Codes
+
+For the full list of status and error codes for this endpoint — including `404` (report not found) and `410` (report expired) — see [Response Codes](/retail-media/docs/demand-side-analytics-overview#response-codes) in the Overview.
 
 ***
 
@@ -239,7 +263,7 @@ Authorization: Bearer {token}
 
 ## Data Retention
 
-This endpoint supports a lookback window of up to **3 years** (36 months). A request with a `startDate` older than that returns `400 Bad Request` — `StartDate cannot be older than 3 years.` Separately, a single report may span at most **100 days** between `startDate` and `endDate`.
+This endpoint supports a lookback window of up to **3 years** (36 months). A request with a `startDate` older than that returns `400 Bad Request` — `StartDate cannot be older than 3 years.` Separately, a single report may span at most **100 days** between `startDate` and `endDate`, regardless of whether you scope by account, campaign, or line item.
 
 ***
 
