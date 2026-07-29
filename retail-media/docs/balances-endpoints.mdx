@@ -736,15 +736,23 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
     <p>
      Accepted values:
      <code>
-      Onsite
+      onsite
      </code>
      ,
      <code>
-      Offsite
+      offsite
      </code>
      ,
      <code>
-      OffsiteAwareness
+      offsiteAwareness
+     </code>
+     ,
+     <code>
+      lockout
+     </code>
+     ,
+     <code>
+      unknown
      </code>
     </p>
     <p>
@@ -1079,7 +1087,7 @@ _*Required for Balance creation_
      Definition of the type of change in a balance
     </p>
     <p>
-     Accepted values: <code>BalanceCreated</code>, <code>BalanceCapped</code>, <code>BalanceUncapped</code>, <code>EndDate</code>, <code>StartDate</code>, <code>RetailerPoNumber</code>, <code>ValueAdd</code>
+     Accepted values: <code>balanceCreated</code>, <code>balanceAdded</code>, <code>balanceRemoved</code>, <code>balanceCapped</code>, <code>balanceUncapped</code>, <code>balanceName</code>, <code>endDate</code>, <code>startDate</code>, <code>retailerPoNumber</code>, <code>criteoPoNumber</code>, <code>retailerId</code>, <code>valueAdd</code>, <code>unknown</code>
     </p>
     <ul>
      <li>
@@ -1325,10 +1333,9 @@ catch(HTTP_Request2_Exception $e) {
 ```json expandable
 {
   "metadata": {
-    "totalItemsAcrossAllPages": 135,
-    "currentPageSize": 25,
-    "currentPageIndex": 0,
-    "totalPages": 6
+    "count": 135,
+    "offset": 0,
+    "limit": 25
   },
   "data": [
     {
@@ -1371,7 +1378,7 @@ catch(HTTP_Request2_Exception $e) {
         "createdAt": "2026-03-24T18:15:58+00:00",
         "updatedAt": "2026-05-20T17:17:40+00:00",
         "balanceType": "capped",
-        "spendType": "Onsite",
+        "spendType": "onsite",
         "privateMarketBillingType": "notApplicable"
       }
     }
@@ -2212,14 +2219,14 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/app
    <td>
     <p>
      <code>
-      id
+      data.attributes.ids
      </code>
     </p>
    </td>
    <td>
     <p>
      <code>
-      string
+      array of strings
      </code>
     </p>
    </td>
@@ -2228,13 +2235,13 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/app
      <a href="/retail-media/docs/campaign">
       Campaign
      </a>
-     ID, required to define to which campaign(s) the balance should be appended or deleted
+     IDs to append or remove from the balance
     </p>
     <p>
-     Accepted values: string of int64
+     Accepted values: array of int64 strings
     </p>
     <p>
-     Writeable? N / Nullable? N
+     Writeable? Y / Nullable? N
     </p>
    </td>
   </tr>
@@ -2318,14 +2325,14 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
    <td>
     <p>
      <code>
-      id
+      data.attributes.ids
      </code>
     </p>
    </td>
    <td>
     <p>
      <code>
-      string
+      array of strings
      </code>
     </p>
    </td>
@@ -2334,13 +2341,13 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
      <a href="/retail-media/docs/campaign">
       Campaign
      </a>
-     ID, required to define to which campaign(s) the balance should be appended or deleted
+     IDs to append or remove from the balance
     </p>
     <p>
-     Accepted values: string of int64
+     Accepted values: array of int64 strings
     </p>
     <p>
-     Writeable? N / Nullable? N
+     Writeable? Y / Nullable? N
     </p>
    </td>
   </tr>
@@ -2394,7 +2401,7 @@ Additional query parameter `limitToChangeTypes` can be used to inform a comma-se
 
   Returns a chronological list of changes to a balance. PO number updates appear as separate entries keyed by `changeType` — not as field keys on every entry.
 
-  **Observed `changeType` values:** `BalanceCreated`, `BalanceCapped`, `BalanceUncapped`, `EndDate`, `StartDate`, `CriteoPoNumber`, `RetailerPoNumber`, `ValueAdd`
+  **Observed `changeType` values:** `balanceCreated`, `balanceAdded`, `balanceRemoved`, `balanceCapped`, `balanceUncapped`, `balanceName`, `endDate`, `startDate`, `criteoPoNumber`, `retailerPoNumber`, `retailerId`, `valueAdd`, `unknown`
 
   Each entry's `changeDetails` carries:
 
@@ -2440,7 +2447,7 @@ curl -L -X GET 'https://api.criteo.com/{version}/retail-media/balances/{balanceI
     {
       “type”: “BalanceHistoryChangeDataCaptureV1”,
       “attributes”: {
-        “changeType”: “BalanceCreated”,
+        “changeType”: “balanceCreated”,
         “changeDetails”: {
           “previousValue”: null,
           “currentValue”: “100.00”,
@@ -2454,7 +2461,7 @@ curl -L -X GET 'https://api.criteo.com/{version}/retail-media/balances/{balanceI
     {
       “type”: “BalanceHistoryChangeDataCaptureV1”,
       “attributes”: {
-        “changeType”: “CriteoPoNumber”,
+        “changeType”: “criteoPoNumber”,
         “changeDetails”: {
           “previousValue”: null,
           “currentValue”: “PO-CRITEO-123”,
@@ -2468,7 +2475,7 @@ curl -L -X GET 'https://api.criteo.com/{version}/retail-media/balances/{balanceI
     {
       “type”: “BalanceHistoryChangeDataCaptureV1”,
       “attributes”: {
-        “changeType”: “RetailerPoNumber”,
+        “changeType”: “retailerPoNumber”,
         “changeDetails”: {
           “previousValue”: null,
           “currentValue”: “PO-RETAILER-123”,
