@@ -1,0 +1,323 @@
+---
+title: Campaign, Line Item & Product Statuses
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Concepts/campaign-lineitem-status.md
+description: Overview of the campaign, line item, and products statuses work with the API
+---
+
+
+
+## Statuses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Level
+    </p>
+   </th>
+   <th>
+    <p>
+     Available Status
+    </p>
+   </th>
+   <th>
+    <p>
+     Read Only Status
+    </p>
+   </th>
+   <th>
+    <p>
+     Is Mutable?
+    </p>
+   </th>
+   <th>
+    <p>
+     Conditions
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Campaign
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      active
+     </code>
+    </p>
+    <p>
+     <code>
+      inactive
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      active
+     </code>
+    </p>
+    <p>
+     <code>
+      inactive
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Campaign statuses will automatically change to active if at least one line item is
+     <b>
+      <code>
+       active
+      </code>
+     </b>
+     . All other line-item statuses will result in the campaign to be
+     <b>
+      <code>
+       inactive
+      </code>
+     </b>
+    </p>
+    <p>
+     ⚠️ <b>Note:</b> Temporary budget caps (hourly, daily, or monthly) do <b>not</b> change the campaign status to <code>inactive</code>. The campaign remains <code>active</code> while a temporary cap is in effect; only a total lifetime budget exhaustion results in <code>inactive</code>.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Line Items
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      active
+     </code>
+    </p>
+    <p>
+     <code>
+      paused
+     </code>
+    </p>
+    <p>
+     <code>
+      scheduled
+     </code>
+    </p>
+    <p>
+     <code>
+      ended
+     </code>
+    </p>
+    <p>
+     <code>
+      budgetHit
+     </code>
+    </p>
+    <p>
+     <code>
+      noFunds
+     </code>
+    </p>
+    <p>
+     <code>
+      draft
+     </code>
+    </p>
+    <p>
+     <code>
+      archived
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      scheduled
+     </code>
+    </p>
+    <p>
+     <code>
+      ended
+     </code>
+    </p>
+    <p>
+     <code>
+      budgetHit
+     </code>
+    </p>
+    <p>
+     <code>
+      noFunds
+     </code>
+    </p>
+    <p>
+     <code>
+      draft
+     </code>
+    </p>
+    <p>
+     <code>
+      archived
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes, line items statuses can be updated through the API to
+     <b>
+      <code>
+       active
+      </code>
+     </b>
+     or
+     <b>
+      <code>
+       paused
+      </code>
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Line item will deliver if the status is
+     <code>
+      active
+     </code>
+     , while all other values are applied automatically depending on flight dates, financials, or missing attributes required for line item to serve.
+    </p>
+    <p>
+     The following line-item status will result in a campaign status to be inactive:
+     <b>
+      <code>
+       paused
+      </code>
+      ,
+      <code>
+       scheduled
+      </code>
+      ,
+      <code>
+       ended
+      </code>
+      ,
+      <code>
+       budgetHit
+      </code>
+      ,
+      <code>
+       noFunds
+      </code>
+      ,
+      <code>
+       draft
+      </code>
+      ,
+      <code>
+       archived
+      </code>
+     </b>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      Products
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      active
+     </code>
+    </p>
+    <p>
+     <code>
+      inactive
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Not entirely -
+     <b>
+      <code>
+       active
+      </code>
+     </b>
+     and
+     <b>
+      <code>
+       paused
+      </code>
+     </b>
+     statuses are read only with most promoted products endpoints. However, they can be directly updated using the pause and unpause endpoints.
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes, with the
+     <code>
+      pause
+     </code>
+     and
+     <code>
+      unpause
+     </code>
+     endpoints
+    </p>
+    <p>
+     /line-items/&#123;LineItemId&#125;/products/pause directly updates promoted product status to
+     <b>
+      <code>
+       paused
+      </code>
+     </b>
+    </p>
+    <p>
+     /line-items/&#123;LineItemId&#125;/products/unpause directly updates promoted product to
+     <b>
+      <code>
+       active
+      </code>
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Pausing products SKU’s on a line item will not change the status of a campaign or line item
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+<br />
+
+
+## What's next
+
+* [API Client Libraries](/retail-media/docs/api-client-libraries)
+* [Criteo API Swagger](/retail-media/docs/criteo-api-swagger)
+* [Use Postman with the Criteo Retail Media API](/retail-media/v2026-preview/docs/use-postman-with-the-criteo-retail-media-api)

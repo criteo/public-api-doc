@@ -1,0 +1,96 @@
+---
+title: MPO Real-Time Asynchronous API (Single-Seller)
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/reporting/mpo-real-time-asynchronous-api-1.md
+hidden: true
+---
+
+# Getting real-time statistics (Single-Seller)
+
+This page explains **how to use the MPO Real-Time Asynchronous API with Single-Seller campaigns**. It assumes you already:
+
+* Have **Single-Seller campaigns** running on a template.
+* Know your **advertiserId**, **templateCampaignId**, and **sellerId** values.
+* Understand the basics of [Single-Seller campaigns](/marketing-solutions/docs/single-seller-campaigns).
+
+For the **full API workflow and schema**, see the canonical reference:  
+[**MPO Real-Time Asynchronous API**](/marketing-solutions/docs/getting-realtime-mpo-statistics).
+
+***
+
+## When to use real-time stats with Single-Seller
+
+Use the Real-Time API when you need **near real-time monitoring** of:
+
+* **Per-seller performance** for budget pacing and alerts.
+* **Product-level performance** (when using `productId`) to adjust product sets or merchandising.
+* **Short-lookback decisions** (e.g. last hour / last few hours) on top of existing Single-Seller budgets.
+
+Key properties:
+
+* Data latency is about **10 minutes**.
+* Data is intended **only for real-time reporting**, not for billing or financial decisions (see warning on the main API page).
+* The same endpoint works for **multi-seller and Single-Seller** — Single-Seller just uses a different pattern of identifiers.
+
+## Typical identifier patterns (Single-Seller)
+
+For Single-Seller campaigns, you will usually:
+
+* Set `advertiserIds` to **your marketplace advertiser**.
+* Filter by:
+  * `campaignIds` when you care about **template- or campaign-level** aggregation.
+  * `sellerIds` when you care about **specific sellers** (one seller per Single-Seller campaign).
+* Optionally add:
+  * `productId` to drill down to **per-product performance**.
+  * `hour` or `minute` for time-series style monitoring.
+
+Examples of common use cases:
+
+1. **Monitor a single Single-Seller campaign (one seller on one template)**
+   * `advertiserIds = [<yourAdvertiserId>]`
+   * `campaignIds = [<templateOrSellerCampaignId>]`
+   * `lookbackWindow = 60` (last hour)
+
+2. **Compare multiple Single-Seller campaigns for the same advertiser**
+   * `advertiserIds = [<yourAdvertiserId>]`
+   * `dimensions = ["campaignId"]`
+   * `metrics = ["clicks", "displays", "cost"]`
+   * `lookbackWindow = 240` (last 4 hours)
+
+3. **Zoom in on one seller across products**
+   * `advertiserIds = [<yourAdvertiserId>]`
+   * `sellerIds = [<sellerId>]`
+   * `dimensions = ["sellerId", "productId"]`
+   * `metrics = ["clicks", "displays", "cost"]`
+   * `lookbackWindow = 60`
+
+## How it fits with Single-Seller budgets
+
+The Real-Time API is **read-only** and does not change budgets or campaigns. A typical Single-Seller control loop is:
+
+1. **Create / update budgets** via MPO budgets endpoints.
+2. **Read near real-time stats** via the Real-Time API for:
+   * Overspend / underspend detection.
+   * Low-traffic sellers or products.
+3. **Adjust budgets or product sets** if needed:
+   * Update budget `amount`, `startDate`, `endDate`, or `isSuspended`.
+   * Update `productSet` for the relevant Single-Seller campaign.
+
+All write operations (budgets, product sets, campaign changes) still go through the regular MPO APIs. The Real-Time API is **only for fast read access**.
+
+## Using the Real-Time API
+
+The Real-Time API uses an **async export workflow**:
+
+1. **Create a report job** with `POST /realtime-reports/export`.
+2. **Poll the job** with `GET /report-jobs/{reportId}` until `status == Done`.
+3. **Download the export** with `GET /realtime-reports/{reportId}` (CSV or JSON).
+
+For complete details on:
+
+* Request fields (`RealTimeProductReportJob`)
+* Available dimensions/metrics
+* Validation rules and error codes
+* File lifecycle and expiry
+
+see the canonical reference:  
+[**MPO Real-Time Asynchronous API**](/marketing-solutions/docs/getting-realtime-mpo-statistics).

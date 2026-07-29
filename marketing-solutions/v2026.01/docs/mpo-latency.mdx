@@ -1,0 +1,97 @@
+---
+title: Latency in MPO
+description: What latency means in MPO, why it exists, and what delays to expect across catalog ingestion, delivery, and reporting workflows.
+---
+
+MPO combines catalog processing, campaign configuration, delivery systems, and reporting pipelines — and those systems do not all update at the same speed.
+
+This page explains what latency means in MPO, why it exists, what delays to expect across common workflows, and how to interpret those delays when integrating with the API.
+
+## What this page covers
+
+- Why MPO changes are not always visible immediately
+- Which MPO surfaces are near-real-time vs. delayed
+- Expected delays for catalog ingestion, seller availability, delivery changes, and reporting
+- How to troubleshoot cases where data or changes do not appear yet
+
+---
+
+## What latency means in MPO
+
+In MPO, latency is the delay between an input or change and the moment that change becomes visible in the relevant system.
+
+Examples:
+
+- Updating a product catalog and waiting for sellers to appear in the Sellers API
+- Creating or updating a budget and waiting for delivery state to reflect the change
+- Generating impressions or clicks and waiting for those events to appear in reporting
+- Checking real-time monitoring vs. checking standard reporting
+
+Latency does not necessarily mean something is broken. In many cases it reflects asynchronous processing between ingestion, delivery, and reporting systems.
+
+---
+
+## Why latency exists
+
+MPO is not a single synchronous system. Different parts of the workflow are processed by different services and pipelines. Latency can come from:
+
+- Processing large volumes of data (e.g. catalog ingestion)
+- Scheduled or batch processing jobs (catalog imports, reporting aggregation, synchronization workflows)
+- Asynchronous provisioning of sellers and seller-campaigns
+- Budget, pacing, and delivery state propagation across downstream systems
+- Third-party reporting delays (e.g. when SSPs or external trackers notify Criteo later than expected)
+- Timezone and reporting window processing
+- Temporary backend load or processing delays
+
+---
+
+## Typical latency by component
+
+The timings below are operational guidance, not formal SLAs. Exact delays can vary by workflow, system load, import cadence, and partner-side behavior.
+
+### Catalog ingestion and seller availability
+
+MPO sellers are inferred from the product catalog rather than created manually through MPO onboarding flows. After the catalog is processed correctly and the relevant MPO setup is in place, sellers become available through the MPO Sellers endpoints only after the relevant import and downstream processing cycle completes.
+
+This means:
+
+- Catalog updates are not reflected instantly in seller availability
+- New sellers may not appear immediately after a feed update
+- Onboarding and validation flows should allow for asynchronous processing time
+
+If sellers do not appear immediately after a valid catalog update, wait for the ingestion window before treating it as a failure.
+
+### Standard reporting
+
+Standard reporting is designed for aggregated performance analysis, not immediate operational monitoring. Reporting data may take several hours to appear depending on the workflow and processing stage.
+
+Use standard reporting when you need:
+
+- Aggregated performance trends
+- Seller, campaign, or seller-campaign reporting over time
+- Stable reporting views for analysis and reconciliation
+
+Do not use standard reporting to validate a change made only a few minutes ago.
+
+### Real-time reporting
+
+The [Real-Time Asynchronous API](/marketing-solutions/docs/getting-realtime-mpo-statistics) is the lower-latency monitoring surface in MPO. It is intended for operational visibility rather than long-term performance analysis. Even this surface has a processing delay and should not be treated as an instant reflection of delivery state.
+
+Use real-time reporting when you need:
+
+- Near-immediate delivery monitoring
+- Operational checks during campaign setup or budget changes
+- Fast feedback on whether delivery is active
+
+---
+
+## Practical guidance
+
+| Workflow | Expected behavior |
+|---|---|
+| Catalog update → seller appears in API | Not immediate; wait for ingestion cycle |
+| Budget update → delivery state change | Not immediate; propagation takes time |
+| Impression / click → standard report | Several hours delay by design |
+| Impression / click → real-time report | Lower latency, but not instant |
+
+When integrating with MPO, build your workflows assuming asynchronous state propagation and do not rely on immediate consistency between input actions and API responses.

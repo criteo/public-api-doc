@@ -1,0 +1,369 @@
+---
+title: "MPO Integration Design Template (PRD)"
+description: "Reusable PRD template to align on activation model, entity mapping, campaign, budget, tracking, and reporting design before starting an MPO API integration."
+sidebarTitle: "MPO Integration Design Template (PRD)"
+---
+
+## About this document
+
+Complete this document with Criteo before implementation to validate your proposed selling model and architecture. It serves as a blueprint for a successful MPO API integration.
+
+It helps to:
+
+- Confirm whether your proposed requirements are supported by Criteo MPO.
+- Align requirements with Criteo best practices.
+- Recommend a more stable and scalable operating model where needed.
+
+<Note>
+  This is a reusable master template for multiple markets and advertisers. Select the Activation Model first, then define Campaign, Budget, Tracking, and Reporting accordingly.
+</Note>
+
+## How to use this template
+
+Fill in the placeholders in each section to produce a working PRD draft. Follow the recommended sequence:
+
+1. Activation Model \+ Executive Summary \+ Entity Mapping
+2. Common Core Requirements (Campaign, Budget, Tracking, Reporting)
+3. Scenario-Specific Requirements
+4. Open Issues \+ MVP finalization
+
+## 1. Activation model selection
+
+Select the MPO operating model before drafting the rest of the PRD.
+
+### 1.1 Selected model
+
+- **Activation Model:** \[Bundle Extension / Standalone Offsite\]
+- **Reason for selection:** \[Write here\]
+- **Current assumption:** \[Write here\]
+- **Items to be confirmed:** \[Write here\]
+
+### 1.2 Model definitions
+
+- **Bundle Extension** — Offsite advertising is attached to an existing onsite advertising product or campaign as an extension, bundle, or additional feature.
+- **Standalone Offsite** — Offsite advertising is offered as a separate product, separate campaign, or separate operating unit, independent from onsite.
+
+**Criteo review points:**
+
+- Does the selected model fit the customer's business model and operating structure?
+- Is the selected model realistic and operationally feasible for launch?
+
+## 2. Executive summary
+
+### 2.1 Project overview
+
+- **Project objective:** \[Write here\]
+- **Expected impact:** \[Write here\]
+- **Target timeline for integration:** \[Write here\]
+- **Target market / business scope:** \[Write here\]
+
+### 2.2 Structural summary
+
+- **Selected Activation Model:** \[Write here\]
+- **Advertiser-facing product structure:** \[Write here\]
+- **Actual MPO operating structure:** \[Write here\]
+- **Key dependencies:** \[Write here\]
+
+### 2.3 MVP scope
+
+\[Write here\]
+
+### 2.4 Open issues
+
+\[Write here\]
+
+## 3. Business goal and scope
+
+### 3.1 Target scope
+
+- **Target advertiser type:** \[Write here\]
+- **Target product type:** \[Write here\]
+- **Target campaign type:** \[Write here\]
+- **Excluded scope:** \[Write here\]
+
+### 3.2 Success metrics
+
+- **Seller adoption:** \[Write here\]
+- **Incremental revenue:** \[Write here\]
+- **Budget utilization:** \[Write here\]
+- **ROAS or efficiency metric:** \[Write here\]
+- **Operational automation target:** \[Write here\]
+
+## 4. Entity mapping
+
+Map the customer's internal structure to the MPO structure to establish a clear foundation for Campaign, Budget, Tracking, and Reporting design.
+
+| Customer entity | Description | MPO entity | Notes / Items to confirm |
+| --- | --- | --- | --- |
+| Advertiser account | \[Write here\] | \[advertiser / seller / other\] | \[Write here\] |
+| Customer campaign | \[Write here\] | \[seller / seller-campaign / other\] | \[Write here\] |
+| Offsite operating unit | \[Write here\] | \[seller / seller-campaign set / other\] | \[Write here\] |
+| Daily budget | \[Write here\] | budget | \[including whether shared\] |
+| Product catalog | \[Write here\] | catalog | \[seller identifier / product deduplication / product removal handling\] |
+
+**Criteo review points:**
+
+- Are internal customer terminology and MPO terminology mapped clearly without ambiguity?
+- Does the entity design fit the intended budget control model?
+- Can the bundle or standalone model be translated cleanly into a standard MPO structure?
+
+## 5. Common core requirements
+
+### 5.1 Campaign ownership and lifecycle
+
+- **Campaign creation owner:** \[Write here\]
+- **Campaign retrieval owner:** \[Write here\]
+- **Bid update owner:** \[Write here\]
+- **Activation conditions:** \[Write here\]
+- **Definition of pause / stop / archive:** \[Write here\]
+- **Lead time for new campaign availability:** \[Write here\]
+- **Impact of product deletion or catalog changes:** \[Write here\]
+
+**Criteo review points:**
+
+- Does the PRD assume immediate reflection when it should not?
+- Can seller-ingestion latency be absorbed operationally?
+- Are pause, stop, and archive clearly distinguished?
+
+### 5.2 Budget
+
+**Budget ownership**
+
+- **Budget creation owner:** \[Write here\]
+- **Budget update owner:** \[Write here\]
+- **Budget suspension owner:** \[Write here\]
+
+**Budget model**
+
+- **Budget type used:** \[capped / uncapped / daily / combination\]
+- **Number of budgets per seller:** \[Write here\]
+- **Whether there is one budget per seller-campaign:** \[Write here\]
+- **Whether shared budget is used:** \[Write here\]
+
+**Budget refresh logic**
+
+- **Budget creation cadence:** \[real-time / daily / other\]
+- **Timing for next-day budget creation:** \[Write here\]
+- **Timezone basis:** \[UTC / local timezone / mixed\]
+- **Same-day increase / decrease policy:** \[Write here\]
+
+**Budget lock / overspend protection**
+
+- **Spend polling frequency:** \[Write here\]
+- **Lock trigger:** \[Write here\]
+- **Lock method:** \[budget suspension / customer-side logic / other\]
+- **Unlock condition:** \[Write here\]
+- **Fallback scenario:** \[Write here\]
+
+**Margin / fee logic**
+
+- **Where margin applies:** \[bid / budget / reporting / other\]
+- **Internal calculation formula:** \[Write here\]
+- **Value shown to advertisers:** \[pre-margin / post-margin\]
+
+**Criteo review points:**
+
+- Does the budget model fit MPO structure?
+- Are risks related to daily budget operation and timezone differences properly addressed?
+- Is budget lock required for the proposed structure?
+
+### 5.3 Tracking
+
+**Tracking scope**
+
+- **Supported platforms:** \[web only / includes app / other\]
+- **Required events:** \[click / conversion / transaction / other\]
+- **Whether a customer tracker will be used in parallel:** \[yes / no\]
+
+**Event collection method**
+
+- **Collection method:** \[OneTag / Web event / App event / S2S / other\]
+- **Whether landing URL parameters are required:** \[yes / no\]
+- **Whether deep link support is required:** \[iOS / AOS / none\]
+- **Whether a 3rd-party tracker is required:** \[yes / no\]
+
+**Tracking parameter requirements**
+
+- **Required parameter list:** \[Write here\]
+- **Parameter value owner:** \[Write here\]
+- **Configuration method:** \[feed-based / runtime-based / mixed\]
+- **Lead time for applying updated values:** \[Write here\]
+
+**Catalog dependency**
+
+- **Seller identifier field:** \[Write here\]
+- **Product ID deduplication policy:** \[Write here\]
+- **Product removal handling:** \[Write here\]
+- **Full vs. partial catalog policy:** \[Write here\]
+- **Refresh cadence and ingestion lead time:** \[Write here\]
+
+**Criteo review points:**
+
+- Do the tracking requirements fit the MPO standard flow?
+- Are feed-based values and runtime-based values clearly distinguished?
+- Is catalog dependency sufficiently documented?
+
+### 5.4 Reporting
+
+**Reporting level**
+
+- **Reporting level provided:** \[advertiser / campaign / seller / seller-campaign / product / other\]
+- **Whether onsite / offsite split will be shown:** \[Write here\]
+- **Whether an aggregated reporting layer is required:** \[Write here\]
+
+**Metrics dictionary**
+
+| Metric | Definition | Formula | Source system | Notes |
+| --- | --- | --- | --- | --- |
+| impressions | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] |
+| clicks | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] |
+| CTR | \[Write here\] | \[Write here\] | \[Write here\] | Attribution-insensitive |
+| spend | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] |
+| conversions | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] |
+| revenue | \[Write here\] | \[Write here\] | \[Write here\] | Attribution-sensitive |
+| CPC | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] |
+| ROAS | \[Write here\] | \[Write here\] | \[Write here\] | Attribution-sensitive |
+
+**Attribution policy**
+
+- **Attribution model:** \[SameSeller / AnySeller / Both\]
+- **Click attribution window:** \[Write here\]
+- **Difference vs. customer's internal standard:** \[Write here\]
+- **Suggested advertiser-facing explanation:** \[Write here\]
+
+**Freshness and latency**
+
+- **API refresh cadence:** \[Write here\]
+- **UI refresh cadence:** \[Write here\]
+- **Timezone basis:** \[UTC — conversion to local timezone is client-side\]
+- **Latency disclaimer:** \[Write here\]
+
+**Export and UI**
+
+- **Whether CSV export is required:** \[yes / no\]
+- **Admin UI scope:** \[Write here\]
+- **Advertiser UI scope:** \[Write here\]
+- **Raw metric vs. processed metric policy:** \[Write here\]
+
+**Criteo review points:**
+
+- Do reporting expectations match standard MPO reporting capabilities?
+- Are attribution differences clearly documented to avoid launch issues?
+- Has product-level reporting been separated from MVP when needed?
+
+## 6. Scenario-specific requirements
+
+Complete either Section 6A or Section 6B based on the Activation Model selected in Section 1.
+
+### 6A. Bundle Extension scenario
+
+**Bundle product definition**
+
+- **Base onsite product name/type:** \[Write here\]
+- **Offsite delivery model:** \[included by default / opt-in / separate add-on / other\]
+- **Structure as perceived by advertisers:** \[single product / single option / separate setting\]
+- **Internal operating structure:** \[Write here\]
+
+**Bundle activation scenario**
+
+- **Offsite activation owner:** \[advertiser / operator / automatic logic\]
+- **Activation timing:** \[at campaign creation / after setup / after approval / other\]
+- **Activation prerequisites:** \[minimum budget / tracking readiness / catalog readiness / other\]
+- **Deactivation method:** \[budget lock / budget suspension / bid set to 0 / other\]
+
+**Bundle operating unit**
+
+- **MPO structure mapped to one bundle:** \[Write here\]
+- **Controls required at bundle level:** \[on/off / budget / bid / reporting / other\]
+- **Whether bundle-level reporting is required:** \[yes / no\]
+- **Bundle-level aggregation method:** \[Write here\]
+
+**Key questions for Bundle structure:**
+
+- Does one onsite campaign map to one MPO seller?
+- Are multiple seller-campaigns created under one onsite campaign?
+- Does one onsite product budget need to be shared across multiple seller-campaigns?
+- How should one advertiser-facing bundle result be aggregated internally?
+
+### 6B. Standalone Offsite scenario
+
+**Standalone product definition**
+
+- **Offsite product name/type:** \[Write here\]
+- **Relationship to onsite:** \[independent / partially linked / shared only at advertiser level / other\]
+- **Structure as perceived by advertisers:** \[separate product / separate campaign / separate account option\]
+- **Internal operating structure:** \[Write here\]
+
+**Standalone activation scenario**
+
+- **Offsite activation owner:** \[advertiser / operator / automatic logic\]
+- **Activation timing:** \[at product request / at campaign creation / after approval / other\]
+- **Activation prerequisites:** \[minimum budget / tracking readiness / catalog readiness / other\]
+- **Deactivation method:** \[budget lock / budget suspension / bid set to 0 / other\]
+
+**Standalone operating unit**
+
+- **MPO structure mapped to one standalone product:** \[Write here\]
+- **Whether separate budget is required:** \[yes / no\]
+- **Whether separate reporting unit is required:** \[yes / no\]
+- **Whether separate approval flow is required:** \[yes / no\]
+
+**Key questions for Standalone structure:**
+
+- Can the offsite product be operated independently from the onsite campaign?
+- Are onboarding, tracking, catalog, and reporting all independently viable?
+- Is the advertiser-facing reporting sufficiently clear for a standalone product?
+
+## 7. Open issues and decision log
+
+| Topic | Customer requirement | Current assumption | MPO support / constraint | Criteo recommendation | Owner | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Activation model | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | Open |
+| Entity mapping | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | Open |
+| Budget timezone | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | Open |
+| Reporting level | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | Open |
+| Tracking parameter | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | \[Write here\] | Open |
+
+## 8. MVP scope
+
+- **MVP in scope:** \[Write here\]
+- **Out of scope for MVP:** \[Write here — commonly: product-level reporting, self-serve offsite budget split, full reconciliation between customer tracker and MPO data, full local-timezone alignment, media-level control UI\]
+- **Future scope:** \[Write here\]
+
+## 9. Criteo review checklist
+
+**Activation model**
+
+- Is it clearly defined whether the model is Bundle or Standalone?
+- Does the selected model match the actual operating structure?
+
+**Entity mapping**
+
+- Is the customer structure clearly mapped to the MPO structure?
+- Is there a clear foundation for Budget, Tracking, and Reporting design?
+
+**Campaign**
+
+- Are ownership and responsibilities for creation, activation, pause, and end-of-life clearly defined?
+- Are lifecycle assumptions realistic?
+
+**Budget**
+
+- Is the budget type clearly defined?
+- Is shared budget usage clearly documented?
+- Are timezone and refresh rules defined?
+- Is there an overspend protection method?
+
+**Tracking**
+
+- Are catalog field requirements sufficiently defined?
+- Are seller identification rules clear?
+- Are tracking parameter requirements specific enough?
+- Is there a clear distinction between feed-based and runtime-based values?
+
+**Reporting**
+
+- Is the reporting level clearly defined?
+- Is there a metrics dictionary?
+- Are attribution differences documented?
+- Are latency expectations clearly described?

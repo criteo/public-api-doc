@@ -1,0 +1,494 @@
+---
+title: Placement Category
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/analytics/placement-category.md
+---
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## **Introduction**
+
+The placement category endpoint provides transparency on which **categories** of domains your ads are being displayed on, as well provides visibility into the number of displays, clicks, and sales that have occurred via a given publisher.
+
+***
+
+## **How It Works**
+
+A single domain can have several categories associated with it because the single page categorization is grouped at the domain level.  Also, each individual page can hold several categories.
+
+For example, a news website could have pages linked to business, sports, and entertainment.
+
+<Info>
+  **How Hits are Normalized Into Displays**
+
+  On examplenewssite.com there are 50 hits on the following categories:
+
+  * News 10
+  * Travel 15
+  * Entertainment 25
+
+  Then take the ratio of each category compared to the total number of hits on examplesnewssite.com.
+
+  * News 0.2
+  * Travel 0.3
+  * Entertainment 0.5
+
+  Suppose there are 20 displays on examplenewssite.com and users clicked through 10 times, apply those ratios to both displays and clicks to get accurate category level data.
+
+  * News 4 displays / 2 clicks
+  * Travel 6 displays / 3 clicks
+  * Entertainment 10 displays / 5 clicks
+</Info>
+
+***
+
+## **Endpoint**
+
+A `POST` request returns a report on categories based on the query.  The query returns a predefined data set that includes displays, clicks, 30 day post click sales, and 1 day post view sales.
+
+<EndpointBadge method="post">
+```http
+ https://api.criteo.com/2026-01/categories/report
+```
+</EndpointBadge>
+
+<Warning>
+  **Required Attributes**
+
+  There are 4 required attributes when making a call.  
+  For additional fields see the **Attributes** table below.
+
+  * `startDate`
+  * `endDate`
+  * `advertiserIds`
+  * `format`
+</Warning>
+
+**Request example:**
+
+```json JSON
+{
+    "data": {
+        "startDate": "2020-01-01",
+        "endDate": "2020-01-02", 
+        "advertiserIds": [
+            "123",
+            "456",
+            "789"
+        ],
+        "category": "News"
+        "domain": "example.com",
+        "timezone": "UTC",
+        "format": "json",
+    }
+}
+```
+
+The response is a file dictated by the "format" field in the request.  This could be returned in JSON, XML, CSV, or XLS.
+
+**Response example:**
+
+```json JSON
+[
+    {
+       "advertiserId": 123,
+       "category": "News",
+       "domain": "example.com",
+       "displays": 42,
+       "clicks": 12,
+       "salesPc30d":5,
+	"salesPv1d": 1
+    },
+    {
+       "advertiserId": 456,
+       "category": "News",
+       "domain": "example.com",
+       "displays": 42,
+       "clicks": 12,
+       "salesPc30d":5,
+	"salesPv1d": 1
+    },
+    {
+       "advertiserId": 789,
+       "category": "News",
+       "domain": "example.com",
+       "displays": 42,,
+       "clicks": 12,
+       "salesPc30d":5,
+	"salesPv1d": 1
+    }
+]
+```
+
+<Warning>
+  **Limitations**
+
+  * This reporting is on publisher categories only.
+
+  * This display data is for the **web environment only** and does not support app display data.
+
+  * URL domains that fall under the category "Unknown" do not fall into any category.
+
+  * URL domains  "Undisclosed" are not permitted to be displayed, and will appear as empty strings.
+
+  * If a domain has no category, then number of displays will be reported in the "Unknown" category.  Additionally, if a domain has less category hits than displays, we do not correct the number of hits, and report the missing displays in the "Unknown" category.
+</Warning>
+
+### Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field
+    </p>
+   </th>
+   <th>
+    <p>
+     Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Default Value
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     DateTime
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Start of the report in YY-MM-DD format
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     DateTime
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     End of the report in YY-MM-DD format
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advertiserIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Comma separated list of Advertiser IDs in an array
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      adsetId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     null
+    </p>
+   </td>
+   <td>
+    <p>
+     Report only on the specified adset Id
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      category
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Report only on the specified category
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      domain
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Report only on the specified domain
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      shoudlDisplayDomainDimension
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     boolean
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     true
+    </p>
+   </td>
+   <td>
+    <p>
+     Specify if the domain dimension is displayed in the report
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      timezone
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Timezone
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     UTC
+    </p>
+   </td>
+   <td>
+    <p>
+     Timezone used for dates
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      format
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     CSV
+    </p>
+   </td>
+   <td>
+    <p>
+     Format of the report: JSON, XML, CSV, XLS
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## **Errors and Warnings**
+
+API users must be authenticated in order to make calls to the category endpoint.  
+For more information on authentication, see [our Authentication guide](/marketing-solutions/docs/authentication).
+
+### Insufficient Permission
+
+```json JSON
+"errors": [{
+  "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+  "type": "access-control",
+  "code": "insufficient-advertiser-permissions",
+  "instance": "/advertisers/placements/report",
+  "title": "Insufficient advertisers permissions",
+  "detail": "You do not have the rights to report on these advertisers.",
+}]
+```
+
+### Missing Required Fields
+
+There are 4 required fields when making a call:  `startDate`, `endDate`, `advertiserIds`, and `format`.
+
+```json JSON
+"errors": [{
+  "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+  "type": "validation",
+  "code": "required-field",
+  "instance": "/advertisers/placements/report",
+  "title": "<field> is required.",
+}]
+```
+
+### Invalid Format
+
+Format must be in CSV, XML, XLS, or JSON.
+
+```json JSON
+"errors": [{
+  "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+  "type": "validation",
+  "code": "invalid-format",
+  "instance": "/advertisers/placements/report",
+  "title": "<field> must be in list of required values",
+  "detail": "<field> must be one of 'csv', 'xml', 'excel' or 'json'. Value: '<value>'." ,
+}]
+```
+
+### Invalid Date Range 
+
+Date ranges are required and must have a valid start and end date.
+
+```json JSON
+"errors": [{
+  "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+  "type": "validation",
+  "code": "invalid-date-range",
+  "instance": "/advertisers/placements/report",
+  "title": "Invalid date range",
+  "detail": "The 'startDate' can not be after 'endDate'.",
+}]
+```
+
+### Invalid Time Zone 
+
+The default time zone for requests is UTC.  See [this page](/marketing-solutions/docs/campaign-statistics#timezones) for more information on supported time zones.
+
+```json JSON
+"errors": [{
+    "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+    "type": "validation",
+    "code": "invalid-timezone",
+    "instance": "/advertisers/placements/report",
+    "title": "Invalid time zone",
+    "detail": "Time zone '<value>' is not valid.",
+}]
+```
