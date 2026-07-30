@@ -1,0 +1,2838 @@
+---
+title: Balances Endpoints
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/balances/balances-endpoints.md
+description: View and manage all available balances across campaigns
+---
+
+import FieldDefinitions from "/snippets/retail-media/FieldDefinitions.mdx";
+
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+<Info>
+  **Getting Started**
+
+  Learn more about balances [here](/retail-media/v2027.01-rc/docs/balances#/).
+</Info>
+
+<Warning>
+  **Backward compatibility for balance endpoints:**
+
+  * The `poNumber` field on balance responses is **removed** in `2026-01` and replaced by two separate fields: `retailerPoNumber` and `criteoPoNumber`. This is a breaking change for consumers of `GET /balances` on prior versions who rely on `poNumber`.
+  * All other new fields (`retailerId`, `privateMarketBillingType`) are additive. Retailer budgets are hidden by default on prior API versions.
+
+  You can learn more about retailer budgets [on this page](/retail-media/v2027.01-rc/docs/retailer-budgets).
+</Warning>
+
+***
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Method
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <b>
+      GET
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/balances
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve all balances associated with a specific account.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      GET
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/balances/&#123;balanceId&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve a specific balance
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/balances
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a new balance for a specified account.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      PATCH
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/balances/&#123;balanceId&#125;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Modify balance's metadata (name, start/end date - for deposited funds, see below)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/balances/&#123;balanceId&#125;/add-funds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Add/remove funds deposited in a specific balance.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      GET
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /balances/&#123;balanceId&#125;/campaigns
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve all campaigns linked to a specific balance.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /balances/&#123;balanceId&#125;/campaigns/append
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Add campaigns to a specific balance.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /balances/&#123;balanceId&#125;/campaigns/delete
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Remove campaigns from a specific balance.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      GET
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /balances/&#123;balanceId&#125;/history
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve all changes made historically to a balance
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Balance Parameters
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Balance ID
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      name
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Balance name
+    </p>
+    <p>
+     Accepted values: up to 255-char strings
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      deposited
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      decimal
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Amount of funds deposited; uncapped if
+     <code>
+      null
+     </code>
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      deposited
+     </code>
+     ≥ 0.0
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      spent
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      decimal
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Amount of funds already spent
+    </p>
+    <p>
+     Accepted values: 0 ≤
+     <code>
+      spent
+     </code>
+     ≤
+     <code>
+      deposited
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      remaining
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      decimal
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Amount of funds already spent
+    </p>
+    <p>
+     Accepted values: 0 ≤
+     <code>
+      remaining
+     </code>
+     ≤
+     <code>
+      deposited
+     </code>
+     (or
+     <code>
+      null
+     </code>
+     , if
+     <code>
+      deposited
+     </code>
+     not set)
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      timestamp
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Balance start date; if time zone is not set, will consider
+     <a href="/retail-media/docs/account">
+      Account
+     </a>
+     's time zone as default
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-dd
+     </code>
+     (in
+     <a href="https://www.iso.org/iso-8601-date-and-time-format.html">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      timestamp
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Balance end date; if time zone is not set, will consider
+     <a href="/retail-media/docs/account">
+      Account
+     </a>
+     's time zone as default
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-dd
+     </code>
+     (in
+     <a href="https://www.iso.org/iso-8601-date-and-time-format.html">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Default: if
+     <code>
+      null
+     </code>
+     or absent, balance will be available indefinitely
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      status
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Balance current status
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      active
+     </code>
+     ,
+     <code>
+      scheduled
+     </code>
+     ,
+     <code>
+      ended
+     </code>
+     ,
+     <code>
+      unknown
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      createdAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      timestamp
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of balance creation, in UTC
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss±hh:mm
+     </code>
+     (in
+     <a href="https://www.iso.org/iso-8601-date-and-time-format.html">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      updatedAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      timestamp
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of last balance update, in UTC
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss±hh:mm
+     </code>
+     (in
+     <a href="https://www.iso.org/iso-8601-date-and-time-format.html">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      memo
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     An optional memo note that can be set in the balance
+    </p>
+    <p>
+     Accepted values: up to 250-char strings
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      balanceType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The balance type is computed based on the deposited amount:
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      capped
+     </code>
+     ,
+     <code>
+      uncapped
+     </code>
+     ,
+     <code>
+      unknown
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+    <ul>
+     <li>
+      <code>
+       capped
+      </code>
+      : if the deposited amount is provided.
+     </li>
+     <li>
+      <code>
+       uncapped
+      </code>
+      : when there is no amount defined (set to
+      <code>
+       null
+      </code>
+      )
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      spendType
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     The type of balance that will be used based on the campaign type
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      onsite
+     </code>
+     ,
+     <code>
+      offsite
+     </code>
+     ,
+     <code>
+      offsiteAwareness
+     </code>
+     ,
+     <code>
+      lockout
+     </code>
+     ,
+     <code>
+      unknown
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      privateMarketBillingType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Billing type of the balance
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      notApplicable
+     </code>
+     ,
+     <code>
+      billByRetailer
+     </code>
+     ,
+     <code>
+      billByCriteo
+     </code>
+    </p>
+    <p>
+     ⚠️
+     <b>
+      Note
+     </b>
+     :
+    </p>
+    <ul>
+     <li>
+      balances created through the API will, automatically, be denoted as
+      <code>
+       billByRetailer
+      </code>
+     </li>
+     <li>
+      only balances denoted as
+      <code>
+       billByRetailer
+      </code>
+      can be modified through the API
+     </li>
+     <li>
+      <code>
+       billByCriteo
+      </code>
+      are balances created in our Commerce Max platform and can only be edited in our UI
+     </li>
+     <li>
+      <code>
+       notApplicable
+      </code>
+      is an initial or default value if the
+      <code>
+       privateMarketBillingType
+      </code>
+      is not set yet. If it is observed it would be treated as the default value
+      <code>
+       billByRetailer
+      </code>
+      .
+     </li>
+    </ul>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer this balance is scoped to.
+    </p>
+    <p>
+     Present only on retailer budgets.
+    </p>
+    <p>
+     Nullable? Y (null for balances without retailer budgets)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerPoNumber
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string?
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retailer purchase order number.
+     <b>
+      Replaces
+     </b>
+     the removed
+     <code>
+      poNumber
+     </code>
+     field.
+    </p>
+    <p>
+     Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      criteoPoNumber
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string?
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Criteo purchase order number.
+    </p>
+    <p>
+     <b>
+      Replaces
+     </b>
+     the removed
+     <code>
+      poNumber
+     </code>
+     field.
+    </p>
+    <p>
+     Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      poNumber
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Purchase order number.
+    </p>
+    <p>
+     <b>
+      Removed since 2026.01
+     </b>
+     and replaced by
+     <code>
+      retailerPoNumber
+     </code>
+     and
+     <code>
+      criteoPoNumber
+     </code>
+    </p>
+    <p>
+     Accepted values: up to 32-char strings
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_*Required for Balance creation_
+
+<FieldDefinitions />
+
+***
+
+## Balance History Parameters
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      dateOfModification
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      timestamp
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of balance update
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss±hh:mm
+     </code>
+     (in
+     <a href="https://www.iso.org/iso-8601-date-and-time-format.html">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      modifiedByUser
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Username who modified the insertion order
+    </p>
+    <p>
+     Accepted values: strings in format "j.doe"
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      changeType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      enum
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Definition of the type of change in a balance
+    </p>
+    <p>
+     Accepted values: <code>balanceCreated</code>, <code>balanceAdded</code>, <code>balanceRemoved</code>, <code>balanceCapped</code>, <code>balanceUncapped</code>, <code>balanceName</code>, <code>endDate</code>, <code>startDate</code>, <code>retailerPoNumber</code>, <code>criteoPoNumber</code>, <code>retailerId</code>, <code>valueAdd</code>, <code>unknown</code>
+    </p>
+    <ul>
+     <li>
+      <code>
+       BalanceCreated
+      </code>
+      : new balance is created
+     </li>
+     <li>
+      <code>
+       BalanceUncapped
+      </code>
+      : capped balance is changed to uncapped
+     </li>
+     <li>
+      <code>
+       BalanceCapped
+      </code>
+      : uncapped balance is changed to capped
+     </li>
+     <li>
+      <code>
+       StartDate
+      </code>
+      : start date is modified
+     </li>
+     <li>
+      <code>
+       EndDate
+      </code>
+      : end date is modified
+     </li>
+    </ul>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      changeDetails
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      object
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Structure with the change details (from Balance History endpoint)
+    </p>
+    <p>
+     Parameters:
+    </p>
+    <ul>
+     <li>
+      <code>
+       previousValue
+      </code>
+      : previous value of a property of the balance
+     </li>
+     <li>
+      <code>
+       currentValue
+      </code>
+      : current value of a property of the balance
+     </li>
+     <li>
+      <code>
+       changeValue
+      </code>
+      : change value of a property of the balance
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Get all Balances for an Account
+
+This endpoint lists all balances in an account.
+
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `25`, respectively. See [API Response](/criteo-apis/docs/api-response#pagination).
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
+```
+</EndpointBadge>
+
+<Warning>
+  On API version `2026-07` and later, retailer budgets are included and `retailerId`, `retailerPoNumber`, and `criteoPoNumber` are returned. The old `poNumber` field is removed.  
+  Learn more on retailer budgets [here](/retail-media/v2027.01-rc/docs/retailer-billed).
+
+  **Legacy version behavior (`2026-01` and earlier):** Only standard Criteo budget balances are returned. `retailerId`, `retailerPoNumber`, and `criteoPoNumber` are not present in the response. The legacy `poNumber` field is present.
+</Warning>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?offset=0&limit=25" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?offset=0&limit=25"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?offset=0&limit=25")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?offset=0&limit=25');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response - Versions prior to `2026.07`**
+
+<CodeGroup>
+
+```json JSON expandable
+{
+    "metadata": {
+        "totalItemsAcrossAllPages": 94,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 4,
+        "nextPage": "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=1&pageSize=25"
+    },
+    "data": [
+        {
+            "id": "14094543095747588032",
+            "type": "BalanceResponseV2",
+            "attributes": {
+                "name": "Balance 123",
+                "poNumber": "13993827",
+                "memo": "uncapped balance, free to spend!",
+                "deposited": null,
+                "spent": 42931.28,
+                "remaining": null,
+                "startDate": "2020-04-06",
+                "endDate": null,
+                "status": "active",
+                "createdAt": "2020-04-06T00:02:41+00:00",
+                "updatedAt": "2020-04-06T00:02:41+00:00",
+                "balanceType": "uncapped",
+                "spendType": "Onsite",
+                "privateMarketBillingType": "notApplicable"
+            }
+        },
+ 
+        // ...
+ 
+        {
+            "id": "4237496305219757554",
+            "type": "BalanceResponseV2",
+            "attributes": {
+                "name": "Balance 789",
+                "poNumber": "",
+                "memo": "10k for the special 2s-day promotion",
+                "deposited": 10000.00,
+                "spent": 923.40,
+                "remaining": 9076.60,
+                "startDate": "2025-02-01",
+                "endDate": null,
+                "status": "scheduled",
+                "createdAt": "2025-01-06T00:48:11+00:00",
+                "updatedAt": "2025-01-07T22:19:57+00:00",
+                "balanceType": "capped",
+                "spendType": "Onsite",
+              "privateMarketBillingType": "notApplicable"
+            }
+        }
+    ]
+}
+```
+</CodeGroup>
+
+**Sample response - Versions `2026.07`onward**
+
+```json expandable
+{
+  "metadata": {
+    "count": 135,
+    "offset": 0,
+    "limit": 25
+  },
+  "data": [
+    {
+      "id": "100000000000000001",
+      "type": "BalanceV1",
+      "attributes": {
+        "name": "Sample Name",
+        "retailerPoNumber": null,
+        "criteoPoNumber": "PO-CRITEO-123",
+        "retailerId": null,
+        "memo": "Sample memo",
+        "deposited": 10.0,
+        "spent": 10.0,
+        "remaining": 0.0,
+        "startDate": "2020-04-13",
+        "endDate": null,
+        "status": "ended",
+        "createdAt": "2020-04-13T15:39:48+00:00",
+        "updatedAt": "2023-06-13T13:35:53+00:00",
+        "balanceType": "capped",
+        "spendType": "onsite",
+        "privateMarketBillingType": "notApplicable"
+      }
+    },
+    {
+      "id": "100000000000000002",
+      "type": "BalanceV1",
+      "attributes": {
+        "name": "Sample Name",
+        "retailerPoNumber": "PO-RETAILER-123",
+        "criteoPoNumber": "PO-CRITEO-123",
+        "retailerId": 123,
+        "memo": "Sample memo",
+        "deposited": 100.0,
+        "spent": 0.16,
+        "remaining": 99.84,
+        "startDate": "2026-03-24",
+        "endDate": null,
+        "status": "active",
+        "createdAt": "2026-03-24T18:15:58+00:00",
+        "updatedAt": "2026-05-20T17:17:40+00:00",
+        "balanceType": "capped",
+        "spendType": "onsite",
+        "privateMarketBillingType": "notApplicable"
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Get Specific Balance
+
+Retrieves the balance details of one specific balances belonging to an account.
+
+<Warning>
+  Returns a single balance including the retailer scoping fields. The `poNumber` field present on prior API versions will be removed in `2026-07`.
+
+  **Legacy version behavior (`2026-01` and earlier):** Returns `400` with `"This version endpoint doesn't support retailer-sold balance. Use latest version instead."` when the requested balance is a retailer budget balance.
+</Warning>
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{balanceId}
+```
+</EndpointBadge>
+
+**Sample Request**
+
+```bash
+curl -L 'https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/4237496305219757554' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "id": "100000000000000001",
+    "type": "BalanceV1",
+    "attributes": {
+      "name": "Sample Name",
+      "retailerPoNumber": null,
+      "criteoPoNumber": "PO-CRITEO-123",
+      "retailerId": 123,
+      "memo": "Sample memo",
+      "deposited": 100.0,
+      "spent": 0.16,
+      "remaining": 99.84,
+      "startDate": "2026-03-24",
+      "endDate": null,
+      "status": "active",
+      "createdAt": "2026-03-24T18:15:58+00:00",
+      "updatedAt": "2026-05-20T17:17:40+00:00",
+      "balanceType": "capped",
+      "spendType": "onsite",
+      "privateMarketBillingType": "notApplicable"
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Create a New Account Balance
+
+This endpoint creates a new balance in the specified account.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
+```
+</EndpointBadge>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+    -d '{
+            "data": {
+                "attributes": {
+                    "name": "Balance 2025 Q1",
+                    "startDate": "2025-01-01",
+                    "spendType": "Onsite",
+                    "poNumber": null,
+                    "deposited": 12500.00,
+                    "endDate": "",
+                    "memo": "Balance for campaigns in 2025 Q1"
+                }
+            }
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances"
+
+payload = json.dumps({
+    "data": {
+        "attributes": {
+            "name": "Balance 2025 Q1",
+            "startDate": "2025-01-01",
+            "spendType": "Onsite",
+            "poNumber": None,
+            "deposited": 12500.00,
+            "endDate": "",
+            "memo": "Balance for campaigns in 2025 Q1"
+        }
+    }
+})
+headers = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"name\":\"Balance 2025 Q1\",\"startDate\":\"2025-01-01\",\"spendType\":\"Onsite\",\"poNumber\": null,\"deposited\": 12500.00,\"endDate\":\"\",\"memo\":\"Balance for campaigns in 2025 Q1\"}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+    'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{"data":{"attributes":{"name":"Balance 2025 Q1","startDate":"2025-01-01","spendType":"Onsite","poNumber":null,"deposited":12500.00,"endDate":"","memo":"Balance for campaigns in 2025 Q1"}}');
+try{
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+        echo $response->getBody();
+    }
+    else {
+        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+        $response->getReasonPhrase();
+    }
+}
+catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "id": "697385288434028544",
+    "type": "BalanceResponseV2",
+    "data": {
+        "attributes": {
+            "name": "Balance 2025 Q1",
+            "poNumber": null,
+            "memo": "Balance for campaigns in 2025 Q1",
+            "deposited": 12500.00,
+            "spent": 0.00,
+            "remaining": 12500.00,
+            "startDate": "2025-01-01",
+            "endDate": null,
+            "status": "active",
+            "createdAt": "2025-04-08T10:00:09+00:00",
+            "updatedAt": "2025-04-08T10:00:09+00:00",
+            "balanceType": "capped",
+            "spendType": "Onsite",
+            "privateMarketBillingType": "billByRetailer"
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Modify Balance Metadata
+
+This endpoint modifies the metadata of a specified balance, like `name`, `poNumber`, `startDate` or `endDate`. To modify deposited funds, check the following endpoint.
+
+<Warning>
+  Only Balances created through the API can be modified through this endpoint, i.e., with billing type `billByRetailer`.  
+  Retailer budget balances are **read-only via API**. Any `PATCH` request against a retailer budget balance returns `403` regardless of API version.  
+  Balance attributes (dates, PO numbers, amounts) are managed by Criteo on behalf of the retailer.
+</Warning>
+
+<EndpointBadge method="patch">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{balanceId}
+```
+</EndpointBadge>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+    -d '{
+            "data": {
+                "attributes": {
+                    "startDate": "2025-01-01",
+                    "endDate": "2025-04-01",
+                    "poNumber": "PO 12345",
+                    "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
+                }
+            }
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544"
+
+payload = json.dumps({
+    "data": {
+        "attributes": {
+            "startDate": "2025-01-01",
+            "endDate": "2025-04-01",
+            "poNumber": "PO 12345",
+            "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
+        }
+    }
+})
+headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("PATCH", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"startDate\":\"2025-01-01\",\"endDate\":\"2025-04-01\",\"poNumber\":\"PO 12345\",\"memo\":\"Balance for campaigns in 2025 Q1 (with start and end date)\"}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544")
+  .method("PATCH", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+    'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{"data":{"attributes":{"startDate":"2025-01-01","endDate":"2025-04-01","poNumber":"PO 12345","memo":"Balance for campaigns in 2025 Q1 (with start and end date)"}}}');
+try{
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+        echo $response->getBody();
+    }
+    else {
+        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+        $response->getReasonPhrase();
+    }
+}
+catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "id": "697385288434028544",
+    "type": "BalanceResponseV2",
+    "data": {
+        "attributes": {
+            "name": "Balance 2025 Q1",
+            "poNumber": "PO 12345",
+            "memo": "Balance for campaigns in 2025 Q1 (with start and end date)",
+            "deposited": 12500.00,
+            "spent": 0.00,
+            "remaining": 12500.00,
+            "startDate": "2025-01-01",
+            "endDate": "2025-04-01",
+            "status": "active",
+            "createdAt": "2025-04-08T10:00:09+00:00",
+            "updatedAt": "2025-04-08T10:00:09+00:00",
+            "balanceType": "capped",
+            "spendType": "Onsite",
+            "privateMarketBillingType": "billByRetailer"
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Add or Remove Balance Funds
+
+This endpoint allows adding or removing funds deposited in a specific balance.
+
+<Info>
+  Only Balances created through the API can be modified through this endpoint, ie, with billing type `billByRetailer`
+</Info>
+
+<Warning>
+  This endpoint only accepts `deltaAmount`, `poNumber`, and `memo`. Any other parameters (e.g. `endDate`) are silently ignored — no error is returned, but the value is not applied.
+</Warning>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{balanceId}/add-funds
+```
+</EndpointBadge>
+
+**Request Body Parameters**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      deltaAmount
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      decimal
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Difference amount of fund to be added/removed from balance; it cannot reduce the current amount of funds deposited to less than zero
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      deltaAmount
+     </code>
+     ≥
+     <code>
+      deposited * (-1)
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      poNumber
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     New purchase order number
+    </p>
+    <p>
+     Accepted values: up to 32-char strings
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      memo
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     A memo note that should be set in the balance together with this modification
+    </p>
+    <p>
+     Accepted values: up to 250-char strings
+    </p>
+    <p>
+     Writeable? Y / Nullable? Y
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_*Required_
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+    -d '{
+            "data": {
+                "attributes": {
+                    "deltaAmount": -2500.00,
+                    "poNumber": "PO 12346",
+                    "memo": "Reduced balance for campaigns in 2025 Q1"
+                }
+            }
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds"
+
+payload = json.dumps({
+    "data": {
+        "attributes": {
+            "deltaAmount": -2500.00,
+            "poNumber": "PO 12346",
+            "memo": "Reduced balance for campaigns in 2025 Q1"
+        }
+    }
+})
+headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"deltaAmount\": -2500.00,\"poNumber\":\"PO 12346",\"memo":\"Reduced balance for campaigns in 2025 Q1\"}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+    'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+    'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{"data":{"attributes":{"deltaAmount":-2500.00,"poNumber":"PO 12346","memo":"Reduced balance for campaigns in 2025 Q1"}}}');
+try{
+    $response = $request->send();
+    if ($response->getStatus() == 200) {
+        echo $response->getBody();
+    }
+    else {
+        echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+        $response->getReasonPhrase();
+    }
+}
+catch(HTTP_Request2_Exception $e) {
+    echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "id": "697385288434028544",
+    "type": "BalanceResponseV2",
+    "data": {
+        "attributes": {
+            "name": "Balance 2025 Q1",
+            "poNumber": "PO 12346",
+            "memo": "Reduced balance for campaigns in 2025 Q1",
+            "deposited": 10000.00,
+            "spent": 0.00,
+            "remaining": 10000.00,
+            "startDate": "2025-01-01",
+            "endDate": "2025-04-01",
+            "status": "active",
+            "createdAt": "2025-04-08T10:00:09+00:00",
+            "updatedAt": "2025-04-08T10:00:09+00:00",
+            "balanceType": "capped",
+            "spendType": "Onsite",
+            "privateMarketBillingType": "billByRetailer"
+        }
+    },
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Get all Campaigns on a Specific Balance
+
+This endpoint lists all campaigns on the specified balance.
+
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `25`, respectively — see [API Response](/criteo-apis/docs/api-response)
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
+```
+</EndpointBadge>
+
+**Response Body Parameters**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      string
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/campaign">
+      Campaign
+     </a>
+     ID, respective to the campaign(s) currently appended to the balance
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?offset=0&limit=25" \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("text/plain");
+
+RequestBody body = RequestBody.create(mediaType, "");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?offset=0&limit=25")
+  .method("GET", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```python Python
+import requests
+
+url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?offset=0&limit=25"
+
+payload={}
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?offset=0&limit=25');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "id": "8343086999167541140",
+            "type": "RetailMediaCampaign"
+        },
+        {
+            "id": "3683145960016759663",
+            "type": "RetailMediaCampaign"
+        }
+    ],
+    "metadata": {
+        "totalItemsAcrossAllPages": 2,
+        "currentPageSize": 25,
+        "currentPageIndex": 0,
+        "totalPages": 1,
+        "nextPage": null,
+        "previousPage": null
+    }
+}
+```
+
+***
+
+## Add Campaigns to a Specific Balance
+
+This endpoint adds one or more campaigns to the specified balance. The results are provided in a single page. In this example, a campaign had already existed on the balance before two new additions.
+
+<Warning>
+  The API enforces compatibility between the campaigns and the balance — all must share the same billing type, retailer (for retailer budget), and demand account. If any campaign in the request fails validation, **the entire request is rejected** and no campaigns are mapped.
+
+  **Validation rules:**
+
+  * All campaigns must be retailer budget campaigns when the balance is a retailer budget balance (and vice versa) — otherwise `BillingTypeMismatchWithBalance`
+  * The `retailerId` on every campaign must match the balance's `retailerId` — otherwise `RetailerMismatchWithBalance`
+  * All campaigns must belong to the same demand account as the balance — otherwise `403`
+</Warning>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/append
+```
+</EndpointBadge>
+
+**Request Body Parameters**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      data.attributes.ids
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array of strings
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/campaign">
+      Campaign
+     </a>
+     IDs to append or remove from the balance
+    </p>
+    <p>
+     Accepted values: array of int64 strings
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/balances/{balanceId}/campaigns/append' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "AppendCampaignsRequest",
+    "attributes": {
+      "ids": ["100000000000000001", "100000000000000002"]
+    }
+  }
+}'
+```
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "type": "BalanceCampaignsV1",
+    "attributes": {
+      "ids": ["100000000000000001", "100000000000000002"]
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Remove Campaigns from a Specific Balance
+
+This endpoint removes one or more campaigns from the specified balance.
+
+The response contains the remaining mapped campaign IDs after removal.
+
+<Warning>
+  Legacy versions (`2025-10` and earlier) will return an error `500`.
+</Warning>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/delete
+```
+</EndpointBadge>
+
+**Request Body Parameters**
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      data.attributes.ids
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array of strings
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/campaign">
+      Campaign
+     </a>
+     IDs to append or remove from the balance
+    </p>
+    <p>
+     Accepted values: array of int64 strings
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/2026-01/retail-media/balances/{balanceId}/campaigns/delete' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "DeleteCampaignsRequest",
+    "attributes": {
+      "ids": ["100000000000000001"]
+    }
+  }
+}'
+```
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "type": "BalanceCampaignsV1",
+    "attributes": {
+      "ids": ["100000000000000002"]
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Get Balance History
+
+This endpoint lists all changes made to a specific balance.
+
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `500`, respectively. See [API Response](/criteo-apis/docs/api-response#pagination).
+
+Additional query parameter `limitToChangeTypes` can be used to inform a comma-separated list of `changeType` values.
+
+<Warning>
+  **Retailer Budgets**
+
+  Returns a chronological list of changes to a balance. PO number updates appear as separate entries keyed by `changeType` — not as field keys on every entry.
+
+  **Observed `changeType` values:** `balanceCreated`, `balanceAdded`, `balanceRemoved`, `balanceCapped`, `balanceUncapped`, `balanceName`, `endDate`, `startDate`, `criteoPoNumber`, `retailerPoNumber`, `retailerId`, `valueAdd`, `unknown`
+
+  Each entry's `changeDetails` carries:
+
+  * `previousValue` — value before the change
+  * `currentValue` — value after the change
+  * `changeValue` — delta where applicable (e.g. `ValueAdd`); `null` otherwise
+
+  **Legacy version behavior (`2026-01` and earlier):** Returns `400` with `”This version endpoint doesn't support retailer-sold balance. Use latest version instead.”` when the requested balance is a retailer budget balance.
+</Warning>
+
+<Info>
+  **Modified Users**
+
+  `modifiedByUser` - When a balance is updated via Criteo's Retail Media UI, the user login name will be provided. For instance, if “Kip Heaney” updated the balance on 2023-11-07, it indicates that Kip made the change through the Criteo Retail Media UI.
+
+  If a balance is updated through the Criteo API, the name of the API application responsible for the change will be shown. For example, on 2024-03-20, the balance was updated by the API application **Retail Media API Application.**
+</Info>
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history
+```
+</EndpointBadge>
+
+**Sample Request**: retrieve all changes
+
+```bash
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/balances/{balanceId}/history' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response**: retrieve all changes
+
+```json
+{
+  “metadata”: {
+    “count”: 4,
+    “offset”: 0,
+    “limit”: 25
+  },
+  “data”: [
+    {
+      “type”: “BalanceHistoryChangeDataCaptureV1”,
+      “attributes”: {
+        “changeType”: “balanceCreated”,
+        “changeDetails”: {
+          “previousValue”: null,
+          “currentValue”: “100.00”,
+          “changeValue”: null
+        },
+        “dateOfModification”: “2026-03-24T14:15:58-04:00”,
+        “modifiedByUser”: “User123”,
+        “memo”: null
+      }
+    },
+    {
+      “type”: “BalanceHistoryChangeDataCaptureV1”,
+      “attributes”: {
+        “changeType”: “criteoPoNumber”,
+        “changeDetails”: {
+          “previousValue”: null,
+          “currentValue”: “PO-CRITEO-123”,
+          “changeValue”: null
+        },
+        “dateOfModification”: “2026-03-24T14:16:28-04:00”,
+        “modifiedByUser”: “User123”,
+        “memo”: null
+      }
+    },
+    {
+      “type”: “BalanceHistoryChangeDataCaptureV1”,
+      “attributes”: {
+        “changeType”: “retailerPoNumber”,
+        “changeDetails”: {
+          “previousValue”: null,
+          “currentValue”: “PO-RETAILER-123”,
+          “changeValue”: null
+        },
+        “dateOfModification”: “2026-03-24T14:16:45-04:00”,
+        “modifiedByUser”: “User123”,
+        “memo”: null
+      }
+    }
+  ],
+  “warnings”: [],
+  “errors”: []
+}
+```
+
+***
+
+## Responses
+
+<br />
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Title
+    </p>
+   </th>
+   <th>
+    <p>
+     Detail
+    </p>
+   </th>
+   <th>
+    <p>
+     Troubleshooting
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🟢
+     <code>
+      201
+     </code>
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Balance request created with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      Error deserializing request
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Field xyz is not valid
+    </p>
+   </td>
+   <td>
+    <p>
+     Review the value of field xyz provided in the request
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      Change data capture type xxx is not supported
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Change data capture type xxx is not supported
+    </p>
+   </td>
+   <td>
+    <p>
+     The value of
+     <code>
+      limitToChangeTypes
+     </code>
+     is not supported for
+     <code>
+      /balances/&#123;balanceId&#125; /history
+     </code>
+     - ensure to use a comma-separated list of available
+     <code>
+      changeType
+     </code>
+     values defined above
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      Invalid name
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Balance name should be unique. There exists balance with the specified name. Balance creation/update has been canceled
+    </p>
+   </td>
+   <td>
+    <p>
+     Check value of
+     <code>
+      name
+     </code>
+     in the request trying to create/edit a balance. In case of editing, either provided a new name value or omit this parameter to maintain its same value
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      Invalid deltaamount
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Can not decrease funds to less than zero
+    </p>
+   </td>
+   <td>
+    <p>
+     Review value of
+     <code>
+      deltaAmount
+     </code>
+     and make sure it's greater than current balance's
+     <code>
+      deposited * (-1)
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      Invalid operation
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Can only change the field xxx of a balance not billed by retailer.
+    </p>
+   </td>
+   <td>
+    <p>
+     Cannot edit balances not created through the API; only balances with billing type
+     <code>
+      billByRetailer
+     </code>
+     can be modified
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      Invalid operation
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Can not add funds to a balance not billed by retailer.
+    </p>
+   </td>
+   <td>
+    <p>
+     Cannot edit balances not created through the API; only balances with billing type
+     <code>
+      billByRetailer
+     </code>
+     can be modified
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      403
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      Authorization error
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     Resource access forbidden: does not have permissions
+    </p>
+   </td>
+   <td>
+    <p>
+     One of the permission levels was not respected. Make sure that the respective API app has access to:
+    </p>
+    <ul>
+     <li>
+      Read/Manage the domain "Balance" (depending on the requested action). Review the Types of Permissions in
+      <a href="/criteo-apis/docs/authorization-requests">
+       Authorization Requests
+      </a>
+     </li>
+     <li>
+      the
+      <code>
+       accountId
+      </code>
+      or
+      <code>
+       balanceId
+      </code>
+      provided in the request
+     </li>
+    </ul>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Balance Append Endpoint Errors
+
+<Warning>
+  The "append" endpoint uses a different error code from campaign create: `code: "campaigns-balance-mapping-validation-error"`, `title: "Validation error"`.
+
+  The specific mismatch type is identified by a bracketed prefix in the `detail` field.
+</Warning>
+
+| Status | `code` | `detail` prefix | Description |
+| :----- | :----- | :-------------- | :---------- |
+| 🔴`400` | `campaigns-balance-mapping-validation-error` | `[retailer-id-mismatch]` | The `retailerId` on one or more campaigns in `ids` doesn't match the balance's `retailerId`. Entire request rejected — no campaigns are mapped. |
+| 🔴`400` | `campaigns-balance-mapping-validation-error` | `[balance-type-mismatch]` | Billing type mismatch — e.g. retailer budget campaign appended to a Criteo budget balance, or vice versa. Entire request rejected. |
+| 🔴`403` | — | — | Campaigns in `ids` belong to a different demand account than the balance. |
+
+### Balance Modify Endpoint Error
+
+| Status | Body | Meaning |
+| :----- | :--- | :------ |
+| 🔴`403` | RFC 9110 HTTP Forbidden (no custom error body) | Retailer budget balances are read-only via API. `PATCH` is always rejected regardless of API version. |
+
+### Legacy Version Access
+
+| Status | `code` | `title` | When |
+| :----- | :----- | :------ | :--- |
+| 🔴`400` | `validation-error` | `"This version endpoint doesn't support retailer-sold balance. Use latest version instead."` | Accessing a retailer budget balance or its history via the account-scoped path on `2025-10` or earlier. |
+| 🔴`500` | (empty body) | — | `POST /balances/{balanceId}/campaigns/delete` on `2025-10` or earlier. |
+
+***
+
+<br />
+
+

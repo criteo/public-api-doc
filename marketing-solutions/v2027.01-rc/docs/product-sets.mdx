@@ -1,0 +1,647 @@
+---
+title: Product Sets
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/catalog/product-sets.md
+---
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Introduction
+
+A Product Set is a subset of the product catalog that can be featured in dynamic ads.
+
+Product Sets are created with a combination of rules using conditions on product attributes available in the Catalog. These conditions are additive (similar to the `AND` operator). Once created, you can apply a Product Set to an Ad as a filter. After doing this, the Ads will display only the products that belong to that Product Set.
+
+***
+
+## Product Set Properties
+
+   
+**`datasetId`**  
+The ID of the Data Set to which the Product Set belongs
+
+**`name`**  
+The name of the Product Set
+
+**`rules`**  
+It's an array that encapsulates product rules.
+
+A **`Product rule`**  is an  object containing the following parameters:  
+
+* **`operator`**: Operator to be used, from the table below.
+* **`field`**: Field to be filtered.
+* **`values`**: The values on which you want to apply the rule.
+
+***
+
+### Fields and Operators
+
+Not all Catalog fields can be used to create rules.   
+If you need a specific field, you can map it in the Catalog to one of the Custom Label fields and later use it to create the rule.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Catalog Field Name
+    </p>
+   </th>
+   <th>
+    <p>
+     API Field Name
+    </p>
+   </th>
+   <th>
+    <p>
+     Operators Available
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     Category 1, Category 2, Category 3
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      category1
+     </code>
+     ,
+     <code>
+      category2
+     </code>
+     ,
+     <code>
+      category3
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      IsIn
+     </code>
+     ,
+     <code>
+      IsNotIn
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Brand
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      brand
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      IsIn
+     </code>
+     ,
+     <code>
+      IsNotIn
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Product ID
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      ExternalproductID
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      IsIn
+     </code>
+     ,
+     <code>
+      IsNotIn
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Custom Label 0, Custom Label 1, Custom Label 2 , Custom Label 3, Custom Label 4
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      CustomLabel0
+     </code>
+     ,
+     <code>
+      CustomLabel1
+     </code>
+     ,
+     <code>
+      CustomLabel2
+     </code>
+     ,
+     <code>
+      CustomLabel3
+     </code>
+     ,
+     <code>
+      CustomLabel4
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      IsIn
+     </code>
+     ,
+     <code>
+      IsNotIn
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     Sale Price
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      SalePrice
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Between
+     </code>
+     ,
+     <code>
+      NotBetween
+     </code>
+     ,
+     <code>
+      LessThan
+     </code>
+     ,
+     <code>
+      GreaterThan
+     </code>
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Create a Product Set
+
+A Product Set can be created for a specific advertiser by making a `POST` call to the Product-Set endpoint.   
+The request body should specify the **Data Set Id**, the name of the Product Set, if it's a draft (optional), and the product rules.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/preview/product-sets
+```
+</EndpointBadge>
+
+**Sample request**
+
+```json JSON expandable
+{
+  "data": {
+    "type": "CreateProductSetRequest",
+    "attributes": {
+      "datasetId": "782",
+      "name": "Product set name",
+      "isDraft": True,
+      "rules": [
+        {
+          "operator": "IsIn",
+          "field": "Category1",
+          "values": [
+             "Decoration", "Home", "Furniture"
+          ]
+        },
+        {
+          "operator": "IsNotIn",
+          "field": "Category2",
+          "values": [
+            "Games", "Gastronomy"
+          ]
+        },
+        {
+          "operator": "IsIn",
+          "field": "Brand",
+          "values": [
+            "ADIDAS PERFORMANCE", "TEDDY SMITH", "REDSKINS", "NATACHA B", "GALERIES LAFAYETTE"
+          ]
+        },
+        {
+          "operator": "Between",
+          "field": "SalePrice",
+          "values": ["1.2", "645531.56"]
+        },
+        {
+          "operator": "LessThan",
+          "field": "SalePrice",
+          "values": ["645531.56"]
+        },
+        {
+          "operator": "GreaterThan",
+          "field": "RetailPrice",
+          "values": ["1.2"]
+        },
+        {
+          "operator": "IsNotIn",
+          "field": "ExternalItemId",
+          "values": ["552751852", "550853326"]
+        },
+        {
+          "operator": "IsNotIn",
+          "field": "CustomLabel0",
+          "values": ["552751852", "550853326"]
+        }
+      
+      ]
+    }
+  }
+}
+```
+
+**Sample response**
+
+```json JSON
+{
+  "data": {
+    "attributes": {
+      "datasetId": "string",
+      "name": "string",
+      "status": "Unknown",
+      "isEnabled": true,
+      "numberOfProducts": 0,
+      "creationDate": "string",
+      "rules": [
+        {
+          "operator": "IsIn",
+          "field": "Category1",
+          "values": [
+            "string"
+          ]
+        }
+      ],
+      "id": "string"
+    },
+    "id": "string",
+    "type": "string"
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Delete a Product Set 
+
+<EndpointBadge method="delete">
+```http
+https://api.criteo.com/preview/product-sets/{productSetId}
+```
+</EndpointBadge>
+
+A Product Set can be deleted for a specific advertiser by making a DELETE call to the product-sets endpoint. You need to specify the **`productSetId`** to delete in the request URL.
+
+```json
+{
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Retrieve Product Set Data
+
+### Retrieve Data for a specific Product Set
+
+You can get the information of a specific Product Set by making a GET call to the product-sets endpoint. You need to specify the **`productSetId`** to retrieve in the request URL.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/preview/product-sets/{productSetId}
+```
+</EndpointBadge>
+
+**Sample response**
+
+```json JSON
+{
+  "data": {
+    "attributes": {
+      "datasetId": "string",
+      "name": "string",
+      "status": "Unknown",
+      "isEnabled": true,
+      "numberOfProducts": 0,
+      "creationDate": "string",
+      "rules": [
+        {
+          "operator": "IsIn",
+          "field": "Category1",
+          "values": [
+            "string"
+          ]
+        }
+      ],
+      "id": "string"
+    },
+    "id": "string",
+    "type": "string"
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+### Retrieve Data for a Specific Data Set
+
+If you need to get all the Product Sets for a specific Data Set, you can make a GET call to the endpoint specifying the relevant **`datasetId`**
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/preview/product-sets/dataset/{datasetId}
+```
+</EndpointBadge>
+
+**Sample response**
+
+```json JSON
+{
+  "data": [
+    {
+      "attributes": {
+        "datasetId": "string",
+        "name": "string",
+        "status": "Unknown",
+        "isEnabled": true,
+        "numberOfProducts": 0,
+        "creationDate": "string",
+        "rules": [
+          {
+            "operator": "IsIn",
+            "field": "Category1",
+            "values": [
+              "string"
+            ]
+          }
+        ],
+        "id": "string"
+      },
+      "id": "string",
+      "type": "string"
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Test Product Set rules
+
+Before creating a Product Set, you can check how many products would be part of a Product Set with a particular set of rules. Use this endpoint to get the number of products belonging to the Product Set and a small sample of the products.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/preview/product-sets/preview
+```
+</EndpointBadge>
+
+**Sample request**
+
+```json JSON
+{
+  "productSet": {
+    "datasetId": "782",
+    "rules": [
+      {
+          "operator": "IsIn",
+          "field": "Category1",
+          "values": [
+            "Decoration", "Home", "Furniture"
+          ]
+        },
+        {
+          "operator": "IsNotIn",
+          "field": "Category2",
+          "values": [
+            "Games", "Gastronomy"
+          ]
+        }
+    ]
+  },
+  "productSampleCount": 5
+}
+```
+
+**Sample response**
+
+```json JSON
+{
+  "data": {
+    "productCount": 3940,
+    "totalProductCount": 404202,
+    "sampleProducts": [
+      "-9063027279849067663",
+      "927588690310362953",
+      "667545005484734956",
+      "-6270815052645770065",
+      "-9213562868104252217"
+    ]
+  },
+  "warnings": []
+}
+```
+
+***
+
+## Associate a Product Set and an Ad
+
+Once a Product Set is created, it can be applied to an Ad as a filter. As a result, only products that belong to that Product Set are displayed in the Ad.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/preview/ads/{adId}/product-filter
+```
+</EndpointBadge>
+
+**`adId`**  
+Id of the Ad to that you want to link to the specified Product Set.
+
+<Info>
+  An Ad can only have  **one** Product Set assigned to it.  
+  A Product Set can be associated with zero or more Ads.
+</Info>
+
+**Sample request**
+
+```json JSON
+{
+  "data": {
+    "type": "CreateProductFilterRequest",
+    "attributes": {
+      "productSetId": product_set_id
+    }
+  }
+}
+```
+
+**Sample response**
+
+```json JSON
+{
+  "data": {
+    "type": "string",
+    "attributes": {
+      "adId": "string",
+      "productSetId": "string"
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Remove a Product Set and Ad association 
+
+<EndpointBadge method="delete">
+```http
+https://api.criteo.com/preview/ads/{adId}/product-filter
+```
+</EndpointBadge>
+
+**`adId`**  
+Id of the Ad you want to unlink from the Product Set.
+
+**Sample response**
+
+```json JSON
+{
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Retrieve Associations Between Ads and Product Sets
+
+### Retrieve Filtering Association Data for a Specific Ad
+
+Get the Product Set assigned to an Ad
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/preview/ads/{adId}/product-filter
+```
+</EndpointBadge>
+
+**`adId`**  
+Id of the ad you want to look for.
+
+**Sample response**
+
+```json JSON
+{
+  "data": {
+    "type": "string",
+    "attributes": {
+      "adId": "string",
+      "productSetId": "string"
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+### Retrieve Associations of a Specific Product Set
+
+By doing a `GET` call to this endpoint, you get the association information (ad id + product set id).
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/preview/product-sets/{productSetId}/product-filters
+```
+</EndpointBadge>
+
+**`productSetId`**  
+Id of the Product Set
+
+**Sample response**
+
+```json JSON
+{
+  "data": [
+    {
+      "type": "string",
+      "attributes": {
+        "adId": "string",
+        "productSetId": "string"
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Validation errors
+
+**`invalid-productset-request`**  
+The request contains an invalid Product Set ID  
+
+**`invalid-productset-request`**  
+Missing authorization to get Product Set for the specified Data Set, or if the Product Set does not exist.  
+
+**`JSON_FORMAT`**  
+There's a constraint not satisfied by the provided JSON. For example: “productSet.rules: The operator Between isn't compatible with the provided field"  
+
+**`REQUIRED_FIELD`**  
+The required field is missing.

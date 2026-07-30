@@ -1,0 +1,413 @@
+---
+title: Managing Budgets
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/singleseller/managing-budgets.md
+---
+
+## Overview
+
+Budget objects are the primary control surface for Single-Seller campaigns. A budget:
+
+* Creates the underlying Single-Seller campaign if one does not yet exist for a `(sellerId, templateCampaignId)` pair.
+* Defines **how much** and **when** that campaign is allowed to spend.
+* Controls pause / resume state via an `isSuspended` flag.
+
+## Budget behavior
+
+Each budget is a **capped total amount over a date range**:
+
+* No **daily** or **uncapped** budget types in Single-Seller mode.
+
+Daily pacing is **automatic**:
+
+* The system computes an average daily amount from the total budget and dates.
+* Under-delivery or over-delivery on a given day can be compensated later, as long as the budget period is active.
+
+For a given `(sellerId, templateCampaignId)`:
+
+* Budget periods **must not overlap**.
+* You can schedule **future budgets** as long as their periods do not overlap existing active budgets.
+* **Suspended budgets** do not block future budgets for the same period (they are treated as logically canceled).
+
+## Typical budget fields
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Field
+    </p>
+   </th>
+   <th>
+    <p>
+     Required
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      sellerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Marketplace seller identifier for which the budget applies
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      campaignIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     List containing the Single-Seller template campaign ID (length = 1)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      amount
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Total amount for the budget period (monetary value in your currency)
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      startDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Date when the budget becomes active
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      endDate
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Date when the budget stops allowing spend
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      budgetType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Yes
+    </p>
+   </td>
+   <td>
+    <p>
+     Must be
+     <code>
+      "Capped"
+     </code>
+     for Single-Seller
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      isSuspended
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Optional
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      true
+     </code>
+     = paused;
+     <code>
+      false
+     </code>
+     = active
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Response
+    </p>
+   </td>
+   <td>
+    <p>
+     Unique budget identifier (
+     <code>
+      budgetId
+     </code>
+     ) returned by the AP
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Workflow: Create the first budget (and campaign)
+
+This is the flow to onboard a seller onto a Single-Seller template for the first time.
+
+### Preconditions
+
+You have:
+
+* `advertiserId`
+* `templateCampaignId` (Single-Seller template campaign ID, provided by Criteo)
+* `sellerId`
+* Your account is enabled for Single-Seller.
+* You know the **minimum allowed budget per seller** for this template.
+
+### Step 1 – Construct the budget payload
+
+Endpoint:
+
+```http
+POST  https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets
+Content-Type: application/json
+```
+
+Sample request:
+
+```json JSON
+[
+{
+"campaignIds": ["456"],
+"sellerId": "123",
+"startDate": "2026-04-16",
+"endDate": "2026-04-30",
+"budgetType": "Capped",
+"amount": "1200"
+}
+]
+```
+
+**Key points:**
+
+* `campaignIds` contains exactly one ID: the Single-Seller template campaign ID.
+* `amount` must be ≥ the minimum per-seller budget communicated by Criteo, multiplied by the number of days between `startDate` and `endDate`.
+* `startDate` / `endDate` must describe a valid period (`startDate ≤ endDate`).
+
+### Step 2 – Interpret the response
+
+A successful response will return:
+
+* The new budget ID (`budgetId`).
+* Echoed fields with normalized formats (for example: truncated seconds, normalized dates).
+* An `isSuspended` value and possibly other status information.
+
+From the moment this first valid budget is accepted for a `(sellerId, templateCampaignId)` pair:
+
+* Criteo creates the corresponding Single-Seller campaign synchronously.
+* You should plan for a short asynchronous provisioning delay before impressions begin.
+
+### Step 3 – Avoid overlapping budgets
+
+When planning future periods:
+
+* Do **not** create budgets whose date ranges overlap for the same `(sellerId, templateCampaignId)`.
+
+If you need to extend or change a period:
+
+* Update the existing budget when possible (see next workflow), or
+* Suspend it and create a new, **non-overlapping** budget.
+
+## Workflow: Update an existing budget
+
+Use budget updates to adjust **amount**, **dates**, or **suspension status**.
+
+### Preconditions
+
+You have:
+
+* The `budgetId` (from creation or a previous GET).
+* A budget still within a modifiable state (see reference docs for immutable fields or cutoffs).
+
+### Example: Increase budget amount mid-flight
+
+Endpoint:
+
+```http
+PATCH  https://api.criteo.com/2026-01/marketing-solutions/marketplace-performance-outcomes/budgets
+Content-Type: application/json
+```
+
+Request body:
+
+```json JSON
+{
+"budgetId": "789",
+"amount": "2000"
+}
+```
+
+**Behavior:**
+
+* The total budget is increased (for example, `1200 → 2000`) for the overall period.
+* The pacing logic recomputes daily caps for the remaining days of the budget period.
+* The update is **idempotent**: sending the same PATCH twice with the same values results in the same final state.
+
+### Example: Extend the end date
+
+Request body:
+
+```json JSON
+{
+"budgetId": "789",
+"endDate": "2026-05-31"
+}
+```
+
+**Guidance:**
+
+* Ensure the extended period still does **not overlap** with any other active budgets for the same `(sellerId, templateCampaignId)`.
+* If the system enforces max duration or future-horizon limits, violations will be returned as 4xx errors with field-specific messages.
+
+## Retrieving and inspecting budgets
+
+### List or filter budgets
+
+```http
+GET /marketplace-performance-outcomes/budgets
+```
+
+Supported query parameters include:
+
+* `sellerId`
+* `campaignId` (template campaign ID)
+* Date filters (see API reference for exact names)
+
+### Retrieve one budget by ID
+
+```http
+GET /marketplace-performance-outcomes/budgets/{budgetId}
+```
+
+Use these endpoints to:
+
+* Synchronize your internal state with the server.
+* Debug issues (for example: confirm whether a budget is suspended, verify effective dates and amounts).
+
+## Workflow: Adjust spend mid-flight (putting it together)
+
+1. **Retrieve the current budget:**
+
+```http
+GET /marketplace-performance-outcomes/budgets?sellerId=...&campaignId=templateCampaignId
+```
+
+2. **Decide on the new amount or dates**, incorporating minimum/maximum constraints and your own business logic.
+
+3. **PATCH the budget** with the updated fields.
+
+4. **Confirm the updated state** by:
+   * Re-fetching the budget, and/or
+   * Checking campaign performance via stats endpoints.
+
+## Workflow: Pause and resume a seller (putting it together)
+
+* **Pause a seller:**
+
+```http
+PATCH /marketplace-performance-outcomes/budgets
+```
+
+* **Resume a seller:**
+
+```http
+PATCH /marketplace-performance-outcomes/budgets
+```
+
+with:
+
+```json JSON
+{
+"budgetId": "789",
+"isSuspended": false
+}
+```
+
+(This only resumes delivery if `endDate` is still in the future.)
+
+* **Cancel scheduled future budgets:**
+  * Set `isSuspended: true` on the future budget and treat it as canceled.
+  * Create a new budget for the desired future period if you need to replace it.

@@ -1,0 +1,118 @@
+---
+title: MPO Attribution
+description: How MPO attributes post-click outcomes in reporting, which metrics are affected, supported attribution windows, and same-seller vs. any-seller logic.
+---
+
+Attribution in Marketplace Performance Outcomes (MPO) determines which post-click outcomes are credited to MPO delivery in reporting. Because MPO operates in a marketplace context, attribution can also depend on whether the purchased product belongs to the same seller that received the click.
+
+## What this page covers
+
+- How MPO attributes post-click outcomes in reporting
+- Which metrics change when attribution settings change
+- The supported attribution windows
+- Same-seller vs. any-seller attribution behavior
+
+---
+
+## Default attribution behavior
+
+If no attribution window is specified in MPO reporting, the default is **PC30**: a 30-day post-click attribution window. A conversion can be attributed to an MPO click if it occurs within 30 days after that click.
+
+---
+
+## Post-click vs. last-click attribution
+
+These are two distinct models:
+
+**Post-click (PC)** — a conversion is attributed to MPO as long as the user clicked any MPO ad and the purchase happened within the attribution window. It does not matter how many other ads the user clicked in between.
+
+**Last-click** — a conversion is attributed to MPO only if an MPO ad was the very last ad clicked before the purchase. Any subsequent click on a non-MPO ad removes the attribution.
+
+MPO uses post-click attribution by default. Last-click logic appears in MPO specifically as a fallback for cross-seller attribution at the seller level: when no same-seller product click can be found for a purchased product, the sale is attributed to the last click event at campaign level.
+
+---
+
+## Attribution-sensitive vs. attribution-insensitive metrics
+
+Not every MPO metric is affected by attribution settings.
+
+**Attribution-insensitive** — these metrics describe delivery activity and do not change when attribution settings change:
+
+- `displays`
+- `impressions`
+- `clicks`
+- `CTR`
+- `cost`
+
+**Attribution-sensitive** — these metrics depend on attribution settings and can change based on the attribution window and click attribution policy:
+
+- `saleUnits`
+- `revenue`
+- `cr`
+- `cpo`
+- `cos`
+- `roas`
+
+Two reporting requests can return identical delivery metrics but different sales and efficiency metrics if they use different attribution settings.
+
+---
+
+## Attribution windows
+
+| Window | Description |
+|---|---|
+| `PC1` | 1-day post-click |
+| `PC7` | 7-day post-click |
+| `PC30` | 30-day post-click *(default)* |
+| `PC1PV1` | 1-day post-click + 1-day post-view |
+| `PC1PV7` | 1-day post-click + 7-day post-view |
+| `PC7PV1` | 7-day post-click + 1-day post-view |
+| `PC7PV7` | 7-day post-click + 7-day post-view |
+| `PC30PV1` | 30-day post-click + 1-day post-view |
+| `PC30PV7` | 30-day post-click + 7-day post-view |
+
+Use shorter windows for more conservative, recent attribution. Use longer windows for a broader view of performance over time.
+
+---
+
+## Same-seller vs. any-seller attribution
+
+In MPO, attribution can be evaluated at seller level using the `clickAttributionPolicy` parameter.
+
+### `SameSeller`
+
+A conversion is attributed only when the click and the purchased product belong to the same seller. Use this for the strictest seller-level attribution logic.
+
+**Example:** user clicks Seller A → buys from Seller A → attributed.
+
+### `AnySeller`
+
+A conversion can be attributed even if the purchased product belongs to a different seller from the one that received the click. Use this for a broader marketplace view of post-click performance.
+
+**Example:** user clicks Seller A → buys from Seller B → attributed.
+
+### `Both`
+
+Returns both same-seller and any-seller interpretations in a single request, so you can compare them directly.
+
+---
+
+## Examples
+
+| Scenario | SameSeller | AnySeller |
+|---|---|---|
+| Click Seller A → buy Seller A (within window) | Attributed | Attributed |
+| Click Seller A → buy Seller B (within window) | Not attributed | Attributed |
+| Click Seller A → buy Seller A (outside window) | Not attributed | Not attributed |
+
+---
+
+## Choosing the right settings
+
+| Goal | Recommended setting |
+|---|---|
+| Standard MPO reporting view | Default `PC30` |
+| Recent, stricter attribution | Shorter window (`PC7`, `PC1`) |
+| Seller-level accountability | `SameSeller` |
+| Broader marketplace impact | `AnySeller` |
+| Compare strict vs. broad | `Both` |
