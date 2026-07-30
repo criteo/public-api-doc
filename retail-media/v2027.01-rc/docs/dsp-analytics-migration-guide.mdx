@@ -1,0 +1,232 @@
+---
+title: Migrating from the Legacy Reporting API
+description: How to move from the legacy /reports/campaigns, /reports/line-items, and /reports/accounts endpoints (with reportType) to the unified 2026.07 DSP Analytics endpoints.
+---
+
+## Who should read this
+
+Your integration calls `POST /reports/campaigns`, `POST /reports/line-items`, or `POST /reports/accounts` — with or without a `reportType` — on a pre-2026.07 version of the Retail Media API. This guide maps every legacy call to its 2026.07 equivalent, with before/after request examples.
+
+If you're integrating against DSP Analytics for the first time, skip this page and start with the [Overview](/retail-media/v2027.01-rc/docs/demand-side-analytics-overview).
+
+## Is this urgent?
+
+Legacy endpoints keep working unchanged on **v2026.01 and earlier**. Per the [versioning policy](/retail-media/v2027.01-rc/docs/versioning-policy), each stable version is supported for 12 months after release, after which it's deprecated and later sunset (the API signals this with `Deprecation` and `Sunset` response headers before the endpoint starts returning `410 Gone`). You don't need to migrate the moment you read this — but any new build, or any plan to move onto 2026.07, should target the endpoints below.
+
+***
+
+## Endpoint mapping
+
+| Legacy call | 2026.07 endpoint |
+|---|---|
+| `POST /reports/campaigns` (any `reportType`, or flexible with `metrics`/`dimensions`) | [`POST /reports/performance`](/retail-media/v2027.01-rc/docs/performance-report), scoped by `filters.campaignIds[]` |
+| `POST /reports/line-items` (any `reportType`, or flexible) | [`POST /reports/performance`](/retail-media/v2027.01-rc/docs/performance-report), scoped by `filters.lineItemIds[]` |
+| `POST /reports/accounts` (any `reportType`, or flexible) | [`POST /reports/performance`](/retail-media/v2027.01-rc/docs/performance-report), scoped by `filters.accountIds[]` |
+| `reportType: capout` on any of the above | [`POST /reports/missed-opportunities`](/retail-media/v2027.01-rc/docs/missed-opportunities-report) |
+| `reportType: attributedTransactions` on any of the above | [`POST /reports/attributed-transactions`](/retail-media/v2027.01-rc/docs/attributed-transactions-report) |
+
+Three separate endpoints, each with its own field quirks and a `reportType` enum, become three purpose-built endpoints with one consistent request shape.
+
+***
+
+## What's different in every request
+
+Regardless of which legacy endpoint or `reportType` you're moving from, the same four changes apply:
+
+1. **Scope moves into a `filters` object.** The legacy endpoints took a top-level `id` / `ids` (or `accountIds` on the accounts endpoint). The new endpoints take exactly one of `filters.accountIds[]`, `filters.campaignIds[]`, or `filters.lineItemIds[]` — never a bare top-level ID field, and never more than one array.
+2. **`reportType` is gone.** There's no preset-shape enum anymore. You always specify `metrics[]` and `dimensions[]` explicitly — including for what used to be the `summary` / default shape.
+3. **`startDate`, `endDate`, `filters`, `metrics`, and `dimensions` are all required.** The legacy endpoints allowed some of these to be inferred from `reportType`; the new endpoints don't infer anything.
+4. **`timezone` is lowercase.** The legacy campaign and line-item endpoints used `timeZone` (capital Z); the account endpoint already used lowercase `timezone`. All 2026.07 endpoints use lowercase `timezone` consistently — if you're coming from `/reports/campaigns` or `/reports/line-items`, this field name changes even though the value format doesn't.
+
+There's no longer an account-specific date-range restriction either: every 2026.07 DSP endpoint allows a **100-day** span between `startDate` and `endDate`, whether you scope by account, campaign, or line item. (The legacy `/reports/accounts` endpoint capped account-level requests at 31 days — that cap doesn't carry over.)
+
+***
+
+## Before / after
+
+### Campaign or line-item flexible report
+
+<CodeGroup>
+```json Before — POST /reports/campaigns
+{
+  "data": {
+    "type": "RetailMediaReportRequest",
+    "attributes": {
+      "id": "8343086999167541140",
+      "metrics": ["impressions", "clicks", "spend"],
+      "dimensions": ["date"],
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-07",
+      "timeZone": "America/New_York"
+    }
+  }
+}
+```
+
+```json After — POST /reports/performance
+{
+  "data": {
+    "type": "AsyncPerformanceReport",
+    "attributes": {
+      "filters": {
+        "campaignIds": ["8343086999167541140"]
+      },
+      "metrics": ["impressions", "clicks", "spend"],
+      "dimensions": ["date"],
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-07",
+      "timezone": "America/New_York"
+    }
+  }
+}
+```
+</CodeGroup>
+
+Swap `filters.lineItemIds[]` for `filters.campaignIds[]` if you were calling `/reports/line-items`.
+
+### Account-level report
+
+<CodeGroup>
+```json Before — POST /reports/accounts
+{
+  "data": {
+    "attributes": {
+      "accountIds": ["505471171905413120"],
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-28",
+      "dimensions": ["date", "accountId"],
+      "metrics": ["impressions"],
+      "timezone": "UTC"
+    }
+  }
+}
+```
+
+```json After — POST /reports/performance
+{
+  "data": {
+    "type": "AsyncPerformanceReport",
+    "attributes": {
+      "filters": {
+        "accountIds": ["505471171905413120"]
+      },
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-28",
+      "dimensions": ["date", "accountId"],
+      "metrics": ["impressions"],
+      "timezone": "UTC"
+    }
+  }
+}
+```
+</CodeGroup>
+
+### `reportType: capout`
+
+<CodeGroup>
+```json Before — POST /reports/line-items
+{
+  "data": {
+    "attributes": {
+      "id": "987654",
+      "reportType": "capout",
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-07"
+    }
+  }
+}
+```
+
+```json After — POST /reports/missed-opportunities
+{
+  "data": {
+    "type": "AsyncMissedOpportunitiesReport",
+    "attributes": {
+      "filters": {
+        "lineItemIds": ["987654"]
+      },
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-07",
+      "dimensions": ["date", "lineItemId", "lineItemName"],
+      "metrics": ["missedTraffic", "missedSpend", "capoutHour"]
+    }
+  }
+}
+```
+</CodeGroup>
+
+Metric names change too — see [Missed Opportunities Report: migrating from `reportType: capout`](/retail-media/v2027.01-rc/docs/missed-opportunities-report#migrating-from-reporttype-capout) for the full `capoutMissed*` → `missed*` rename table.
+
+### `reportType: attributedTransactions`
+
+<CodeGroup>
+```json Before — POST /reports/campaigns
+{
+  "data": {
+    "attributes": {
+      "id": "123456",
+      "reportType": "attributedTransactions",
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-07"
+    }
+  }
+}
+```
+
+```json After — POST /reports/attributed-transactions
+{
+  "data": {
+    "type": "AsyncAttributedTransactionsReport",
+    "attributes": {
+      "filters": {
+        "campaignIds": ["123456"]
+      },
+      "startDate": "2026-05-01",
+      "endDate": "2026-05-07",
+      "dimensions": ["advertisedDate", "advertisedProductName", "purchasedProductName", "advertisedToPurchasedProductRelationship"],
+      "metrics": ["attributedSales", "attributedUnits"]
+    }
+  }
+}
+```
+</CodeGroup>
+
+Field names change too — see [Attributed Transactions Report: migrating from `reportType: attributedTransactions`](/retail-media/v2027.01-rc/docs/attributed-transactions-report#migrating-from-reporttype-attributedtransactions) for the full `adv*` → `advertised*` rename table.
+
+***
+
+## Mapping every `reportType` value
+
+| Old `reportType` (or legacy dimension) | New equivalent |
+|---|---|
+| `summary` | `POST /reports/performance` with `metrics`: `impressions`, `clicks`, `spend`, `roas`, `ctr`, `attributedSales`, `attributedUnits` |
+| `flexible` (no `reportType`, explicit `metrics`/`dimensions`) | `POST /reports/performance` — same behavior, only the endpoint path and request shape change |
+| `keyword` | Add `keyword` to `dimensions` on `/reports/performance` |
+| `pageType` | Add `pageType` to `dimensions` |
+| `productCategory` | Add `productCategory` to `dimensions` |
+| `product` | Add `productId` and `productName` to `dimensions` |
+| `servedCategory` | Add `servedCategory` to `dimensions` |
+| `environment` | Add `environment` to `dimensions` |
+| `capout` | [`POST /reports/missed-opportunities`](/retail-media/v2027.01-rc/docs/missed-opportunities-report) |
+| `attributedTransactions` | [`POST /reports/attributed-transactions`](/retail-media/v2027.01-rc/docs/attributed-transactions-report) |
+
+***
+
+## Common migration errors
+
+| Symptom | Cause |
+|---|---|
+| `400 Bad Request` on a request that used to work | Almost always a missing or extra scope filter — `filters` must contain **exactly one** of `accountIds[]` / `campaignIds[]` / `lineItemIds[]`. Passing a bare top-level `id` (the old shape) is silently invalid, not ignored. |
+| `400 Bad Request` mentioning `metrics` or `dimensions` | These are now required on every request. A call that relied on `reportType` to imply the output columns needs explicit `metrics[]` / `dimensions[]`. |
+| Data looks right but `timezone` seems ignored | Check the field name — `timeZone` (capital Z) is not recognized on the new endpoints; use `timezone`. |
+| Row-level fields renamed or missing on an attributed-transactions or capout migration | See the endpoint-specific rename tables linked above — several fields were renamed (`adv*` → `advertised*`) or moved between `metrics` and `dimensions` (`daypartingScheduled`). |
+
+***
+
+## What's next
+
+* [Overview](/retail-media/v2027.01-rc/docs/demand-side-analytics-overview)
+* [Performance Report](/retail-media/v2027.01-rc/docs/performance-report)
+* [Missed Opportunities Report](/retail-media/v2027.01-rc/docs/missed-opportunities-report)
+* [Attributed Transactions Report](/retail-media/v2027.01-rc/docs/attributed-transactions-report)
+* [Versioning Policy](/retail-media/v2027.01-rc/docs/versioning-policy)

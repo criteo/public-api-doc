@@ -1,0 +1,46 @@
+---
+title: Managing Sellers
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/singleseller/managing-sellers.md
+---
+
+### Overview
+
+In Single-Seller setups, sellers are **not created or managed through MPO**. They exist in your marketplace catalog and are discoverable through the **same MPO Sellers endpoints** used for multi-seller campaigns. This article covers how to find sellers and use their identifiers in Single-Seller workflows.
+
+### The Seller entity
+
+Each seller in your marketplace is represented by a **`sellerId`** — a unique identifier used across MPO endpoints to associate **budgets**, **campaigns**, and **statistics** with a specific seller.
+
+* Sellers are sourced from your **catalog**, not created via MPO.
+* The same `sellerId` values used in **multi-seller** campaigns apply in **Single-Seller** setups.
+
+### Discovering sellers
+
+Use the MPO Sellers endpoint to look up `sellerId` values:
+
+```http HTTP
+GET /marketplace-performance-outcomes/sellers
+```
+
+**Example — filter by seller name:**
+
+```http
+http
+GET /marketplace-performance-outcomes/sellers?sellerName=YourSellerName
+```
+
+Use the returned `sellerId` values when:
+
+* Creating or updating budgets:
+  * `POST /marketplace-performance-outcomes/budgets`
+  * `PATCH /marketplace-performance-outcomes/budgets`
+* Filtering statistics by seller.
+* Configuring `productSet`s on seller-campaigns.
+
+### Syncing your seller list
+
+For automated integrations, fetch and store seller IDs as part of your onboarding flow for each new seller:
+
+1. Call `GET /marketplace-performance-outcomes/sellers` to obtain `sellerId` values.
+2. Store them in your system alongside the corresponding `templateCampaignId`.
+3. Use the **(`sellerId`, `templateCampaignId`) pair** as the key for all subsequent **budget** and **campaign** operations.
