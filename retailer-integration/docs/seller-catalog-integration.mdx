@@ -1,0 +1,222 @@
+---
+title: Seller Catalog Integration
+---
+
+## Introduction
+
+The Seller Offer project formalizes a catalog structure to support marketplace retailers. This guide walks you through the steps required to configure your catalog to support seller offers, including SKU ID structure, Cross Seller Product IDs (CSPID), and Buy Box Winner (BBW) updates.
+
+This guide is designed API-first — agencies, advertisers, and measurement partners can use Criteo reporting raw data directly. The foundation is reusable: Social ad-level reporting will be onboarded on the same foundation in the next phase.
+
+<Warning>
+  Any update to your SKU ID structure must be validated with your Technical Solutions (TS) representative before making any changes.
+</Warning>
+
+***
+
+## Glossary
+
+| Term | Definition |
+|------|------------|
+| **Product** | The physical item being sold (e.g. one specific TV model), regardless of which seller is offering it. |
+| **Offer** | One seller's way of selling a product (seller + price + availability). |
+| **Seller** | A third-party (neither the retailer nor the 1P brand) offering products on the retailer's marketplace. |
+| **Brand SKU** | The retailer/brand's identifier for a product, not tied to any 3P marketplace seller. |
+| **Seller SKU** | The product identifier sold by a 3P entity within a marketplace. |
+| **SKU ID (`externalId`)** | The identifier the retailer sends in the feed for an orderable item. In marketplace contexts this is often a concatenation like `productId-sellerId`. |
+| **Cross Seller Product ID (CSPID)** | The product-level key shared across all offers (retailer + all sellers) for the same physical product. |
+| **Concatenation** | A pattern where the retailer builds a unique SKU ID by combining product and seller information (e.g. `productId-sellerId`). |
+| **Rotation** | A pattern where the retailer only sends the current winning offer in the feed for each product, removing losing offers altogether. |
+| **PDP (Product Detail Page)** | The retailer's product detail page, often used as a source of frequent intraday checks/updates. |
+| **Buy Box Winner (BBW)** | The offer chosen as the "winning" offer for a product at a given time — the one shoppers see by default on the product page. Indicated by the `is_buybox` flag. |
+
+***
+
+## Step 1 — Understand your current structure
+
+Before you begin, identify your existing processes and setup, as they will impact the steps you need to complete.
+
+| Scenario | Action required |
+|----------|-----------------|
+| You already use a unique SKU ID | Confirm your SKU ID structure, select a CSPID, and update processes for Buy Box Winner. |
+| You do not have seller SKUs in your account | Follow the steps below to implement a unique SKU ID structure, select a CSPID, and implement a BBW. |
+| You currently use a Rotation model | Follow the steps below to update your catalog with a per-offer SKU ID structure, select a CSPID, and update BBW processes. |
+
+**To get started:**
+
+1. Create a diagram with your TS rep for your current SKU ID structure (Parent ID → SKU ID), mapping your `SKU_ID` structure with the correct product `SKU_ID`s and any `Parent` and `Seller_ID`s.
+2. Create an example file of your current feed to share with the Criteo R&D team.
+
+***
+
+## Step 2 — Decide on your SKU ID and CSPID structures
+
+<Warning>
+  Do NOT make any adjustments to your Brand SKUs while mapping your future structure or in any of the following steps.
+</Warning>
+
+### Choose a SKU ID structure
+
+Design a unique SKU ID for each seller × product combination using one of three methods:
+
+- **Concatenation (recommended):** Combine the SKU ID with the Seller ID separated by a character (typically `-` or `_`).
+  - Example: `SKU_ID=XXX` + `Seller_ID=Seller_A` → `XXX-Seller_A`
+- **Unique SKU per seller:** Create a new SKU designation for each seller.
+  - Example: `XXX`, `YYY`, `ZZZ`
+- **Hashing:** Use a mathematical function combining the current SKU ID and Seller ID to produce a unique, consistent identifier.
+  - Example: `b21b29df0a2e2c2a`
+
+**SKU ID requirements:**
+- Maximum 50 characters
+- Case-insensitive
+- Must use ASCII characters
+- Cannot use quotation marks
+- `id`, `item_group_id`, and `seller_id` cannot match each other
+
+Refer to the [Product Feed Parameters](/retailer-integration/docs/product-feed-parameters) and [Product Feed Examples](/retailer-integration/docs/product-feed-examples) pages for approved formats and examples.
+
+### Choose a CSPID structure
+
+The CSPID must represent one physical product across all sellers. You can use:
+
+- **SKU ID** — if your current SKU ID will continue to serve as the unique product identifier even after switching to a unique Seller ID (recommended when applicable).
+- **GTIN** — already unique across products and consistent across sellers.
+- **Other** — any value that is consistent over time and represents a single product across multiple sellers.
+
+Once decided, create a sample file of your future feed to share with the Criteo R&D team.
+
+***
+
+## Step 3 — Populate a CSPID
+
+<Warning>
+  Before populating the CSPID, confirm with your TS rep that your chosen CSPID will work as expected.
+</Warning>
+
+The CSPID groups all offers for the same physical product across all sellers. It enables Buy Box Winner changes by product group and lets users search for a specific product to see all offers at once.
+
+**If you are newly introducing Seller IDs, or using a Rotation model:**
+
+Introduce a unique product identifier. You must provide one CSPID per unique product across all sellers, reusing an existing, well-understood product identifier where possible.
+
+**If your catalog already uses a concatenated SKU ID (`productId-sellerId`):**
+
+1. Populate `cross_seller_product_id` using one CSPID per physical product across all sellers.
+   - Example: `cross_sellers_product_id = XXX` for all offers around `XXX-*`, and `cross_sellers_product_id = YYY` for all offers around `YYY-*`.
+2. The concatenated SKUs remain the ingestion key per offer (e.g. `XXX-seller_A`, `XXX-seller_B`), while the CSPID becomes the stable product-level grouping key used for Buy Box Winner and search.
+
+**Example feed structure with CSPID:**
+
+```xml
+<feed>
+  <product>
+    <id>12345-123seller</id>
+    <cross_sellers_product_id>12345</cross_sellers_product_id>
+    <is_buybox>true</is_buybox>
+    <title>Red Men's T-Shirt Size L</title>
+    <seller_id>123seller</seller_id>
+    <seller_name>Top Fashion</seller_name>
+    <availability>In Stock</availability>
+    <!-- other required feed fields -->
+  </product>
+</feed>
+```
+
+***
+
+## Step 4 — Make necessary catalog changes
+
+<Warning>
+  Do NOT make any changes to Brand SKUs. All catalog changes must be reviewed and approved by your TS rep before deployment.
+</Warning>
+
+| Scenario | Action |
+|----------|--------|
+| Your existing SKU ID structure does not need changes | No catalog changes needed — confirm with your TS rep and move to Step 5. |
+| You do not have seller SKUs in your catalog | Add Seller SKUs using the unique SKU ID structure decided with your TS rep. |
+| You are updating your existing SKU ID model (Rotation → Concatenation) | Deploy updates to your catalog with the new SKU ID and CSPID. |
+
+**Required feed tags for seller offers:**
+
+- `seller_id`
+- `sellername`
+- `is_marketplace`
+- `is_buybox`
+
+**Impact to accounts after Criteo-led migration:**
+
+- SKUs in the previous format will be removed from the product feed and marked as "out of stock" in line-item reports.
+- Direct sold Seller SKUs will be switched to the appropriate unique Seller SKUs — users will see 2 rows for the same product in the UI for up to 30 days. Data will not be duplicated or impacted.
+- A message will be added directly in the UI to explain the temporary duplicate view.
+
+**Impact to attribution:**
+
+- Attribution metrics will be saved on the old SKU — the updated SKU will show no data until it begins serving.
+- Criteo estimates roughly 20% loss of Attribution data for approximately 3 days from the start of migration. Once the new SKU begins serving, no further interruption to Attribution metrics is expected.
+
+***
+
+## Step 5 — Deploy SKU ID updates elsewhere in your account
+
+Complete this step alongside or immediately after Step 4 to ensure accurate attribution metrics.
+
+Wherever you share the SKU ID must be updated to use the new structure, including the **Order Confirmation Page** and **Universal Beacons** (when in use). The SKU ID value in the catalog feed must match the value used in Ad Requests, Beacons, and all Sales/Attribution events.
+
+**Example — Concatenated SKU IDs (`productID-sellerID`):**
+
+```
+https://d.us.criteo.com/delivery/retailmedia?criteo-partner-id=108747&event-type=trackTransaction&page-id=trackTransaction&retailer-visitor-id=visitorid1&item=XXX-Seller_A&price=1&quantity=1&transaction-id=order123
+```
+
+**Example — Unique SKU ID per seller:**
+
+```
+https://d.us.criteo.com/delivery/retailmedia?criteo-partner-id=108747&event-type=trackTransaction&page-id=trackTransaction&retailer-visitor-id=visitorid1&item=XXX&price=1&quantity=1&transaction-id=order123
+```
+
+***
+
+## Step 6 — Implement or update Buy Box Winner
+
+<Note>
+  Using the API endpoint to share Buy Box Winner updates is strongly recommended for the best experience.
+</Note>
+
+Now that you are using a CSPID, the Buy Box Loser is inferred automatically — there is no need to send information for both winners and losers. Your full feed update will still contain both winners and losers so sellers can add products to a campaign regardless of Buy Box status.
+
+### Add BBW to your catalog feed
+
+Send `is_buybox` in the feed for seller offers. This tag tells Criteo the initial winner per CSPID group.
+
+| Value | Meaning |
+|-------|---------|
+| `true` | This offer is the Buy Box winner among all offers with the same CSPID. |
+| `false` | This offer competes in BBW but is not the winner. |
+| empty/absent | This offer shares the same CSPID but does not participate in BBW (e.g. a retailer/brand offer that should never be the marketplace loser). |
+
+### Send winner-only BBW data via the API
+
+To set the winner per product using the API, call `SetBuyBoxWinners` with the new SKU ID structure. The request body specifies the Offer ID of the current Buy Box winner. A maximum of 5,000 Buy Box winners can be updated simultaneously.
+
+```
+POST /preview/retail-media/retailers/{retailer-id}/products/set-buy-box-winners
+```
+
+```json
+{
+  "data": {
+    "type": "SetProductBuyBoxWinnersRequest",
+    "attributes": {
+      "productBuyBoxWinners": [
+        {
+          "offerId": "100"
+        }
+      ]
+    }
+  }
+}
+```
+
+<Note>
+  The API does not replace the `is_buybox` column in your catalog feed for existing PDP intraday updates (i.e. shopper visits). Both mechanisms work in tandem.
+</Note>
