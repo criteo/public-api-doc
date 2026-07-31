@@ -8,50 +8,93 @@ description: "Configure your Criteo App campaign for App Install or App Retarget
 This page will guide you in setting up your Criteo App campaign(s) with Singular, either App Install or App Retargeting campaigns.
 
 ## Singular Dashboard Configuration
+<Note>
+  Keep in mind that the following settings are Criteo's recommendations but the ultimate goal is to match the options you want to take into account for your setup!
+</Note>
 
 ### Adding Criteo in Partner Configuration
 
 To add Criteo as a partner on Singular's dashboard:
 
 1. Login to Singular Dashboard
-2. Under **Attribution** in the side bar, select **Partner Configuration**
-3. Search for "_Criteo_" into the text field at the top right:
+2. Under **Attribution Setup** in the side bar, select **Partner Configuration**
+3. Search for "_Criteo_" into the text field at the top right
+4. Select your app that you want to connect to our campaigns
+5. You should see the Criteo partner set up now
 
 <Frame>
   ![Image](/images/mobile-integrations/singular/singular_partner_configuration_search.png "Image")
 </Frame>
 
-4. Select your app that you want to connect to our campaigns
 
-### Configuring Event Postbacks
+### Attribution Postbacks
 
-Firstly, set the configuration at the app-level:
+Firstly, set the configuration at the app-level, for both **Install** and **Re-engagement** events:
 
-- **Enable Re-engagement Postbacks** set **ON**
-  - This is mandatory in case you want to run App Retargeting campaigns
-- **Send View-Through Postbacks** set **ON**
-- **Send all install postbacks to Criteo regardless of attribution partner** set **ON**
-  - This will allow Criteo to identify users who already installed the app, either organically or through other channels, to exclude them from our Install campaigns automatically
-- **Click-through attribution lookback window** set with the default **7d** window (recommended)
-
-{/*  follow the setup as shown in the below image, the postbacks URL can be left as the default one:  */}
+- **Send View Through**: ON
+- **Send All**: ON
+  - Sends postbacks for all users, to allow us to receive all postbacks and identify your existing app audience appropriately.
+- **Send Fraud Postbacks**: ON
+  - Includes postbacks for events flagged as fraudulent, for troubleshooting.
 
 <Frame>
   ![Image](/images/mobile-integrations/singular/singular_app_settings_postbacks.png "Image")
 </Frame>
 
-In case you have the options for Install and Re-engagement Postback setups visible, set both as below:
-
-1. Tracker Campaign Name Filter empty, to allow us to receive all installs/re-engagements independently of the campaign attributed to
+Expand the **Postback URL customization and filters** option for both **Install** and **Re-engagement** events:
+1. Leave the **Tracker Campaign Name Filter** empty, to allow us to receive all installs/re-engagements independently of the campaign attributed to
 2. **Postback URL** can be left with the default postback template (unless your Criteo technical contact says otherwise)
-3. **Send View-Through Postbacks** enabled, to measure post-view installs/re-engagements
-4. **Send All** enabled, to allow us to receive all postbacks and identify your existing app audience appropriately
 
 <Frame>
-  ![Image](/images/mobile-integrations/singular/singular_install_reengagement_postback.png "Image")
+  ![Image](/images/mobile-integrations/singular/singular_install_postback_advanced_settings.png "Image")
 </Frame>
 
-Next, the following section lets you choose which conversion postbacks (callbacks) you want to send to Criteo about this app.
+<Frame>
+  ![Image](/images/mobile-integrations/singular/singular_reengagement_postback_advanced_settings.png "Image")
+</Frame>
+
+### Attribution Windows Setup
+
+<Note>
+  Setting up Impression based attribution is optional and should be enabled only if taken into account.
+</Note>
+<Warning>
+  The attribution windows below are **recommendations** to be aligned with our standard campaigns setup. If you still prefer to use different windows, please inform your Criteo contact about your attribution model.
+</Warning>
+
+In order to minimize discrepancies between Criteo and Singular dashboards, we recommend using the following attribution settings:
+
+- Expand the **Installs** section:
+  - Click-through deterministic install window: **7 days**
+  - Click-through probabilistic install window: **24 hours**
+  - View-through deterministic install window: **0(off)**
+  - View-through probabilistic install window: **0(off)**
+
+<Frame>
+  ![Image](/images/mobile-integrations/singular/singular_install_attribution_sliders.png "Image")
+</Frame>
+
+- Expand the **Re-engagements** section:
+  - Click-through deterministic re-engagement window: **30 days**
+  - Click-through probabilistic re-engagement window: **168 hours**
+  - View-through deterministic re-engagement window: **0(off)**
+  - View-through probabilistic re-engagement window: **0(off)**
+  - Re-engagement Inactivity Window: reduced to **1 days**
+
+<Warning>
+  If **Re-engagement Inactivity Window** is **greater than 1 days**, please inform your Criteo contact about the inactivity window used so our campaigns are configured to not retarget users within this window, which would directly affect our results (mostly in terms of CPA and/or ROAS/COS).
+</Warning>
+
+<Frame>
+  ![Image](/images/mobile-integrations/singular/singular_reengagement_attribution_sliders.png "Image")
+</Frame>
+
+
+
+For more info, access Singular's Help Center article [Attribution Logic & Settings](https://support.singular.net/hc/en-us/articles/13000445013531#links_attribution_settings).
+
+### In-app Events Postbacks
+Next, the following section **In app Events Postback** lets you choose which events postbacks (callbacks) you want to send to Criteo about this app.
 
 <Tip>
   Here, it's very important that you enable all event postbacks relevant to the user's journey in your app, for our Retargeting campaigns or Installs (for post-install actions measurement).
@@ -59,15 +102,15 @@ Next, the following section lets you choose which conversion postbacks (callback
 
 For each of those events, please leave:
 
-- **Lookback** as **None**, so Criteo receives all event postbacks independently of the install time
+- Tick **Send All** in order to send postback for all events triggered in your app, regardless of attributed source
+- **Lookback** as **Unlimited**, so Criteo receives all event postbacks independently of the attribution/install time
   - This is strongly recommended for Retargeting campaigns
-- **Include Revenue Value** enabled, in order to forward revenue data to Criteo and allow us to measure ROAS/COS (enabling the possibility to optimize towards those metrics)
+- **Include Revenue** enabled, in order to forward revenue data to Criteo and allow us to measure ROAS/COS (enabling the possibility to optimize towards those metrics)
 
 <Frame>
   ![Image](/images/mobile-integrations/singular/singular_event_postback_settings.png "Image")
 </Frame>
 
-All settings under _Edit Postback_ should follow the settings of Install & Re-engagement postbacks above to avoid discrepancies across event types.
 
 ## Tracking in Singular
 
@@ -77,70 +120,40 @@ To create it:
 
 1. Navigate to section **Attribution** -\> **Manage Link**
 2. In case of multiple apps, select the correct one and hit **Create Link**
-3. Select **Link Type** = **Partner** from the dropdown
-4. Select **Source Name** = **Criteo** from the list of partners
-
-<div style={{ width: "67%", margin: "0 auto" }}>
-  <Frame>
-    ![Image](/images/mobile-integrations/singular/singular_create_link_source.png "Image")
-  </Frame>
-</div>
-
+3. Select **Partner** from the **Link Type**  dropdown
+4. Select **Criteo** from the **Source Name** dropdown
 5. Choose an arbitrary Tracking Link Name
-6. Choose the desired OS to track with this link
-   - Criteo requires one Singular Link per OS
-7. In the option "_If the app is not installed go to:_", choose the expected location the user should land in those cases (usually, Google Play / App Store)
-8. For the option "_If the app is already installed, go to:_", you can leave it empty for most cases, as Criteo will configure the dynamic redirection through deeplinks in the catalog (see [Products catalog for Dynamic campaigns](#products-catalog-for-dynamic-campaigns))
-
-Before generating the link, especially if you intend to run App Retargeting campaigns, make sure to turn **ON** the option **Enable re-engagement tracking** (under **Attribution Settings**):
-
-<div style={{ width: "65%", margin: "0 auto" }}>
-  <Frame>
-    ![Image](/images/mobile-integrations/singular/singular_enable_reengagement_tracking.png "Image")
-  </Frame>
-</div>
-
-Finally, click to **Generate** the tracking links and forward them to your Criteo contact.
-
-<div style={{ width: "67%", margin: "0 auto" }}>
-  <Frame>
-    ![Image](/images/mobile-integrations/singular/singular_generate_tracking_links.png "Image")
-  </Frame>
-</div>
-
-## Attribution Windows Setup
-
-In order to minimize discrepancies between Criteo and Singular dashboards, we recommend using the following attribution settings:
-
-- In **Attribution** \> **Manage Links** and under the **Attribution Settings** of the Tracking Link recently created:
-  - Click-through deterministic install window: **7 days**
-  - Click-through probabilistic install window: **24 hours**
-  - View-through deterministic install window: **24 hours**
-  - View-through probabilistic install window: **24 hours**
-  - Click-through deterministic re-engagement window: **30 days**
-
-<div style={{ width: "74%", margin: "0 auto" }}>
-  <Frame>
-    ![Image](/images/mobile-integrations/singular/singular_attribution_windows.png "Image")
-  </Frame>
-</div>
-
-<Warning>
-  The attribution windows above are **recommendations** to be aligned with our standard campaigns setup. If you still prefer to use different windows, please inform your Criteo contact about your attribution model.
-</Warning>
-
-- In **Settings** \> **Apps**, under **Show Advanced Settings** of the respective app:
-  - Re-engagement Inactivity Window: reduced to **0 days** (recommended)
 
 <Frame>
-  ![Image](/images/mobile-integrations/singular/singular_reengagement_inactivity_window.png "Image")
+  ![Image](/images/mobile-integrations/singular/singular_link_creation_overview.png "Image")
 </Frame>
 
-<Warning>
-  If **greater than 0 days**, please inform your Criteo contact about the inactivity window used so our campaigns are configured to not retarget users within this window, which would directly affect our results (mostly in terms of CPA and/or ROAS/COS).
-</Warning>
+6. Expand the **Link Settings and Redirects** section
+   - Set the Link Sub-Domain and Site from the dropdowns. [More info](https://support.singular.net/hc/en-us/articles/13000445013531-How-to-Build-Tracking-Links)
+   - Choose the desired OS to track with this link
+     - Criteo requires one Singular Link per OS
+   - In the option **If the app is not installed go to:**, choose the expected location the user should land in those cases (usually, Google Play / App Store)
+   - For the option **If the app is already installed, go to:**, you can leave it empty for most cases, as Criteo will configure the dynamic redirection through deeplinks in the catalog (see [Products catalog for Dynamic campaigns](#products-catalog-for-dynamic-campaigns))
+   - Set the **Fallback Destination for Other Platforms**
 
-For more info, access Singular's Help Center article [Attribution Logic & Settings](https://support.singular.net/hc/en-us/articles/13000445013531#links_attribution_settings).
+<Frame>
+  ![Image](/images/mobile-integrations/singular/singular_link_settings_redirects.png "Image")
+</Frame>
+
+7. Expand the **Attribution Settings** section
+   - Before generating the link, especially if you intend to run App Retargeting campaigns, make sure to turn **ON** the option **Enable re-engagement tracking**
+   - Keep the **Override attribution windows** toggle disabled - because we want to use the partner level configuration settings
+
+<Frame>
+  ![Image](/images/mobile-integrations/singular/singular_attribution_settings_windows.png "Image")
+</Frame>
+
+8. Expand the **Link Summary** section
+   - Forward the links to your Criteo contact
+
+<Frame>
+  ![Image](/images/mobile-integrations/singular/singular_link_summary_tracking_links.png "Image")
+</Frame>
 
 ## Singular Data Connector
 
