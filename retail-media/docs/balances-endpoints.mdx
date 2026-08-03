@@ -1471,8 +1471,8 @@ curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/18446744
                 "attributes": {
                     "name": "Balance 2025 Q1",
                     "startDate": "2025-01-01",
-                    "spendType": "Onsite",
-                    "poNumber": null,
+                    "spendType": "onsite",
+                    "retailerPoNumber": null,
                     "deposited": 12500.00,
                     "endDate": "",
                     "memo": "Balance for campaigns in 2025 Q1"
@@ -1492,8 +1492,8 @@ payload = json.dumps({
         "attributes": {
             "name": "Balance 2025 Q1",
             "startDate": "2025-01-01",
-            "spendType": "Onsite",
-            "poNumber": None,
+            "spendType": "onsite",
+            "retailerPoNumber": None,
             "deposited": 12500.00,
             "endDate": "",
             "memo": "Balance for campaigns in 2025 Q1"
@@ -1517,7 +1517,7 @@ OkHttpClient client = new OkHttpClient().newBuilder()
 
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"name\":\"Balance 2025 Q1\",\"startDate\":\"2025-01-01\",\"spendType\":\"Onsite\",\"poNumber\": null,\"deposited\": 12500.00,\"endDate\":\"\",\"memo\":\"Balance for campaigns in 2025 Q1\"}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"name\":\"Balance 2025 Q1\",\"startDate\":\"2025-01-01\",\"spendType\":\"onsite\",\"retailerPoNumber\":null,\"deposited\":12500.00,\"endDate\":\"\",\"memo\":\"Balance for campaigns in 2025 Q1\"}}}");
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances")
@@ -1544,7 +1544,7 @@ $request->setHeader(array(
     'Accept' => 'application/json',
     'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
-$request->setBody('{"data":{"attributes":{"name":"Balance 2025 Q1","startDate":"2025-01-01","spendType":"Onsite","poNumber":null,"deposited":12500.00,"endDate":"","memo":"Balance for campaigns in 2025 Q1"}}');
+$request->setBody('{"data":{"attributes":{"name":"Balance 2025 Q1","startDate":"2025-01-01","spendType":"onsite","retailerPoNumber":null,"deposited":12500.00,"endDate":"","memo":"Balance for campaigns in 2025 Q1"}}}');
 try{
     $response = $request->send();
     if ($response->getStatus() == 200) {
@@ -1567,11 +1567,12 @@ catch(HTTP_Request2_Exception $e) {
 ```json
 {
     "id": "697385288434028544",
-    "type": "BalanceResponseV2",
+    "type": "BalanceV1",
     "data": {
         "attributes": {
             "name": "Balance 2025 Q1",
-            "poNumber": null,
+            "retailerPoNumber": null,
+            "criteoPoNumber": null,
             "memo": "Balance for campaigns in 2025 Q1",
             "deposited": 12500.00,
             "spent": 0.00,
@@ -1582,7 +1583,7 @@ catch(HTTP_Request2_Exception $e) {
             "createdAt": "2025-04-08T10:00:09+00:00",
             "updatedAt": "2025-04-08T10:00:09+00:00",
             "balanceType": "capped",
-            "spendType": "Onsite",
+            "spendType": "onsite",
             "privateMarketBillingType": "billByRetailer"
         }
     },
@@ -1595,7 +1596,7 @@ catch(HTTP_Request2_Exception $e) {
 
 ## Modify Balance Metadata
 
-This endpoint modifies the metadata of a specified balance, like `name`, `poNumber`, `startDate` or `endDate`. To modify deposited funds, check the following endpoint.
+This endpoint modifies the metadata of a specified balance, like `name`, `retailerPoNumber`, `startDate` or `endDate`. To modify deposited funds, check the following endpoint.
 
 <Warning>
   Only Balances created through the API can be modified through this endpoint, i.e., with billing type `billByRetailer`.  
@@ -1622,8 +1623,8 @@ curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/1844674
             "data": {
                 "attributes": {
                     "startDate": "2025-01-01",
-                    "endDate": "2025-04-01",
-                    "poNumber": "PO 12345",
+                    "endDate": {"value": "2025-04-01"},
+                    "retailerPoNumber": "PO 12345",
                     "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
                 }
             }
@@ -1640,8 +1641,8 @@ payload = json.dumps({
     "data": {
         "attributes": {
             "startDate": "2025-01-01",
-            "endDate": "2025-04-01",
-            "poNumber": "PO 12345",
+            "endDate": {"value": "2025-04-01"},
+            "retailerPoNumber": "PO 12345",
             "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
         }
     }
@@ -1663,7 +1664,7 @@ OkHttpClient client = new OkHttpClient().newBuilder()
 
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"startDate\":\"2025-01-01\",\"endDate\":\"2025-04-01\",\"poNumber\":\"PO 12345\",\"memo\":\"Balance for campaigns in 2025 Q1 (with start and end date)\"}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"startDate\":\"2025-01-01\",\"endDate\":{\"value\":\"2025-04-01\"},\"retailerPoNumber\":\"PO 12345\",\"memo\":\"Balance for campaigns in 2025 Q1 (with start and end date)\"}}}");
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544")
@@ -1690,7 +1691,7 @@ $request->setHeader(array(
     'Accept' => 'application/json',
     'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
-$request->setBody('{"data":{"attributes":{"startDate":"2025-01-01","endDate":"2025-04-01","poNumber":"PO 12345","memo":"Balance for campaigns in 2025 Q1 (with start and end date)"}}}');
+$request->setBody('{"data":{"attributes":{"startDate":"2025-01-01","endDate":{"value":"2025-04-01"},"retailerPoNumber":"PO 12345","memo":"Balance for campaigns in 2025 Q1 (with start and end date)"}}}');
 try{
     $response = $request->send();
     if ($response->getStatus() == 200) {
@@ -1713,24 +1714,23 @@ catch(HTTP_Request2_Exception $e) {
 ```json
 {
     "id": "697385288434028544",
-    "type": "BalanceResponseV2",
-    "data": {
-        "attributes": {
-            "name": "Balance 2025 Q1",
-            "poNumber": "PO 12345",
-            "memo": "Balance for campaigns in 2025 Q1 (with start and end date)",
-            "deposited": 12500.00,
-            "spent": 0.00,
-            "remaining": 12500.00,
-            "startDate": "2025-01-01",
-            "endDate": "2025-04-01",
-            "status": "active",
-            "createdAt": "2025-04-08T10:00:09+00:00",
-            "updatedAt": "2025-04-08T10:00:09+00:00",
-            "balanceType": "capped",
-            "spendType": "Onsite",
-            "privateMarketBillingType": "billByRetailer"
-        }
+    "type": "BalanceV1",
+    "attributes": {
+        "name": "Balance 2025 Q1",
+        "retailerPoNumber": "PO 12345",
+        "criteoPoNumber": null,
+        "memo": "Balance for campaigns in 2025 Q1 (with start and end date)",
+        "deposited": 12500.00,
+        "spent": 0.00,
+        "remaining": 12500.00,
+        "startDate": "2025-01-01",
+        "endDate": "2025-04-01",
+        "status": "active",
+        "createdAt": "2025-04-08T10:00:09+00:00",
+        "updatedAt": "2025-04-08T10:00:09+00:00",
+        "balanceType": "capped",
+        "spendType": "onsite",
+        "privateMarketBillingType": "billByRetailer"
     },
     "warnings": [],
     "errors": []
@@ -1748,7 +1748,7 @@ This endpoint allows adding or removing funds deposited in a specific balance.
 </Info>
 
 <Warning>
-  This endpoint only accepts `deltaAmount`, `poNumber`, and `memo`. Any other parameters (e.g. `endDate`) are silently ignored — no error is returned, but the value is not applied.
+  This endpoint only accepts `deltaAmount`, `retailerPoNumber`, and `memo`. Any other parameters (e.g. `endDate`) are silently ignored — no error is returned, but the value is not applied.
 </Warning>
 
 <EndpointBadge method="post">
@@ -1819,7 +1819,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
    <td>
     <p>
      <code>
-      poNumber
+      retailerPoNumber
      </code>
     </p>
    </td>
@@ -1832,7 +1832,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
    </td>
    <td>
     <p>
-     New purchase order number
+     New retailer purchase order number
     </p>
     <p>
      Accepted values: up to 32-char strings
@@ -1887,7 +1887,7 @@ curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/1844674
             "data": {
                 "attributes": {
                     "deltaAmount": -2500.00,
-                    "poNumber": "PO 12346",
+                    "retailerPoNumber": "PO 12346",
                     "memo": "Reduced balance for campaigns in 2025 Q1"
                 }
             }
@@ -1904,7 +1904,7 @@ payload = json.dumps({
     "data": {
         "attributes": {
             "deltaAmount": -2500.00,
-            "poNumber": "PO 12346",
+            "retailerPoNumber": "PO 12346",
             "memo": "Reduced balance for campaigns in 2025 Q1"
         }
     }
@@ -1927,7 +1927,7 @@ OkHttpClient client = new OkHttpClient().newBuilder()
 
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"deltaAmount\": -2500.00,\"poNumber\":\"PO 12346",\"memo":\"Reduced balance for campaigns in 2025 Q1\"}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"deltaAmount\": -2500.00,\"retailerPoNumber\":\"PO 12346\",\"memo\":\"Reduced balance for campaigns in 2025 Q1\"}}}");
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds")
@@ -1954,7 +1954,7 @@ $request->setHeader(array(
     'Accept' => 'application/json',
     'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
-$request->setBody('{"data":{"attributes":{"deltaAmount":-2500.00,"poNumber":"PO 12346","memo":"Reduced balance for campaigns in 2025 Q1"}}}');
+$request->setBody('{"data":{"attributes":{"deltaAmount":-2500.00,"retailerPoNumber":"PO 12346","memo":"Reduced balance for campaigns in 2025 Q1"}}}');
 try{
     $response = $request->send();
     if ($response->getStatus() == 200) {
@@ -1976,24 +1976,23 @@ catch(HTTP_Request2_Exception $e) {
 ```json
 {
     "id": "697385288434028544",
-    "type": "BalanceResponseV2",
-    "data": {
-        "attributes": {
-            "name": "Balance 2025 Q1",
-            "poNumber": "PO 12346",
-            "memo": "Reduced balance for campaigns in 2025 Q1",
-            "deposited": 10000.00,
-            "spent": 0.00,
-            "remaining": 10000.00,
-            "startDate": "2025-01-01",
-            "endDate": "2025-04-01",
-            "status": "active",
-            "createdAt": "2025-04-08T10:00:09+00:00",
-            "updatedAt": "2025-04-08T10:00:09+00:00",
-            "balanceType": "capped",
-            "spendType": "Onsite",
-            "privateMarketBillingType": "billByRetailer"
-        }
+    "type": "BalanceV1",
+    "attributes": {
+        "name": "Balance 2025 Q1",
+        "retailerPoNumber": "PO 12346",
+        "criteoPoNumber": null,
+        "memo": "Reduced balance for campaigns in 2025 Q1",
+        "deposited": 10000.00,
+        "spent": 0.00,
+        "remaining": 10000.00,
+        "startDate": "2025-01-01",
+        "endDate": "2025-04-01",
+        "status": "active",
+        "createdAt": "2025-04-08T10:00:09+00:00",
+        "updatedAt": "2025-04-08T10:00:09+00:00",
+        "balanceType": "capped",
+        "spendType": "onsite",
+        "privateMarketBillingType": "billByRetailer"
     },
     "warnings": [],
     "errors": []
@@ -2160,12 +2159,9 @@ catch(HTTP_Request2_Exception $e) {
         }
     ],
     "metadata": {
-        "totalItemsAcrossAllPages": 2,
-        "currentPageSize": 25,
-        "currentPageIndex": 0,
-        "totalPages": 1,
-        "nextPage": null,
-        "previousPage": null
+        "count": 2,
+        "offset": 0,
+        "limit": 25
     }
 }
 ```
