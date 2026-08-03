@@ -1,0 +1,236 @@
+---
+title: Ad-Level Report
+---
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Introduction
+
+The Ad-Level Report gives advertisers and commercial teams granular visibility into OpenAI creative and context performance at the ad level — understanding which products, contexts, and creative messages are working best.
+
+This endpoint is designed API-first: agencies, advertisers, and measurement partners can consume Criteo reporting raw data directly. It is built as a reusable service — other ad-level reporting will be onboarded onto the same foundation in the next phase.
+
+<Info>
+  **OpenAI campaigns only (for now)**
+
+  This endpoint currently returns OpenAI-sourced data only (`mediaChannel: "AI Platform"`, `platform: "OpenAI"` on every row). Other media channels will be onboarded without a breaking change — always filter or branch on `mediaChannel`/`platform` rather than assuming OpenAI-only. Requests are capped at 5 `advertiserIds` and 100,000 result rows per call.
+</Info>
+
+**Prerequisites:**
+- OAuth 2.0 Bearer token with scope `MarketingSolutions_Analytics_Read`
+- The caller's app must have consent for every `advertiserId` requested
+
+***
+
+## Endpoints Overview
+
+| Verb | Endpoint | Description |
+| :--- | :--- | :--- |
+| **POST** | `/marketing-solutions/statistics-adlevel/report` | Report on ad-level delivery and performance for OpenAI creative campaigns, broken down by dimensions such as ad set, ad group/context, product, or individual ad |
+
+***
+
+## Request Attributes
+
+Resource type: `AdLevelReportQuery`
+
+| Field | Type | Required | Notes |
+| :---- | :--- | :------- | :---- |
+| `advertiserIds` | array[string] | **Yes** — 1 to 5 | Numeric advertiser IDs. More than 5 → `400 too-many-advertiser-ids`. Any non-numeric ID → `400 advertiser-is-not-int`. |
+| `adsetIds` | array[string] | No | Restricts results to specific ad sets. Also satisfies the ad-set-scope requirement — required (or `AdsetId` must be in `dimensions`) whenever `dimensions` includes `AdGroupName`, `ProductId`, or `AdId`. |
+| `startDate` / `endDate` | string (`YYYY-MM-DD`) | **Yes** | Inclusive date range. `startDate` after `endDate` → `400 invalid-date-range`. |
+| `timezone` | string | No — defaults to `UTC` | IANA timezone name (e.g. `Europe/Paris`). Invalid zone → `400 invalid-timezone`. |
+| `format` | string | No — defaults to `json` | `json` or `csv`. Anything else → `400 unsupported-file-format`. |
+| `dimensions` | array[string] | **Yes** — 1 or more | Breakdown columns — see **Dimensions** table below. |
+| `metrics` | array[string] | **Yes** — 1 or more | Metric columns to return — see **Metrics** table below. Requesting a metric without its required dimension → `400 metric-requires-dimension`. |
+
+**Dimensions**
+
+| Dimension | Description |
+| :-------- | :---------- |
+| `AdvertiserId` | Advertiser ID |
+| `AdvertiserName` | Advertiser display name |
+| `AdsetId` | Ad set ID |
+| `AdsetName` | Ad set display name |
+| `MediaChannel` | Media channel of the row (currently always `"AI Platform"`) |
+| `Platform` | Platform of the row (currently always `"OpenAI"`) |
+| `AdGroupName` | Product/semantic cluster name (falls back to `"Unclustered"` when unmatched). *Requires `adsetIds` filter or `AdsetId` in `dimensions`.* |
+| `ProductId` | Product ID. *Requires `adsetIds` filter or `AdsetId` in `dimensions`.* |
+| `AdId` | Individual ad ID. *Requires `adsetIds` filter or `AdsetId` in `dimensions`.* |
+
+**Metrics**
+
+| Metric | Requires dimension | Description |
+| :----- | :----------------- | :---------- |
+| `Impressions` | — | Sum of impressions |
+| `Clicks` | — | Sum of clicks |
+| `Spend` | — | Sum of spend, returned as `{ "value": <number>, "currency": "<code>" }` — currency is the advertiser's OpenAI account currency, not converted |
+| `Ctr` | — | Clicks / Impressions |
+| `Cpc` | — | Spend / Clicks |
+| `Cpm` | — | Spend / Impressions × 1000 |
+| `AdGroupContextHint` | `AdGroupName` | Short descriptive context hint for the matched ad group/cluster; `null` when unmatched |
+| `AdGroupDescription` | `AdGroupName` | Longer descriptive text for the matched ad group/cluster; `null` when unmatched |
+| `ProductName` | `ProductId` | Product display name |
+| `AdTitle` | `AdId` | The ad's title text |
+| `AdCopy` | `AdId` | The ad's body copy text |
+
+***
+
+## Ad-Level Report
+
+Returns ad-level delivery and performance metrics for OpenAI creative campaigns, aggregated by the requested `dimensions` over the requested date range.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/2027-01/marketing-solutions/statistics-adlevel/report
+```
+</EndpointBadge>
+
+**Sample request**
+
+```curl
+curl -s -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.criteo.com/2027-01/marketing-solutions/statistics-adlevel/report" \
+  -d '{
+    "data": {
+      "type": "AdLevelReportQuery",
+      "attributes": {
+        "advertiserIds": ["122530"],
+        "adsetIds": ["708590"],
+        "startDate": "2026-07-14",
+        "endDate": "2026-07-22",
+        "timezone": "UTC",
+        "format": "json",
+        "dimensions": ["AdGroupName", "ProductId"],
+        "metrics": ["Impressions", "Clicks", "Spend", "Ctr"]
+      }
+    }
+  }'
+```
+```python
+import requests
+
+response = requests.post(
+    "https://api.criteo.com/2027-01/marketing-solutions/statistics-adlevel/report",
+    headers={
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "data": {
+            "type": "AdLevelReportQuery",
+            "attributes": {
+                "advertiserIds": ["122530"],
+                "adsetIds": ["708590"],
+                "startDate": "2026-07-14",
+                "endDate": "2026-07-22",
+                "timezone": "UTC",
+                "format": "json",
+                "dimensions": ["AdGroupName", "ProductId"],
+                "metrics": ["Impressions", "Clicks", "Spend", "Ctr"],
+            },
+        }
+    },
+)
+print(response.json())
+```
+```java
+OkHttpClient client = new OkHttpClient().newBuilder().build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"AdLevelReportQuery\",\"attributes\":{\"advertiserIds\":[\"122530\"],\"adsetIds\":[\"708590\"],\"startDate\":\"2026-07-14\",\"endDate\":\"2026-07-22\",\"timezone\":\"UTC\",\"format\":\"json\",\"dimensions\":[\"AdGroupName\",\"ProductId\"],\"metrics\":[\"Impressions\",\"Clicks\",\"Spend\",\"Ctr\"]}}}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/2027-01/marketing-solutions/statistics-adlevel/report")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Authorization", "Bearer <TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+```php
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/2027-01/marketing-solutions/statistics-adlevel/report');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array('follow_redirects' => TRUE));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Authorization' => 'Bearer <TOKEN>'
+));
+$request->setBody('{"data":{"type":"AdLevelReportQuery","attributes":{"advertiserIds":["122530"],"adsetIds":["708590"],"startDate":"2026-07-14","endDate":"2026-07-22","timezone":"UTC","format":"json","dimensions":["AdGroupName","ProductId"],"metrics":["Impressions","Clicks","Spend","Ctr"]}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  } else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' . $response->getReasonPhrase();
+  }
+} catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+
+**Sample response** — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "type": "AdLevelReportRow",
+      "attributes": {
+        "rows": [
+          {
+            "adGroupName": "Photo & Image Editing",
+            "productId": "482",
+            "impressions": 154320,
+            "clicks": 2210,
+            "spend": { "value": 1875.42, "currency": "USD" },
+            "ctr": 0.0143
+          },
+          {
+            "adGroupName": "Unclustered",
+            "productId": null,
+            "impressions": 48210,
+            "clicks": 601,
+            "spend": { "value": 512.10, "currency": "USD" },
+            "ctr": 0.0125
+          }
+        ]
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Behavior
+
+| Aspect | Detail |
+| :----- | :----- |
+| Pagination | None — a single call returns the full result set. There is no page/cursor mechanism. |
+| Row limit | 100,000 rows per response. If exceeded, results are truncated and a warning is included: `{ "code": "row-limit-exceeded", "title": "Result set truncated.", "detail": "The query produced more than 100000 rows. Results have been truncated. Narrow your query by reducing the number of dimensions or the time range." }`. |
+| Advertiser fan-out | Max 5 `advertiserIds` per request. Split larger sets into multiple calls. |
+| Permissions | Scope `MarketingSolutions_Analytics_Read` required. Caller must have consent for every `advertiserId` in the request; otherwise `403 insufficient-advertisers-permissions`. |
+
+***
+
+## Responses
+
+| Response | Title | Detail | Troubleshooting |
+| :------- | :---- | :----- | :-------------- |
+| 🟢 `200` | OK | | Check `warnings[]` for a `row-limit-exceeded` entry if results may have been truncated |
+| 🔴 `400` `required-field` | At least one advertiser id must be provided | `advertiserIds` missing or empty | Provide at least one advertiser ID |
+| 🔴 `400` `too-many-advertiser-ids` | Too many advertiser IDs provided | Max 5 advertiser IDs per request | Split into multiple requests of ≤5 advertiser IDs |
+| 🔴 `400` `advertiser-is-not-int` | At least one advertiser id is not an integer | One or more `advertiserIds` values is not numeric | Ensure every advertiser ID is a numeric string |
+| 🔴 `400` `unsupported-file-format` | Unsupported file format | Supported formats: `csv` and `json` | Use `"format": "json"` or `"format": "csv"` |
+| 🔴 `400` `invalid-timezone` | Invalid time zone | Time zone is not valid | Use a valid IANA timezone name, e.g. `Europe/Paris` |
+| 🔴 `400` `invalid-date-range` | Invalid date range | The start date cannot be after the end date | Ensure `startDate` ≤ `endDate` |
+| 🔴 `400` `ad-level-dimension-requires-adset-scope` | Ad-level dimension requires adset scope | `AdGroupName`, `ProductId`, and `AdId` require a non-empty `adsetIds` filter or `AdsetId` in `dimensions` | Add an `adsetIds` filter, or add `AdsetId` to `dimensions` |
+| 🔴 `400` `metric-requires-dimension` | Metric requires a dimension not present in the request | e.g. `AdTitle` requires the `AdId` breakdown dimension | Add the dimension named in the error detail |
+| 🔴 `400` `invalid-query` | Invalid query definition | Wrong `data.type` or unsupported dimension/metric spelling | Check `data.type` is exactly `"AdLevelReportQuery"` and all `dimensions`/`metrics` values match the documented spelling |
+| 🔴 `401` | Unauthorized | Missing, invalid, or expired Bearer token | Obtain a new token via `POST https://api.criteo.com/oauth2/token` with `grant_type=client_credentials` |
+| 🔴 `403` `insufficient-advertisers-permissions` | Insufficient advertisers permissions | You do not have rights to report on these advertisers | Confirm the advertiser has authorized your application via the OAuth consent flow |
