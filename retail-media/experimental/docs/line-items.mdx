@@ -1,132 +1,100 @@
 ---
 title: Line Items
-description: Create and manage the line items that control how a campaign delivers ads.
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026-preview/docs/Guides for Retail Media API/line-items/index.md
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+import CalloutPreviewOnlyContent from "/snippets/retail-media/v2026-preview/CalloutPreviewOnlyContent.mdx";
+
+
 
 ## Overview
 
-A line item is a unit within a campaign that controls how ads are delivered. It identifies the retailer where ads can run, defines the active flight dates, and holds delivery settings for its campaign type. A campaign can contain multiple line items.
+Each campaign consists of one or more line items. 
 
-The line item core endpoints are shared across campaign types. They expose common fields through one contract instead of separate Sponsored Products and Onsite Display routes.
-
-The referenced `campaignId` determines the line-item type. Type-specific fields are carried in a matching details object alongside the common attributes. Include only the details object supported by the campaign type.
+You can only run ads after creating a campaign and at least one line item.
 
 <Info>
-  The long-term goal is to support line-item core operations across campaign types. Initial documented support targets Onsite Display Auction campaigns and uses `onsiteDisplayDetails`. Additional details objects will be documented as support is added.
+  A line item allows you to select the products and the retailer where you'd like to advertise. Each line item can include multiple featured products but is restricted to a single retailer. 
+
+  To advertise across multiple retailers, you must create separate line items for each.
 </Info>
 
-## Endpoints
+Several settings are available to help you manage your budget and optimize ad delivery effectively.
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `POST` | `/line-items` | **Coming soon** — Create a line-item core entity. |
+With the Criteo API, you can:
 
-## Create a Line Item Core
+* Manage your retail media line items,
+
+* Configure line items, including budgets, flight dates, bids (for Onsite Sponsored Products), and targeting options (for Preferred Deals),
+
+* Retrieve products from your product catalog to advertise.
+
+***
+
+## Line Item Settings
+
+<Frame>
+![789d2f5 l3 line items](/images/retail-media/experimental/docs/789d2f5-l3-line-items.png)
+</Frame>
+
+* A line item promotes products for ads on a specific retailer.
+
+* Line items include settings such as start and end dates, optional budget controls, and associated retailers where ads are served.
+
+* Campaigns can manage budgets at both the line item and campaign level.
+
+* Several [reports](/retail-media/v2025.07/docs/demand-side-analytics-get-started) are available to measure line item performance.
+
+* Campaigns are limited to 10,000 non-archived line items.
+
+* Line items are automatically archived 90 days after their end date.
+
+***
+
+## Promoted Products
+
+<Frame>
+![57f7b20 l4 products](/images/retail-media/experimental/docs/57f7b20-l4-products.png)
+</Frame>
+
+* A promoted product defines the product to be advertised on a line item.
+
+* Use your account [catalog](/retail-media/experimental/docs/catalogs) to identify eligible products for promotion.
+
+* Each product can have a specific bid amount if desired.
+
+* Line items can include up to 500 promoted products.
+
+***
+
+## Getting started
+
+1. **Select products** from your account catalog to promote.
+
+2. **Create a campaign** to define the marketing objective.
+
+3. **Create a line item** within the campaign.
+
+4. **Add products** to the line item to specify which products to promote.
+
+5. **Assign the campaign** to an account balance for budget management.
+
+6. **Activate your line item** to begin running ads!
 
 <Warning>
-  **Coming soon:** This operation is not yet published in the [Experimental OpenAPI](https://api.criteo.com/experimental/retailmedia/open-api-specifications.json), which is the source of truth for available operations. The contract below is provided for advance planning and remains subject to change.
+  **Access to Preferred Deals capabilities**
+
+  Preferred Deals are currently in beta and available only to our Retailer partners. To access Preferred Deals documentation, please contact your Criteo Account Manager.
 </Warning>
 
-Creates a line-item core entity under an existing campaign.
+<CalloutPreviewOnlyContent />
 
-**Planned Endpoint**
+***
 
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items
-```
-</EndpointBadge>
+<br />
 
-### Request attributes
 
-| Attribute | Required | Description |
-| --- | --- | --- |
-| `name` | Yes | Display name of the line item. It must be unique within the campaign and contain 2–255 characters after trimming. |
-| `retailerId` | Yes | External ID of the retailer associated with the line item. If the campaign specifies a retailer, the line-item retailer must match it. |
-| `campaignId` | Yes | External ID of the existing campaign that owns the line item and determines which type-specific details object is accepted. |
-| `flightDates` | Yes | Active date range. `startDate` is required and must precede `endDate`; whether `endDate` is required depends on the campaign and buy type. |
-| `isPaused` | No | Whether the line item is paused. Defaults to `false`. |
-| `serveToOptOutUser` | No | Whether ads can serve to users who opted out of personalization. |
-| `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | No | Initial Onsite Display Auction-specific setting. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
+## What's next
 
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `financialStatus`, `effectiveFlightDates`, or `conquestingSettings` inside `attributes`.
-
-**Sample Request**
-
-```json
-{
-  "data": {
-    "type": "line-item",
-    "attributes": {
-      "name": "Back-to-school display",
-      "isPaused": false,
-      "retailerId": "12345",
-      "campaignId": "987654321",
-      "flightDates": {
-        "startDate": "2026-09-01T00:00:00Z",
-        "endDate": "2026-09-30T23:59:59Z"
-      },
-      "serveToOptOutUser": false,
-      "onsiteDisplayDetails": {
-        "auctionDetails": {
-          "isDynamicMatch": true
-        }
-      }
-    }
-  }
-}
-```
-
-**Sample Response**
-
-```json
-{
-  "data": {
-    "id": "112233445566778899",
-    "type": "line-item",
-    "attributes": {
-      "lineItemId": "112233445566778899",
-      "type": "OnsiteDisplay",
-      "name": "Back-to-school display",
-      "isPaused": false,
-      "financialStatus": "Active",
-      "retailerId": "12345",
-      "campaignId": "987654321",
-      "effectiveFlightDates": {
-        "startDate": "2026-09-01T00:00:00Z",
-        "endDate": "2026-09-30T23:59:59Z"
-      },
-      "serveToOptOutUser": false,
-      "conquestingSettings": {
-        "conquestingAdStrategyEnabled": false,
-        "neutralAdStrategyEnabled": true,
-        "defensiveAdStrategyEnabled": true,
-        "isAdStrategyLocked": false
-      },
-      "onsiteDisplayDetails": {
-        "auctionDetails": {
-          "isDynamicMatch": true
-        }
-      }
-    }
-  }
-}
-```
-
-### Errors
-
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the campaign or buy type, or auction attributes were supplied for a non-auction campaign. |
-| `400` | `invalid-campaign-id` | The campaign ID is improperly formatted. |
-| `400` | `campaign-not-found` | The campaign could not be found. |
-| `400` | `invalid-name` | The name is blank or outside the supported length. |
-| `400` | `invalid-flight-dates` | The flight dates are missing or invalid. |
-| `400` | `invalid-retailer-id` | The retailer ID is improperly formatted or, when the campaign specifies a retailer, does not match it. |
-| `400` | `retailer-not-found` | The retailer could not be found. |
-| `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
-| `400` | `unsupported-campaign-type` | The campaign type is not supported by the current implementation. |
-| `401` | `unauthorized` | The caller is not authenticated. |
-| `403` | `forbidden` | The caller cannot create a line item for the target campaign and retailer. |
+* [Onsite Display Line Items](/retail-media/experimental/docs/onsite-display-line-items)
+* [Sponsored Products Line Items](/retail-media/experimental/docs/onsite-sponsored-products)
