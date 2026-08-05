@@ -4,9 +4,7 @@ title: Seller Catalog Integration
 
 ## Introduction
 
-The Seller Offer project formalizes a catalog structure to support marketplace retailers. This guide walks you through the steps required to configure your catalog to support seller offers, including SKU ID structure, Cross Seller Product IDs (CSPID), and Buy Box Winner (BBW) updates.
-
-This guide is designed API-first — agencies, advertisers, and measurement partners can use Criteo reporting raw data directly. The foundation is reusable: Social ad-level reporting will be onboarded on the same foundation in the next phase.
+This guide walks you through the steps required to configure your catalog to support seller offers, including SKU ID structure, Cross Seller Product IDs (CSPID), and Buy Box Winner (BBW) updates.
 
 <Warning>
   Any update to your SKU ID structure must be validated with your Technical Solutions (TS) representative before making any changes.
@@ -18,7 +16,7 @@ This guide is designed API-first — agencies, advertisers, and measurement part
 
 | Term | Definition |
 |------|------------|
-| **Product** | The physical item being sold (e.g. one specific TV model), regardless of which seller is offering it. |
+| **Product** | The physical item being sold (e.g. one specific TV model), regardless of which seller/brand is offering it. |
 | **Offer** | One seller's way of selling a product (seller + price + availability). |
 | **Seller** | A third-party (neither the retailer nor the 1P brand) offering products on the retailer's marketplace. |
 | **Brand SKU** | The retailer/brand's identifier for a product, not tied to any 3P marketplace seller. |
@@ -46,6 +44,10 @@ Before you begin, identify your existing processes and setup, as they will impac
 
 1. Create a diagram with your TS rep for your current SKU ID structure (Parent ID → SKU ID), mapping your `SKU_ID` structure with the correct product `SKU_ID`s and any `Parent` and `Seller_ID`s.
 2. Create an example file of your current feed to share with the Criteo R&D team.
+
+<Frame caption="Example SKU ID structure: Parent ID → SKU IDs → Seller IDs">
+  <img src="/images/retailer-integration/docs/seller-catalog-step1.png" alt="Diagram showing a parent product (XYZ) with two child SKUs (XXX for Orange Hat, YYY for Green Hat), each offered by Seller A, Seller B, and Brand" />
+</Frame>
 
 ***
 
@@ -85,6 +87,10 @@ The CSPID must represent one physical product across all sellers. You can use:
 
 Once decided, create a sample file of your future feed to share with the Criteo R&D team.
 
+<Frame caption="Example structure: Parent ID (optional) → CSPID → concatenated SKU ID per seller">
+  <img src="/images/retailer-integration/docs/seller-catalog-step2-2.png" alt="Diagram showing parent XYZ mapping to CSPID Orange Hat (XXX) and CSPID Green Hat (YYY), each with concatenated SKU IDs per seller (e.g. XXX-Seller_A, XXX-Seller_B)" />
+</Frame>
+
 ***
 
 ## Step 3 — Populate a CSPID
@@ -104,6 +110,10 @@ Introduce a unique product identifier. You must provide one CSPID per unique pro
 1. Populate `cross_seller_product_id` using one CSPID per physical product across all sellers.
    - Example: `cross_sellers_product_id = XXX` for all offers around `XXX-*`, and `cross_sellers_product_id = YYY` for all offers around `YYY-*`.
 2. The concatenated SKUs remain the ingestion key per offer (e.g. `XXX-seller_A`, `XXX-seller_B`), while the CSPID becomes the stable product-level grouping key used for Buy Box Winner and search.
+
+<Frame caption="CSPID enables product-level search across all seller offers">
+  <img src="/images/retailer-integration/docs/seller-catalog-step2.png" alt="UI screenshot showing Search by Product ID returning no results without CSPID, and results found after CSPID is populated" />
+</Frame>
 
 **Example feed structure with CSPID:**
 
@@ -152,7 +162,6 @@ Introduce a unique product identifier. You must provide one CSPID per unique pro
 **Impact to attribution:**
 
 - Attribution metrics will be saved on the old SKU — the updated SKU will show no data until it begins serving.
-- Criteo estimates roughly 20% loss of Attribution data for approximately 3 days from the start of migration. Once the new SKU begins serving, no further interruption to Attribution metrics is expected.
 
 ***
 
@@ -164,7 +173,7 @@ Wherever you share the SKU ID must be updated to use the new structure, includin
 
 **Example — Concatenated SKU IDs (`productID-sellerID`):**
 
-```
+```text expandable
 https://d.us.criteo.com/delivery/retailmedia?criteo-partner-id=108747&event-type=trackTransaction&page-id=trackTransaction&retailer-visitor-id=visitorid1&item=XXX-Seller_A&price=1&quantity=1&transaction-id=order123
 ```
 
@@ -183,6 +192,10 @@ https://d.us.criteo.com/delivery/retailmedia?criteo-partner-id=108747&event-type
 </Note>
 
 Now that you are using a CSPID, the Buy Box Loser is inferred automatically — there is no need to send information for both winners and losers. Your full feed update will still contain both winners and losers so sellers can add products to a campaign regardless of Buy Box status.
+
+<Frame caption="Buy Box Winner and Loser grouping by CSPID">
+  <img src="/images/retailer-integration/docs/seller-catalog-step3.png" alt="Diagram showing CSPID groups (XXX and YYY) with multiple seller SKU IDs, each labeled as BuyBox Winner or BuyBox Loser" />
+</Frame>
 
 ### Add BBW to your catalog feed
 
