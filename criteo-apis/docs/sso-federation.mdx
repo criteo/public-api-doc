@@ -1,0 +1,134 @@
+---
+title: SSO Federation
+description: Configure SAML-based SSO federation to let your users access Criteo platforms using your organization's existing identity system.
+---
+
+{/* [NEEDS INPUT: Confirm which products/platforms this applies to — the discovery doc mentions CGrowth, CGrid, CMax, and CYield. Clarify whether this guide applies to all of them or a specific subset, and whether availability is gated (waitlist, GA, specific tiers, etc.)] */}
+
+## Overview
+
+SSO federation lets your users access Criteo platforms using your organization's existing identity system — no separate Criteo credentials required. Once configured, users on your federated domain are redirected to your identity provider (IdP) login page when they access Criteo.
+
+Criteo uses **SAML 2.0** for federation. Two systems exchange metadata to establish trust:
+
+| Term | Role | Example systems |
+|------|------|-----------------|
+| **Service Provider (SP)** | Criteo — the application your users want to access | — |
+| **Identity Provider (IdP)** | Your organization's identity system, which authenticates users and sends Criteo a SAML assertion | Okta, Azure AD, ADFS |
+
+***
+
+## Before you start
+
+Gather the following before initiating an SSO federation request:
+
+| What | Details |
+|------|---------|
+| **Domains to federate** | The email domain(s) your users will log in with (e.g. `yourcompany.com`). You can start with one and add more later. |
+| **Technical contact(s)** | The member(s) of your IT or identity team who will handle the IdP configuration. |
+| **Test users** | A short list of email addresses to validate the integration before going live. |
+| **Target go-live date** | The date you want SSO active for all users. |
+| **IdP type** | Which identity provider your organization uses, and which SAML attribute you will send for user matching. Criteo recommends `emailaddress`. |
+| **IdP metadata file + certificate** | Your IdP's metadata XML file and signing certificate — you will share these with Criteo during onboarding. |
+
+***
+
+## What Criteo provides
+
+Once onboarding begins, Criteo generates and shares a **Service Provider (SP) metadata file**. Use it to configure the Criteo application in your IdP. It contains the following three values:
+
+| Field | Description |
+|-------|-------------|
+| **Entity ID** | Unique identifier for Criteo's SSO service |
+| **ACS URL (Reply URL)** | The destination URL where your IdP sends the SAML assertion after a successful login |
+| **X509 Certificate** | Criteo's signing certificate |
+
+***
+
+## Onboarding process
+
+{/* [NEEDS INPUT: This section reflects the current assisted onboarding flow (Steps 1–7 below). Confirm whether this is still the experience to document, or whether the self-serve UI flow should be described instead — the discovery doc references a planned self-serve product that would automate several of these steps.] */}
+
+### Step 1 — Request onboarding
+
+{/* [NEEDS INPUT: How does a client initiate the process? Contact their account manager? Submit a form? A self-serve UI entry point? Also confirm whether an eligibility check or waitlist applies, and if so, what the criteria are.] */}
+
+### Step 2 — Technical discussion
+
+Your IT or identity team joins a technical call with Criteo to align on:
+
+- Which domains to federate now and which may be added later
+- Which IdP you use and which SAML attribute will be sent for matching
+- The initial list of test user emails to enable first
+- Your target go-live date
+
+### Step 3 — Criteo shares SP metadata
+
+Criteo generates the SP metadata file and shares it with you. Use it to configure the Criteo application in your IdP. The file contains the Entity ID, ACS URL, and X509 certificate.
+
+### Step 4 — You share IdP metadata
+
+Once your IdP configuration is ready, share the following with Criteo:
+
+- Your **IdP metadata XML file**
+- Your **signing certificate** (may be delivered in an encrypted ZIP)
+- The final list of **test users** to enable first
+
+### Step 5 — Test activation
+
+Criteo enables SSO for your agreed test users only — not for all users on the domain yet. You will receive a URL to begin testing.
+
+<Note>
+  SSO is activated per user during this phase. Your other users continue to log in as normal until go-live.
+</Note>
+
+### Step 6 — Testing
+
+Your test users log in via the URL shared in Step 5 and verify:
+
+- They are redirected to your IdP login page
+- After login, they land in the correct location in Criteo
+- They can see the right accounts and data
+
+If anything is wrong, share screenshots or error messages with Criteo. The integration can be reverted on request during this phase.
+
+<Note>
+  **Preprod before prod:** If your organization runs a preprod environment, you may first test SSO with preprod IdP metadata. Once preprod is stable, you will go through Steps 4–6 again with your production metadata before the final go-live.
+</Note>
+
+### Step 7 — Go live
+
+Once all test users can log in successfully, Criteo activates SSO for all users on your federated domain(s) on the agreed date.
+
+<Warning>
+  Go-live is **all-or-nothing per domain.** Once SSO is activated for a domain, all users on that domain must log in via SSO to access Criteo.
+</Warning>
+
+If something goes wrong after go-live, contact Criteo to roll back or fix the configuration.
+
+***
+
+## Ongoing maintenance
+
+Some fields are defined once and rarely need to change. Others require periodic updates during the lifetime of the integration.
+
+### Rarely changed
+
+These are set during initial onboarding and stay stable:
+
+- SP Entity ID
+- SP ACS / Reply URL
+- IdP Entity ID
+- SAML attribute used for user matching
+
+### Updated over time
+
+These are expected to change and should be kept current:
+
+| Field | Why it changes |
+|-------|---------------|
+| **IdP signing certificate** | Certificates expire and must be rotated before the expiry date |
+| **Federated email domains** | You may add new domains or remove old ones after go-live |
+| **IdP metadata** | May need updating if you migrate IdP systems or change environments |
+
+{/* [NEEDS INPUT: What is the process for updating dynamic fields post go-live? Does the client contact Criteo support, their account manager, or will there be a self-serve mechanism? This is important for clients to understand ongoing responsibilities.] */}
