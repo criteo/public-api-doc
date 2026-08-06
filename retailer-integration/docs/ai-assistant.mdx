@@ -1,6 +1,5 @@
 ---
-title: Search Pages
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Delivery_Docs/v2026_01/docs/Requesting Ads/api-parameters-1/search-page.md
+title: AI Assistant 
 ---
 
 import Headervaluesareillustrative from "/snippets/retailer-integration/Headervaluesareillustrative.mdx";
@@ -9,12 +8,9 @@ import Headervaluesareillustrative from "/snippets/retailer-integration/Headerva
 
 # Definition
 
-A search page is a **listing page showing the results of a user's inputted keyword**.
+Use the AI Assistant type to **show products that are relevant to the conversation happening on site between a shopper and an AI**.
 
-Search result pages are divided into two types:
-
-* **Search result**: A search page that displays a product grid.
-* **Null search result**: A search page with no results and no corresponding product grid.
+Make an ad request for each predicted keyword sent by the LLM.
 
 ***
 
@@ -22,9 +18,9 @@ Search result pages are divided into two types:
 
 ## `event-type`
 
-**Value**: `viewSearchResult`
+**Value**: `aiAssistant`
 
-**Description**: Indicates to the API that this is a search result request.
+**Description**: Indicates to the Delivery API that this is an AI Assistant event.
 
 **Required**: Yes
 
@@ -34,8 +30,8 @@ Search result pages are divided into two types:
 
 **Description**: An identifier that tells Criteo which placements to return for the ad request. Placements are instantiated by your Technical Account Manager depending on your desired ad configuration. Below are the standard page-ids for this page type:
 
-* **In Americas**: Typically follows the structure `[event-type]_API_[environment]`, e.g., `viewSearchResult_API_desktop`, `viewNullSearchResult_API_iOS`
-* **In EMEA**: Typically follows the structure `[event-type]Api[environment]`, e.g., `viewSearchResultApiMobile`, `viewNullSearchResultApiAndroid`
+* **In Americas**: Typically follows the structure `[event-type]_API_[environment]`, e.g., `aiAssistant_API_desktop`, `aiAssistant_API_iOS`
+* **In EMEA**: Typically follows the structure `[event-type]Api[environment]`, e.g., `aiAssistantApiMobile`, `aiAssistantApiAndroid`
 
 **Required**: Yes
 
@@ -43,7 +39,7 @@ Search result pages are divided into two types:
 
 ## `keywords`
 
-**Description**: The search query entered by the user. Should be URL encoded.
+**Description**: The search query predicted by the LLM. Should be URL encoded.
 
 **Examples**:
 
@@ -51,6 +47,16 @@ Search result pages are divided into two types:
 * `black-laptops`
 
 **Required**: Yes
+
+***
+
+## `page-uid`
+
+**Description**: This value is returned within the response of the **initial call made on page load**. By storing this value and including it in subsequent `aiAssistant` event calls, Criteo is able to link the events to the initial ad request.
+
+**Example**: `545d9a70-f096-4568-b4b9-8f2f32a452d4`
+
+**Required**: Recommended. If not used, might inflate page views. 
 
 ***
 
@@ -117,7 +123,7 @@ Search result pages are divided into two types:
 
 ***
 
-## Search Result Page Example
+## AI Assistant Page Example
 
 ### AMER
 
@@ -127,8 +133,8 @@ curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
 --data-urlencode "environment=d" \
 --data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
 --data-urlencode "customer-id=123456789" \
---data-urlencode "page-id=viewSearchResult_API_desktop" \
---data-urlencode "event-type=viewSearchResult" \
+--data-urlencode "page-id=aiAssistant_API_desktop" \
+--data-urlencode "event-type=aiAssistant" \
 --data-urlencode "keywords=fast laptops" \
 --data-urlencode "item=123|456|789" \
 --data-urlencode "page-number=1" \
@@ -145,8 +151,8 @@ curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
 --data-urlencode "environment=d" \
 --data-urlencode "retailervisitor-id=a1b2c3d4e5" \
 --data-urlencode "customer-id=123456789" \
---data-urlencode "page-id=viewSearchResultApiAios" \
---data-urlencode "event-type=viewCategory" \
+--data-urlencode "page-id=aiAssistantApiAios" \
+--data-urlencode "event-type=aiAssistant" \
 --data-urlencode "keywords=black laptops" \
 --data-urlencode "item=123|456|789" \
 -H "Referer: https://www.criteo.com" \
@@ -156,74 +162,8 @@ curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
 
 ***
 
-## Null Search Result Page Example
-
-### AMER
-
-```bash
-curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
---data-urlencode "criteo-partner-id=12345" \
---data-urlencode "environment=d" \
---data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
---data-urlencode "customer-id=123456789" \
---data-urlencode "page-id=viewSearchResult_API_iOS" \
---data-urlencode "event-type=viewSearchResult" \
---data-urlencode "keywords=fast laptops" \
---data-urlencode "item=123|456|789" \
---data-urlencode "page-number=1" \
--H "Referer: https://www.criteo.com" \
--H "X-Forwarded-For: 123.456.789.012" \
--H "User-Agent: app_ios 1.2.3"
-```
-
-### EMEA
-
-```bash cURL
-curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
---data-urlencode "criteo-partner-id=12345" \
---data-urlencode "environment=d" \
---data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
---data-urlencode "customer-id=123456789" \
---data-urlencode "page-id=viewNullSearchResultApiAios" \
---data-urlencode "event-type=viewSearchResult" \
---data-urlencode "keywords=notarealkeyword" \
--H "Referer: https://www.criteo.com" \
--H "X-Forwarded-For: 123.456.789.012" \
--H "User-Agent: app_ios 1.2.3"
-```
-
-***
-
-## Mock retailer API response
-
-The API call below will return a response for a mock retailer.
-
-```bash
-curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
---data-urlencode "criteo-partner-id=108341" \
---data-urlencode "retailer-visitor-id=456" \
---data-urlencode "customer-id=789" \
---data-urlencode "page-id=viewSearchResultApiDesktop" \
---data-urlencode "event-type=viewSearchResult" \
---data-urlencode "keywords=drink" \
--H "Referer: https://www.criteo.com" \
--H "X-Forwarded-For: 123.456.789.012" \
--H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-```
-
-<Note>
-  You can see an example of the response [here](https://d.eu.criteo.com/delivery/retailmedia?criteo-partner-id=108341&retailer-visitor-id=456&customer-id=789&page-id=viewSearchResultApiDesktop&event-type=viewSearchResult&keywords=drink).
-</Note>
-
-***
-
-<br />
-
-
 ## What's next
 
-* [Search bar dropdown](/retailer-integration/docs/search-bar-dropdown)
-* [AI assistant](/retailer-integration/docs/ai-assistant)
 * [Category pages](/retailer-integration/docs/category-page)
 * [Category flyout](/retailer-integration/docs/category-flyout)
 * [Product details page](/retailer-integration/docs/product-details-page)
