@@ -1,0 +1,241 @@
+---
+title: Search Line Items
+description: Query line items accessible from demand or supply accounts.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Overview
+
+The search endpoints let you retrieve line items in bulk by filtering on account, campaign, retailer, or line item IDs. Two variants are available depending on the account type you are operating from:
+
+- **Demand search** — query line items accessible from one or more demand accounts.
+- **Supply search** — query line items accessible from a supply account and its retailers.
+
+Both endpoints are paginated and return the same line item shape in the response.
+
+## Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/line-items/demand-search` | Search line items from demand accounts. |
+| `POST` | `/line-items/supply-search` | Search line items from a supply account. |
+
+---
+
+## Search Line Items — Demand
+
+Returns line items accessible from the specified demand accounts, with optional filters on campaign and line item IDs.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/demand-search
+```
+</EndpointBadge>
+
+### Request attributes
+
+| Attribute | Required | Type | Description |
+| --- | --- | --- | --- |
+| `accountIds` | Yes | array of strings | One or more demand account IDs to search from. |
+| `includeChildrenAccounts` | No | boolean | <!-- TODO: confirm with R&D — does this include line items from sub-accounts or child accounts in the hierarchy? --> |
+| `campaignIds` | No | array of strings | Filter results to line items belonging to these campaigns. |
+| `lineItemIds` | No | array of strings | Filter results to these specific line item IDs. |
+| `limit` | No | integer | Maximum number of results to return per page. Defaults to the maximum allowed page size. <!-- TODO: confirm max value with R&D --> |
+| `offset` | No | integer | Zero-based offset for pagination. |
+
+**Sample Request**
+
+```json
+{
+  "data": {
+    "type": "line-item-search",
+    "attributes": {
+      "accountIds": ["111222333"],
+      "campaignIds": ["987654321"],
+      "limit": 50,
+      "offset": 0
+    }
+  }
+}
+```
+
+### Response attributes
+
+Results are returned as a paginated array under `data`. Each item contains:
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `lineItemId` | string | Unique identifier of the line item. |
+| `name` | string | Display name of the line item. |
+| `accountId` | string | The demand account the line item belongs to. |
+| `campaignId` | string | The campaign the line item belongs to. |
+| `retailerId` | string | The retailer associated with the line item. |
+| `lineItemType` | string | Type of line item: `SponsoredProduct` or `CommerceDisplay`. <!-- TODO: confirm with R&D — the create/update endpoints return `OnsiteDisplay`; clarify whether CommerceDisplay and OnsiteDisplay refer to the same type under different names --> |
+| `buyType` | string | Buy model: `Auction`, `PreferredDeals`, or `Sponsorship`. |
+| `flightDates.startDate` | string | When the line item becomes active. |
+| `flightDates.endDate` | string | When the line item expires. |
+| `isPaused` | boolean | — |
+| `serveToOptOutUser` | boolean | Whether ads serve to users who opted out of personalization. |
+| `conquestingSettings` | object | Keyword bidding strategy flags. See [Create a Line Item Core](#create-a-line-item-core) for field descriptions. |
+| `commerceDisplay.auctionDetails.isDynamicMatch` | boolean | Onsite Display Auction: whether dynamic matching is enabled. |
+| `sponsoredProducts.auction.allInventory` | boolean | Sponsored Products Auction: whether all inventory is targeted. <!-- TODO: confirm description with R&D --> |
+
+The response also includes a `metadata` object with pagination fields:
+
+| Field | Description |
+| --- | --- |
+| `count` | Total number of line items matching the search. |
+| `limit` | Page size used for this response. |
+| `offset` | Offset used for this response. |
+
+**Sample Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "112233445566778899",
+      "type": "line-item",
+      "attributes": {
+        "lineItemId": "112233445566778899",
+        "name": "Back-to-school display",
+        "accountId": "111222333",
+        "campaignId": "987654321",
+        "retailerId": "12345",
+        "lineItemType": "CommerceDisplay",
+        "buyType": "Auction",
+        "flightDates": {
+          "startDate": "2026-09-01T00:00:00Z",
+          "endDate": "2026-09-30T23:59:59Z"
+        },
+        "isPaused": false,
+        "serveToOptOutUser": false,
+        "conquestingSettings": {
+          "conquestingAdStrategyEnabled": false,
+          "neutralAdStrategyEnabled": true,
+          "defensiveAdStrategyEnabled": true,
+          "isAdStrategyLocked": false
+        },
+        "commerceDisplay": {
+          "auction": {
+            "isDynamicMatch": true
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "count": 1,
+    "limit": 50,
+    "offset": 0
+  }
+}
+```
+
+### Errors
+
+<!-- TODO: confirm error codes with R&D — the spec does not enumerate them for this endpoint -->
+
+| HTTP status | Code | Description |
+| --- | --- | --- |
+| `401` | `unauthorized` | The caller is not authenticated. |
+| `403` | `forbidden` | The caller does not have access to the requested accounts. |
+
+---
+
+## Search Line Items — Supply
+
+Returns line items accessible from a supply account and its retailers, with optional filters on retailer, campaign, line item, and supply relationship.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/supply-search
+```
+</EndpointBadge>
+
+### Request attributes
+
+| Attribute | Required | Type | Description |
+| --- | --- | --- | --- |
+| `supplyAccountId` | Yes | string | The supply account ID to search from. |
+| `retailerIds` | No | array of strings | Filter results to line items associated with these retailers. |
+| `relationship` | No | string | Filter by supply relationship. Accepted values: `Direct`, `PrivateMarket`, `Network`, `AnyIndirect`. When omitted, all relationships are returned. <!-- TODO: confirm with R&D what each relationship value means in practice --> |
+| `campaignIds` | No | array of strings | Filter results to line items belonging to these campaigns. |
+| `lineItemIds` | No | array of strings | Filter results to these specific line item IDs. |
+| `limit` | No | integer | Maximum number of results to return per page. Defaults to the maximum allowed page size. <!-- TODO: confirm max value with R&D --> |
+| `offset` | No | integer | Zero-based offset for pagination. |
+
+**Sample Request**
+
+```json
+{
+  "data": {
+    "type": "line-item-search",
+    "attributes": {
+      "supplyAccountId": "444555666",
+      "retailerIds": ["12345"],
+      "relationship": "Direct",
+      "limit": 50,
+      "offset": 0
+    }
+  }
+}
+```
+
+### Response attributes
+
+Same shape as the [demand search response](#response-attributes). The `metadata` pagination object is also included.
+
+**Sample Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "112233445566778899",
+      "type": "line-item",
+      "attributes": {
+        "lineItemId": "112233445566778899",
+        "name": "Back-to-school display",
+        "accountId": "111222333",
+        "campaignId": "987654321",
+        "retailerId": "12345",
+        "lineItemType": "CommerceDisplay",
+        "buyType": "Auction",
+        "flightDates": {
+          "startDate": "2026-09-01T00:00:00Z",
+          "endDate": "2026-09-30T23:59:59Z"
+        },
+        "isPaused": false,
+        "serveToOptOutUser": false,
+        "conquestingSettings": {
+          "conquestingAdStrategyEnabled": false,
+          "neutralAdStrategyEnabled": true,
+          "defensiveAdStrategyEnabled": true,
+          "isAdStrategyLocked": false
+        },
+        "commerceDisplay": {
+          "auction": {
+            "isDynamicMatch": true
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "count": 1,
+    "limit": 50,
+    "offset": 0
+  }
+}
+```
+
+### Errors
+
+<!-- TODO: confirm error codes with R&D — the spec does not enumerate them for this endpoint -->
+
+| HTTP status | Code | Description |
+| --- | --- | --- |
+| `401` | `unauthorized` | The caller is not authenticated. |
+| `403` | `forbidden` | The caller does not have access to the requested supply account. |

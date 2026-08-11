@@ -28,6 +28,7 @@ This endpoint replaces the following type-specific creation routes, which remain
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `POST` | `/line-items` | Create a line-item core entity. |
+| `PATCH` | `/line-items/{line-item-id}` | Update an existing line item. |
 
 ## Create a Line Item Core
 
@@ -130,3 +131,103 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
 | `400` | `unsupported-campaign-type` | The campaign type is not supported by the current implementation. |
 | `401` | `unauthorized` | The caller is not authenticated. |
 | `403` | `forbidden` | The caller cannot create a line item for the target campaign and retailer. |
+
+---
+
+## Update a Line Item Core
+
+Updates an existing line item. This is a partial update: only the fields included in the request body are changed. Omitted fields keep their current values.
+
+`campaignId` and `retailerId` cannot be changed after creation.
+
+<EndpointBadge method="patch">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}
+```
+</EndpointBadge>
+
+### Path parameters
+
+| Parameter | Description |
+| --- | --- |
+| `line-item-id` | The unique identifier of the line item to update. |
+
+### Request attributes
+
+| Attribute | Description |
+| --- | --- |
+| `name` | New display name. Must be unique within the campaign and contain 2–255 characters after trimming. |
+| `flightDates.startDate` | Updated start date for the line item's active period. |
+| `flightDates.endDate` | Updated end date for the line item's active period. |
+| `isPaused` | Set to `true` to pause the line item or `false` to unpause it. |
+| `serveToOptOutUser` | Whether ads can serve to users who opted out of personalization. |
+| `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | Onsite Display Auction-specific. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
+
+The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `financialStatus`, `effectiveFlightDates`, or `conquestingSettings` inside `attributes`.
+
+**Sample Request**
+
+```json
+{
+  "data": {
+    "type": "line-item",
+    "attributes": {
+      "name": "Back-to-school display — extended",
+      "flightDates": {
+        "endDate": "2026-10-15T23:59:59Z"
+      },
+      "isPaused": false
+    }
+  }
+}
+```
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "id": "112233445566778899",
+    "type": "line-item",
+    "attributes": {
+      "lineItemId": "112233445566778899",
+      "type": "OnsiteDisplay",
+      "name": "Back-to-school display — extended",
+      "isPaused": false,
+      "financialStatus": "Active",
+      "retailerId": "12345",
+      "campaignId": "987654321",
+      "effectiveFlightDates": {
+        "startDate": "2026-09-01T00:00:00Z",
+        "endDate": "2026-10-15T23:59:59Z"
+      },
+      "serveToOptOutUser": false,
+      "conquestingSettings": {
+        "conquestingAdStrategyEnabled": false,
+        "neutralAdStrategyEnabled": true,
+        "defensiveAdStrategyEnabled": true,
+        "isAdStrategyLocked": false
+      },
+      "onsiteDisplayDetails": {
+        "auctionDetails": {
+          "isDynamicMatch": true
+        }
+      }
+    }
+  }
+}
+```
+
+### Errors
+
+<!-- TODO: confirm error codes with R&D — the spec does not enumerate them for this endpoint -->
+
+| HTTP status | Code | Description |
+| --- | --- | --- |
+| `400` | `invalid-name` | The name is blank or outside the supported length. |
+| `400` | `invalid-flight-dates` | The flight dates are missing or invalid. |
+| `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
+| `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the line item's campaign or buy type. |
+| `401` | `unauthorized` | The caller is not authenticated. |
+| `403` | `forbidden` | The caller cannot update this line item. |
+| `404` | `line-item-not-found` | The line item could not be found. |
