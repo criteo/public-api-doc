@@ -1,0 +1,222 @@
+---
+title: Line Item Targets
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Introduction
+
+The Line Item Targets endpoint retrieves the three supported target types configured for a line item: `ManualKeyword`, `PageType`, and `Category`. It combines targets from two independent retrieval sources into one paginated response: one source for manual keyword targets and one source for page type and category targets together.
+
+Clients should inspect the `errors` array even when the endpoint returns `200 OK`. If one retrieval source is unavailable, the response can still contain targets from the other source.
+
+**Prerequisites:**
+
+* OAuth 2.0 bearer token with the `RetailMedia_Campaign_Read` scope
+* Access to the requested line item
+
+***
+
+## Endpoints Overview
+
+| Verb | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/retail-media/line-items/{line-item-id}/targets` | Retrieves targets for a line item |
+
+***
+
+## Attributes
+
+### Request Attributes
+
+| Attribute | Type | Required | Description |
+| :-------- | :--- | :------- | :---------- |
+| `line-item-id` | string | Yes | Line item ID. Provided in the URL path. |
+| `offset` | integer | No | Zero-based offset applied after targets from both retrieval sources are combined. Defaults to `0`. |
+| `limit` | integer | No | Maximum number of targets returned. Defaults to `500`; maximum `50,000`. |
+
+### Response Attributes
+
+| Attribute | Type | Description |
+| :-------- | :--- | :---------- |
+| `metadata.count` | integer | Total number of targets retrieved successfully before pagination is applied. |
+| `metadata.offset` | integer | Zero-based offset applied to the combined targets. |
+| `metadata.limit` | integer | Maximum number of targets requested for the page. |
+| `data` | array | Paginated target resources. |
+| `errors` | array | Errors encountered while querying the retrieval sources. This array is not paginated. |
+| `warnings` | array | Warnings encountered while querying the retrieval sources. This array is not paginated. |
+
+### Target Attributes
+
+| Attribute | Type | Description |
+| :-------- | :--- | :---------- |
+| `targetType` | enum | Operational target type: `ManualKeyword`, `PageType`, or `Category`. |
+| `negative` | boolean | Whether the target excludes matching inventory. Page type targets always return `false`. |
+| `bidMultiplier` | number or null | Bid multiplier for the target. Category target bid multipliers are supported. |
+| `approvalStatus` | enum | Approval status of the target: `Unknown`, `Approved`, `AutoApproved`, `InReview`, `Rejected`, `AutoRejected`, or `Unsubmitted`. Page type targets return `AutoApproved`. |
+| `manualKeywordTargetDetails` | object | Details for a manual keyword target. Present only when `targetType` is `ManualKeyword`. |
+| `pageTypeTargetDetails` | object | Details for a page type target. Present only when `targetType` is `PageType`. |
+| `categoryTargetDetails` | object | Details for a category target. Present only when `targetType` is `Category`. |
+
+Each target contains exactly one target details object:
+
+| Target details object | Attribute | Type | Description |
+| :-------------------- | :-------- | :--- | :---------- |
+| `manualKeywordTargetDetails` | `keywordInput` | string | Manual keyword used for targeting. |
+| `manualKeywordTargetDetails` | `matchType` | enum | Keyword match type: `Broad` or `Exact`. |
+| `pageTypeTargetDetails` | `pageType` | enum | Page type targeted by the line item: `Unknown`, `Search`, `Home`, `Browse`, `Checkout`, `Category`, `ProductDetail`, `Confirmation`, `Merchandising`, `Deals`, `Favorites`, `SearchBar`, `CategoryMenu`, or `AiAssistant`. |
+| `categoryTargetDetails` | `categoryId` | string | Category ID targeted by the line item. |
+| `categoryTargetDetails` | `includeChildren` | boolean | Whether the target includes child categories. |
+
+***
+
+## Get Line Item Targets
+
+Retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for the specified line item. Use `offset` and `limit` to page through the result combined from both retrieval sources.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/targets
+```
+</EndpointBadge>
+
+**Sample request**
+
+```bash
+curl -L -X GET \
+  'https://api.criteo.com/experimental/retail-media/line-items/1234567890123456789/targets?offset=0&limit=500' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample response** — `200 OK`
+
+```json
+{
+  "metadata": {
+    "count": 3,
+    "offset": 0,
+    "limit": 500
+  },
+  "data": [
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "ManualKeyword",
+        "negative": false,
+        "bidMultiplier": 1.25,
+        "approvalStatus": "Approved",
+        "manualKeywordTargetDetails": {
+          "keywordInput": "trail running shoes",
+          "matchType": "Broad"
+        }
+      }
+    },
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "PageType",
+        "negative": false,
+        "bidMultiplier": null,
+        "approvalStatus": "AutoApproved",
+        "pageTypeTargetDetails": {
+          "pageType": "Search"
+        }
+      }
+    },
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "Category",
+        "negative": false,
+        "bidMultiplier": 1.5,
+        "approvalStatus": "Approved",
+        "categoryTargetDetails": {
+          "categoryId": "1001",
+          "includeChildren": true
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+***
+
+## Behavior
+
+The endpoint queries two independent retrieval sources. The manual keyword source provides `ManualKeyword` targets. The combined page type/category source provides both `PageType` and `Category` targets as one unit, so those two target types cannot fail independently. The endpoint combines targets from every successful retrieval source and then applies `offset` and `limit` to the combined collection.
+
+| Successful retrieval sources | Result |
+| :--------------------------- | :----- |
+| Manual keyword source and combined page type/category source | Returns `200 OK` with all target types supplied by both sources. |
+| Combined page type/category source only | Returns `200 OK` with `PageType` and `Category` targets and an entry in `errors` for the unavailable manual keyword source. |
+| Manual keyword source only | Returns `200 OK` with `ManualKeyword` targets and an entry in `errors` for the unavailable combined page type/category source. Both `PageType` and `Category` targets are absent. |
+| None | Returns a non-`200` response because neither retrieval source succeeded. |
+
+The `metadata.count` value is the total number of targets retrieved successfully before pagination. If `offset` is greater than or equal to `metadata.count`, `data` is empty. The `errors` and `warnings` arrays describe the complete retrieval operation and are not affected by pagination.
+
+The following example shows a successful response when the manual keyword retrieval source is unavailable. The combined page type/category source still supplies both `PageType` and `Category` targets. Clients should process those targets and inspect `errors` before treating the response as complete.
+
+**One retrieval source unavailable** — `200 OK`
+
+```json
+{
+  "metadata": {
+    "count": 2,
+    "offset": 0,
+    "limit": 500
+  },
+  "data": [
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "PageType",
+        "negative": false,
+        "bidMultiplier": null,
+        "approvalStatus": "AutoApproved",
+        "pageTypeTargetDetails": {
+          "pageType": "Home"
+        }
+      }
+    },
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "Category",
+        "negative": false,
+        "bidMultiplier": 1.2,
+        "approvalStatus": "Approved",
+        "categoryTargetDetails": {
+          "categoryId": "1002",
+          "includeChildren": false
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": [
+    {
+      "traceId": "example-trace-id",
+      "type": "availability",
+      "code": "keyword-targets-unavailable",
+      "detail": "Failed to fetch keyword targets."
+    }
+  ]
+}
+```
+
+***
+
+## Responses
+
+| Response | Meaning | Troubleshooting |
+| :------- | :------ | :-------------- |
+| 🟢 `200` | Both retrieval sources succeeded, or one source succeeded while the other was unavailable. | Always inspect `errors` and `warnings`; a `200` response can contain targets from only one retrieval source. |
+| 🔴 `400` `targets-max-page-size-exceeded` | The requested `limit` is greater than `50,000`. | Reduce `limit` to `50,000` or less. |
+| 🔴 `401` | The access token is missing, invalid, or expired. | Obtain a valid access token and retry the request. |
+| 🔴 `403` | The caller lacks Campaign Read permission or access to the requested line item. | Verify the bearer token includes the `RetailMedia_Campaign_Read` scope and the caller has access to the requested line item. |
+| 🔴 `500` | An unexpected internal error prevented the endpoint from completing the request. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
+| 🔴 `502` | A downstream retrieval failure prevented the endpoint from returning targets from either retrieval source. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
