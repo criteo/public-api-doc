@@ -12,7 +12,7 @@ This endpoint is designed API-first: agencies, advertisers, and measurement part
 <Info>
   **OpenAI campaigns only (for now)**
 
-  This endpoint currently returns OpenAI-sourced data only (`mediaChannel: "AI Platform"`, `platform: "OpenAI"` on every row). Other media channels will be onboarded without a breaking change — always filter or branch on `mediaChannel`/`platform` rather than assuming OpenAI-only. Requests are capped at 5 `advertiserIds` and 100,000 result rows per call.
+  This endpoint currently returns OpenAI-sourced data only (`mediaChannel: "AI Platform"`, `platform: "OpenAI"` on every row). Other media channels will be onboarded without a breaking change — always filter or branch on `mediaChannel`/`platform` rather than assuming OpenAI-only. Monetary metrics are converted into the currency requested via `currency` (defaults to EUR). Requests are capped at 5 `advertiserIds` and 100,000 result rows per call. This report always operates in UTC.
 </Info>
 
 **Prerequisites:**
@@ -37,8 +37,10 @@ Resource type: `AdLevelReportQuery`
 | :---- | :--- | :------- | :---- |
 | `advertiserIds` | array[string] | **Yes** — 1 to 5 | Numeric advertiser IDs. More than 5 → `400 too-many-advertiser-ids`. Any non-numeric ID → `400 advertiser-is-not-int`. |
 | `adsetIds` | array[string] | No | Restricts results to specific ad sets. Also satisfies the ad-set-scope requirement — required (or `AdsetId` must be in `dimensions`) whenever `dimensions` includes `AdGroupName`, `ProductId`, or `AdId`. |
+| `mediaChannel` | array[string] | No | Filters to specific media channels (currently only `"AI Platform"` exists). Omit for no filter. |
+| `platform` | array[string] | No | Filters to specific platforms (currently only `"OpenAI"` exists). Omit for no filter. |
+| `currency` | string | No — defaults to `EUR` | ISO 4217 code. Converts `Spend`/`Cpc`/`Cpm` into this currency. An unrecognized code doesn't error — it's a soft no-op (the value is returned unconverted, labeled with whatever code was sent). |
 | `startDate` / `endDate` | string (`YYYY-MM-DD`) | **Yes** | Inclusive date range. `startDate` after `endDate` → `400 invalid-date-range`. |
-| `timezone` | string | No — defaults to `UTC` | IANA timezone name (e.g. `Europe/Paris`). Invalid zone → `400 invalid-timezone`. |
 | `format` | string | No — defaults to `json` | `json` or `csv`. Anything else → `400 unsupported-file-format`. |
 | `dimensions` | array[string] | **Yes** — 1 or more | Breakdown columns — see **Dimensions** table below. |
 | `metrics` | array[string] | **Yes** — 1 or more | Metric columns to return — see **Metrics** table below. Requesting a metric without its required dimension → `400 metric-requires-dimension`. |
@@ -53,6 +55,7 @@ Resource type: `AdLevelReportQuery`
 | `AdsetName` | Ad set display name |
 | `MediaChannel` | Media channel of the row (currently always `"AI Platform"`) |
 | `Platform` | Platform of the row (currently always `"OpenAI"`) |
+| `Day` | Calendar day the row belongs to, formatted `YYYY-MM-DD`. Always a UTC calendar day — there's no finer time-of-day grain in the underlying data to convert. |
 | `AdGroupName` | Product/semantic cluster name (falls back to `"Unclustered"` when unmatched). *Requires `adsetIds` filter or `AdsetId` in `dimensions`.* |
 | `ProductId` | Product ID. *Requires `adsetIds` filter or `AdsetId` in `dimensions`.* |
 | `AdId` | Individual ad ID. *Requires `adsetIds` filter or `AdsetId` in `dimensions`.* |
@@ -63,10 +66,10 @@ Resource type: `AdLevelReportQuery`
 | :----- | :----------------- | :---------- |
 | `Impressions` | — | Sum of impressions |
 | `Clicks` | — | Sum of clicks |
-| `Spend` | — | Sum of spend, returned as `{ "value": <number>, "currency": "<code>" }` — currency is the advertiser's OpenAI account currency, not converted |
+| `Spend` | — | Sum of spend, returned as `{ "value": <number>, "currency": "<requested code>" }`, converted into the currency requested via `currency` (defaults EUR) |
 | `Ctr` | — | Clicks / Impressions |
-| `Cpc` | — | Spend / Clicks |
-| `Cpm` | — | Spend / Impressions × 1000 |
+| `Cpc` | — | Spend / Clicks, same currency conversion as `Spend` |
+| `Cpm` | — | Spend / Impressions × 1000, same currency conversion as `Spend` |
 | `AdGroupContextHint` | `AdGroupName` | Short descriptive context hint for the matched ad group/cluster; `null` when unmatched |
 | `AdGroupDescription` | `AdGroupName` | Longer descriptive text for the matched ad group/cluster; `null` when unmatched |
 | `ProductName` | `ProductId` | Product display name |
@@ -100,10 +103,10 @@ curl -s -X POST \
         "adsetIds": ["708590"],
         "startDate": "2026-07-14",
         "endDate": "2026-07-22",
-        "timezone": "UTC",
         "format": "json",
         "dimensions": ["AdGroupName", "ProductId"],
-        "metrics": ["Impressions", "Clicks", "Spend", "Ctr"]
+        "metrics": ["Impressions", "Clicks", "Spend", "Ctr"],
+        "currency": "USD"
       }
     }
   }'
@@ -125,10 +128,10 @@ response = requests.post(
                 "adsetIds": ["708590"],
                 "startDate": "2026-07-14",
                 "endDate": "2026-07-22",
-                "timezone": "UTC",
                 "format": "json",
                 "dimensions": ["AdGroupName", "ProductId"],
                 "metrics": ["Impressions", "Clicks", "Spend", "Ctr"],
+                "currency": "USD",
             },
         }
     },
@@ -138,7 +141,7 @@ print(response.json())
 ```java
 OkHttpClient client = new OkHttpClient().newBuilder().build();
 MediaType mediaType = MediaType.parse("application/json");
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"AdLevelReportQuery\",\"attributes\":{\"advertiserIds\":[\"122530\"],\"adsetIds\":[\"708590\"],\"startDate\":\"2026-07-14\",\"endDate\":\"2026-07-22\",\"timezone\":\"UTC\",\"format\":\"json\",\"dimensions\":[\"AdGroupName\",\"ProductId\"],\"metrics\":[\"Impressions\",\"Clicks\",\"Spend\",\"Ctr\"]}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"AdLevelReportQuery\",\"attributes\":{\"advertiserIds\":[\"122530\"],\"adsetIds\":[\"708590\"],\"startDate\":\"2026-07-14\",\"endDate\":\"2026-07-22\",\"format\":\"json\",\"dimensions\":[\"AdGroupName\",\"ProductId\"],\"metrics\":[\"Impressions\",\"Clicks\",\"Spend\",\"Ctr\"],\"currency\":\"USD\"}}}");
 Request request = new Request.Builder()
   .url("https://api.criteo.com/2027-01/marketing-solutions/statistics-adlevel/report")
   .method("POST", body)
@@ -158,7 +161,7 @@ $request->setHeader(array(
   'Content-Type' => 'application/json',
   'Authorization' => 'Bearer <TOKEN>'
 ));
-$request->setBody('{"data":{"type":"AdLevelReportQuery","attributes":{"advertiserIds":["122530"],"adsetIds":["708590"],"startDate":"2026-07-14","endDate":"2026-07-22","timezone":"UTC","format":"json","dimensions":["AdGroupName","ProductId"],"metrics":["Impressions","Clicks","Spend","Ctr"]}}}');
+$request->setBody('{"data":{"type":"AdLevelReportQuery","attributes":{"advertiserIds":["122530"],"adsetIds":["708590"],"startDate":"2026-07-14","endDate":"2026-07-22","format":"json","dimensions":["AdGroupName","ProductId"],"metrics":["Impressions","Clicks","Spend","Ctr"],"currency":"USD"}}}');
 try {
   $response = $request->send();
   if ($response->getStatus() == 200) {
@@ -227,7 +230,6 @@ try {
 | 🔴 `400` `too-many-advertiser-ids` | Too many advertiser IDs provided | Max 5 advertiser IDs per request | Split into multiple requests of ≤5 advertiser IDs |
 | 🔴 `400` `advertiser-is-not-int` | At least one advertiser id is not an integer | One or more `advertiserIds` values is not numeric | Ensure every advertiser ID is a numeric string |
 | 🔴 `400` `unsupported-file-format` | Unsupported file format | Supported formats: `csv` and `json` | Use `"format": "json"` or `"format": "csv"` |
-| 🔴 `400` `invalid-timezone` | Invalid time zone | Time zone is not valid | Use a valid IANA timezone name, e.g. `Europe/Paris` |
 | 🔴 `400` `invalid-date-range` | Invalid date range | The start date cannot be after the end date | Ensure `startDate` ≤ `endDate` |
 | 🔴 `400` `ad-level-dimension-requires-adset-scope` | Ad-level dimension requires adset scope | `AdGroupName`, `ProductId`, and `AdId` require a non-empty `adsetIds` filter or `AdsetId` in `dimensions` | Add an `adsetIds` filter, or add `AdsetId` to `dimensions` |
 | 🔴 `400` `metric-requires-dimension` | Metric requires a dimension not present in the request | e.g. `AdTitle` requires the `AdId` breakdown dimension | Add the dimension named in the error detail |
