@@ -6,9 +6,9 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
 ## Introduction
 
-The Line Item Targets endpoint retrieves the three supported target types configured for a line item: `ManualKeyword`, `PageType`, and `Category`. It combines targets from two independent retrieval sources into one paginated response: one source for manual keyword targets and one source for page type and category targets together.
+The Line Item Targets endpoint retrieves the three supported target types configured for a line item: `ManualKeyword`, `PageType`, and `Category`.
 
-Clients should inspect the `errors` array even when the endpoint returns `200 OK`. If one retrieval source is unavailable, the response can still contain targets from the other source.
+Clients should inspect the `errors` array even when the endpoint returns `200 OK`. The endpoint supports partial success by target type: if a target type is unavailable, other available target types can still be included in the response.
 
 **Prerequisites:**
 
@@ -32,7 +32,7 @@ Clients should inspect the `errors` array even when the endpoint returns `200 OK
 | Attribute | Type | Required | Description |
 | :-------- | :--- | :------- | :---------- |
 | `line-item-id` | string | Yes | Line item ID. Provided in the URL path. |
-| `offset` | integer | No | Zero-based offset applied after targets from both retrieval sources are combined. Defaults to `0`. |
+| `offset` | integer | No | Zero-based offset applied to the targets retrieved successfully. Defaults to `0`. |
 | `limit` | integer | No | Maximum number of targets returned. Defaults to `500`; maximum `50,000`. |
 
 ### Response Attributes
@@ -40,17 +40,17 @@ Clients should inspect the `errors` array even when the endpoint returns `200 OK
 | Attribute | Type | Description |
 | :-------- | :--- | :---------- |
 | `metadata.count` | integer | Total number of targets retrieved successfully before pagination is applied. |
-| `metadata.offset` | integer | Zero-based offset applied to the combined targets. |
+| `metadata.offset` | integer | Zero-based offset applied to the returned targets. |
 | `metadata.limit` | integer | Maximum number of targets requested for the page. |
 | `data` | array | Paginated target resources. |
-| `errors` | array | Errors encountered while querying the retrieval sources. This array is not paginated. |
-| `warnings` | array | Warnings encountered while querying the retrieval sources. This array is not paginated. |
+| `errors` | array | Errors encountered while retrieving targets. This array is not paginated. |
+| `warnings` | array | Warnings encountered while retrieving targets. This array is not paginated. |
 
 ### Target Attributes
 
 | Attribute | Type | Description |
 | :-------- | :--- | :---------- |
-| `targetType` | enum | Operational target type: `ManualKeyword`, `PageType`, or `Category`. |
+| `targetType` | enum | Target type: `ManualKeyword`, `PageType`, or `Category`. |
 | `negative` | boolean | Whether the target excludes matching inventory. Page type targets always return `false`. |
 | `bidMultiplier` | number or null | Bid multiplier for the target. Category target bid multipliers are supported. |
 | `approvalStatus` | enum | Approval status of the target: `Unknown`, `Approved`, `AutoApproved`, `InReview`, `Rejected`, `AutoRejected`, or `Unsubmitted`. Page type targets return `AutoApproved`. |
@@ -72,7 +72,7 @@ Each target contains exactly one target details object:
 
 ## Get Line Item Targets
 
-Retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for the specified line item. Use `offset` and `limit` to page through the result combined from both retrieval sources.
+Retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for the specified line item. Use `offset` and `limit` to page through the targets retrieved successfully.
 
 <EndpointBadge method="get">
 ```http
@@ -147,20 +147,13 @@ curl -L -X GET \
 
 ## Behavior
 
-The endpoint queries two independent retrieval sources. The manual keyword source provides `ManualKeyword` targets. The combined page type/category source provides both `PageType` and `Category` targets as one unit, so those two target types cannot fail independently. The endpoint combines targets from every successful retrieval source and then applies `offset` and `limit` to the combined collection.
+The endpoint supports partial success by target type. If one or more target types are available, it returns `200 OK` with those targets in `data` and describes any unavailable target types in `errors`. If retrieval fails for every supported target type, it returns a non-`200` response with no target data.
 
-| Successful retrieval sources | Result |
-| :--------------------------- | :----- |
-| Manual keyword source and combined page type/category source | Returns `200 OK` with all target types supplied by both sources. |
-| Combined page type/category source only | Returns `200 OK` with `PageType` and `Category` targets and an entry in `errors` for the unavailable manual keyword source. |
-| Manual keyword source only | Returns `200 OK` with `ManualKeyword` targets and an entry in `errors` for the unavailable combined page type/category source. Both `PageType` and `Category` targets are absent. |
-| None | Returns a non-`200` response because neither retrieval source succeeded. |
+The `metadata.count` value is the total number of targets retrieved successfully before pagination. If `offset` is greater than or equal to `metadata.count`, `data` is empty. The `errors` and `warnings` arrays apply to the full response and are not affected by pagination.
 
-The `metadata.count` value is the total number of targets retrieved successfully before pagination. If `offset` is greater than or equal to `metadata.count`, `data` is empty. The `errors` and `warnings` arrays describe the complete retrieval operation and are not affected by pagination.
+The following example shows a successful response when `ManualKeyword` targets are unavailable. The response still includes the available `PageType` and `Category` targets. Clients should process those targets and inspect `errors` before treating the response as complete.
 
-The following example shows a successful response when the manual keyword retrieval source is unavailable. The combined page type/category source still supplies both `PageType` and `Category` targets. Clients should process those targets and inspect `errors` before treating the response as complete.
-
-**One retrieval source unavailable** — `200 OK`
+**`ManualKeyword` targets unavailable** — `200 OK`
 
 ```json
 {
@@ -214,9 +207,9 @@ The following example shows a successful response when the manual keyword retrie
 
 | Response | Meaning | Troubleshooting |
 | :------- | :------ | :-------------- |
-| 🟢 `200` | Both retrieval sources succeeded, or one source succeeded while the other was unavailable. | Always inspect `errors` and `warnings`; a `200` response can contain targets from only one retrieval source. |
+| 🟢 `200` | All supported target types were retrieved, or the request partially succeeded for the available target types. | Always inspect `errors` and `warnings`; a `200` response can contain only a subset of the supported target types. |
 | 🔴 `400` `targets-max-page-size-exceeded` | The requested `limit` is greater than `50,000`. | Reduce `limit` to `50,000` or less. |
 | 🔴 `401` | The access token is missing, invalid, or expired. | Obtain a valid access token and retry the request. |
 | 🔴 `403` | The caller lacks Campaign Read permission or access to the requested line item. | Verify the bearer token includes the `RetailMedia_Campaign_Read` scope and the caller has access to the requested line item. |
 | 🔴 `500` | An unexpected internal error prevented the endpoint from completing the request. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
-| 🔴 `502` | A downstream retrieval failure prevented the endpoint from returning targets from either retrieval source. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
+| 🔴 `502` | Retrieval failed for every supported target type. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
