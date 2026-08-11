@@ -1,0 +1,91 @@
+---
+title: Bid Strategy Settings
+description: Retrieve bidding settings for an Onsite Display auction line item.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Overview
+
+Use the bid strategy settings endpoint to retrieve the current CPM bidding configuration for an Onsite Display auction line item.
+
+**Availability:** Coming soon
+
+<Info>
+  This endpoint currently supports Display auction line items only. Sponsored Products and other line item types are not supported.
+</Info>
+
+The response identifies the active strategy and includes preserved settings for the inactive strategy when available. This allows clients to inspect both Standard page-type bids and the Adaptive maximum bid without losing previously configured values.
+
+## Retrieve bid strategy settings
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/bidding-strategy
+```
+</EndpointBadge>
+
+### Path parameter
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `line-item-id` | string | Yes | Identifier of the Display auction line item. |
+
+The authenticated user must have permission to view the requested line item.
+
+### Sample request
+
+```bash
+curl -X GET "https://api.criteo.com/experimental/retail-media/line-items/123456789012345678/bidding-strategy" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Accept: application/json"
+```
+
+### Response attributes
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `cpm` | object or null | CPM-specific bidding configuration. |
+| `cpm.bidStrategy` | string | Active strategy: `Standard` or `Adaptive`. |
+| `cpm.standardBiddingSettings` | object or null | Active or preserved Standard strategy settings. |
+| `cpm.standardBiddingSettings.auctionBids` | array | Manual bid amounts configured by page type. |
+| `cpm.standardBiddingSettings.auctionBids[].pageType` | string | Page type to which the bid applies. |
+| `cpm.standardBiddingSettings.auctionBids[].bid` | number | Bid amount in the line item's currency. |
+| `cpm.adaptiveBiddingSettings` | object or null | Active or preserved Adaptive strategy settings. |
+| `cpm.adaptiveBiddingSettings.maxBid` | number or null | Maximum bid that the Adaptive strategy may use. |
+
+Supported `pageType` contract values are `Unknown`, `Search`, `Home`, `Browse`, `Checkout`, `Category`, `ProductDetail`, `Confirmation`, `Merchandising`, `Deals`, `Favorites`, `SearchBar`, `CategoryMenu`, and `AiAssistant`. Availability depends on the retailer and line item configuration.
+
+### Sample response
+
+```json
+{
+  "data": {
+    "type": "BiddingSettings",
+    "attributes": {
+      "cpm": {
+        "bidStrategy": "Adaptive",
+        "standardBiddingSettings": {
+          "auctionBids": [
+            {
+              "pageType": "Search",
+              "bid": 1.25
+            }
+          ]
+        },
+        "adaptiveBiddingSettings": {
+          "maxBid": 3.5
+        }
+      }
+    }
+  }
+}
+```
+
+## Responses
+
+| Status | Description |
+| --- | --- |
+| `200 OK` | Returns the current bidding settings. |
+| `400 Bad Request` | The line item type is not supported. The error code is `unsupported-line-item-type`. |
+| `403 Forbidden` | The line item does not exist or is not accessible. For security, the response does not identify which condition occurred or include an error code. |
