@@ -1,31 +1,40 @@
 ---
-title: Line Item Targets
+title: Targeting
+description: Retrieve the targets configured for a line item.
 ---
 
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
-## Introduction
+## Overview
 
-The Line Item Targets endpoint retrieves the three supported target types configured for a line item: `ManualKeyword`, `PageType`, and `Category`.
+Targeting defines where and how a line item can serve. Each target has a target type and type-specific details. The Get Targets endpoint retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for a line item.
 
 Clients should inspect the `errors` array even when the endpoint returns `200 OK`. The endpoint supports partial success by target type: if a target type is unavailable, other available target types can still be included in the response.
 
-**Prerequisites:**
-
-* OAuth 2.0 bearer token with the `RetailMedia_Campaign_Read` scope
-* Access to the requested line item
-
 ***
 
-## Endpoints Overview
+## Endpoints
 
-| Verb | Endpoint | Description |
+| Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | **GET** | `/retail-media/line-items/{line-item-id}/targets` | Retrieves targets for a line item |
 
 ***
 
-## Attributes
+## Get Targets
+
+Retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for the specified line item. Use `offset` and `limit` to page through the targets retrieved successfully.
+
+**Prerequisites:**
+
+- OAuth 2.0 bearer token with the `RetailMedia_Campaign_Read` scope
+- Access to the requested line item
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/targets
+```
+</EndpointBadge>
 
 ### Request Attributes
 
@@ -68,19 +77,7 @@ Each target contains exactly one target details object:
 | `categoryTargetDetails` | `categoryId` | string | Category ID targeted by the line item. |
 | `categoryTargetDetails` | `includeChildren` | boolean | Whether the target includes child categories. |
 
-***
-
-## Get Line Item Targets
-
-Retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for the specified line item. Use `offset` and `limit` to page through the targets retrieved successfully.
-
-<EndpointBadge method="get">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/targets
-```
-</EndpointBadge>
-
-**Sample request**
+**Sample Request**
 
 ```bash
 curl -L -X GET \
@@ -89,7 +86,7 @@ curl -L -X GET \
   -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
 ```
 
-**Sample response** — `200 OK`
+**Sample Response** — `200 OK`
 
 ```json
 {
@@ -143,9 +140,7 @@ curl -L -X GET \
 }
 ```
 
-***
-
-## Behavior
+### Partial Success
 
 The endpoint supports partial success by target type. If one or more target types are available, it returns `200 OK` with those targets in `data` and describes any unavailable target types in `errors`. If retrieval fails for every supported target type, it returns a non-`200` response with no target data.
 
@@ -201,9 +196,7 @@ The following example shows a successful response when `ManualKeyword` targets a
 }
 ```
 
-***
-
-## Responses
+### Responses
 
 | Response | Meaning | Troubleshooting |
 | :------- | :------ | :-------------- |
