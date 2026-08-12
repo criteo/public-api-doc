@@ -1,6 +1,6 @@
 ---
 title: Targeting
-description: Retrieve the targets configured for a line item.
+description: Retrieve and create targets for a line item.
 ---
 
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
@@ -11,6 +11,8 @@ Targeting defines where and how a line item can serve. Each target has a target 
 
 Clients should inspect the `errors` array even when the endpoint returns `200 OK`. The endpoint supports partial success by target type: if a target type is unavailable, other available target types can still be included in the response.
 
+The Create Targets endpoint creates `ManualKeyword`, `PageType`, and `Category` targets for a line item.
+
 ***
 
 ## Endpoints
@@ -18,6 +20,7 @@ Clients should inspect the `errors` array even when the endpoint returns `200 OK
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | **GET** | `/retail-media/line-items/{line-item-id}/targets` | Retrieves targets for a line item |
+| **POST** | `/retail-media/line-items/{line-item-id}/targets/create` | Creates targets for a line item |
 
 ***
 
@@ -206,3 +209,76 @@ The following example shows a successful response when `ManualKeyword` targets a
 | 🔴 `403` | The caller lacks Campaign Read permission or access to the requested line item. | Verify the bearer token includes the `RetailMedia_Campaign_Read` scope and the caller has access to the requested line item. |
 | 🔴 `500` | An unexpected internal error prevented the endpoint from completing the request. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
 | 🔴 `502` | Retrieval failed for every supported target type. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
+
+***
+
+## Create Targets
+
+Creates `ManualKeyword`, `PageType`, and `Category` targets for the specified line item. A single request can contain targets of more than one supported target type.
+
+**Prerequisites:**
+
+- OAuth 2.0 bearer token with the `RetailMedia_Campaign_Manage` scope
+- Access to the requested line item
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/targets/create
+```
+</EndpointBadge>
+
+### Request Attributes
+
+| Attribute | Type | Description |
+| :-------- | :--- | :---------- |
+| `line-item-id` | string | Line item ID. Provided in the URL path. |
+| `data` | array | Target resources to create. A request can contain up to 100 targets. |
+| `data[].type` | string | Resource type. Set this value to `Target`. |
+| `data[].attributes.targetType` | enum | Target type to create: `ManualKeyword`, `PageType`, or `Category`. |
+| `data[].attributes.negative` | boolean | Whether the target excludes matching inventory. Applicability depends on the target type. |
+| `data[].attributes.bidMultiplier` | number or null | Bid multiplier used when supported for the target and line item. |
+| `data[].attributes.manualKeywordTargetDetails` | object | Manual keyword details. Use when `targetType` is `ManualKeyword`. |
+| `data[].attributes.pageTypeTargetDetails` | object | Page type details. Use when `targetType` is `PageType`. |
+| `data[].attributes.categoryTargetDetails` | object | Category details. Use when `targetType` is `Category`. |
+
+**Sample Request**
+
+```bash
+curl -L -X POST \
+  'https://api.criteo.com/experimental/retail-media/line-items/1234567890123456789/targets/create' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -H 'Content-Type: application/json' \
+  --data-raw '{
+    "data": [
+      {
+        "type": "Target",
+        "attributes": {
+          "targetType": "PageType",
+          "negative": false,
+          "bidMultiplier": null,
+          "pageTypeTargetDetails": {
+            "pageType": "Search"
+          }
+        }
+      }
+    ]
+  }'
+```
+
+### Partial Success
+
+A request can contain up to 100 targets and can include more than one supported target type.
+
+Creation supports partial success across target types. If some target types succeed, the endpoint can return `200 OK` with the created targets in `data` and errors for target types that did not succeed. Clients should inspect both `errors` and `warnings` before treating the response as complete.
+
+### Responses
+
+| Response | Meaning | Troubleshooting |
+| :------- | :------ | :-------------- |
+| 🟢 `200` | The request succeeded completely or partially across target types. | Process the created targets in `data` and inspect `errors` and `warnings`. |
+| 🔴 `400` | The request is malformed, contains invalid target data, or contains more than 100 targets. | Correct the request using the response details and retry. |
+| 🔴 `401` | The access token is missing, invalid, or expired. | Obtain a valid access token and retry the request. |
+| 🔴 `403` | The caller lacks Campaign Manage permission or access to the requested line item. | Verify the bearer token includes the `RetailMedia_Campaign_Manage` scope and the caller has access to the requested line item. |
+| 🔴 `500` | An unexpected internal error prevented the endpoint from completing the request. | Retry the request. If the failure persists, contact support. |
+| 🔴 `502` | The endpoint could not complete target creation. | Retry the request. If the failure persists, contact support. |
