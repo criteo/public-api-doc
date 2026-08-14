@@ -1,0 +1,1833 @@
+---
+title: Audience Segment Endpoints
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/audiences/audience-segment-endpoints.md
+---
+
+import FieldDefinitions from "/snippets/retail-media/FieldDefinitions.mdx";
+
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## **Introduction**
+
+**Audience Segments** represent groups of users, defined through `Contact Lists` provided externally.
+
+Multiple **Audience Segments** can be combined using logical [Algebra Nodes](/retail-media/v2027.01-rc/docs/algebra-nodes) to define the desired target audience for your campaigns.
+
+<Info>
+  **Partial Approvals**
+
+  Bulk operations (`create`, `update`, `delete`) use a **partial approval model**. Even if some items in the request fail, the response will return `200 OK`. Any failed items will be listed in the warnings section of the response with an error code and details.
+
+  Examples of possible warning codes:
+
+  * `segment-not-found` → Segment is not found.
+  * `name-must-be-unique` → Segment name must be unique.
+  * `name-must-not-be-empty` → Segment name property must not be empty.
+
+  This list is not exhaustive. Additional warnings may be returned depending on the request context.
+</Info>
+
+<Info>
+  **Note on event-based targeting**
+
+  Event-based targeting is currently **not** supported in the Stable version of this API.
+  For event-based targeting, please refer to [the Preview documentation](/retail-media/v2026-preview/docs/audience-segments).
+</Info>
+
+<Warning>
+  **Note on Audience Computation**
+
+  Audience updates are processed daily at 0h UTC and 12h UTC and can take around 5 hours to reflect on a live campaign. This is important for audiences that are frequently updated as changes should be ready for processing prior to these two times.
+</Warning>
+
+***
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/audience-segments/create
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Create a new Audience Segment
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      PATCH
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/audience-segments
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Update an Audience Segment
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/audience-segments/delete
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Delete an Audience Segment
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/audience-segments/search
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Search for Audience Segments by segment IDs, retailer IDs and/or segment types
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      GET
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/&#123;accountId&#125;/audience-segments/&#123;audienceSegmentId&#125;/contact-list
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Retrieve contact list statistics
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /audience-segments/&#123;audienceSegmentId&#125;/contact-list/add-remove
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Add/remove identifiers in contact list Audience Segment
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /audience-segments/&#123;audienceSegmentId&#125;/contact-list/clear
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Clear all identifiers in contact list Audience Segment
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Audience Segment Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      id
+     </code>
+     /
+     <code>
+      audienceSegmentId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Audience Segment ID, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      name
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Audience Segment name
+    </p>
+    <p>
+     Accepted values: string
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      description
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Description of the Audience Segment
+    </p>
+    <p>
+     Accepted values: string
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/account">
+      Account
+     </a>
+     ID associated with the Audience Segment, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/retailers">
+      Retailer
+     </a>
+     ID, associated with the Audience Segment, generated internally by Criteo
+    </p>
+    <p>
+     Accepted values: string of int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      type
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Type of segment
+    </p>
+    <p>
+     Accepted values:
+    </p>
+    <p>
+     <code>
+      ContactList
+     </code>
+     : users segment defined by list of contact identifiers, manageable by the other endpoints
+    </p>
+    <p>
+     Writeable? Y / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      contactList
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     object
+    </p>
+   </td>
+   <td>
+    <p>
+     Setting to target users with contact list. Note, either one of
+     <code>
+      contactList
+     </code>
+     or
+     <code>
+      events
+     </code>
+     is required, however both cannot be leveraged at the same time
+    </p>
+    <p>
+     See below for more details
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      createdAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of Audience Segment creation, in UTC
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss.msZ
+     </code>
+     (in
+     <a href="https://www.iso.org/iso-8601-date-and-time-format.html">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      createdById
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     User ID who created the Audience Segment (
+     <code>
+      null
+     </code>
+     if created by a service)
+    </p>
+    <p>
+     Accepted values: string
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      updatedAt
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     timestamp
+    </p>
+   </td>
+   <td>
+    <p>
+     Timestamp of last Audience Segment update, in UTC
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      yyyy-mm-ddThh:mm:ss.msZ
+     </code>
+     (in
+     <a href="https://en.wikipedia.org/wiki/ISO_8601">
+      ISO-8601
+     </a>
+     )
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      channels
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     list
+     <code>
+      &lt;enum&gt;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Channels associated to the audience
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      Onsite
+     </code>
+     ,
+     <code>
+      Offsite
+     </code>
+     ,
+     <code>
+      Unknown
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_*Required at create operation_
+
+<FieldDefinitions />
+
+***
+
+## Contact List Segment Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      isReadOnly
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     boolean
+    </p>
+   </td>
+   <td>
+    <p>
+     Indicates if the contact list can be edited
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      true
+     </code>
+     ,
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      identifierType
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     User identifier type from Contact list
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      Email
+     </code>
+     ,
+     <code>
+      UserIdentifier
+     </code>
+     ,
+     <code>
+      IdentityLink
+     </code>
+     ,
+     <code>
+      CustomerId
+     </code>
+     ,
+     <code>
+      Unknown
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<FieldDefinitions />
+
+***
+
+## Create Audience Segment
+
+This endpoint allows creating  **Audience Segments** from `Contact List`.
+
+<Warning>
+  The corresponding App should have the "**Audiences Manage**" permission enabled.
+</Warning>
+
+<Note>
+  As of now, it is only possible to create Contact List segments through our API. For Users Events Segments, users can rely on the C-Max UI - for more details, check [(Onsite Display) Build an Audience](https://help.retailmedia.criteo.com/kb/guide/en/onsite-display-build-an-audience-5a0BoXiXmP/Steps/2360680)
+</Note>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audience-segments/create
+```
+</EndpointBadge>
+
+**Sample Request**:
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/create' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": [
+    {
+      "type": "AudienceSegment",
+      "attributes": {
+        "name": "CRM Users 2025",
+        "description": "Segment made of CRM user emails",
+        "retailerId": "1234",
+        "contactList": {
+          "identifierType": "Email"
+        }
+      }
+    },
+  ]
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": [
+    {
+      "type": "AudienceSegment",
+      "attributes": {
+        "name": "CRM Users 2025",
+        "description": "Segment made of CRM user emails",
+        "retailerId": "1234",
+        "contactList": {
+          "identifierType": "Email"
+        }
+      }
+    },
+  ]
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("POST", "/{version}/retail-media/accounts/625702934721171442/audience-segments/create", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":[{\"type\":\"AudienceSegment\",\"attributes\":{\"name\":\"CRM Users 2025\",\"description\":\"Segment made of CRM user emails\",\"retailerId\":\"1234\",\"contactList\":{\"identifierType\":\"Email\"}}}]}");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/create")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/create');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":[{"type":"AudienceSegment","attributes":{"name":"CRM Users 2025","description":"Segment made of CRM user emails","retailerId":"1234","contactList":{"identifierType":"Email"}}}]}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "id": "738406688413290496",
+            "type": "RetailMediaAudienceSegment",
+            "attributes": {
+                "accountId": "625702934721171442",
+                "name": "CRM Users 2025",
+                "description": "Segment made of CRM user emails",
+                "retailerId": "1234",
+                "type": "ContactList",
+                "createdAt": "2025-07-30T14:44:32.81Z",
+                "updatedAt": "2025-07-30T14:44:32.81Z",
+                "createdById": "514277",
+                "contactList": {
+                    "isReadOnly": false,
+                    "identifierType": "Email",
+                    "sharingStatus": "NotShared"
+                },
+                "channels": [
+                    "Offsite"
+                ]
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Update Audience Segment
+
+This endpoint allows updating **Audience Segments**from `Contact List`.
+
+Note: the corresponding App should have the "**Audiences Manage**" permission enabled.
+
+<Warning>
+  For `Contact List` segments, it's possible to update their metadata (name and description) but not their identity types. For those cases, create a new segment with the new desired identifier type.
+</Warning>
+
+<EndpointBadge method="patch">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audience-segments
+```
+</EndpointBadge>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": [
+    {
+      "id": "738406688413290496",
+      "type": "AudienceSegment",
+      "attributes": {
+        "name": "CRM User E-mails 2025 ",
+        "description": "Segment made of CRM user e-mails",
+        "retailerId": "1234",
+        "contactList": {
+          "identifierType": "Email"
+        }
+      }
+    }
+  ]
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": [
+    {
+      "id": "738406688413290496",
+      "type": "AudienceSegment",
+      "attributes": {
+        "name": "CRM User E-mails 2025 ",
+        "description": "Segment made of CRM user e-mails",
+        "retailerId": "1234",
+        "contactList": {
+          "identifierType": "Email"
+        }
+      }
+    }
+  ]
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("PATCH", "/{version}/retail-media/accounts/625702934721171442/audience-segments", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(
+  mediaType,
+  "{\"data\":[{\"id\":\"738406688413290496\",\"type\":\"AudienceSegment\",\"attributes\":{\"name\":\"CRM User E-mails 2025\",\"description\":\"Segment made of CRM user e-mails\",\"retailerId\":\"1234\",\"contactList\":{\"identifierType\":\"Email\"}}}]}"
+);
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments")
+  .method("PATCH", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments');
+$request->setMethod(HTTP_Request2::METHOD_PATCH);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":[{"id":"738406688413290496","type":"AudienceSegment","attributes":{"name":"CRM User E-mails 2025","description":"Segment made of CRM user e-mails","retailerId":"1234","contactList":{"identifierType":"Email"}}}]}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "id": "738406688413290496",
+            "type": "RetailMediaAudienceSegment",
+            "attributes": {
+                "accountId": "4",
+                "name": "CRM Users 2025",
+                "description": "Segment made of CRM user emails",
+                "retailerId": "1234",
+                "type": "ContactList",
+                "createdAt": "2025-07-30T14:44:32.81Z",
+                "updatedAt": "2025-07-30T15:14:19.3566667Z",
+                "createdById": "514277",
+                "contactList": {
+                    "isReadOnly": false,
+                    "identifierType": "Email",
+                    "sharingStatus": "NotShared"
+                },
+                "channels": [
+                    "Offsite"
+                ]
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Delete Audience Segment
+
+This endpoint allows deleting **Audience Segments**, either one by one or multiple of them.
+
+<Warning>
+  The corresponding App should have the "**Audiences Manage**" permission enabled.
+</Warning>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audience-segments/delete
+```
+</EndpointBadge>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/delete' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": [
+    {
+      "id": "738406561971802112"
+    }
+  ]
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+  "data": [
+    {
+      "id": "738406561971802112"
+    }
+  ]
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("POST", "/{version}/retail-media/accounts/625702934721171442/audience-segments/delete", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, '{"data":[{"id":"225702933721171456"}]}');
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/delete")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/delete');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":[{"id":"225702933721171456"}]}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "id": "738406561971802112",
+            "type": "RetailMediaAudienceSegment",
+            "attributes": {}
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+### Partial `200 OK` response
+
+<Warning>
+  **Audience Segments cannot be deleted once they have served impressions**. Attempts to delete them will return `200 OK` but include a warning indicating the segment must first be removed from all audiences.
+</Warning>
+
+```json
+{
+    "data": [],
+    "warnings": [],
+    "errors": [
+        {
+            "traceId": "0ab8cdc52e17ecfd1ba9e5d1dacd102a",
+            "traceIdentifier": "0ab8cdc52e17ecfd1ba9e5d1dacd102a",
+            "type": "validation",
+            "code": "segment-must-not-be-used-in-audience",
+            "instance": "@data/0",
+            "title": "Segment must not be used in an audience",
+            "detail": "The segment must be removed from all audiences to be able to delete it"
+        }
+    ]
+}
+```
+
+***
+
+## Search for Audience Segments
+
+This endpoint allows searching for existing **Audience Segments** that satisfy one or multiple attributes at the same time.
+
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `500`, respectively. See [API Response](/criteo-apis/docs/api-response#pagination).
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audience-segments/search
+```
+</EndpointBadge>
+
+**Sample Request:**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/search?limit=50&offset=0' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "AudienceSegment",
+    "attributes": {
+    "audienceSegmentIds": null,
+    "retailerIds": [
+      "12"
+    ],
+    "audienceSegmentTypes": [
+      "ContactList",
+      "Events"
+    ]
+  }
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+{
+  "data": {
+    "type": "AudienceSegment",
+    "attributes": {
+      "audienceSegmentIds": None
+      "retailerIds": [
+        "12"
+      ],
+      "audienceSegmentTypes": [
+        "ContactList",
+        "Events"
+      ]
+    }
+  }
+}
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("POST", "/{version}/retail-media/accounts/625702934721171442/audience-segments/search?limit=50&offset=0", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, '{"data":{"type":"AudienceSegment","attributes":{"audienceSegmentIds":null,"retailerIds":["12"],"audienceSegmentTypes":["ContactList","Events"]}}}');
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/search?limit=50&offset=0")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/search?limit=50&offset=0');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":{"type":"AudienceSegment","attributes":{"audienceSegmentIds":null,"retailerIds":["12"],"audienceSegmentTypes":["ContactList","Events"]}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json expandable
+{
+    "meta": {
+        "totalItems": 400,
+        "limit": 50,
+        "offset": 0
+    },
+    "data": [
+        {
+            "id": "203134567785554216",
+            "type": "AudienceSegment",
+            "attributes": {
+                "name": "Segment Name",
+                "type": "Events",
+                "createdAt": "2024-01-15T12:23:18.180Z",
+                "updatedAt": "2024-01-15T12:23:18.180Z",
+                "accountId": "625702934721171442",
+                "retailerId": "12",
+                "events": {
+                    "shopperActivity": "View",
+                    "lookbackDays": "Last90Days",
+                    "categoryIds": [
+                        "3590922"
+                    ],
+                    "brandIds": []
+                }
+            }
+        },
+        // ...
+        {
+            "id": "225702933721171456",
+            "type": "AudienceSegment",
+            "attributes": {
+                "name": "Segment Name",
+                "type": "ContactList",
+                "createdAt": "2024-01-23T09:33:40.822Z",
+                "updatedAt": "2024-01-23T09:33:40.822Z",
+                "accountId": "625702934721171442",
+                "retailerId": "12",
+                "contactList": {
+                    "isReadOnly": "true",
+                    "identifierType": "Email"
+                }
+            }
+        }
+    ],
+    "errors": [],
+    "warnings": []
+}
+```
+
+***
+
+## Get Contact List Segment Statistics
+
+This endpoint allows retrieving statistics from `Contact List` segments.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/{version}/retail-media/accounts/{accountId}/audience-segments/{audienceSegmentId}/contact-list
+```
+</EndpointBadge>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X GET 'https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/225702933721171456/contact-list' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import http.client
+conn = http.client.HTTPSConnection("api.criteo.com")
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("GET", "/{version}/retail-media/accounts/625702934721171442/audience-segments/225702933721171456/contact-list",  headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/225702933721171456/contact-list")
+  .method("GET")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/625702934721171442/audience-segments/225702933721171456/contact-list');
+$request->setMethod(HTTP_Request2::METHOD_GET);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "id": "225702933721171456",
+        "identifierType": "AudienceSegment",
+        "attributes": {
+            "numberOfIdentifiers": 10000,
+            "numberOfMatches": 5000,
+            "matchRate": 0.5
+        }
+    },
+    "errors": [],
+    "warnings": []
+}
+```
+
+***
+
+## Add/Remove identifiers in Contact List Audience Segment
+
+This endpoint allows to add/remove users in a specific `Contact List` segment.
+
+Note: the corresponding App should have the "**Audiences Manage**" permission enabled.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      operation
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     enum
+    </p>
+   </td>
+   <td>
+    <p>
+     Operation required for the sub-set of users provided in the request
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      add
+     </code>
+     ,
+     <code>
+      remove
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/audience-segments/{audienceSegmentId}/contact-list/add-remove
+```
+</EndpointBadge>
+
+**Sample Request**  - adding users to existing audience segment
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/add-remove' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "AddRemoveContactlist",
+    "attributes": {
+      "operation": "add",
+      "identifierType": "email",
+      "identifiers": [
+        "abc@gmail.com",
+        "def@gmail.com",
+        "aef@gmail.com"
+      ]
+    }
+  }
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+{
+  "data": {
+    "type": "AddRemoveContactlist",
+    "attributes": {
+      "operation": "add",
+      "identifierType": "email",
+      "identifiers": [
+        "abc@gmail.com",
+        "def@gmail.com",
+        "aef@gmail.com",
+      ]
+    }
+  }
+}
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("POST", "/{version}/retail-media/audience-segments/225702933721171456/contact-list/add-remove", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, '{"data":{"type":"AddRemoveContactlist","attributes":{"operation":"add","identifierType":"email","identifiers":["abc@gmail.com","def@gmail.com","aef@gmail.com"]}}}');
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/add-remove")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/add-remove');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":{"type":"AddRemoveContactlist","attributes":{"operation":"add","identifierType":"email","identifiers":["abc@gmail.com","def@gmail.com","aef@gmail.com"]}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "AddRemoveContactlistResult",
+        "attributes": {
+            "contactListId": 523103620165619700,
+            "operation": "add",
+            "requestDate": "2024-04-22T14:29:07.994Z",
+            "identifierType": "email",
+            "nbValidIdentifiers": 3,
+            "nbInvalidIdentifiers": 0,
+            "sampleInvalidIdentifiers": []
+        }
+    },
+    /* omitted if no errors */
+    "errors": [],
+    /* omitted if no warnings */
+    "warnings": []
+}
+```
+
+**Sample Request** - removing users from existing audience segment
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/add-remove' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "ContactlistAmendment",
+    "attributes": {
+      "operation": "remove",
+      "identifierType": "email",
+      "identifiers": [
+        "example1@gmail.com"
+      ]
+    }
+  }
+}'
+```
+
+```python Python
+import http.client
+import json
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = json.dumps({
+{
+  "data": {
+    "type": "ContactlistAmendment",
+    "attributes": {
+        "operation": "remove",
+        "identifierType": "email",
+        "identifiers": [
+            "example1@gmail.com"
+        ]
+    }
+  }
+}
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer &lt;TOKEN&gt;'
+}
+conn.request("POST", "/{version}/retail-media/audience-segments/225702933721171456/contact-list/add-remove", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, '{"data":{"type":"ContactlistAmendment","attributes":{"operation":"remove","identifierType":"email","identifiers":["example1@gmail.com"]}}}');
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/add-remove")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer &lt;TOKEN&gt;")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/add-remove');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer &lt;TOKEN&gt;'
+));
+$request->setBody('{"data":{"type":"ContactlistAmendment","attributes":{"operation":"remove","identifierType":"email","identifiers":["example1@gmail.com"]}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json
+{
+    "data": {
+        "type": "ContactlistAmendment",
+        "attributes": {
+            "operation": "remove",
+            "requestDate": "2018-12-10T10:00:50.000Z",
+            "identifierType": "email",
+            "nbValidIdentifiers": 7342,
+            "nbInvalidIdentifiers": 13,
+            "sampleInvalidIdentifiers": [
+                "InvalidIdentifier"
+            ]
+        }
+    },
+    /* omitted if no errors */
+    "errors": [],
+    /* omitted if no warnings */
+    "warnings": []
+}
+```
+
+<Danger>
+  **Identifier List Size Limit**
+
+  Note that there is a limit of **50,000 identifiers per single request**. If you are adding more than 50,000 users, please split them into chunks of 50,000 and make multiple requests.
+</Danger>
+
+***
+
+## Clear all identifiers in Contact List Audience Segment
+
+This endpoint resets a `Contact List segment`, erasing all existing users identifiers.
+
+<Warning>
+  The corresponding App should have the "**Audiences Manage**" permission enabled.
+</Warning>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/retail-media/audience-segments/{audienceSegmentId}/contact-list/clear
+```
+</EndpointBadge>
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/clear' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+```python Python
+import http.client
+
+conn = http.client.HTTPSConnection("api.criteo.com")
+payload = ''
+headers = {
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+conn.request("POST", "/{version}/retail-media/audience-segments/225702933721171456/contact-list/clear", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = RequestBody.create(mediaType, "");
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/clear")
+  .method("POST", body)
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/audience-segments/225702933721171456/contact-list/clear');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer MY_ACCESS_TOKEN>'
+));
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+🟢 201 Created (empty response body)
+
+<Info>
+  Note that this will only wipe all of the users from the audience segment and will not delete the audience segment itself.
+</Info>
+
+<Warning>
+  **Note on Audience Computation**
+
+  Audience updates are processed daily at 0h UTC and 12h UTC and can take around 5 hours to reflect on a live campaign. This is important for audiences that are frequently updated as changes should be ready for processing prior to these two times.
+</Warning>
+
+***
+
+<br />
+
+

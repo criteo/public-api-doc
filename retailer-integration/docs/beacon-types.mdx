@@ -130,7 +130,7 @@ For SKUs that were not rendered, you **must** append additional parameters to th
 
 ### Handling Painted Slots
 
-Painted slot indices represent the position of each product as rendered in the UI within a placement. Providing slot indices enables accurate measurement and attribution at the slot level.
+Painted slot indices represent the absolute position of each product as rendered in the UI within the whole grid including organic products. Providing slot indices enables accurate measurement and attribution at the slot level.
 
 <Warning>
   Providing slot indices is required to ensure accurate slot-level reporting and alignment between impression and click events.
@@ -138,7 +138,7 @@ Painted slot indices represent the position of each product as rendered in the U
 
 #### How slot indices work
 
-Slot indices must reflect the actual visual position of each product in the placement (e.g., left-to-right, top-to-bottom).
+Slot indices must reflect the actual visual position of each sponsored product in the whole grid including organic products (e.g., left-to-right, top-to-bottom).
 
 **Example:**
 
@@ -253,9 +253,11 @@ Billable events, tracked by Criteo beacons, include:
 <Warning>
   **Beacon duplication**
 
-  **All Criteo beacons should only ever be triggered once**, _except_ for product-level click events (`OnClick`, `OnBasketChange`, and `OnWishlist`), which can occur multiple times.
+  **Each Criteo beacon should only ever be triggered once per user action.** Criteo deduplicates beacons only from the **third firing onwards** — a beacon fired twice still results in two billable charges. Duplicate firings inflate costs for brands, distort ROAS, and accelerate budget spend. Even though deduplication exists, it is not a safeguard against double-firing.
 
-  Criteo automatically deduplicates all billable events. Therefore, each user action—such as adding a product to the wishlist, adding it to the cart, increasing the cart quantity, and clicking through to the product page—should trigger its respective click beacon for all click interactions.
+  The only exception is `OnBasketChangeBeacon`, which should fire on every basket change event (add, remove, or quantity update).
+
+  All other beacons — including `OnClick` and `OnWishlist` — should fire once per distinct user interaction.
 </Warning>
 
 <Info>

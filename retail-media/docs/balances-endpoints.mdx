@@ -736,15 +736,23 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
     <p>
      Accepted values:
      <code>
-      Onsite
+      onsite
      </code>
      ,
      <code>
-      Offsite
+      offsite
      </code>
      ,
      <code>
-      OffsiteAwareness
+      offsiteAwareness
+     </code>
+     ,
+     <code>
+      lockout
+     </code>
+     ,
+     <code>
+      unknown
      </code>
     </p>
     <p>
@@ -1079,7 +1087,7 @@ _*Required for Balance creation_
      Definition of the type of change in a balance
     </p>
     <p>
-     Accepted values: <code>BalanceCreated</code>, <code>BalanceCapped</code>, <code>BalanceUncapped</code>, <code>EndDate</code>, <code>StartDate</code>, <code>RetailerPoNumber</code>, <code>ValueAdd</code>
+     Accepted values: <code>balanceCreated</code>, <code>balanceAdded</code>, <code>balanceRemoved</code>, <code>balanceCapped</code>, <code>balanceUncapped</code>, <code>balanceName</code>, <code>endDate</code>, <code>startDate</code>, <code>retailerPoNumber</code>, <code>criteoPoNumber</code>, <code>retailerId</code>, <code>valueAdd</code>, <code>unknown</code>
     </p>
     <ul>
      <li>
@@ -1168,7 +1176,7 @@ _*Required for Balance creation_
 
 This endpoint lists all balances in an account.
 
-Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respectively. See [API Response](/criteo-apis/docs/api-response#pagination).
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `25`, respectively. See [API Response](/criteo-apis/docs/api-response#pagination).
 
 <EndpointBadge method="get">
 ```http
@@ -1188,14 +1196,14 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25" \
+curl -X GET "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?offset=0&limit=25" \
     -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
 ```
 
 ```python Python
 import requests
 
-url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25"
+url = "https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?offset=0&limit=25"
 
 payload={}
 headers = {
@@ -1217,7 +1225,7 @@ MediaType mediaType = MediaType.parse("text/plain");
 RequestBody body = RequestBody.create(mediaType, "");
 
 Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25")
+  .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?offset=0&limit=25")
   .method("GET", body)
   .addHeader("Accept", "application/json")
   .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
@@ -1230,7 +1238,7 @@ Response response = client.newCall(request).execute();
 <?php
 require_once 'HTTP/Request2.php';
 $request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?pageIndex=0&pageSize=25');
+$request->setUrl('https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances?offset=0&limit=25');
 $request->setMethod(HTTP_Request2::METHOD_GET);
 $request->setConfig(array(
   'follow_redirects' => TRUE
@@ -1325,10 +1333,9 @@ catch(HTTP_Request2_Exception $e) {
 ```json expandable
 {
   "metadata": {
-    "totalItemsAcrossAllPages": 135,
-    "currentPageSize": 25,
-    "currentPageIndex": 0,
-    "totalPages": 6
+    "count": 135,
+    "offset": 0,
+    "limit": 25
   },
   "data": [
     {
@@ -1371,7 +1378,7 @@ catch(HTTP_Request2_Exception $e) {
         "createdAt": "2026-03-24T18:15:58+00:00",
         "updatedAt": "2026-05-20T17:17:40+00:00",
         "balanceType": "capped",
-        "spendType": "Onsite",
+        "spendType": "onsite",
         "privateMarketBillingType": "notApplicable"
       }
     }
@@ -1464,8 +1471,8 @@ curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/18446744
                 "attributes": {
                     "name": "Balance 2025 Q1",
                     "startDate": "2025-01-01",
-                    "spendType": "Onsite",
-                    "poNumber": null,
+                    "spendType": "onsite",
+                    "retailerPoNumber": null,
                     "deposited": 12500.00,
                     "endDate": "",
                     "memo": "Balance for campaigns in 2025 Q1"
@@ -1485,8 +1492,8 @@ payload = json.dumps({
         "attributes": {
             "name": "Balance 2025 Q1",
             "startDate": "2025-01-01",
-            "spendType": "Onsite",
-            "poNumber": None,
+            "spendType": "onsite",
+            "retailerPoNumber": None,
             "deposited": 12500.00,
             "endDate": "",
             "memo": "Balance for campaigns in 2025 Q1"
@@ -1510,7 +1517,7 @@ OkHttpClient client = new OkHttpClient().newBuilder()
 
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"name\":\"Balance 2025 Q1\",\"startDate\":\"2025-01-01\",\"spendType\":\"Onsite\",\"poNumber\": null,\"deposited\": 12500.00,\"endDate\":\"\",\"memo\":\"Balance for campaigns in 2025 Q1\"}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"name\":\"Balance 2025 Q1\",\"startDate\":\"2025-01-01\",\"spendType\":\"onsite\",\"retailerPoNumber\":null,\"deposited\":12500.00,\"endDate\":\"\",\"memo\":\"Balance for campaigns in 2025 Q1\"}}}");
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances")
@@ -1537,7 +1544,7 @@ $request->setHeader(array(
     'Accept' => 'application/json',
     'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
-$request->setBody('{"data":{"attributes":{"name":"Balance 2025 Q1","startDate":"2025-01-01","spendType":"Onsite","poNumber":null,"deposited":12500.00,"endDate":"","memo":"Balance for campaigns in 2025 Q1"}}');
+$request->setBody('{"data":{"attributes":{"name":"Balance 2025 Q1","startDate":"2025-01-01","spendType":"onsite","retailerPoNumber":null,"deposited":12500.00,"endDate":"","memo":"Balance for campaigns in 2025 Q1"}}}');
 try{
     $response = $request->send();
     if ($response->getStatus() == 200) {
@@ -1560,11 +1567,12 @@ catch(HTTP_Request2_Exception $e) {
 ```json
 {
     "id": "697385288434028544",
-    "type": "BalanceResponseV2",
+    "type": "BalanceV1",
     "data": {
         "attributes": {
             "name": "Balance 2025 Q1",
-            "poNumber": null,
+            "retailerPoNumber": null,
+            "criteoPoNumber": null,
             "memo": "Balance for campaigns in 2025 Q1",
             "deposited": 12500.00,
             "spent": 0.00,
@@ -1575,7 +1583,7 @@ catch(HTTP_Request2_Exception $e) {
             "createdAt": "2025-04-08T10:00:09+00:00",
             "updatedAt": "2025-04-08T10:00:09+00:00",
             "balanceType": "capped",
-            "spendType": "Onsite",
+            "spendType": "onsite",
             "privateMarketBillingType": "billByRetailer"
         }
     },
@@ -1588,7 +1596,7 @@ catch(HTTP_Request2_Exception $e) {
 
 ## Modify Balance Metadata
 
-This endpoint modifies the metadata of a specified balance, like `name`, `poNumber`, `startDate` or `endDate`. To modify deposited funds, check the following endpoint.
+This endpoint modifies the metadata of a specified balance, like `name`, `retailerPoNumber`, `startDate` or `endDate`. To modify deposited funds, check the following endpoint.
 
 <Warning>
   Only Balances created through the API can be modified through this endpoint, i.e., with billing type `billByRetailer`.  
@@ -1615,8 +1623,8 @@ curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/1844674
             "data": {
                 "attributes": {
                     "startDate": "2025-01-01",
-                    "endDate": "2025-04-01",
-                    "poNumber": "PO 12345",
+                    "endDate": {"value": "2025-04-01"},
+                    "retailerPoNumber": "PO 12345",
                     "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
                 }
             }
@@ -1633,8 +1641,8 @@ payload = json.dumps({
     "data": {
         "attributes": {
             "startDate": "2025-01-01",
-            "endDate": "2025-04-01",
-            "poNumber": "PO 12345",
+            "endDate": {"value": "2025-04-01"},
+            "retailerPoNumber": "PO 12345",
             "memo": "Balance for campaigns in 2025 Q1 (with start and end date)"
         }
     }
@@ -1656,7 +1664,7 @@ OkHttpClient client = new OkHttpClient().newBuilder()
 
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"startDate\":\"2025-01-01\",\"endDate\":\"2025-04-01\",\"poNumber\":\"PO 12345\",\"memo\":\"Balance for campaigns in 2025 Q1 (with start and end date)\"}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"startDate\":\"2025-01-01\",\"endDate\":{\"value\":\"2025-04-01\"},\"retailerPoNumber\":\"PO 12345\",\"memo\":\"Balance for campaigns in 2025 Q1 (with start and end date)\"}}}");
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544")
@@ -1683,7 +1691,7 @@ $request->setHeader(array(
     'Accept' => 'application/json',
     'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
-$request->setBody('{"data":{"attributes":{"startDate":"2025-01-01","endDate":"2025-04-01","poNumber":"PO 12345","memo":"Balance for campaigns in 2025 Q1 (with start and end date)"}}}');
+$request->setBody('{"data":{"attributes":{"startDate":"2025-01-01","endDate":{"value":"2025-04-01"},"retailerPoNumber":"PO 12345","memo":"Balance for campaigns in 2025 Q1 (with start and end date)"}}}');
 try{
     $response = $request->send();
     if ($response->getStatus() == 200) {
@@ -1706,24 +1714,23 @@ catch(HTTP_Request2_Exception $e) {
 ```json
 {
     "id": "697385288434028544",
-    "type": "BalanceResponseV2",
-    "data": {
-        "attributes": {
-            "name": "Balance 2025 Q1",
-            "poNumber": "PO 12345",
-            "memo": "Balance for campaigns in 2025 Q1 (with start and end date)",
-            "deposited": 12500.00,
-            "spent": 0.00,
-            "remaining": 12500.00,
-            "startDate": "2025-01-01",
-            "endDate": "2025-04-01",
-            "status": "active",
-            "createdAt": "2025-04-08T10:00:09+00:00",
-            "updatedAt": "2025-04-08T10:00:09+00:00",
-            "balanceType": "capped",
-            "spendType": "Onsite",
-            "privateMarketBillingType": "billByRetailer"
-        }
+    "type": "BalanceV1",
+    "attributes": {
+        "name": "Balance 2025 Q1",
+        "retailerPoNumber": "PO 12345",
+        "criteoPoNumber": null,
+        "memo": "Balance for campaigns in 2025 Q1 (with start and end date)",
+        "deposited": 12500.00,
+        "spent": 0.00,
+        "remaining": 12500.00,
+        "startDate": "2025-01-01",
+        "endDate": "2025-04-01",
+        "status": "active",
+        "createdAt": "2025-04-08T10:00:09+00:00",
+        "updatedAt": "2025-04-08T10:00:09+00:00",
+        "balanceType": "capped",
+        "spendType": "onsite",
+        "privateMarketBillingType": "billByRetailer"
     },
     "warnings": [],
     "errors": []
@@ -1741,7 +1748,7 @@ This endpoint allows adding or removing funds deposited in a specific balance.
 </Info>
 
 <Warning>
-  This endpoint only accepts `deltaAmount`, `poNumber`, and `memo`. Any other parameters (e.g. `endDate`) are silently ignored — no error is returned, but the value is not applied.
+  This endpoint only accepts `deltaAmount`, `retailerPoNumber`, and `memo`. Any other parameters (e.g. `endDate`) are silently ignored — no error is returned, but the value is not applied.
 </Warning>
 
 <EndpointBadge method="post">
@@ -1812,7 +1819,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
    <td>
     <p>
      <code>
-      poNumber
+      retailerPoNumber
      </code>
     </p>
    </td>
@@ -1825,7 +1832,7 @@ https://api.criteo.com/{version}/retail-media/accounts/{accountId}/balances/{bal
    </td>
    <td>
     <p>
-     New purchase order number
+     New retailer purchase order number
     </p>
     <p>
      Accepted values: up to 32-char strings
@@ -1880,7 +1887,7 @@ curl -L -X PATCH 'https://api.criteo.com/{version}/retail-media/accounts/1844674
             "data": {
                 "attributes": {
                     "deltaAmount": -2500.00,
-                    "poNumber": "PO 12346",
+                    "retailerPoNumber": "PO 12346",
                     "memo": "Reduced balance for campaigns in 2025 Q1"
                 }
             }
@@ -1897,7 +1904,7 @@ payload = json.dumps({
     "data": {
         "attributes": {
             "deltaAmount": -2500.00,
-            "poNumber": "PO 12346",
+            "retailerPoNumber": "PO 12346",
             "memo": "Reduced balance for campaigns in 2025 Q1"
         }
     }
@@ -1920,7 +1927,7 @@ OkHttpClient client = new OkHttpClient().newBuilder()
 
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"deltaAmount\": -2500.00,\"poNumber\":\"PO 12346",\"memo":\"Reduced balance for campaigns in 2025 Q1\"}}}");
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"deltaAmount\": -2500.00,\"retailerPoNumber\":\"PO 12346\",\"memo\":\"Reduced balance for campaigns in 2025 Q1\"}}}");
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/accounts/18446744073709551616/balances/697385288434028544/add-funds")
@@ -1947,7 +1954,7 @@ $request->setHeader(array(
     'Accept' => 'application/json',
     'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
-$request->setBody('{"data":{"attributes":{"deltaAmount":-2500.00,"poNumber":"PO 12346","memo":"Reduced balance for campaigns in 2025 Q1"}}}');
+$request->setBody('{"data":{"attributes":{"deltaAmount":-2500.00,"retailerPoNumber":"PO 12346","memo":"Reduced balance for campaigns in 2025 Q1"}}}');
 try{
     $response = $request->send();
     if ($response->getStatus() == 200) {
@@ -1969,24 +1976,23 @@ catch(HTTP_Request2_Exception $e) {
 ```json
 {
     "id": "697385288434028544",
-    "type": "BalanceResponseV2",
-    "data": {
-        "attributes": {
-            "name": "Balance 2025 Q1",
-            "poNumber": "PO 12346",
-            "memo": "Reduced balance for campaigns in 2025 Q1",
-            "deposited": 10000.00,
-            "spent": 0.00,
-            "remaining": 10000.00,
-            "startDate": "2025-01-01",
-            "endDate": "2025-04-01",
-            "status": "active",
-            "createdAt": "2025-04-08T10:00:09+00:00",
-            "updatedAt": "2025-04-08T10:00:09+00:00",
-            "balanceType": "capped",
-            "spendType": "Onsite",
-            "privateMarketBillingType": "billByRetailer"
-        }
+    "type": "BalanceV1",
+    "attributes": {
+        "name": "Balance 2025 Q1",
+        "retailerPoNumber": "PO 12346",
+        "criteoPoNumber": null,
+        "memo": "Reduced balance for campaigns in 2025 Q1",
+        "deposited": 10000.00,
+        "spent": 0.00,
+        "remaining": 10000.00,
+        "startDate": "2025-01-01",
+        "endDate": "2025-04-01",
+        "status": "active",
+        "createdAt": "2025-04-08T10:00:09+00:00",
+        "updatedAt": "2025-04-08T10:00:09+00:00",
+        "balanceType": "capped",
+        "spendType": "onsite",
+        "privateMarketBillingType": "billByRetailer"
     },
     "warnings": [],
     "errors": []
@@ -1999,7 +2005,7 @@ catch(HTTP_Request2_Exception $e) {
 
 This endpoint lists all campaigns on the specified balance.
 
-Results are paginated using `pageIndex` and `pageSize` query parameters; if omitted, defaults to `0` and `25`, respective - see [API Response](/criteo-apis/docs/api-response)
+Results are paginated using `offset` and `limit` query parameters; if omitted, defaults to `0` and `25`, respectively — see [API Response](/criteo-apis/docs/api-response)
 
 <EndpointBadge method="get">
 ```http
@@ -2068,7 +2074,7 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?pageIndex=0&pageSize=25" \
+curl -X GET "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?offset=0&limit=25" \
     -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
 ```
 
@@ -2081,7 +2087,7 @@ MediaType mediaType = MediaType.parse("text/plain");
 RequestBody body = RequestBody.create(mediaType, "");
 
 Request request = new Request.Builder()
-  .url("https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?pageIndex=0&pageSize=25")
+  .url("https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?offset=0&limit=25")
   .method("GET", body)
   .addHeader("Accept", "application/json")
   .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
@@ -2093,7 +2099,7 @@ Response response = client.newCall(request).execute();
 ```python Python
 import requests
 
-url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?pageIndex=0&pageSize=25"
+url = "https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?offset=0&limit=25"
 
 payload={}
 headers = {
@@ -2110,7 +2116,7 @@ print(response.text)
 <?php
 require_once 'HTTP/Request2.php';
 $request = new HTTP_Request2();
-$request->setUrl('https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?pageIndex=0&pageSize=25');
+$request->setUrl('https://api.criteo.com/{version}/retail-media/balances/14094543095747588032/campaigns?offset=0&limit=25');
 $request->setMethod(HTTP_Request2::METHOD_GET);
 $request->setConfig(array(
   'follow_redirects' => TRUE
@@ -2153,12 +2159,9 @@ catch(HTTP_Request2_Exception $e) {
         }
     ],
     "metadata": {
-        "totalItemsAcrossAllPages": 2,
-        "currentPageSize": 25,
-        "currentPageIndex": 0,
-        "totalPages": 1,
-        "nextPage": null,
-        "previousPage": null
+        "count": 2,
+        "offset": 0,
+        "limit": 25
     }
 }
 ```
@@ -2212,14 +2215,14 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/app
    <td>
     <p>
      <code>
-      id
+      data.attributes.ids
      </code>
     </p>
    </td>
    <td>
     <p>
      <code>
-      string
+      array of strings
      </code>
     </p>
    </td>
@@ -2228,13 +2231,13 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/app
      <a href="/retail-media/docs/campaign">
       Campaign
      </a>
-     ID, required to define to which campaign(s) the balance should be appended or deleted
+     IDs to append or remove from the balance
     </p>
     <p>
-     Accepted values: string of int64
+     Accepted values: array of int64 strings
     </p>
     <p>
-     Writeable? N / Nullable? N
+     Writeable? Y / Nullable? N
     </p>
    </td>
   </tr>
@@ -2318,14 +2321,14 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
    <td>
     <p>
      <code>
-      id
+      data.attributes.ids
      </code>
     </p>
    </td>
    <td>
     <p>
      <code>
-      string
+      array of strings
      </code>
     </p>
    </td>
@@ -2334,13 +2337,13 @@ https://api.criteo.com/{version}/retail-media/balances/{balanceId}/campaigns/del
      <a href="/retail-media/docs/campaign">
       Campaign
      </a>
-     ID, required to define to which campaign(s) the balance should be appended or deleted
+     IDs to append or remove from the balance
     </p>
     <p>
-     Accepted values: string of int64
+     Accepted values: array of int64 strings
     </p>
     <p>
-     Writeable? N / Nullable? N
+     Writeable? Y / Nullable? N
     </p>
    </td>
   </tr>
@@ -2394,7 +2397,7 @@ Additional query parameter `limitToChangeTypes` can be used to inform a comma-se
 
   Returns a chronological list of changes to a balance. PO number updates appear as separate entries keyed by `changeType` — not as field keys on every entry.
 
-  **Observed `changeType` values:** `BalanceCreated`, `BalanceCapped`, `BalanceUncapped`, `EndDate`, `StartDate`, `CriteoPoNumber`, `RetailerPoNumber`, `ValueAdd`
+  **Observed `changeType` values:** `balanceCreated`, `balanceAdded`, `balanceRemoved`, `balanceCapped`, `balanceUncapped`, `balanceName`, `endDate`, `startDate`, `criteoPoNumber`, `retailerPoNumber`, `retailerId`, `valueAdd`, `unknown`
 
   Each entry's `changeDetails` carries:
 
@@ -2440,7 +2443,7 @@ curl -L -X GET 'https://api.criteo.com/{version}/retail-media/balances/{balanceI
     {
       “type”: “BalanceHistoryChangeDataCaptureV1”,
       “attributes”: {
-        “changeType”: “BalanceCreated”,
+        “changeType”: “balanceCreated”,
         “changeDetails”: {
           “previousValue”: null,
           “currentValue”: “100.00”,
@@ -2454,7 +2457,7 @@ curl -L -X GET 'https://api.criteo.com/{version}/retail-media/balances/{balanceI
     {
       “type”: “BalanceHistoryChangeDataCaptureV1”,
       “attributes”: {
-        “changeType”: “CriteoPoNumber”,
+        “changeType”: “criteoPoNumber”,
         “changeDetails”: {
           “previousValue”: null,
           “currentValue”: “PO-CRITEO-123”,
@@ -2468,7 +2471,7 @@ curl -L -X GET 'https://api.criteo.com/{version}/retail-media/balances/{balanceI
     {
       “type”: “BalanceHistoryChangeDataCaptureV1”,
       “attributes”: {
-        “changeType”: “RetailerPoNumber”,
+        “changeType”: “retailerPoNumber”,
         “changeDetails”: {
           “previousValue”: null,
           “currentValue”: “PO-RETAILER-123”,

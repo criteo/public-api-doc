@@ -1,0 +1,285 @@
+---
+title: Product Boost
+---
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Introduction
+
+Product Boost allows advertisers to amplify the visibility of specific product sets within an ad by applying a **boosting factor**. When configured, products belonging to the specified product set are weighted more heavily in the ad's delivery logic relative to unboosted products.
+
+Advertisers managing large catalogs can use Product Boost to surface priority products (e.g. seasonal items, high-margin SKUs, promoted lines) without creating separate ads. It provides a lightweight configuration layer on top of an existing ad, scoped to a product set.
+
+**Prerequisites:**
+- A valid Marketing Solutions ad ID (`ad-id`) — the ad must already exist
+- A valid product set ID (`product-set-id`) linked to a dataset associated with the ad
+- OAuth 2.0 Bearer token with scope `MarketingSolutions_Reco_Read` (read endpoints) or `MarketingSolutions_Reco_Manage` (POST and DELETE)
+
+**Key concepts:**
+- **Product set** — a curated subset of products from a catalog dataset, identified by `productSetId`
+- **Boosting factor** — a numeric multiplier applied to products in the set during ad serving; a value of `1` means no boost, values above `1` increase priority
+- **Dataset** — the catalog data source referenced by the ad; the dataset-level GET endpoint lets you inspect all boost configurations across a dataset regardless of which ad they belong to
+
+<Info>
+  **Upsert behavior**
+
+  The POST endpoint creates the boosting configuration if none exists for the given `(ad-id, product-set-id)` pair, or replaces it entirely if one already exists. There is no PATCH — send the full desired configuration each time.
+</Info>
+
+***
+
+## Endpoints Overview
+
+| Verb | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/marketing-solutions/ads/{ad-id}/product-boost` | List all product boost configurations for an ad |
+| **GET** | `/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}` | Get the product boost configuration for a specific product set |
+| **POST** | `/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}` | Create or replace a product boost configuration |
+| **DELETE** | `/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}` | Delete a product boost configuration |
+| **GET** | `/marketing-solutions/dataset/{dataset-id}/product-boost` | List all product boost configurations for a dataset |
+
+***
+
+## Attributes
+
+Resource type: `BoostedAdProductSet`
+
+| Attribute | Data Type | Description |
+| --- | --- | --- |
+| `adId` | string | ID of the Marketing Solutions ad this configuration belongs to.<br /><br />**Accepted values:** string of int64 / **Writeable?** N / **Nullable?** N |
+| `productSetId` | string | ID of the product set being boosted within the ad.<br /><br />**Accepted values:** string of int64 / **Writeable?** N / **Nullable?** N |
+| `boostingFactor`* | number (double) | Multiplier applied to products in the set during ad serving. A value of `1` means no boost.<br /><br />**Accepted values:** positive float / **Writeable?** Y / **Nullable?** N |
+| `modificationDate` | string | Datetime of the last modification to this configuration.<br /><br />**Accepted values:** datetime string / **Writeable?** N / **Nullable?** N |
+
+_*Required at create/update operation_
+
+<FieldDefinitions />
+
+***
+
+## List all product boost configurations for an ad
+
+Returns all `BoostedAdProductSet` entries associated with the given ad.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/2026-07/marketing-solutions/ads/{ad-id}/product-boost
+```
+</EndpointBadge>
+
+**Sample request**
+
+```curl
+curl -L -X GET 'https://api.criteo.com/2026-07/marketing-solutions/ads/1234567890/product-boost' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample response**
+
+```json
+{
+  "data": [
+    {
+      "type": "BoostedAdProductSet",
+      "attributes": {
+        "adId": "1234567890",
+        "productSetId": "9876543210",
+        "boostingFactor": 1.5,
+        "modificationDate": "2026-07-21T10:30:00Z"
+      }
+    },
+    {
+      "type": "BoostedAdProductSet",
+      "attributes": {
+        "adId": "1234567890",
+        "productSetId": "1122334455",
+        "boostingFactor": 2.0,
+        "modificationDate": "2026-07-15T08:00:00Z"
+      }
+    }
+  ]
+}
+```
+
+***
+
+## Get a product boost configuration
+
+Returns the `BoostedAdProductSet` for the given `(ad-id, product-set-id)` pair.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/2026-07/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}
+```
+</EndpointBadge>
+
+**Sample request**
+
+```curl
+curl -L -X GET 'https://api.criteo.com/2026-07/marketing-solutions/ads/1234567890/product-boost/9876543210' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample response**
+
+```json
+{
+  "data": {
+    "type": "BoostedAdProductSet",
+    "attributes": {
+      "adId": "1234567890",
+      "productSetId": "9876543210",
+      "boostingFactor": 1.5,
+      "modificationDate": "2026-07-21T10:30:00Z"
+    }
+  }
+}
+```
+
+***
+
+## Create or replace a product boost configuration
+
+Creates a new boosting configuration for the given `(ad-id, product-set-id)` pair. If a configuration already exists, it is fully replaced. Returns `201` on creation, `200` on update.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/2026-07/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}
+```
+</EndpointBadge>
+
+**Sample request**
+
+```curl
+curl -L -X POST 'https://api.criteo.com/2026-07/marketing-solutions/ads/1234567890/product-boost/9876543210' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+-d '{
+  "data": {
+    "type": "BoostingConfigurationRequest",
+    "attributes": {
+      "boostingFactor": 1.5
+    }
+  }
+}'
+```
+
+**Sample response**
+
+```json
+{
+  "data": {
+    "type": "BoostedAdProductSet",
+    "attributes": {
+      "adId": "1234567890",
+      "productSetId": "9876543210",
+      "boostingFactor": 1.5,
+      "modificationDate": "2026-08-01T14:22:00Z"
+    }
+  }
+}
+```
+
+***
+
+## Delete a product boost configuration
+
+Removes the boosting configuration for the given `(ad-id, product-set-id)` pair. Products in the set will no longer receive any boost. The ad itself and the product set remain unaffected. Returns the deleted resource in the response body.
+
+<EndpointBadge method="delete">
+```http
+https://api.criteo.com/2026-07/marketing-solutions/ads/{ad-id}/product-boost/{product-set-id}
+```
+</EndpointBadge>
+
+**Sample request**
+
+```curl
+curl -L -X DELETE 'https://api.criteo.com/2026-07/marketing-solutions/ads/1234567890/product-boost/9876543210' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample response**
+
+```json
+{
+  "data": {
+    "type": "BoostedAdProductSet",
+    "attributes": {
+      "adId": "1234567890",
+      "productSetId": "9876543210",
+      "boostingFactor": 1.5,
+      "modificationDate": "2026-08-01T14:22:00Z"
+    }
+  }
+}
+```
+
+***
+
+## List product boost configurations for a dataset
+
+Returns all `BoostedAdProductSet` configurations associated with the given dataset, across all ads. Optionally filter by `client-type`.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/2026-07/marketing-solutions/dataset/{dataset-id}/product-boost
+```
+</EndpointBadge>
+
+**Query parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `client-type` | string | No | Filter results by client type. Accepted values: `Unknown`, `CGrowth`, `CMax`. Returns all configurations if omitted. |
+
+**Sample request**
+
+```curl
+curl -L -X GET 'https://api.criteo.com/2026-07/marketing-solutions/dataset/5544332211/product-boost?client-type=CMax' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample response**
+
+```json
+{
+  "data": [
+    {
+      "type": "BoostedAdProductSet",
+      "attributes": {
+        "adId": "1234567890",
+        "productSetId": "9876543210",
+        "boostingFactor": 1.5,
+        "modificationDate": "2026-07-21T10:30:00Z"
+      }
+    },
+    {
+      "type": "BoostedAdProductSet",
+      "attributes": {
+        "adId": "1234567891",
+        "productSetId": "9876543211",
+        "boostingFactor": 3.0,
+        "modificationDate": "2026-07-28T09:15:00Z"
+      }
+    }
+  ]
+}
+```
+
+***
+
+## Responses
+
+| Response | Title | Detail | Troubleshooting |
+| --- | --- | --- | --- |
+| 🟢 `200` | OK | | Request executed successfully; response body contains the resource |
+| 🟢 `201` | Created | | POST executed successfully — new boosting configuration created |
+| 🔴 `400` | Bad Request | `boostingFactor` must be greater than 0 | Review the value of `boostingFactor` in the request body |
+| 🔴 `401` | Unauthorized | Missing or invalid Bearer token | Verify that the Authorization header contains a valid, non-expired access token |
+| 🔴 `403` | Forbidden | Caller does not have access to this resource | Check that the token scope is `MarketingSolutions_Reco_Manage` for write operations |
+| 🔴 `404` | Not Found | Ad or product set ID does not exist | Verify that `ad-id` and `product-set-id` exist and are accessible to the caller |

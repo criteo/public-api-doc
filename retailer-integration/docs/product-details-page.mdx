@@ -84,7 +84,11 @@ A product details page (PDP) shows the details of a single product or multiple p
 
 ## `category`
 
-**Description**: For PDP calls, this parameter exists to pass an explicit category for the purposes of ad-serving. If this field is not present, Criteo will default to the primary taxonomy of the SKU passed in the `item` parameter. If passed, this value should match the `product_type_key` value in the product feed. See more details [here](/retailer-integration/docs/product-feed-parameters#product_type_key).
+**Description**: For PDP calls, this parameter passes an explicit category used for both ad-serving and Served Category reporting. If this field is not present, Criteo will default to the primary taxonomy of the SKU passed in the `item` parameter. If passed, this value should match the `product_type_key` value in the product feed. See more details [here](/retailer-integration/docs/product-feed-parameters#product_type_key).
+
+<Warning>
+  Without this parameter, all PDP ad activity is grouped under **Page Without Category** in UI reporting. While ad-serving still works, Served Category reporting will not reflect the actual page categories for PDPs.
+</Warning>
 
 **Examples**:
 
@@ -168,6 +172,31 @@ curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
 -H "X-Forwarded-For: 123.456.789.012" \
 -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 ```
+
+***
+
+## Mock retailer API response
+
+The API call below will return a response for a mock retailer.
+
+```bash
+curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
+--data-urlencode "criteo-partner-id=108341" \
+--data-urlencode "retailer-visitor-id=456" \
+--data-urlencode "customer-id=789" \
+--data-urlencode "page-id=viewItemApiDesktop" \
+--data-urlencode "event-type=viewItem" \
+--data-urlencode "item=19539" \
+--data-urlencode "price=1" \
+--data-urlencode "availability=1" \
+-H "Referer: https://www.criteo.com" \
+-H "X-Forwarded-For: 123.456.789.012" \
+-H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+```
+
+<Note>
+  You can see an example of the response [here](https://d.eu.criteo.com/delivery/retailmedia?criteo-partner-id=108341&retailer-visitor-id=456&customer-id=789&page-id=viewItemApiDesktop&event-type=viewItem&item=19539&price=1&availability=1).
+</Note>
 
 ***
 

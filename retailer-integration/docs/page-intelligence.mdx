@@ -8,21 +8,21 @@ This guide introduces the `Page Intelligence` endpoint, its request and response
 
 ## Business Context
 
-`Page Intelligence` helps retailers optimize search and category pages holistically by evaluating organic and sponsored products together instead of managing them through separate decisioning flows.
+`Page Intelligence` helps retailers optimize search, category, and PDP pages holistically by evaluating organic and sponsored products together instead of managing them through separate decisioning flows.
 
-It uses the same Sponsored Products campaigns and reporting, while adding a unified scoring and policy layer so retailers can control how sponsored SKUs appear across placements without compromising relevance or shopper experience.
+It uses the same Sponsored Products campaigns and reporting, while adding a unified ranking and policy layer so retailers can control how sponsored SKUs appear across placements without compromising relevance or shopper experience.
 
 <Warning>
   Page Intelligence does not replace Sponsored Products.
 
   It uses the same Sponsored Products campaigns and reporting, but offers an additional way to orchestrate where and how sponsored SKUs appear across placements on your page.
 
-  You can enable it on selected search and category pages while keeping your existing Sponsored Products integration elsewhere.
+  You can enable it on selected search, category, and PDP pages while keeping your existing Sponsored Products integration elsewhere.
 </Warning>
 
 ## Endpoint Behavior
 
-`Page Intelligence` helps retailers maximize page-level value by balancing organic and sponsored products across placements using a unified scoring and policy layer.
+`Page Intelligence` helps retailers maximize page-level value by balancing organic and sponsored products across placements using a unified ranking and policy layer.
 
 The endpoint lets you:
 
@@ -78,13 +78,13 @@ The updated contract is designed to support multiple placements and align more c
    <td>
     <p>
      <code>
-      https://api.criteo.com/v1/partners/&#123;partnerId&#125;/optimize
+      /v1/partners/{partnerId}/optimize
      </code>
     </p>
    </td>
    <td>
     <p>
-     Optimize one or more placements across organic and sponsored products using a unified scoring and policy layer.
+     Optimize one or more placements across organic and sponsored products using a unified ranking and policy layer.
     </p>
    </td>
   </tr>
@@ -229,14 +229,14 @@ The updated contract is designed to support multiple placements and align more c
    <td>
     <p>
      <code>
-      regionId
+      placementIds
      </code>
     </p>
    </td>
    <td>
     <p>
      <code>
-      string
+      array\<string\>
      </code>
     </p>
    </td>
@@ -247,7 +247,7 @@ The updated contract is designed to support multiple placements and align more c
    </td>
    <td>
     <p>
-     Store ID selected by the user when browsing the retailer site.
+     A filter on the list of placements that are returned in the ad response, if items are in the list.
     </p>
    </td>
   </tr>
@@ -492,10 +492,36 @@ The `pageAdContext` object uses a flat, composable structure. Each property can 
     </p>
    </td>
   </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      regionIds
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      array\<string\>
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     No
+    </p>
+   </td>
+   <td>
+    <p>
+     Region / Store IDs selected by the user when browsing the retailer’s site.
+    </p>
+   </td>
+  </tr>
  </tbody>
 </table>
 
-* Required for requests that use holistic optimization.
+(\*) Required for requests that use holistic optimization.
 
 ### `OrganicSku`
 
@@ -701,7 +727,7 @@ The `pageAdContext` object uses a flat, composable structure. Each property can 
    <td>
     <p>
      <code>
-      array&lt;string&gt;
+      array\<string\>
      </code>
     </p>
    </td>
@@ -859,6 +885,7 @@ The `pageAdContext` object uses a flat, composable structure. Each property can 
 ```json
 {
   "pageId": "hpo_searchPage_desktop",
+  "customerId": "567242992384",
   "pageAdContext": {
     "keywords": "windows",
     "filters": [
@@ -881,9 +908,7 @@ The `pageAdContext` object uses a flat, composable structure. Each property can 
         "score": 0.97
       }
     ]
-  },
-  "customerId": "567242992384",
-  "regionId": "us-east"
+  }
 }
 ```
 
@@ -1176,7 +1201,7 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
    <td>
     <p>
      <code>
-      array&lt;OptimizeProduct&gt;
+      array\<OptimizeProduct\>
      </code>
     </p>
    </td>
@@ -1214,58 +1239,6 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
    <td>
     <p>
      Placement-level tracking beacons.
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      vastTagUrl
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     <code>
-      string
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     No
-    </p>
-   </td>
-   <td>
-    <p>
-     VAST tag URL for video ad formats.
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      vastTagXml
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     <code>
-      string
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     No
-    </p>
-   </td>
-   <td>
-    <p>
-     VAST tag XML for video ad formats.
     </p>
    </td>
   </tr>
@@ -1628,7 +1601,7 @@ The `data` object includes a `type` field set to `"OptimizeData"` and an `attrib
    <td>
     <p>
      <code>
-      object
+      StructuredBeacon
      </code>
     </p>
    </td>
@@ -1964,7 +1937,6 @@ The placement `onLoadBeacon` returned from the `/optimize` endpoint is always a 
 
 ## Integration Notes
 
-* Use this endpoint on pages where you want Criteo to optimize across organic and sponsored products together.
 * Include the relevant page context and `organicSkus` in `pageAdContext` for holistic optimization scenarios.
 * Render each placement exactly as returned.
 * Implement all beacons returned in the response. For placement `onLoadBeacon`, fire the beacon using `navigator.sendBeacon(url, data)` where `url` is `StructuredBeacon.url` and `data` is the `payload` serialized as `application/x-www-form-urlencoded`. If `navigator.sendBeacon` is not available, use a `POST` request with the same form-encoded body.

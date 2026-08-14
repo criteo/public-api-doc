@@ -1,6 +1,5 @@
 ---
 title: Overview
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/analytics/demand-side-analytics-overview.md
 ---
 
 import AttributionDelays from "/snippets/retail-media/AttributionDelays.mdx";
@@ -14,7 +13,15 @@ The following information is important to know regarding Demand Side Analytics.
 
 ### Asynchronous Workflow
 
-Reports are requested and retrieved using **asynchronous endpoints**.
+`POST /reports/performance`, `POST /reports/missed-opportunities`, and `POST /reports/attributed-transactions` are all **asynchronous**: you submit a request, poll the returned `reportId` for status, and download the output once processing succeeds.
+
+1. **Submit** the report request — a successful call returns `200 OK` with a `reportId` and a `status` of `pending`.
+2. **Poll for status** at `GET /reports/{reportId}/status` until `status` is `success` or `failure`.
+3. **Download the output** at `GET /reports/{reportId}/output` once `status` is `success`.
+
+<Note>
+  The [Real-Time Performance API](/retail-media/docs/real-time-performance-api) is the exception: it is a **synchronous** endpoint (`POST /retail-media/reports/sync/real-time-performance`) that returns data directly in the response, with no `reportId`, polling, or output step.
+</Note>
 
 ### Granularity
 
@@ -22,11 +29,11 @@ Most reports are generated at a **daily granularity**, except for the Attributed
 
 ### Report Date Range
 
-The report date range supports a maximum window of **100 days** for campaign and line-item reports, and **31 days** for account-level reports, with data retained for up to **3 years**.
+The report date range supports a maximum window of **100 days** per report, regardless of whether you scope by account, campaign, or line item, with data retained for up to **3 years**.
 
 ### Report Row Limits
 
-Reports are limited to **100,000 rows**. If a report reaches this limit, the data may be incomplete due to truncation. To avoid this, consider reviewing the following parameters for bulk requests:
+Reports are limited to **10MM rows**. If a report reaches this limit, the data may be incomplete due to truncation. To avoid this, consider reviewing the following parameters for bulk requests:
 
 * Number of campaign or line item IDs
 * Start and end date range
@@ -57,11 +64,41 @@ Please refer to [our troubleshooting guide](/criteo-apis/docs/api-troubleshootin
 
 ***
 
-<br />
+## Response Codes
 
+All Demand Side Analytics reporting endpoints — `POST /reports/performance`, `POST /reports/missed-opportunities`, `POST /reports/attributed-transactions`, and the shared `GET /reports/{reportId}/status` / `GET /reports/{reportId}/output` — share the same set of response and status codes.
 
-## What's next
+| Code | Meaning |
+|------|---------|
+| `200` | Request succeeded — report submitted, status retrieved, or output returned. |
+| `400` | Validation error. Common causes: missing, or more than one, scope filter under `filters` (`accountIds[]` / `campaignIds[]` / `lineItemIds[]`); missing `metrics[]` or `dimensions[]`; a date range exceeding 100 days; or a `startDate` older than 3 years. |
+| `404` | The `reportId` used in `GET /reports/{reportId}/status` or `GET /reports/{reportId}/output` doesn't exist, or doesn't belong to the caller's account. |
+| `410` | The report is expired (past its `expiresAt`) or failed to generate and is no longer retrievable. Submit a new report request — report output isn't retained indefinitely. |
 
-* [DSP Analytics Endpoints](/retail-media/docs/demand-side-analytics-get-started)
-* [Report Types](/retail-media/docs/report-types)
-* [Metrics and Dimensions](/retail-media/docs/metrics-and-dimensions)
+For authentication, permission, and rate-limit errors (`401`, `403`, `429`, `500`) common to all Retail Media API endpoints, see [API Error Codes](/retail-media/docs/api-error-codes).
+
+***
+
+## What changed in this version
+
+<Warning>
+  **This version introduces a major redesign of the Demand Side Analytics reporting API.** If you have an integration built against a previous version, it will **not** work unchanged: the endpoints, the request shape, and the `reportType` field have all changed. See the [migration guide](/retail-media/docs/dsp-analytics-migration-guide) before upgrading.
+</Warning>
+
+Previous versions exposed three aggregation-level endpoints — `POST /reports/campaigns`, `POST /reports/line-items`, and `POST /reports/accounts` — together with a `reportType` field that selected a preset report shape (`summary`, `keyword`, `pageType`, `capout`, `attributedTransactions`, and so on). That model has been replaced by a smaller, explicit, and more predictable set of endpoints.
+
+| Purpose | New endpoint |
+|---------|--------------|
+| Flexible performance reporting, at any account / campaign / line-item granularity | [`POST /reports/performance`](/retail-media/docs/performance-report) |
+| Budget cap-out and missed-delivery diagnostics (formerly `reportType: capout`) | [`POST /reports/missed-opportunities`](/retail-media/docs/missed-opportunities-report) |
+| Transaction-level attribution log (formerly `reportType: attributedTransactions`) | [`POST /reports/attributed-transactions`](/retail-media/docs/attributed-transactions-report) |
+
+**What is different from the previous model:**
+
+* **One performance endpoint instead of three.** `/reports/campaigns`, `/reports/line-items`, and `/reports/accounts` are all replaced by `POST /reports/performance`. You choose the scope by which ID array you pass under `filters`, and the output granularity by the dimensions you select.
+* **`reportType` is gone.** You now always specify `metrics` and `dimensions` explicitly. The preset report types (`keyword`, `pageType`, `productCategory`, `product`, `servedCategory`, `environment`, …) are reproduced simply by adding the corresponding dimension to your request.
+* **Scope moved into a `filters` object.** Instead of top-level `accountId` / `campaignId` / `lineItemId`, provide exactly one of `filters.accountIds[]`, `filters.campaignIds[]`, or `filters.lineItemIds[]`.
+* **`startDate`, `endDate`, `filters`, `metrics`, and `dimensions` are all required** on the new endpoints.
+* **Two purpose-built use cases are split into their own endpoints.** `capout` and `attributedTransactions` are no longer `reportType` values — they are dedicated endpoints, each with a few field/metric renames documented on its own page.
+
+For the full old → new endpoint mapping, every `reportType` value, before/after request examples, and the legacy support timeline, see [Migrating from the Legacy Reporting API](/retail-media/docs/dsp-analytics-migration-guide).
