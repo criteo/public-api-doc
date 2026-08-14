@@ -1,0 +1,151 @@
+---
+title: "AppsFlyer In-App Events [Android]"
+description: "Implement Criteo in-app events for Android using the AppsFlyer SDK."
+---
+
+## About this Guide
+
+This document provides detailed information on the following:
+
+- Recommended events and parameters
+- Deep link implementation
+- Testing process
+
+## Recommended Events per Vertical
+
+The recommendation is to send all events that describe the "user-flow" in the app.
+
+| Event Name | Description | Retail | Travel | Classified | Gaming | Streaming Entertainment | Finance | Dating Social | RideHailing |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| app open/app launch | when user installs the app | Y | Y | Y | Y | Y | Y | Y | Y |
+| home page / App open | when user opens the app or arrives on the home page | Y | Y | Y | Y | Y | Y | Y | Y |
+| view item list / listing | when a user sees list of items/products/offering | Y | Y | Y |  | Y |  |  | Y |
+| view item | when a user sees one specific item/products/offering | Y | Y | Y | Y | Y | Y |  |  |
+| add to cart | when a user adds an item/product to the cart | Y | Y |  |  |  |  |  |  |
+| basket | when user is on the basket page | Y | Y |  |  |  |  |  |  |
+| purchase | when user makes a purchase | Y | Y | Y | Y |  | Y |  | Y |
+| add to wish list | when a user adds an item/product to the wish list | Y | Y |  |  |  |  |  |  |
+| complete registration / sign up | when a user creates an account | Y | Y | Y | Y | Y | Y | Y | Y |
+| login | when a user logs in | Y | Y | Y | Y | Y | Y | Y | Y |
+| add payment info | when a user adds payment info | Y | Y |  |  |  | Y |  | Y |
+| begin checkout | when a user starts the purchase flow | Y | Y |  |  |  | Y |  |  |
+| purchase cancelled / refund | when a user cancels a purchase or asks for a refund | Y | Y |  |  |  |  |  | Y |
+| generate lead | when a user generates a lead |  |  | Y |  |  |  |  |  |
+| start trial | when a user starts the trial version of the app |  |  |  | Y | Y | Y | Y |  |
+| subscribe | when a user subscribes (recurring payment) | Y |  |  |  | Y | Y | Y |  |
+| select item | when a user has selected content in an app |  |  |  | Y |  |  |  | Y |
+| earn virtual currency | when a user earns virtual currency |  |  |  | Y |  |  |  |  |
+| level up | when a user passes a level |  |  |  | Y |  |  |  |  |
+| spend virtual currency | when a user spends virtual currency |  |  |  | Y |  |  |  |  |
+| tutorial begin | when a user starts the tutorial |  |  |  | Y |  |  |  |  |
+| tutorial complete | when a user completes the tutorial |  |  |  | Y |  |  |  |  |
+| unlock achievement | when a user unlocks an achievement |  |  |  | Y |  |  |  |  |
+| search |  |  | Y |  |  |  |  |  |  |
+| video/audio start | when user starts to play media in the app |  |  |  |  | Y |  |  |  |
+
+## In-App Events Implementation
+
+### viewHome
+
+The `viewHome` event is automatically tracked once the AppsFlyer SDK initializes. This event is fired for each user session.
+
+### viewListing
+
+The `viewListing` event should be fired on pages displaying product lists such as a category page or a search results page. You can use `af_view_list` as the event name. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+```java
+Map<String,Object> listViewEvent = new HashMap<String,Object>();
+listViewEvent.put(AFInAppEventParameterName.CONTENT_LIST, new String[]{"item123", "item456", "item789"});
+listViewEvent.put(AFInAppEventParameterName.CURRENCY,"USD");
+listViewEvent.put(AFInAppEventParameterName.DATE_A,"2015-10-01"); // Check-in date
+listViewEvent.put(AFInAppEventParameterName.DATE_B,"2015-10-05"); // Check-out date
+AppsFlyerLib.getInstance().trackEvent(this.getApplication(), "af_view_list", listViewEvent);
+```
+
+### viewProduct
+
+The `viewProduct` event should be fired on all product-details pages. You can use AppsFlyer's `AFInAppEventType.CONTENT_VIEW` constant for this event. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+```java
+Map<String,Object> contentViewEvent = new HashMap<String,Object>();
+contentViewEvent.put(AFInAppEventParameterName.CONTENT_ID,"item123");
+contentViewEvent.put(AFInAppEventParameterName.CURRENCY,"USD");
+contentViewEvent.put(AFInAppEventParameterName.DATE_A,"2015-10-01"); // Check-in date
+contentViewEvent.put(AFInAppEventParameterName.DATE_B,"2015-10-05"); // Check-out date
+AppsFlyerLib.getInstance().trackEvent(this.getApplication(), AFInAppEventType.CONTENT_VIEW, contentViewEvent);
+```
+
+### viewBasket
+
+The `viewBasket` event should be fired on the basket-details pages. You can use the event name `af_view_cart`. You must include the ID, unit price, and quantity for each product in the basket.
+
+```java
+Map<String, Object> viewBasket = new HashMap<String,Object>();
+viewBasket.put(AFInAppEventParameterName.CONTENT_ID, new String[]{"123a","988b","399c"});
+viewBasket.put(AFInAppEventParameterName.QUANTITY, new String[]{"2","1","1"});
+viewBasket.put(AFInAppEventParameterName.PRICE, new String[]{"25.20","50.25","10.15"});
+viewBasket.put(AFInAppEventParameterName.CURRENCY, "USD");
+viewBasket.put(AFInAppEventParameterName.DATE_A,"2015-10-01"); // Check-in date
+viewBasket.put(AFInAppEventParameterName.DATE_B,"2015-10-05"); // Check-out date
+AppsFlyerLib.getInstance().trackEvent(this.getApplication(), AFInAppEventType.INITIATED_CHECKOUT, viewBasket);
+```
+
+### trackTransaction
+
+The `trackTransaction` event should be fired on order-confirmation pages. You can use AppsFlyer's `AFInAppEventType.PURCHASE` constant for this event. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+```java
+Map<String, Object> trackTransaction = new HashMap<String, Object>();
+trackTransaction.put(AFInAppEventParameterName.CONTENT_TYPE,"category_a");
+trackTransaction.put(AFInAppEventParameterName.REVENUE,110);
+trackTransaction.put(AFInAppEventParameterName.CURRENCY,"USD");
+trackTransaction.put(AFInAppEventParameterName.CONTENT_ID,new String[]{"123a", "343rd", "39f9w"});
+trackTransaction.put(AFInAppEventParameterName.QUANTITY,new String[]{"2","1","1"});
+trackTransaction.put(AFInAppEventParameterName.PRICE, new String[]{"25.20","50.25","10.15"});
+trackTransaction.put(AFInAppEventParameterName.DATE_A,"2015-10-01"); // Check-in date
+trackTransaction.put(AFInAppEventParameterName.DATE_B,"2015-10-05"); // Check-out date
+trackTransaction.put(AFInAppEventParameterName.RECEIPT_ID,"insert-transaction-id-here");
+AppsFlyerLib.getInstance().trackEvent(this.getApplication(), AFInAppEventType.PURCHASE, trackTransaction);
+```
+
+### Hashed Email for Cross-Device Targeting
+
+Clients should send Criteo the hashed email address of the app user when available, to enable cross-device targeting.
+
+Steps to generate a hash of an email address:
+
+1. Convert all characters to lower case
+2. Remove any blank spaces
+3. Convert to UTF-8
+4. Hash using **SHA256** algorithm
+
+```java
+// You can pass one email...
+AppsFlyerLib.getInstance().setUserEmails(AppsFlyerProperties.EmailsCryptType.SHA256, "email@mydomain.com");
+
+// ...or multiple emails
+AppsFlyerLib.getInstance().setUserEmails(AppsFlyerProperties.EmailsCryptType.SHA256, "email1@mydomain.com", "email2@mydomain.com");
+```
+
+### Dates for Travel
+
+It's possible to attach check-in and check-out dates to every Criteo event with `AFInAppEventParameterName.DATE_A` for check-in date and `AFInAppEventParameterName.DATE_B` for check-out date. The format is `"yyyy-mm-dd"`.
+
+```java
+Event.put(AFInAppEventParameterName.DATE_A,"2015-10-01");
+Event.put(AFInAppEventParameterName.DATE_B,"2015-10-05");
+```
+
+## Testing Process
+
+Once all events have been implemented, you should contact your Criteo representative to begin the testing phase.
+
+<Warning>
+  Please allow sufficient time (at least a week before) for testing **prior** to the app submission in order to ensure that the data you are sending is complete.
+</Warning>
+
+Criteo requires the following elements:
+
+- App build to test the collection of events on Criteo side.
+- If testing remotely, the IDFA of the test device.
+- Deep link example (homepage & product detail).
