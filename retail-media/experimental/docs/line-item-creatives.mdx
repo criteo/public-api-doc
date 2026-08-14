@@ -1,0 +1,196 @@
+---
+title: Line Item Creatives
+description: Manage the creatives associated with an Onsite Display line item.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Overview
+
+Line Item Creatives associate a Creative to a line item. If a creative support product mappings, the creative's product collections define product placements within the creative.
+
+For more information on creative discovery (including product collection requirements), see [Creative Search](/retail-media/experimental/docs/search-for-creatives).
+
+## Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/line-items/{line-item-id}/creatives/upsert` | Link creatives and creative product collections to a line item. |
+
+## Upsert Line Item Creatives
+
+Associate one or more creatives to a line item, and define the creative's product collections. If the creative is already mapped to the line item, the association will be updated instead of duplicated.
+
+Existing line item creatives that are omitted from the request are unmodified.
+
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/creatives/upsert
+```
+</EndpointBadge>
+
+### Path parameters
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `line-item-id` | Yes | The ID of the line item to associate the creatives and product collections. |
+
+### Request attributes
+
+The resource `type` is `Creatives`.
+
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `creativeType` | Yes | Type of creative being added or updated. Currently, the only accepted value is `AuctionCreative`. It must match the buy type of the target line item. |
+| `auctionCreativeDetails` | Required when `creativeType` is `AuctionCreative`, otherwise it is rejected. | Auction-specific creative configuration. |
+| `auctionCreativeDetails.lineItemCreatives` | Required when `creativeType` is `AuctionCreative`, otherwise it is rejected. | Array of [Line Item Creative](#line-item-creative-attributes) objects to add or update. An auction line item can have at most 20 associated creatives. |
+
+
+#### Line Item Creative Attributes
+
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `creative.id` | Yes | ID of an existing creative available to the line item's account and retailer. <br/><br/> If the creative id is already mapped to the line item, then the line item creative is updated instead of duplicated. |
+| `creativeProductCollections` | Yes | Complete ordered array of Creative Product Collections for the creative. The supplied array replaces the existing collections. <br/><br/> Send an empty array to remove all collections or when the line item uses Dynamic Match. |
+| `creativeProductCollections[].isMandatory` | Required for each collection | Whether the collection is mandatory for serving. |
+| `creativeProductCollections[].products` | Required for each collection | Ordered products in the collection. A product cannot appear more than once in the same collection. |
+| `creativeProductCollections[].products[].id` | Required for each product | ID of a product in the retailer catalog. Products that are not already in the line item's product pool are added automatically. <br/><br/> Products added are subject to the same validation as when using the [Line Item Products](/retail-media/experimental/docs/line-item-products) endpoints. |
+
+### Sample Auction Creative request
+
+```json
+{
+  "data": {
+    "type": "Creatives",
+    "attributes": {
+      "creativeType": "AuctionCreative",
+      "auctionCreativeDetails": {
+        "lineItemCreatives": [
+          {
+            "creative": {
+              "id": "123"
+            },
+            "creativeProductCollections": [
+              {
+                "isMandatory": false,
+                "products": [
+                  {
+                    "id": "product-1"
+                  },
+                  {
+                    "id": "product-2"
+                  }
+                ]
+              },
+              {
+                "isMandatory": false,
+                "products": [
+                  {
+                    "id": "product-2"
+                  },
+                  {
+                    "id": "product-3"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+### Response attributes
+
+| Attribute | Description |
+| --- | --- |
+| `mediaType` | `Display` or `Video`. The line item media type is set based on the creative provided. Creatives associated to the line item must have the same media type. |
+| `auctionCreativeDetails.lineItemCreatives` | Contains the accepted auction creatives from the request. The other creatives associated to the line item are not included in the response. |
+| `creative.id` | ID of the creative. |
+| `creative.modifiedAt` | Indicates when the associated creative was last modified. |
+| `approvalStatus` | The approval status of the creative associated to the line item. |
+| `creativePreviewCode` | The Creative Live Demo preview code of the associated creative. Will be null if the retailer does not support this feature. |
+| `creativeProductCollections` | The ordered product collections of the associated creative. |
+| `creativeProductCollections[].isMandatory` | Whether the collection is mandatory for serving. |
+| `creativeProductCollections[].products` | The ordered products in the collection. |
+| `creativeProductCollections[].products[].id` | ID of the product. |
+| `creativeProductCollections[].products[].approvalStatus` | The approval status of the product. |
+
+### Sample Auction Creative response
+
+```json
+{
+  "data": {
+    "type": "Creatives",
+    "attributes": {
+      "mediaType": "Display",
+      "auctionCreativeDetails": {
+        "lineItemCreatives": [
+          {
+            "creative": {
+              "id": "123",
+              "modifiedAt": "2026-08-13T14:30:00Z"
+            },
+            "approvalStatus": "Unsubmitted",
+            "creativePreviewCode": "preview-code",
+            "creativeProductCollections": [
+              {
+                "isMandatory": false,
+                "products": [
+                  {
+                    "id": "product-1",
+                    "approvalStatus": "Approved"
+                  },
+                  {
+                    "id": "product-2",
+                    "approvalStatus": "Rejected"
+                  }
+                ]
+              },
+              {
+                "isMandatory": false,
+                "products": [
+                  {
+                    "id": "product-2",
+                    "approvalStatus": "Rejected"
+                  },
+                  {
+                    "id": "product-3",
+                    "approvalStatus": "Approved"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+### Errors
+
+This endpoint does not support partial success. When more than one creative fails validation, the response will contain entries in the JSON:API `errors` array.
+
+| HTTP status | Code | Description |
+| --- | --- | --- |
+| `400` | `creatives-required` | No creative was supplied for the selected `creativeType`. |
+| `400` | `invalid-creative-id` | A creative ID is missing or invalid. |
+| `400` | `duplicate-creative-id` | The same creative ID appears more than once in the request. |
+| `400` | `invalid-creative-type` | The requested `creativeType` does not match the line item buy type, or its corresponding details object was not supplied. |
+| `400` | `creative-unavailable` | A creative is not available to the line item's account or retailer. |
+| `400` | `invalid-media-type` | The submitted creatives have different media types or do not match the line item's media type. |
+| `400` | `invalid-creative-product-collections` | Creative Product Collections must be empty when the line item uses Dynamic Match. |
+| `400` | `invalid-product-collection` | A Creative Product Collection contains the same product ID more than once. |
+| `400` | `invalid-product-id` | A Creative Product Collection contains a product that is not available in the retailer catalog. |
+| `400` | `too-many-products` | Adding the referenced products would exceed the line item's 1,500-product limit. |
+| `400` | `too-many-creatives` | Adding the submitted creatives would exceed the line item's creative limit. Up to 20 creatives can be attached to an Onsite Display Auction line item. |
+| `400` | `unsupported-line-item-type` | The line item buy type is not currently supported. |
+| `401` | `unauthenticated` | The caller is not authenticated. |
+| `403` | `forbidden` | The caller cannot modify the target line item, or the line item does not exist. |
+| `500` | `internal-error` | An unexpected error occurred. |
+| `503` | `service-unavailable` | A service required to process the request is temporarily unavailable. Retry the request later. |
