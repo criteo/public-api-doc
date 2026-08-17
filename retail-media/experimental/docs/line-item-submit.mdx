@@ -1,0 +1,85 @@
+---
+title: Line Item Submit
+description: Submit a line item for retailers to review the fields that require their approval.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+<Warning>
+  **Coming soon:** This operation is not yet published in the [Experimental OpenAPI](https://api.criteo.com/experimental/retailmedia/open-api-specifications.json), which is the source of truth for available operations. The contract below is provided for advance planning and remains subject to change.
+</Warning>
+
+## Overview
+Line item submission is a required step for activation that sends a configured line item for Retailer review.
+
+Onsite Display line items have various fields that require a Retailer's approval before they are eligible to deliver ads.
+These fields include newly added keywords, categories, products, and creatives. 
+Use the line item submit endpoint to submit reviewable changes made to the specified Retailer to review in the Line Item Review Center (LIRC).  
+
+Once the line item is submitted, reviewable configuration will have a status of: 
+
+`In Review`
+
+Once the retailer has reviewed the line item, the line item's configured settings will show as either:
+
+`Approved` or `Rejected`
+
+Submission is allowed once the line item has the minimum required setup: at least one product, one creative, and one page type. 
+
+After approval is received from the Retailer, if you've selected a date in the future, your line item will save and be scheduled to serve ads. On the selected date it will automatically become active and start delivering ads.
+
+Subsequent reviewable configuration added will require a call to the submit endpoint to surface changes for Retailer to review.
+
+## Endpoints
+
+Submits a line item's reviewable configuration to be reviewed by the specified Retailer (Retailer is specified using - [Line Item Core](/retail-media/experimental/docs/line-items-core))
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `line-items/{line-item-id}/submit` | Submit a line-item for Retailer review. |
+
+
+## Submit a Line Item
+
+Submits a line-item's reviewable configuration for the Retailer to approve or reject.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/submit
+```
+</EndpointBadge>
+
+### Path Parameters
+
+| Parameter | Description |
+| --- | --- |
+| `line-item-id` | The unique identifier of the line item to submit. |
+
+### Request Attributes
+
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `comment` | No | Comment field for Advertiser to relay additional context to the Retailer reviewing the line item. |
+
+**Sample Request**
+
+```json
+{
+  "data": {
+    "type": "SubmitLineItemRequest",
+    "attributes": {
+      "comment": "Hi retailer, please approve my line item now that I have updated the creative per your request"
+    }
+  }
+}
+```
+
+Returns 204 with no response body
+
+### Errors
+
+| HTTP Status | Code | Description |
+| --- | --- | --- |
+| `400` | `invalid-line-item-type` | Line item type is not supported for onsite display line item approval |
+| `400` | `incomplete-configuration` | Line item is not fully formed and cannot be submitted for review |
+| `403` | `forbidden` | The caller cannot submit this line item. |
