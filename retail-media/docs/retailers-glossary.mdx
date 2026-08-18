@@ -1,0 +1,50 @@
+---
+title: "Glossary"
+description: "Key terms for retailers using the Retail Media API — draft pending SME sign-off"
+---
+
+<Warning>
+  **Draft — pending SME sign-off.** The account hierarchy and term mappings below are a working model assembled from documentation review, not confirmed by the API or product owner. Treat this page as provisional until the open questions below are resolved and this notice is removed.
+</Warning>
+
+## Why this page exists
+
+Retailer-side documentation uses at least six overlapping terms for "the non-advertiser side of the platform" — Supply, Private Market, Retailer, CMax, CYield, and Partner — plus a funding-model enum (`billByRetailer` / `billByCriteo`) that cuts across them on a different axis. This page exists to pin down what each term means and how they relate, so the rest of the Retailers guides can use them consistently.
+
+## Terms in use today
+
+| Term | Where it appears | What it seems to mean |
+|---|---|---|
+| **Supply** | Contrasted with "Demand" to describe account type | Account-type axis, paired with "Demand" |
+| **Private Market** | Page titles ("Account Creation and Management (Private Market)," "Account Fees (Private Market)"); also bundled with Supply as "Supply/Private Market accounts" | Sometimes a synonym for Supply, sometimes a distinct program layered on top of it |
+| **Retailer** | Retailer Budgets, Retailer Search | The persona/business-role term |
+| **CMax** | Referenced as a help center and as a billing concept | A Criteo product, never formally related to Supply/Private Market in the guides |
+| **CYield** | Referenced alongside CMax in billing content | Same problem as CMax — unexplained |
+| **billByRetailer / billByCriteo / notApplicable** | `privateMarketBillingType` enum on Balance objects | Funding-model axis: who capitalizes the balance. `billByCriteo` maps to CMax |
+| **Partner** | Partner Billing Report / PBR | A report name that uses "Partner" to mean retailer — not used as persona prose elsewhere in current guide content |
+
+## Working account hierarchy — pending confirmation
+
+- **Retailer** — the business entity; owns a **Supply Account**.
+- **Supply Account** — the retailer's top-level account. Controls platform configuration; accesses Supply Side revenue reporting.
+- **Private Market Account** — a child account under a Supply Account. Demand-bounded (runs campaigns like a Demand account) but belongs to the retailer's hierarchy, not an independent advertiser.
+- **CMax** — the "Criteo Billed" concept: Criteo-owned demand accounts (`billByCriteo`).
+- **CYield** — a reporting/product concept spanning the Supply Account and its child Private Market accounts. Not a distinct account type.
+
+### Open questions before this page ships as final
+
+1. Is a Supply Account 1:1 with a Retailer, or can one retailer own several (per region or banner)?
+2. Are all Private Market accounts children of exactly one Supply Account, or does the label apply outside that hierarchy too?
+3. [Balances](/retail-media/docs/balances) contrasts "Demand accounts" (read-only) with "Supply/Private Market accounts" (read-write). Does "Demand account" there mean independent advertiser accounts specifically — as opposed to a Private Market account, which is also demand-bounded but retailer-owned? If so, the existing wording conflates two senses of "Demand."
+4. Is CMax a subtype within Private Market, or can Criteo-billed demand accounts exist outside that hierarchy too?
+5. What's CYield's actual access scope — one reporting surface over a Supply Account plus its Private Market children, or something narrower?
+
+## Plain-language mapping (once confirmed)
+
+Once the hierarchy above is confirmed, guide prose should consistently use this pairing:
+
+- **Advertiser / Retailer** — persona terms for prose.
+- **Demand / Supply** — the account-type values the API returns; map explicitly to Advertiser/Retailer.
+- **CMax / CYield** — Criteo's retailer-facing products, referenced only to explain why something is UI-only vs. API-editable, not as API concepts themselves.
+- **billByRetailer / billByCriteo** — the balance funding-model enum, independent of account type.
+- **Partner** — not used as a synonym for Retailer in current guide prose; the term survives only in the Partner Billing Report (PBR) name and its API type names, which are left as-is.
