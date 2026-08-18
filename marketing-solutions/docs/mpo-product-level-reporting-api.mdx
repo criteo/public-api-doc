@@ -1,0 +1,206 @@
+---
+title: "Product Level Reporting API"
+---
+
+## **Overview**
+
+The Product Level Reporting API provides product-level (SKU) performance data for Marketplace Performance Outcomes (MPO). It is designed for use cases where you need to understand how individual products perform across clicks, displays, and cost -at a granularity that campaign or seller-level reporting does not provide.
+
+This API is asynchronous and file-based. Because product-level reports cover every product with activity in the requested period, they are designed for large-scale data export: you create a report job, poll for its status, and download the result as a CSV or JSON file once it is ready.
+
+Totals returned by this API reconcile with the MPO Statistics API for the same scope and period.
+
+## **When to Use This API**
+
+Use the Product Level Reporting API when you need to:
+
+- Analyze performance at individual product level across sellers and campaigns
+- Export complete product-level data with no truncation -all products with activity in the period are included
+- Understand product-level cost and delivery (clicks, displays) for BI or data warehouse use
+- Filter performance by advertiser, campaign, ad set.
+
+For seller-level or campaign-level aggregated reporting, use the [<u>MPO Standard Reporting API</u>](https://developers.criteo.com/marketing-solutions/docs/reporting "https://developers.criteo.com/marketing-solutions/docs/reporting") instead.
+
+For near real-time product monitoring, use the [<u>MPO Real-Time Asynchronous API</u>](https://developers.criteo.com/marketing-solutions/docs/getting-realtime-mpo-statistics "https://developers.criteo.com/marketing-solutions/docs/getting-realtime-mpo-statistics") instead.
+
+## **Campaign vs Ad Set -Terminology**
+
+This API follows the standard MPO object model: `campaignId` refers to the marketing campaign, and `adSetId` refers to the ad set -the buying entity below the campaign.
+
+Legacy MPO APIs use the term `campaignId` to refer to what this API calls `adSetId`. If your integration uses the legacy `campaignId` to identify a buying entity, that same ID maps to `adSetId` here. The `campaignId` dimension and filter in this API refer to the marketing campaign and are available for MPO Pro only.
+
+| Entity | This API | Legacy MPO APIs |
+| :-- | :-- | :-- |
+| Marketing campaign | `campaignId` dimension / filter -MPO Pro only | Not exposed |
+| Ad set (buying entity) | `adSetId` dimension / filter | `campaignId` |
+
+## **How It Works**
+
+The API follows a three-step asynchronous flow:
+
+1. Create a report job (`POST /product-reports/export`)
+2. Poll for job status (`GET /report-jobs/{reportId}`)
+3. Download the report once ready (`GET /product-reports/{reportId}`)
+
+Report jobs are cached. If you submit an identical request within the configured freshness window, the API may return a `DONE` status immediately with the cached result.
+
+Reports contain totals over the requested interval -there is no time breakdown or date column in the output.
+
+## **Endpoint Reference**
+
+### 1. Create Report Job
+
+`POST https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/product-reports/export`<br />
+
+Creates a new asynchronous product-level report job. Returns a `reportId` to use in subsequent status and download calls.
+
+#### Request Body
+
+`{`<br />`  "data": {`<br />`    "type": "ProductReportJob",`<br />`    "attributes": {`<br />`      "fileFormat": "csv",`<br />`      "advertiserIds": ["2914"],`<br />`      "adSetIds": ["106509"],`<br />`      "dimensions": ["advertiserId", "adSetId", "sellerId", "productId"],`<br />`      "metrics": ["displays", "clicks", "cost"],`<br />`      "startDate": "2026-03-09T00:00:00Z",`<br />`      "endDate": "2026-03-11T00:00:00Z"`<br />`    }`<br />`  }`<br />`}`<br />
+
+#### Request Parameters
+
+| Field | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `fileFormat` | string | Yes | Report format: `csv` or `json` |
+| `advertiserIds` | string\[\] | Yes | Advertiser account IDs. Maximum 5. Must be numeric |
+| `campaignIds` | string\[\] | No | Filter by marketing campaign IDs. Maximum 10. MPO Pro only |
+| `adSetIds` | string\[\] | No | Filter by ad set IDs. Maximum 10. For Multi-Seller/Single-Seller, these are the IDs the legacy API calls `campaignId` |
+| `dimensions` | string\[\] | No | Dimensions to group by. Defaults to `["advertiserId", "adSetId", "sellerId", "productId"]`. Duplicates not allowed. Time dimensions are not supported |
+| `metrics` | string\[\] | No | Metrics to include. Defaults to `["clicks", "displays", "cost"]`. Duplicates not allowed |
+| `startDate` | string | Yes | Start of reporting interval (ISO-8601, UTC). Cannot be more than 1 year in the past |
+| `endDate` | string | No | End of reporting interval (ISO-8601, UTC). Defaults to the last complete day. The current day is never included |
+
+ 
+
+Data availability grows progressively after launch. If your `startDate` is earlier than the available data window, the request will be rejected with an `invalid-query` error. Full 1-year lookback is expected to be available progressively after go-live.
+
+#### Response
+
+`{`<br />`  "data": {`<br />`    "type": "ProductReportJobStatus",`<br />`    "attributes": {`<br />`      "reportId": "e0893b6b-be25-477f-9ca3-e6e8c8ec9e30",`<br />`      "status": "PENDING"`<br />`    }`<br />`  }`<br />`}`<br />
+
+If an identical request was recently processed and the cache is still valid, the response may already show `"status": "DONE"`.
+
+---
+
+### 2. Get Report Status
+
+`GET https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/report-jobs/{reportId}`<br />
+
+Returns the current status of a report job.
+
+#### Path Parameters
+
+| Parameter | Type | Description |
+| :-- | :-- | :-- |
+| `reportId` | string | The unique ID returned when the report job was created |
+
+#### Response
+
+`{`<br />`  "data": {`<br />`    "type": "ProductReportJobStatus",`<br />`    "attributes": {`<br />`      "reportId": "e0893b6b-be25-477f-9ca3-e6e8c8ec9e30",`<br />`      "status": "DONE",`<br />`      "expiresAt": "2026-03-18T10:35:53Z",`<br />`      "fileSizeBytes": 154555`<br />`    }`<br />`  }`<br />`}`<br />
+
+#### Status Values
+
+| Status | Meaning |
+| :-- | :-- |
+| `PENDING` | Job is queued or processing |
+| `DONE` | Report is ready to download |
+| `FAILURE` | Job failed -check your request parameters and retry |
+| `EXPIRED` | Report has expired and is no longer available -submit a new job |
+
+Poll this endpoint at a regular interval (recommended: every 30–60 seconds) until status is `DONE` before downloading.
+
+---
+
+### 3. Download Report
+
+`GET https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/product-reports/{reportId}`<br />
+
+Downloads the completed report file. Only available when job status is `DONE`.
+
+#### Path Parameters
+
+| Parameter | Type | Description |
+| :-- | :-- | :-- |
+| `reportId` | string | The unique ID of a completed report job |
+
+#### Response -CSV (`text/csv`)
+
+One row per combination of the requested dimensions, with metrics totalled over the full reporting interval. There is no date column -the report returns interval totals only.
+
+`advertiserId,adSetId,sellerId,productId,displays,clicks,cost`<br />`2914,106509,515151,847392011,220,45,4400`<br />`2914,106509,515151,847392012,800,4,400`<br />`2914,106509,131313,564656664,1832,3,450`<br />
+
+#### Response -JSON (`application/json`)
+
+`{`<br />`  "data": [`<br />`    [2914, 106509, 515151, 847392011, 220, 45, 4400],`<br />`    [2914, 106509, 515151, 847392012, 800, 4, 400],`<br />`    [2914, 106509, 131313, 564656664, 1832, 3, 450]`<br />`  ],`<br />`  "metadata": {`<br />`    "columns": ["advertiserId", "adSetId", "sellerId", "productId", "displays", "clicks", "cost"],`<br />`    "rows": 3`<br />`  }`<br />`}`<br />
+
+---
+
+## **Dimensions**
+
+| Dimension | Description |
+| :-- | :-- |
+| `advertiserId` | ID of the advertiser |
+| `partnerId` | ID of the partner |
+| `campaignId` | ID of the marketing campaign. MPO Pro only -not available for Multi-Seller or Single-Seller |
+| `adSetId` | ID of the ad set. For Multi-Seller/Single-Seller, this is the ID the legacy API calls `campaignId` |
+| `sellerId` | Seller ID, consistent with the other MPO APIs |
+| `productId` | Product ID as provided in your catalog feed |
+
+Duplicate dimension values in the same request are not permitted. Time dimensions (`date`, `day`, `hour`) are not supported by this API -the report always returns interval totals.
+
+---
+
+## **Metrics**
+
+| Metric | Type | Description |
+| :-- | :-- | :-- |
+| `clicks` | int | Number of clicks, totalled over the reporting interval |
+| `displays` | int | Number of display opportunities, totalled over the reporting interval |
+| `cost` | float | Click-attributed cost in the advertiser's local currency, totalled over the reporting interval. Consistent with the `cost` metric in the MPO Statistics API |
+
+Duplicate metric values in the same request are not permitted.
+
+## **Error Handling**
+
+### HTTP Status Codes
+
+| Code | Meaning |
+| :-- | :-- |
+| `400` | Bad request -invalid syntax or validation error |
+| `401` | Authentication failed -access token missing or expired |
+| `403` | Insufficient permissions, or report job not found |
+| `409` | Conflicting parameters |
+| `429` | Rate limit reached |
+| `500` | Internal server error -retry with backoff |
+
+### Error Codes
+
+| Code | Title | Detail |
+| :-- | :-- | :-- |
+| `insufficient-account-permissions` | Insufficient account permissions | The caller does not have the required rights to generate a report for the specified advertisers |
+| `invalid-query` | Invalid query definition | Missing required fields, unsupported dimensions (including any time dimension), duplicate dimensions or metrics, invalid IDs, or `startDate` more than 1 year in the past |
+| `export-not-found` | Export job not found | The requested `reportId` does not exist or is not accessible to the caller |
+| `export-already-expired` | Export already expired | The export job exists but the result file has been permanently deleted |
+| `unsupported-file-format` | Unsupported file format | Only `csv` and `json` are supported |
+
+#### Example: Invalid file format
+
+`{`<br />`  "errors": [`<br />`    {`<br />`      "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",`<br />`      "code": "unsupported-file-format",`<br />`      "title": "Unsupported file format",`<br />`      "detail": "The requested fileFormat 'xls' is not supported. Supported formats are: csv and json."`<br />`    }`<br />`  ]`<br />`}`<br />
+
+---
+
+## **Integration Pattern**
+
+A typical integration for a daily product-level export:
+
+1. Call `POST /product-reports/export` with your desired dimensions, metrics, and date range.
+2. Store the returned `reportId`.
+3. Poll `GET /report-jobs/{reportId}` every 30–60 seconds.
+4. When status is `DONE`, call `GET /product-reports/{reportId}` to download the file.
+5. If status is `FAILURE`, check your request parameters and retry.
+6. If status is `EXPIRED`, submit a new report job.
+
+If you submit the same request within the cache freshness window, the API may return `DONE` immediately on the initial `POST` response -check before polling.
+
+ 
