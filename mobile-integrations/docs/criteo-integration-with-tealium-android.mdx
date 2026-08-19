@@ -1,0 +1,900 @@
+---
+title: "Criteo Integration With Tealium [Android]"
+description: "Configure your Criteo App campaign for Android with Tealium."
+hidden: true
+---
+
+## Overview
+
+Criteo serves personalized ads to mobile app users that have a high probability of clicking through and making a purchase. Criteo technology is based on real-time product-recommendation optimization and prediction engines.
+
+In order to enable its technology, Criteo needs:
+
+- **App events** — App events and relevant data correctly captured on your mobile app.
+- **Deep Link Capability** — Product level deep link capabilities in app to take users back to the products they clicked on.
+- **Catalog Feed** — A CSV or XML file, called Catalog Feed, containing product information of a large portion of your mobile app's offers.
+
+This document provides detailed information on the following:
+
+- Integration
+- Required events and data
+- Dashboard configuration
+- Catalog feed
+- Deep link implementation
+- Testing process
+
+## Integration
+
+The table below describes the steps to follow during this integration.
+
+| Steps to Follow | Where to Integrate |
+| --- | --- |
+| Integration Kickoff Call | Criteo & client technical teams |
+| Catalog Feed Integration | Client-side |
+| Dashboard Configuration | Client-side |
+| Testing Phase | Criteo & client technical teams |
+| App Submission & Release | Client-side |
+| Campaign Launch | Criteo & client technical teams |
+
+## Required Events and Data
+
+### SDK Initialization
+
+The following code snippet must be placed at app launch:
+
+```java
+Tealium.Config tealConfig = Tealium.Config.create(this.getApplication(),"ACCOUNT","PROFILE","ENV");
+tealConfig.setDatasourceId("<<INSERT DATASOURCE ID>>");
+Tealium.createInstance("tealium", tealConfig);
+```
+
+### Events Implementation in the App
+
+Criteo requires the implementation of a set of events. The exact required/optional events and sample code differ depending on your business vertical — select yours below.
+
+<Tabs>
+  <Tab title="All Events">
+    <Card title="Full list of events:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of a list of products. |
+      | viewProduct | View of a specific product. |
+      | viewBasket | View of shopping basket. |
+      | trackTransaction | Purchase of one or more products. |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | User Level | Every time the user opens the app or levels up. |
+      | Achievement Unlocked | Every time the user unlocks a new achievement. |
+      | Custom event | To capture generic extra data. |
+      | Custom event 2 | To capture generic extra data. |
+
+      **<u>viewHome and appDeeplink</u>**
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and App Links (ex: `https://myapp.com/deeplink/android`).
+
+      ```java
+      Map<String, Object> data_viewHome = new HashMap<>();
+      data_viewHome.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewHome.put("deeplink_uri", "<<INSERT DEEPLINK URI>>");
+      
+      // User IDs
+      data_viewHome.put("email", "INSERT_USER_EMAIL");
+      data_viewHome.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", data_viewHome);
+      ```
+
+      **<u>viewListing</u>**
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewListing = new HashMap<>();
+      data_viewListing.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewListing.put("product", new String[]{"item123", "item456", "item789"});
+      data_viewListing.put("din", "12-12-2018"); // Checkin date
+      data_viewListing.put("dout", "12-13-2018"); // Checkout date
+      
+      // User IDs
+      data_viewListing.put("email", "INSERT_USER_EMAIL");
+      data_viewListing.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewListing", data_viewListing);
+      ```
+
+      **<u>viewProduct</u>**
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewProduct = new HashMap<>();
+      data_viewProduct.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewProduct.put("product", new String[]{"item789"}); // supports product ID in an Array of Strings or just String
+      data_viewProduct.put("din", "12-12-2018"); // Checkin date
+      data_viewProduct.put("dout", "12-13-2018"); // Checkout date
+      
+      // User IDs
+      data_viewProduct.put("email", "INSERT_USER_EMAIL");
+      data_viewProduct.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewProduct", data_viewProduct);
+      ```
+
+      **<u>viewBasket</u>**
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewBasket = new HashMap<>();
+      data_viewBasket.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewBasket.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_viewBasket.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_viewBasket.put("product_quantities",new int[]{1, 3, 7});
+      data_viewBasket.put("din", "12-12-2018"); // Checkin date
+      data_viewBasket.put("dout", "12-13-2018"); // Checkout date
+      
+      // User IDs
+      data_viewBasket.put("email", "INSERT_USER_EMAIL");
+      data_viewBasket.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewBasket", data_viewBasket);
+      ```
+
+      **<u>trackTransaction</u>**
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```java
+      Map<String, Object> data_trackTransaction = new HashMap<>();
+      data_trackTransaction.put("gaid", "<<INSERT DEVICE GAID>>");
+      
+      data_trackTransaction.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_trackTransaction.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_trackTransaction.put("product_quantities",new int[]{1, 3, 7});
+      data_trackTransaction.put("order_id","<<INSERT ORDER ID>>");
+      data_trackTransaction.put("din", "12-12-2018"); // Checkin date
+      data_trackTransaction.put("dout", "12-13-2018"); // Checkout date
+      
+      // User IDs
+      data_trackTransaction.put("email", "INSERT_USER_EMAIL");
+      data_trackTransaction.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("trackTransaction", data_trackTransaction);
+      ```
+
+      **<u>UI Status</u>**
+
+      The `UI Status` should be triggered every time the user opens the app or the user's status has changed. You must include the status value of the updated status with the event.
+
+      ```java
+      Map<String, Object> data_userStatus = new HashMap<>();
+      data_userStatus.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_userStatus.put("ui_status", "INSERT_USER_STATUS");
+      
+      // User IDs
+      data_userStatus.put("email", "INSERT_USER_EMAIL");
+      data_userStatus.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("userStatus", data_userStatus);
+      ```
+
+      **<u>UI Level</u>**
+
+      The `UI Level` event should be triggered every time the user opens the app or levels up. You must include the level value of the new incremental level reached.
+
+      ```java
+      Map<String, Object> data_userLevel = new HashMap<>();
+      data_userLevel.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_userLevel.put("ui_level", "INSERT_USER_LEVEL");
+      
+      // User IDs
+      data_userLevel.put("email", "INSERT_USER_EMAIL");
+      data_userLevel.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("userLevel", data_userLevel);
+      ```
+
+      **<u>UI Achievement</u>**
+
+      The `achievement` event should be triggered every time the user unlocks a new achievement. You must include the name of the achievement.
+
+      ```java
+      Map<String, Object> data_Achievement = new HashMap<>();
+      data_Achievement.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_Achievement.put("ui_achievement", "INSERT_USER_ACHIEVEMENT");
+      
+      // User IDs
+      data_Achievement.put("email", "INSERT_USER_EMAIL");
+      data_Achievement.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("userAchievement", data_Achievement);
+      ```
+
+      **<u>Custom Event</u>**
+
+      Custom Event allows you to pass one extra piece of data in the event. This is useful when tagging unique users with a specific piece of data. The data parameter must be `ui_data`.
+
+      ```java
+      Map<String, Object> extra1_data = new HashMap<>();
+      extra1_data.put("gaid", "<<INSERT DEVICE GAID>>");
+      extra1_data.put("ui_data", "INSERT_EXTRA_DATA");
+      
+      // User IDs
+      extra1_data.put("email", "INSERT_USER_EMAIL");
+      extra1_data.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", extra1_data);
+      ```
+
+      **<u>Custom Event (2)</u>**
+
+      Custom Event allows you to pass two pieces of extra data in a single event. This is useful when tagging unique users with two pieces of data. The data must be passed using `ui_data` and/or `ui_data2`.
+
+      ```java
+      Map<String, Object> extra2_data = new HashMap<>();
+      extra2_data.put("gaid", "<<INSERT DEVICE GAID>>");
+      extra2_data.put("ui_data", "INSERT_EXTRA_DATA1");
+      extra2_data.put("ui_data2", "INSERT_EXTRA_DATA2");
+      
+      // User IDs
+      extra2_data.put("email", "INSERT_USER_EMAIL");
+      extra2_data.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", extra2_data);
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Retail">
+    <Card title="Events for Retail vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of a list of products. |
+      | viewProduct | View of a specific product. |
+      | viewBasket | View of shopping basket. |
+      | trackTransaction | Purchase of one or more products. |
+
+      | Optional Event | Description |
+      | --- | --- |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | Custom event | To capture generic extra data. |
+
+      <Note>
+        Criteo does not currently provide sample implementations for User Status or Custom Event in the Retail vertical — reach out to your Criteo contact if you need to send them.
+      </Note>
+
+      **<u>viewHome and appDeeplink</u>**
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and App Links (ex: `https://myapp.com/deeplink/android`).
+
+      ```java
+      Map<String, Object> data_viewHome = new HashMap<>();
+      data_viewHome.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewHome.put("deeplink_uri", "<<INSERT DEEPLINK URI>>");
+      
+      // User IDs
+      data_viewHome.put("email", "INSERT_USER_EMAIL");
+      data_viewHome.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", data_viewHome);
+      ```
+
+      **<u>viewListing</u>**
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewListing = new HashMap<>();
+      data_viewListing.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewListing.put("product", new String[]{"item123", "item456", "item789"});
+      
+      // User IDs
+      data_viewListing.put("email", "INSERT_USER_EMAIL");
+      data_viewListing.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewListing", data_viewListing);
+      ```
+
+      **<u>viewProduct</u>**
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewProduct = new HashMap<>();
+      data_viewProduct.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewProduct.put("product", new String[]{"item789"}); // supports product ID in an Array of Strings or just String
+      
+      // User IDs
+      data_viewProduct.put("email", "INSERT_USER_EMAIL");
+      data_viewProduct.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewProduct", data_viewProduct);
+      ```
+
+      **<u>viewBasket</u>**
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewBasket = new HashMap<>();
+      data_viewBasket.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewBasket.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_viewBasket.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_viewBasket.put("product_quantities",new int[]{1, 3, 7});
+      
+      // User IDs
+      data_viewBasket.put("email", "INSERT_USER_EMAIL");
+      data_viewBasket.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewBasket", data_viewBasket);
+      ```
+
+      **<u>trackTransaction</u>**
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```java
+      Map<String, Object> data_trackTransaction = new HashMap<>();
+      data_trackTransaction.put("gaid", "<<INSERT DEVICE GAID>>");
+      
+      data_trackTransaction.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_trackTransaction.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_trackTransaction.put("product_quantities",new int[]{1, 3, 7});
+      data_trackTransaction.put("order_id","<<INSERT ORDER ID>>");
+      
+      // User IDs
+      data_trackTransaction.put("email", "INSERT_USER_EMAIL");
+      data_trackTransaction.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("trackTransaction", data_trackTransaction);
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Travel">
+    <Card title="Events for Travel vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of a list of products. |
+      | viewProduct | View of a specific product. |
+      | viewBasket | Before the confirmation page. |
+      | trackTransaction | Purchase of one or more products. |
+
+      | Optional Event | Description |
+      | --- | --- |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | Custom event | To capture generic extra data. |
+
+      <Note>
+        Criteo does not currently provide sample implementations for User Status or Custom Event in the Travel vertical — reach out to your Criteo contact if you need to send them.
+      </Note>
+
+      **<u>viewHome and appDeeplink</u>**
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and App Links (ex: `https://myapp.com/deeplink/android`).
+
+      ```java
+      Map<String, Object> data_viewHome = new HashMap<>();
+      data_viewHome.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewHome.put("deeplink_uri", "<<INSERT DEEPLINK URI>>");
+      
+      // User IDs
+      data_viewHome.put("email", "INSERT_USER_EMAIL");
+      data_viewHome.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", data_viewHome);
+      ```
+
+      **<u>viewListing</u>**
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewListing = new HashMap<>();
+      data_viewListing.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewListing.put("product", new String[]{"item123", "item456", "item789"});
+      data_viewListing.put("din", "12-12-2018"); // Checkin date
+      data_viewListing.put("dout", "12-13-2018"); // Checkout date
+      
+      // User IDs
+      data_viewListing.put("email", "INSERT_USER_EMAIL");
+      data_viewListing.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewListing", data_viewListing);
+      ```
+
+      **<u>viewProduct</u>**
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewProduct = new HashMap<>();
+      data_viewProduct.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewProduct.put("product", new String[]{"item789"}); // supports product ID in an Array of Strings or just String
+      data_viewProduct.put("din", "12-12-2018"); // Checkin date
+      data_viewProduct.put("dout", "12-13-2018"); // Checkout date
+      
+      // User IDs
+      data_viewProduct.put("email", "INSERT_USER_EMAIL");
+      data_viewProduct.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewProduct", data_viewProduct);
+      ```
+
+      **<u>viewBasket</u>**
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewBasket = new HashMap<>();
+      data_viewBasket.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewBasket.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_viewBasket.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_viewBasket.put("product_quantities",new int[]{1, 3, 7});
+      data_viewBasket.put("din", "12-12-2018"); // Checkin date
+      data_viewBasket.put("dout", "12-13-2018"); // Checkout date
+      
+      // User IDs
+      data_viewBasket.put("email", "INSERT_USER_EMAIL");
+      data_viewBasket.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewBasket", data_viewBasket);
+      ```
+
+      **<u>trackTransaction</u>**
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```java
+      Map<String, Object> data_trackTransaction = new HashMap<>();
+      data_trackTransaction.put("gaid", "<<INSERT DEVICE GAID>>");
+      
+      data_trackTransaction.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_trackTransaction.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_trackTransaction.put("product_quantities",new int[]{1, 3, 7});
+      data_trackTransaction.put("order_id","<<INSERT ORDER ID>>");
+      data_trackTransaction.put("din", "12-12-2018"); // Checkin date
+      data_trackTransaction.put("dout", "12-13-2018"); // Checkout date
+      
+      // User IDs
+      data_trackTransaction.put("email", "INSERT_USER_EMAIL");
+      data_trackTransaction.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("trackTransaction", data_trackTransaction);
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Classified">
+    <Card title="Events for Classified vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of a list of products. |
+      | viewProduct | View of a specific product. |
+      | trackTransaction | Purchase of one or more products. |
+
+      | Optional Event | Description |
+      | --- | --- |
+      | viewBasket | Before the confirmation page. |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | Custom event | To capture generic extra data. |
+
+      <Note>
+        Criteo does not currently provide a sample implementation for Custom Event in the Classified vertical — reach out to your Criteo contact if you need to send it.
+      </Note>
+
+      **<u>viewHome and appDeeplink</u>**
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and App Links (ex: `https://myapp.com/deeplink/android`).
+
+      ```java
+      Map<String, Object> data_viewHome = new HashMap<>();
+      data_viewHome.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewHome.put("deeplink_uri", "<<INSERT DEEPLINK URI>>");
+      
+      // User IDs
+      data_viewHome.put("email", "INSERT_USER_EMAIL");
+      data_viewHome.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", data_viewHome);
+      ```
+
+      **<u>viewListing</u>**
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewListing = new HashMap<>();
+      data_viewListing.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewListing.put("product", new String[]{"item123", "item456", "item789"});
+      
+      // User IDs
+      data_viewListing.put("email", "INSERT_USER_EMAIL");
+      data_viewListing.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewListing", data_viewListing);
+      ```
+
+      **<u>viewProduct</u>**
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewProduct = new HashMap<>();
+      data_viewProduct.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewProduct.put("product", new String[]{"item789"}); // supports product ID in an Array of Strings or just String
+      
+      // User IDs
+      data_viewProduct.put("email", "INSERT_USER_EMAIL");
+      data_viewProduct.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewProduct", data_viewProduct);
+      ```
+
+      **<u>viewBasket</u>**
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewBasket = new HashMap<>();
+      data_viewBasket.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewBasket.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_viewBasket.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_viewBasket.put("product_quantities",new int[]{1, 3, 7});
+      
+      // User IDs
+      data_viewBasket.put("email", "INSERT_USER_EMAIL");
+      data_viewBasket.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewBasket", data_viewBasket);
+      ```
+
+      **<u>trackTransaction</u>**
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```java
+      Map<String, Object> data_trackTransaction = new HashMap<>();
+      data_trackTransaction.put("gaid", "<<INSERT DEVICE GAID>>");
+      
+      data_trackTransaction.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_trackTransaction.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_trackTransaction.put("product_quantities",new int[]{1, 3, 7});
+      data_trackTransaction.put("order_id","<<INSERT ORDER ID>>");
+      
+      // User IDs
+      data_trackTransaction.put("email", "INSERT_USER_EMAIL");
+      data_trackTransaction.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("trackTransaction", data_trackTransaction);
+      ```
+
+      **<u>UI Status</u>**
+
+      The `UI Status` should be triggered every time the user opens the app or the user's status has changed. You must include the status value of the updated status with the event.
+
+      ```java
+      Map<String, Object> data_userStatus = new HashMap<>();
+      data_userStatus.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_userStatus.put("ui_status", "INSERT_USER_STATUS");
+      
+      // User IDs
+      data_userStatus.put("email", "INSERT_USER_EMAIL");
+      data_userStatus.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("userStatus", data_userStatus);
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Gaming">
+    <Card title="Events for Gaming vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | viewListing | View of the shop. |
+      | viewProduct | View of a specific product. |
+      | trackTransaction | Purchase of one or more products. |
+      | User Level | Every time the user opens the app or levels up. |
+
+      | Optional Event | Description |
+      | --- | --- |
+      | viewBasket | Abandon the purchase. |
+      | User Status | Every time a user opens the app and when their status changes. |
+      | Achievement Unlocked | Every time the user unlocks a new achievement. |
+      | Custom event | To capture generic extra data. |
+      | Custom event 2 | To capture generic extra data. |
+
+      <Note>
+        Criteo does not currently provide a sample implementation for the single "Custom event" in the Gaming vertical — only Custom Event (2), shown below, has sample code.
+      </Note>
+
+      **<u>viewHome and appDeeplink</u>**
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and App Links (ex: `https://myapp.com/deeplink/android`).
+
+      ```java
+      Map<String, Object> data_viewHome = new HashMap<>();
+      data_viewHome.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewHome.put("deeplink_uri", "<<INSERT DEEPLINK URI>>");
+      
+      // User IDs
+      data_viewHome.put("email", "INSERT_USER_EMAIL");
+      data_viewHome.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", data_viewHome);
+      ```
+
+      **<u>viewListing</u>**
+
+      The `viewListing` event should be fired on pages displaying a product list such as a category page or a search results page. You must include the IDs of the first three products displayed on the page. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewListing = new HashMap<>();
+      data_viewListing.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewListing.put("product", new String[]{"item123", "item456", "item789"});
+      
+      // User IDs
+      data_viewListing.put("email", "INSERT_USER_EMAIL");
+      data_viewListing.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewListing", data_viewListing);
+      ```
+
+      **<u>viewProduct</u>**
+
+      The `viewProduct` event should be fired on all product-details pages. You must use the ID of the product detailed on the page. **The product ID must be unique and must be the same ID used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewProduct = new HashMap<>();
+      data_viewProduct.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewProduct.put("product", new String[]{"item789"}); // supports product ID in an Array of Strings or just String
+      
+      // User IDs
+      data_viewProduct.put("email", "INSERT_USER_EMAIL");
+      data_viewProduct.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewProduct", data_viewProduct);
+      ```
+
+      **<u>viewBasket</u>**
+
+      The `viewBasket` event should be fired on the basket-details pages. You must include the ID, unit price, and quantity for each product in the basket. **These IDs must be unique and match those used in the catalog feed.**
+
+      ```java
+      Map<String, Object> data_viewBasket = new HashMap<>();
+      data_viewBasket.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewBasket.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_viewBasket.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_viewBasket.put("product_quantities",new int[]{1, 3, 7});
+      
+      // User IDs
+      data_viewBasket.put("email", "INSERT_USER_EMAIL");
+      data_viewBasket.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewBasket", data_viewBasket);
+      ```
+
+      **<u>trackTransaction</u>**
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```java
+      Map<String, Object> data_trackTransaction = new HashMap<>();
+      data_trackTransaction.put("gaid", "<<INSERT DEVICE GAID>>");
+      
+      data_trackTransaction.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_trackTransaction.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_trackTransaction.put("product_quantities",new int[]{1, 3, 7});
+      data_trackTransaction.put("order_id","<<INSERT ORDER ID>>");
+      
+      // User IDs
+      data_trackTransaction.put("email", "INSERT_USER_EMAIL");
+      data_trackTransaction.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("trackTransaction", data_trackTransaction);
+      ```
+
+      **<u>UI Status</u>**
+
+      The `UI Status` should be triggered every time the user opens the app or the user's status has changed. You must include the status value of the updated status with the event.
+
+      ```java
+      Map<String, Object> data_userStatus = new HashMap<>();
+      data_userStatus.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_userStatus.put("ui_status", "INSERT_USER_STATUS");
+      
+      // User IDs
+      data_userStatus.put("email", "INSERT_USER_EMAIL");
+      data_userStatus.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("userStatus", data_userStatus);
+      ```
+
+      **<u>UI Level</u>**
+
+      The `UI Level` event should be triggered every time the user opens the app or levels up. You must include the level value of the new incremental level reached.
+
+      ```java
+      Map<String, Object> data_userLevel = new HashMap<>();
+      data_userLevel.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_userLevel.put("ui_level", "INSERT_USER_LEVEL");
+      
+      // User IDs
+      data_userLevel.put("email", "INSERT_USER_EMAIL");
+      data_userLevel.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("userLevel", data_userLevel);
+      ```
+
+      **<u>UI Achievement</u>**
+
+      The `achievement` event should be triggered every time the user unlocks a new achievement. You must include the name of the achievement.
+
+      ```java
+      Map<String, Object> data_Achievement = new HashMap<>();
+      data_Achievement.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_Achievement.put("ui_achievement", "INSERT_USER_ACHIEVEMENT");
+      
+      // User IDs
+      data_Achievement.put("email", "INSERT_USER_EMAIL");
+      data_Achievement.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("userAchievement", data_Achievement);
+      ```
+
+      **<u>Custom Event (2)</u>**
+
+      Custom Event allows you to pass two pieces of extra data in a single event. This is useful when tagging unique users with two pieces of data. The data must be passed using `ui_data` and/or `ui_data2`.
+
+      ```java
+      Map<String, Object> extra2_data = new HashMap<>();
+      extra2_data.put("gaid", "<<INSERT DEVICE GAID>>");
+      extra2_data.put("ui_data", "INSERT_EXTRA_DATA1");
+      extra2_data.put("ui_data2", "INSERT_EXTRA_DATA2");
+      
+      // User IDs
+      extra2_data.put("email", "INSERT_USER_EMAIL");
+      extra2_data.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", extra2_data);
+      ```
+    </Card>
+  </Tab>
+  <Tab title="Static">
+    <Card title="Events for Static vertical:">
+      | Event Name | Description |
+      | --- | --- |
+      | viewHome and appDeeplink | App open / app brought to the foreground. |
+      | trackTransaction | Purchase of one or more products. |
+
+      <Note>
+        Static-ad campaigns don't display individual products, so `viewListing`, `viewProduct`, and `viewBasket` are not applicable for this vertical.
+      </Note>
+
+      **<u>viewHome and appDeeplink</u>**
+
+      This event must be fired whenever a user opens the Application or is deeplinked into the application. Deeplinking includes via custom native deeplinks (ex: `myapp://`) and App Links (ex: `https://myapp.com/deeplink/android`).
+
+      ```java
+      Map<String, Object> data_viewHome = new HashMap<>();
+      data_viewHome.put("gaid", "<<INSERT DEVICE GAID>>");
+      data_viewHome.put("deeplink_uri", "<<INSERT DEEPLINK URI>>");
+      
+      // User IDs
+      data_viewHome.put("email", "INSERT_USER_EMAIL");
+      data_viewHome.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("viewHome", data_viewHome);
+      ```
+
+      **<u>trackTransaction</u>**
+
+      The `trackTransaction` event should be fired on order-confirmation pages. **You must include a unique transaction ID as well as the ID, unit price, and quantity for each purchased product.**
+
+      ```java
+      Map<String, Object> data_trackTransaction = new HashMap<>();
+      data_trackTransaction.put("gaid", "<<INSERT DEVICE GAID>>");
+      
+      data_trackTransaction.put("product_ids",new String[]{"item123", "item456", "item789"});
+      data_trackTransaction.put("product_prices",new String[]{"32.10", "7.10", "10.10"});
+      data_trackTransaction.put("product_quantities",new int[]{1, 3, 7});
+      data_trackTransaction.put("order_id","<<INSERT ORDER ID>>");
+      
+      // User IDs
+      data_trackTransaction.put("email", "INSERT_USER_EMAIL");
+      data_trackTransaction.put("ci", "INSERT_USER_ID");
+      
+      Tealium.getInstance("tealium").trackEvent("trackTransaction", data_trackTransaction);
+      ```
+    </Card>
+  </Tab>
+</Tabs>
+
+### Custom Partner Name Override
+
+For advertisers who have multiple Criteo partners in a single application, it is important to specify which event belongs to which Criteo partner.
+
+To change the value used for the Account Name in the Criteo postback, you must map the account name parameter used to differentiate each set of events in the Tealium Dashboard. For example, if you have a travel application that has a **flights** and **car rentals** section of the app, you must also have different account names for each set of events. For flights, you can use `com.myapp.flights` and for cars you can use `com.myapp.cars`.
+
+<Frame>
+  ![Image](/images/mobile-integrations/tealium/tealium_android_custom_partner_override.png "Image")
+</Frame>
+
+### Hashed Email for Cross-Device Targeting
+
+Clients should send Criteo a hashed email address of the app user when available, to enable cross-device targeting.
+
+<Warning>
+  Before sending or hashing the email, make sure to: _convert all characters to lower case_, _remove any/all blank spaces_ & _convert to UTF-8_.
+</Warning>
+
+Tealium offers a **Crypto Extension** which allows you to convert the plain (non-hashed) email sent in the event into MD5 format. See the screenshot below for an example.
+
+<Frame>
+  ![Image](/images/mobile-integrations/tealium/tealium_android_hashed_email_crypto.png "Image")
+</Frame>
+
+## Dashboard Configuration
+
+You must map the necessary variables in the Tealium Dashboard in order for Tealium to know what value to use for each event. It's also highly recommended for you to enable Tealium's E-Commerce extension as it maps directly with our product collection convention.
+
+<Frame>
+  ![Image](/images/mobile-integrations/tealium/tealium_android_dashboard_mapping.png "Image")
+</Frame>
+
+Below are the "mappable" parameters in the Tealium Dashboard:
+
+| Recommended Variables | Description |
+| --- | --- |
+| Android Device Identifier | Google Advertising Identifier, it must be provided in all Android events (**MANDATORY**) |
+| Event Name | Name of the event being sent from the application (**MANDATORY**) |
+| List of Product IDs (product\_id) (Overrides \_cprod) | Mapping made available by the Tealium E-Commerce extension. Must be an array of product IDs / SKUs |
+| List of Quantities (product\_quantity) (Overrides \_cquan) | Mapping made available by the Tealium E-Commerce extension. Must be an array of product quantities |
+| List of Prices (product\_unit\_price) (Overrides \_cprice) | Mapping made available by the Tealium E-Commerce extension. Must be an array of each product's unit price |
+| Order ID | Unique order ID sent with the purchase / transaction event |
+| Email | User's email |
+| Customer ID | Customer / CRM ID of user |
+
+| Optional Parameters | Description |
+| --- | --- |
+| Email Hash Method | If you intend to hash the user's email before sending to Criteo, you must indicate the hashing method used. Criteo supports two formats: MD5 & SHA256 of the MD5. For MD5 hashing, please use "**md5**". For SHA256 of MD5, please use "**s2m**". |
+| De-duplication Flag (dd) | For Criteo to optimize to your attribution logic, please map a value of 1 for attributed purchases / transactions. Otherwise, map 0. |
+| New Customer Flag (nc) | New Customer flag indicating whether this is a first sale recorded for a given user. (1: New Customer, 0: Returning customer) |
+| Travel Date In (din) (YYYY-MM-DD) | Check-in / departure date entered by the user for a booking event (flight/hotel/car). |
+| Travel Date Out (dout) (YYYY-MM-DD) | Check-out / arrival date entered by the user for a booking event (flight/hotel/car). |
+| UI Level | User Level — Maximum Level achieved by the user on a Game App. |
+| UI Status | User Status — Status of the user, typically the subscription status of a user. |
+| UI Achievement | Unlocked Achievement of the user on a Game App (ex: secret key...). |
+| UI Data & UI Data 2 | Extra Data passed in with an event. Used to segment users in a unique way. Please reach out to your Criteo TS for more information. |
+
+## Catalog Feed
+
+A catalog feed is an XML or a CSV file containing product information (name, price, deep link, image link…) that allows Criteo to dynamically generate the product-recommendation banners. Therefore, it is important to keep this file up to date for Criteo to show the right data in your banners.
+
+The following points need to be kept in mind:
+
+- Each product must have a unique ID that must be identical to the one passed in the events.
+- The catalog feed must contain all or at least most of your site's products.
+- Recommended image resolution is 300x300 pixels to 400x400 pixels.
+
+<Note>
+  Criteo will already have the catalog feed in some instances (i.e. live campaigns on mobile, web, or desktop).
+</Note>
+
+For more information, please request the dedicated guide from your contact.
+
+For deep link testing requirements specific to Android \+ Tealium integrations, see [Deep Linking Configuration and Requirements](/mobile-integrations/docs/deeplinks).
+
+## Testing Process
+
+Once all events have been implemented, you should contact your Criteo representative to begin the testing phase.
+
+<Warning>
+  Please allow sufficient time (at least a week before) for testing **prior** to the app submission in order to ensure that the data you are sending is complete.
+</Warning>
+
+Criteo requires the following elements:
+
+- App build to test the collection of events on Criteo's side.
+- If testing remotely, the GAID of the test device.
+- Deep link example (homepage & product detail).

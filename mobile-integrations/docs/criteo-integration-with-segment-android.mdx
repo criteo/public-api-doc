@@ -1,0 +1,256 @@
+---
+title: "Criteo Integration With Segment [Android]"
+description: "Configure your Criteo App campaign for Android with Segment."
+hidden: true
+---
+
+## Overview
+
+Criteo serves personalized ads to mobile app users that have a high probability of clicking through and making a purchase. Criteo technology is based on real-time product recommendation optimization and prediction engines.
+
+To enable its technology, Criteo needs:
+
+- **App events** — App events and relevant data correctly captured on your mobile app.
+- **Deep Link Capability** — Product level deep link capabilities in app to take users back to the products they clicked on.
+- **Catalog Feed** — A CSV or XML file (called Catalog Feed) containing product information of a large portion of your mobile app's offers.
+
+This document provides detailed information on the following:
+
+- Integration
+- Required events and parameters
+- Implementation guidelines
+
+## Integration Steps
+
+The table below describes the steps to follow during this integration.
+
+| Steps to Follow | Where to Integrate |
+| --- | --- |
+| Integration Kickoff Call | Criteo & client technical teams |
+| Integration Questionnaire | Client-side |
+| Catalog Feed Integration | Client-side |
+| Criteo Event Implementation | Client-side |
+| Dashboard Configuration | Client-side |
+| Testing Phase | Criteo & client technical teams |
+| App Submission & Release | Client-side |
+| Pre-Launch Checks | Client-side |
+| Campaign Launch | Client-side |
+
+## App Events & Data
+
+### SDK Initialization
+
+Set up and initialize the Segment SDK as recommended by the Segment documentation.
+
+<Note>
+  Find additional SDK & event tracking documentation here: [Segment Android Source docs](https://segment.com/docs/sources/mobile/android/) and [Segment Criteo Integration docs](https://segment.com/docs/integrations/criteo). Analytics for Android only supports API 14 (Android 4.0) and higher.
+</Note>
+
+### Segment SDK Initialization
+
+We recommend initializing the client in your `Application` subclass.
+
+```java
+import com.segment.analytics.Analytics;
+import com.segment.analytics.Properties;
+
+Analytics analytics = new Analytics.Builder(context, YOUR_WRITE_KEY)
+    .trackApplicationLifecycleEvents()
+    .recordScreenViews()
+    .build();
+
+Analytics.setSingletonInstance(analytics);
+```
+
+### Events Implementation in the App
+
+Criteo requires the implementation of the following events:
+
+| Event Name | Retail Event Description |
+| --- | --- |
+| viewHome | App open / app brought to the foreground. |
+| viewListing | View of a list of products. |
+| viewProduct | View of a specific product. |
+| viewBasket | View of shopping basket. |
+| trackTransaction | Purchase of one or more products. |
+
+#### View Home
+
+The `viewHome` event is sent to Criteo on the `Application Opened` event.
+
+```java
+analytics.track("Application Opened", new Properties()
+    .putValue("url", "url://location") // deeplink that brought user into app (if deeplinked)
+);
+```
+
+#### View Listing
+
+The `viewListing` event should be triggered on pages displaying product lists such as a category page or a search results page. It will automatically be sent to Criteo when the Segment "Product List Viewed" event fires. You must include the ID of the top three products displayed on the page/list. These IDs must match those used in the catalog feed. The format of the product information must be an array of product objects containing a `product_id` or `id` parameter. Example below.
+
+Use the following code snippet to implement:
+
+```java
+Map <String,String> product1 = new HashMap <String, String>();
+Map <String,String> product2 = new HashMap <String, String>();
+Map <String,String> product3 = new HashMap <String, String>();
+
+List< Map<String, String> > products = new ArrayList< Map<String, String> >();
+
+product1.put("product_id", "561594");
+product2.put("product_id", "1186735");
+product3.put("product_id", "1257640");
+
+products.add(0,product1);
+products.add(1,product2);
+products.add(2,product3);
+
+Analytics.with(this).track("Product List Viewed", new Properties()
+  .putValue("products", products)
+  .putValue("email", "test@example.com")   // Segment MD5 hashes email before sending to Criteo
+  .putValue("checkin_date", "12-10-2017")  // checkin date  -- used for travel only
+  .putValue("checkout_date", "12-10-2017") // checkout date -- used for travel only
+);
+```
+
+#### View Product
+
+The `viewProduct` event should be triggered on all product-detail pages. You must include the ID of the product detailed on the page via the `product_id` (or `id`) parameter in the `properties` dictionary. It must be the same ID as used in the catalog feed, and must be unique. Example below.
+
+Use the following code snippet to implement:
+
+```java
+Analytics.with(this).track("Product Viewed", new Properties()
+  .putValue("product_id", "1186735")
+  .putValue("email", "test@example.com")   // Segment MD5 hashes email before sending to Criteo
+  .putValue("checkin_date", "12-10-2017")  // checkin date  -- used for travel only
+  .putValue("checkout_date", "12-10-2017") // checkout date -- used for travel only
+);
+```
+
+#### View Basket
+
+The `viewBasket` event will be triggered on the basket-details pages. You must include the ID, unit price, and quantity of the products in the basket/cart. Note: the product information for the `viewBasket` event & the `trackTransaction` event is expected to be an array of product objects (see below for example formatting).
+
+Use the following code snippet to implement:
+
+```java
+Map<String,String> product1 = new HashMap<String, String>();
+Map<String,String> product2 = new HashMap<String, String>();
+Map<String,String> product3 = new HashMap<String, String>();
+List< Map<String, String> > products = new ArrayList< Map<String, String> >();
+
+product1.put("product_id", "561594");
+product1.put("price", "2.99");
+product1.put("quantity", "2");
+
+product2.put("product_id", "1186735");
+product2.put("price", "5.99");
+product2.put("quantity", "1");
+
+product3.put("product_id", "1257640");
+product3.put("price", "10.00");
+product3.put("quantity", "1");
+
+products.add(0,product1);
+products.add(1,product2);
+products.add(2,product3);
+
+Analytics.with(this).track("Cart Viewed", new Properties()
+  .putValue("products", products)
+  .putValue("email", "test@example.com")   // Segment MD5 hashes email before sending to Criteo
+  .putValue("checkin_date", "12-10-2017")  // checkin date  -- used for travel only
+  .putValue("checkout_date", "12-10-2017") // checkout date -- used for travel only
+);
+```
+
+#### Track Transaction
+
+The `trackTransaction` event should be triggered on order confirmation pages. You must include the IDs, unit prices, and quantities of the products bought in the transaction via the `products` array. Again, the product information must be sent as an array of product objects like in the example below.
+
+Use the following code snippet to implement:
+
+```java
+product1.put("product_id", "561594");
+product1.put("price", "2.99");
+product1.put("quantity", "2");
+
+product2.put("product_id", "1186735");
+product2.put("price", "5.99");
+product2.put("quantity", "1");
+
+product3.put("product_id", "1257640");
+product3.put("price", "10.00");
+product3.put("quantity", "1");
+
+products.add(0,product1);
+products.add(1,product2);
+products.add(2,product3);
+
+Analytics.with(this).track("Order Completed", new Properties()
+  .putValue("products", products)
+  .putValue("email", "test@example.com")   // Segment MD5 hashes email before sending to Criteo
+  .putValue("checkin_date", "12-10-2017")  // checkin date  -- used for travel only
+  .putValue("checkout_date", "12-10-2017") // checkout date -- used for travel only
+  .putValue("order_id", "12345678910")
+);
+```
+
+## Dashboard Configuration
+
+Once you begin sending Segment events from your application, activate the Criteo Integration in the Segment dashboard.
+
+### Configuring Criteo in Segment Dashboard
+
+To begin sending app events to Criteo:
+
+1. In the Segment Dashboard, go to **Destinations** and then click the **Add Integration** button.
+2. Search for and select the Criteo Integration. Then click **Configure Criteo**.
+
+<Frame>
+  ![Image](/images/mobile-integrations/segment/segment_configure_criteo_integration.png "Image")
+</Frame>
+
+3. Once you've added the Criteo Integration to your "source" (your app), you must activate the Integration.
+
+<Frame>
+  ![Image](/images/mobile-integrations/segment/segment_activate_integration.png "Image")
+</Frame>
+
+4. Once active, the Integration will automatically transform & forward your app events to Criteo.
+
+<Frame>
+  ![Image](/images/mobile-integrations/segment/segment_events_forwarded.png "Image")
+</Frame>
+
+## Catalog Feed
+
+### Catalog Feed Overview
+
+A catalog feed is an XML or a CSV file containing product information (name, price, deep link, image link…) that allows Criteo to dynamically generate the product recommendation banners. Therefore, it is important to keep this file up to date for Criteo to show the right data in your banners.
+
+The following points need to be kept in mind:
+
+- Each product must have a unique ID that must be identical to the one passed in the events.
+- The catalog feed must contain all or at least most of your site's products.
+- Recommended image resolution is 300x300 pixels to 400x400 pixels.
+
+<Note>
+  Criteo will already have the catalog feed in some instances (i.e. live campaigns on mobile, web, or desktop).
+</Note>
+
+For more information, please request the dedicated guide from your contact.
+
+## Testing Process
+
+You should contact Criteo to start the testing phase as soon as the events are implemented.
+
+<Note>
+  Please allow sufficient time (at least a week before) for testing prior to the app submission in order to ensure that the data you are sending is complete.
+</Note>
+
+Criteo will require the following elements:
+
+- Pieces of implemented code for each event.
+- App build to test the collection of events on Criteo's side.
+- If remote testing, the GAID of the device used to test the events.

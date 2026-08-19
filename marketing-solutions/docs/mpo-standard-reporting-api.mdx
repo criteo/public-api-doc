@@ -78,6 +78,10 @@ All three endpoints share a common set of filters. The most important are:
 
 - `clickAttributionPolicy` – `SameSeller`, `AnySeller`, or `Both` (where supported)
 
+### Time zone
+
+- `timeZoneId` – IANA time zone code (for example, `Asia/Seoul`, `Asia/Tokyo`) used to determine day/hour bucket boundaries for aggregation. Optional; defaults to UTC-0 if not provided, preserving prior behavior for existing integrations.
+
 Each endpoint then adds its own identifier filters (for example, `campaignId`, `sellerId`).
 
 ---
@@ -110,6 +114,7 @@ Each endpoint then adds its own identifier filters (for example, `campaignId`, `
 - `intervalSize` (enum, optional)<br />Aggregation granularity: `Day`, `Month`, `Year`, and in some environments `Hour`.
 - `count` (integer, optional)<br />Maximum number of rows to return (useful for pagination or sampling).
 - `clickAttributionPolicy` (enum, optional)<br />Attribution mode: `SameSeller`, `AnySeller`, or `Both` (where supported).
+- `timeZoneId` (string, optional)<br />IANA time zone code used for aggregation boundaries (for example, `Asia/Seoul`). Defaults to UTC-0 if omitted.
 
 ### Response Shape (Conceptual)
 
@@ -178,6 +183,7 @@ This endpoint works for:
 - `advertiserId` (integer, optional)<br />Restrict to a specific advertiser.
 - `campaignId` (string, optional)<br />Restrict to one campaign. If omitted, returns one row per campaign per interval.
 - `startDate`, `endDate`, `intervalSize`, `count`, `clickAttributionPolicy`<br />Same semantics as for seller stats.
+- `timeZoneId` (string, optional)<br />Same semantics as for Seller Statistics.
 
 ### Response Shape (Conceptual)
 
@@ -221,6 +227,15 @@ This endpoint works for:
 - High-level reporting for commercial or product stakeholders
 - Sanity checks before drilling down at seller or seller-campaign level
 
+### Example Request
+
+```bash
+curl -X 'GET' \
+  'https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/campaigns?intervalSize=Day&clickAttributionPolicy=AnySeller&startDate=2026-08-06&endDate=2026-08-07&campaignId=2&advertiserId=2&timeZoneId=Asia%2FSeoul'
+```
+
+This aggregates stats by day, using the Asia/Seoul day boundary instead of UTC. The same parameter works on `/stats/sellers` and `/stats/seller-campaigns`.
+
 ---
 
 ## Seller-Campaign Statistics
@@ -245,6 +260,7 @@ This endpoint is the most granular standard reporting view and is key for:
 - `campaignId` (string, optional)<br />Restrict to a specific campaign (or template).
 - `sellerId` (string, optional)<br />Restrict to one seller. If omitted, you get rows across all sellers/campaigns.
 - `startDate`, `endDate`, `intervalSize`, `count`, `clickAttributionPolicy`<br />Same semantics as for the other endpoints.
+- `timeZoneId` (string, optional)<br />Same semantics as for the other endpoints.
 
 ### Response Shape (Conceptual)
 

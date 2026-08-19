@@ -1,0 +1,206 @@
+---
+title: "Deep Linking Configuration and Requirements"
+description: "Configure URI Schemes, Universal Links, and Android App Links for your Criteo App campaigns."
+---
+
+## Overview
+
+Deep linking is the mechanism that allows users to be redirected to a specific platform's content by clicking on a link address. This is a process commonly used while users are navigating the Web, under the same or across different websites. It is also applicable, however, to Apps in the mobile environment.
+
+The process of App Deep Linking is as follows:
+
+- An app's developer will configure the app to "listen" to links of a certain format
+- When a user clicks on one of these links, the link should trigger a native behaviour from the OS responsible for launching the respective app (Android or iOS)
+- After the app is launched, its code might contain specific logic to redirect the user to a specific internal screen, or behave in some other particular way based on the specific link triggered
+
+Deep linking can be achieved using various approaches, from the original **URI Scheme** mechanism to newer technologies like iOS' **Universal Links** and Android's **App Links**.
+
+<Warning>
+  To maximize compatibility with different environments & publisher capabilities, it's recommended that apps have both functionalities available.
+</Warning>
+
+### URI Schemes
+
+These can be thought of as similar to the web protocols `https://` and `http://`, only for specific apps. For example:
+
+- `myapp://path/to/content?key1=value1&key2=value2`
+- `mystore://products/details?id=abc123`
+- `youtube://watch?v=LQoohRwojmw`
+
+The first part (before the `://`) is called the **URI Scheme** and it defines which app should be launched by the OS when this link is invoked.
+
+The **path** and **query parameters** (after the `://`) can be read by the app's code and will determine the redirection/behaviour inside the app.
+
+### Universal Linking (iOS) / App Links (Android)
+
+In iOS 9, Apple introduced what is known as [Universal Links](https://developer.apple.com/ios/universal-links/). This new Mobile Deeplinking solution aims to avoid URI scheme conflicts between apps listening to the same scheme (a known vulnerability of URI schemes), as well as handling cross-environment redirection (between Web & App). It also provides native fallback redirection to a mobile website if the app is not installed. A similar approach called [Android App Links](https://developer.android.com/training/app-links) was released by Google in Android 6.0.
+
+Effectively, Universal Links/Android App Links are links that use the secure HTTPS Web protocol to ensure smooth redirection to the app if it's installed, or a fallback to the mobile website:
+
+- `https://www.mystore.com/products?id=abc123`
+- `https://www.youtube.com/watch?v=LQoohRwojmw`
+- `https://twitter.com/criteo`
+
+### Deep Linking at Criteo
+
+Redirection can be set up via either the URI Scheme, Universal Link/App Links, or a combination, and these are required for all campaigns whose landing environment is within your App.
+
+<Warning>
+  Not applicable to App Install campaigns, since in that use case, the user is redirected to the App Store or Play Store.
+</Warning>
+
+Their usage depends on the type of banner:
+
+#### Dynamic Ads
+
+These ads have dynamic content that use our varied creative Layouts & our Product Recommendation Engine (powered by proprietary ML algorithms) to maximize the campaign's Click-Through Rate and Conversion Rate.
+
+Deeplinking is also specific to the area within the banner that is clicked on. From a macro perspective, our dynamic ads are divided into the zones outlined below:
+
+- **Logo Zone:** the part of the banner which has the advertiser's branding content (logo), usually at the top-left of the banner. This is designed to redirect users to the main screen of the app. To configure it, Criteo requires:
+  - `(mandatory)` A URI Scheme that opens the app and redirects the user to the main screen
+  - `(if available)` A similar Universal Link/App Link
+- **Product Zone:** the part of the banner where the products are displayed and whose resources are loaded directly from the Product Catalog. Clicks in this area are usually designed to redirect users to the product details screen within the app. To configure it, Criteo requires:
+  - `(mandatory)` Product-specific URI Scheme deeplinks in the catalog, which open the app and redirect to the respective product details screen
+  - `(if available)` Similar Universal Links/App Links
+- **Coupon Zone:** area of the banner covered by Coupons (whenever configured — optional), which are designed to display special offers or seasonal discounts. If configured, Coupons might also redirect users to dedicated screens within the app. To configure it, Criteo requires:
+  - `(optional)` URL Scheme that opens the app and redirects to the main screen
+  - `(optional & if available)` Similar Universal Link/App Link
+
+<Warning>
+  Currently, these configurations are not available in the self-service platform, so please inform your Criteo contact about the desired URI Scheme and UL/AL's to use for your App campaigns.
+</Warning>
+
+#### Static Ads
+
+These are ads whose contents are provided directly & entirely by the advertiser and whose redirection behaviour is the same in the entire banner frame.
+
+Here, redirection is also controlled manually and set at the Ad level. To configure it, Criteo requires:
+
+- `(mandatory)` URI Scheme which opens the app and redirects to the main screen
+- `(if available)` Similar Universal Link/App Link
+
+This configuration is available in our self-service platform when creating a new Ad under Landing Page URL:
+
+<Frame>
+  ![Image](/images/mobile-integrations/deeplinks/deeplinks_static_ad_landing_url.png "Image")
+</Frame>
+
+### Deep Linking Setup for iOS Apps
+
+#### iOS URI Scheme Implementation
+
+- These schemes need to be **declared and configured in the info.plist file of your iOS application**
+- Once configured, a tap on a link of this format will trigger the app and redirect the user into it
+
+For more details, please see this [link](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app).
+
+Example of a URI Scheme configured in the info.plist file of an iOS project:
+
+<Frame>
+  ![Image](/images/mobile-integrations/deeplinks/deeplinks_ios_info_plist_scheme.png "Image")
+</Frame>
+
+#### Universal Linking
+
+To properly configure the Universal Links feature, the following steps must be followed:
+
+- The links' domain must be registered in your iOS application's associated domains file
+- The Apple App Site Association (AASA) file must be hosted on the public domain that the Universal Links should work with:
+  - The AASA file is a JSON file containing the Apple App ID of the app you want the Universal Links to redirect to, as well as the paths from which app redirection should & should not happen
+
+For more details, please see this [link](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
+
+Example of a domain declared under Associated Domains in Xcode (the iOS IDE) of an iOS project:
+
+<Frame>
+  ![Image](/images/mobile-integrations/deeplinks/deeplinks_ios_associated_domains.png "Image")
+</Frame>
+
+Example AASA file:
+
+```json
+{
+  "applinks": {
+      "details": [
+           {
+             "appIDs": [ "ABCDE12345.com.example.app", "ABCDE12345.com.example.app2" ],
+             "components": [
+               {
+                  "#": "no_universal_links",
+                  "exclude": true,
+                  "comment": "Matches any URL with a fragment that equals no_universal_links and instructs the system not to open it as a universal link."
+               },
+               {
+                  "/": "/buy/*",
+                  "comment": "Matches any URL with a path that starts with /buy/."
+               },
+               {
+                  "/": "/help/*",
+                  "?": { "articleNumber": "????" },
+                  "comment": "Matches any URL with a path that starts with /help/ and that has a query string parameter with name 'articleNumber' and a value of exactly four characters."
+               }
+             ]
+           }
+       ]
+   },
+   "webcredentials": {
+      "apps": [ "ABCDE12345.com.example.app" ]
+   }
+}
+```
+
+### Deep Linking Setup for Android Apps
+
+#### Android URI Scheme Implementation
+
+- These schemes need to be **configured in the manifest.xml of your Android application**
+- Once configured, a tap on a link of this format will trigger the app and redirect the user into it
+
+For more details, please see this [link](https://developer.android.com/training/app-links/deep-linking).
+
+Example of URI Scheme configured in manifest.xml of an Android project:
+
+<Frame>
+  ![Image](/images/mobile-integrations/deeplinks/deeplinks_android_manifest_scheme.png "Image")
+</Frame>
+
+#### Android App Links
+
+To properly configure the Android App Links feature, the following steps must be followed:
+
+- The link needs to be registered in your Android application's manifest.xml file, under a **separate intent filter from that of the URI Scheme**
+- The Digital Asset Link file (assetlinks.json) must be hosted on the public domain that the Android App Links should work with:
+  - `assetlinks.json` is a JSON file which contains the package name and the SHA fingerprint of the app you want the redirection from this link to work for.
+    - `package_name`: The application ID declared in the app's `build.gradle` file
+    - `sha256_cert_fingerprints`: The SHA256 fingerprints of your app's signing certificate. You can use the following command to generate the fingerprint via the Java key tool:
+
+```bash
+keytool -list -v -keystore my-release-key.keystore
+```
+
+For more details, please see this [link](https://developer.android.com/training/app-links/verify-android-applinks).
+
+Example of a domain configured in the manifest.xml file:
+
+<Frame>
+  ![Image](/images/mobile-integrations/deeplinks/deeplinks_android_manifest_applinks.png "Image")
+</Frame>
+
+Example `assetlinks.json` file:
+
+```json
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.example",
+    "sha256_cert_fingerprints":
+    ["14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5"]
+  }
+}]
+```
+
+<Tip>
+  If you are facing issues in identifying either the URI schemes, Universal Links, or App Links to share with the Criteo Team, please reach out to your app's development team for guidance.
+</Tip>

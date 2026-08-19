@@ -1,0 +1,115 @@
+---
+title: Line Item Products
+description: Add products to a line item's product pool.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Overview
+
+The product pool of a line item holds the products that the line item can promote. Adding a product makes it available to the line item; it does not assign it to a Creative Product Collection.
+
+Adding products is the step that follows creating a line item with [Line Item Core](/retail-media/experimental/docs/line-items-core). Identify eligible products to add by accessing your account [catalog](/retail-media/experimental/docs/catalogs).
+
+<Info>
+  The long-term goal is to support product operations across line item types. Initial documented support targets Onsite Display Auction line items and uses `productType` `DisplayProduct` with `displayProductDetails`. Additional product types will be documented as support is added.
+</Info>
+
+This endpoint replaces the [Add Products to specific Line Item, or Update Bid Override](/retail-media/docs/promoted-products) route (`/line-items/{lineItemId}/products/append`), which remains available in the meantime.
+
+## Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/line-items/{lineItemId}/products/add` | Add products to a line item's product pool. |
+
+## Add Products to a Line Item
+
+Adds one or more products to the product pool of an existing line item.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}/products/add
+```
+</EndpointBadge>
+
+### Path parameters
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `lineItemId` | Yes | External ID of the line item that owns the product pool. |
+
+### Request attributes
+
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `productType` | Yes | Type of products being added. It must match the type of the target line item. Only `DisplayProduct` is currently supported. |
+| `displayProductDetails` | Yes | Products to add, when `productType` is `DisplayProduct`. At least one entry is required, and the number of entries is subject to the product limit configured for the line item's campaign type. |
+| `displayProductDetails[].productId` | Yes | ID of the product to add. It must exist in the retailer catalog of the line item's account. |
+
+The resource `type` is `Products`. Do not send response-only fields such as `approvalStatus` inside `displayProductDetails`.
+
+### Behavior
+
+- All items in the request must be added successfully; otherwise, no items are added to the product pool. If any `productId` is invalid, the entire request fails and the product pool is left unchanged.
+- A `productId` is invalid if it is missing, not present in the retailer catalog, marked as deleted, or unavailable in the line item's account.
+- Adding a `productId` that is already in the product pool is a no-op. No duplicate is created and no error is returned for that product.
+- Duplicate `productId` values within the same request are deduplicated. The product is added once.
+- Products are added to the product pool only. They are not assigned to a Creative Product Collection.
+
+**Sample Request**
+
+```json
+{
+  "data": {
+    "type": "Products",
+    "attributes": {
+      "productType": "DisplayProduct",
+      "displayProductDetails": [
+        {
+          "productId": "sku-12345"
+        },
+        {
+          "productId": "sku-67890"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Sample Response**
+
+```json
+{
+  "data": {
+    "type": "Products",
+    "attributes": {
+      "productType": "DisplayProduct",
+      "displayProductDetails": [
+        {
+          "productId": "sku-12345",
+          "approvalStatus": "Unsubmitted"
+        },
+        {
+          "productId": "sku-67890",
+          "approvalStatus": "Unsubmitted"
+        }
+      ]
+    }
+  }
+}
+```
+
+### Errors
+
+| HTTP status | Code | Description |
+| --- | --- | --- |
+| `400` | `product-invalid` | One or more of the supplied product IDs are invalid. |
+| `400` | `products-required` | No product was supplied, or the list of products is empty. |
+| `400` | `products-limit-exceeded` | More products were supplied than the line item permits. |
+| `400` | `invalid-line-item-type` | The requested `productType` does not match the type of the target line item. |
+| `401` | `unauthenticated` | The caller is not authenticated. |
+| `403` | `forbidden` | The caller cannot modify the target line item, or the line item does not exist. |
+| `501` | `unsupported-line-item-type` | The line item buy type is not Auction, which the current implementation does not support. |
+| `503` | `catalog-unavailable` | The catalog service could not be reached to validate the products. Retry the request later. |
