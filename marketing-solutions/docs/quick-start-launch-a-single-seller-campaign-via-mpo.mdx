@@ -1,30 +1,29 @@
 ---
-title: Quick Start – Launch a Single-Seller Campaign via MPO
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/singleseller/quick-start-launch-a-single-seller-campaign-via-mpo.md
+title: "Quick Start – Launch a Single-Seller Campaign via MPO"
+original_file: "to-migrate/criteo-dev-portal-full-export/merged_export/Performance_Media/v2026_01/docs/Marketing Solutions Endpoints/marketplace-performance-outcomes/singleseller/quick-start-launch-a-single-seller-campaign-via-mpo.md"
 ---
 
 ## What you’ll accomplish
 
 In this recipe, you will:
 
-* Take a single seller from having **no Single-Seller campaign** to having a **live, dedicated Single-Seller campaign**.
-* Create the first **Single-Seller budget**, which:
-  * Automatically creates the per-seller campaign for that seller and template (if it doesn’t exist yet).
-  * Controls how much that seller can spend and over which dates.
-* Restrict products for that seller’s campaign using **`productSet`** (this is optional).
-* Verify the setup using both:
-  * **Budgets** endpoints, to confirm configuration.
-  * **Statistics** endpoints, to confirm the seller is delivering.
+- Take a single seller from having **no Single-Seller campaign** to having a **live, dedicated Single-Seller campaign**.
+- Create the first **Single-Seller budget**, which:
+  - Automatically creates the per-seller campaign for that seller and template (if it doesn’t exist yet).
+  - Controls how much that seller can spend and over which dates.
+- Restrict products for that seller’s campaign using **`productSet`** (this is optional).
+- Verify the setup using both:
+  - **Budgets** endpoints, to confirm configuration.
+  - **Statistics** endpoints, to confirm the seller is delivering.
 
-This recipe assumes you already understand the high-level concepts in the  
-[Single-Seller Campaigns – Concept Guide](https://criteo.atlassian.net/wiki/display/~g.handley/Single-Seller+Campaigns+%E2%80%93+Concept+Guide).
+This recipe assumes you already understand the high-level concepts in the<br />[Single-Seller Campaigns – Concept Guide](https://criteo.atlassian.net/wiki/display/~g.handley/Single-Seller+Campaigns+%E2%80%93+Concept+Guide).
 
 ## Who this recipe is for
 
 This flow is intended for sellers who are a good fit for Single-Seller, typically:
 
-* **Top or strategic sellers** who can meet the minimum Single-Seller budgets, and
-* Sellers with **enough eligible products** in their catalog to support stable delivery.
+- **Top or strategic sellers** who can meet the minimum Single-Seller budgets, and
+- Sellers with **enough eligible products** in their catalog to support stable delivery.
 
 Very small or long-tail sellers with very low daily budgets are usually better handled via **Multi-Seller campaigns**, not Single-Seller.
 
@@ -40,63 +39,73 @@ Marketplace Performance Outcomes uses the same Marketing Solutions Performance M
 
 To call `/marketplace-performance-outcomes`, your application must:
 
-* Be onboarded to Marketing Solutions with the **Campaign** domain in its scope.
-* Have the **Campaign Manage** permission, as described in the [onboarding checklist](/marketing-solutions/docs/onboarding-checklist#3-define-your-app-scope).
+- Be onboarded to Marketing Solutions with the **Campaign** domain in its scope.
+- Have the **Campaign Manage** permission, as described in the [onboarding checklist](/marketing-solutions/docs/onboarding-checklist#3-define-your-app-scope).
 
 #### Single-Seller feature enablement
 
 Single-Seller campaigns must be enabled on your account. Confirm with your Criteo representative that:
 
-* Your advertiser is allowed to use **Single-Seller**.
-* At least one **Single-Seller template campaign** exists for you.
+- Your advertiser is allowed to use **Single-Seller**.
+- At least one **Single-Seller template campaign** exists for you.
 
 If Single-Seller is not enabled, the calls in this recipe may return authorization or validation errors.
 
 ### Template configuration
 
-* You have a **Single-Seller template campaign ID** from Criteo:
-  * This is often referred to as `templateCampaignId`.
-  * You must use this ID as `campaignId` in **budget calls**.
-* You know the **minimum per-seller budget** for this template:
-  * For example: a minimum total budget per period, or a minimum “equivalent daily” spend.
+- You have a **Single-Seller template campaign ID** from Criteo:
+  - This is often referred to as `templateCampaignId`.
+  - You must use this ID as `campaignId` in **budget calls**.
+- You know the **minimum per-seller budget** for this template:
+  - For example: a minimum total budget per period, or a minimum “equivalent daily” spend.
 
 ### Seller eligibility
 
 Single-Seller is designed for sellers who can sustain **meaningful, continuous delivery**. Before using this recipe for a seller, check that:
 
-* The seller can meet the **minimum daily budget** guidelines for Single-Seller. As a rule of thumb:
-  * **Recommended**: around **US\$20/day** for ROAS/sales goals, or **US\$10/day** for click goals.
-  * **Hard minimums**: **US\$10/day** (ROAS/sales) and **US\$5/day** (click).
-* The seller is **not** a pure long-tail seller with very small or sporadic budgets.
-  * Long-tail sellers are usually better suited to **Multi-Seller pooled campaigns**.
-* If you plan to use `productSet` for this seller:
-  * The seller has at least **~20 in-stock products** mapped correctly in the catalog.
-  * This helps avoid **under-delivery** and `productSet` **validation errors**.
+- The seller can meet the **minimum daily budget** guidelines for Single-Seller. As a rule of thumb:
+  - **Recommended**: around **US\$20/day** for ROAS/sales goals, or **US\$10/day** for click goals.
+  - **Hard minimums**: **US\$10/day** (ROAS/sales) and **US\$5/day** (click).
+- The seller is **not** a pure long-tail seller with very small or sporadic budgets.
+  - Long-tail sellers are usually better suited to **Multi-Seller pooled campaigns**.
+- If you plan to use `productSet` for this seller:
+  - The seller has at least **~20 in-stock products** mapped correctly in the catalog.
+  - This helps avoid **under-delivery** and `productSet` **validation errors**.
 
 ### Catalog and sellers
 
-* Your product catalog is integrated and includes `sellerName` on relevant products.
-* The MPO Sellers endpoints return sellers:
-  * You can call `/marketplace-performance-outcomes/sellers` and see your sellers.
-  * Each seller you want to onboard to Single-Seller has a corresponding `sellerId`.
+- Your product catalog is integrated and includes `sellerName` on relevant products.
+- The MPO Sellers endpoints return sellers:
+  - You can call `/marketplace-performance-outcomes/sellers` and see your sellers.
+  - Each seller you want to onboard to Single-Seller has a corresponding `sellerId`.
 
 ### API access & permissions
 
 You have valid OAuth 2.0 client credentials and can obtain a Bearer token.
 
+Unlike Multi-Seller (which only requires Campaign Manage), Single-Seller requires broader access because creating a seller's first budget triggers an automatic sync of audience, creative, and product-set configuration from the parent template ad set to the newly created child (seller) ad set.
+
 Your OAuth token must include the following permissions for the advertiser portfolios used in this recipe:
 
-* **Campaigns: Read**
-* **Campaigns: Manage**
+- **Campaigns: Manage**
+- **Audiences: Manage**
+- **Creatives: Manage**
+- **Catalog: Manage**
+- **Product Recommendation: Manage**
+- **Analytics: Read**
 
 With these permissions, your app can read the required entities (including sellers), create and update budgets, and call the reporting endpoints used in this workflow.
 
+<Warning>
+  If any of the Manage permissions above are missing, the first budget-creation call for a seller can fail because the API cannot read the parent ad set's audience/creative/productSet configuration to apply it to the new child ad set. This can currently return a `500` error even though the request itself is valid. Missing permissions won't necessarily fail every call: once a seller's child ad set already exists, subsequent budget calls for that seller reuse it and do not require re-syncing this configuration.
+</Warning>
+
 You will need (for this recipe):
 
-* `advertiserId`
-* `templateCampaignId` (Single-Seller template campaign ID)
-* `sellerId` (you will retrieve this in Step 1)
-* Minimum per-seller budget for this template (from Criteo)
+- `advertiserId`
+- `templateCampaignId` (Single-Seller template campaign ID)
+- `sellerId` (you will retrieve this in Step 1)
+- Minimum per-seller budget for this template (from Criteo)
 
 **Estimated time:** ~30–60 minutes if all of the above are ready.
 
@@ -125,15 +134,15 @@ Accept: application/json
 ]
 ```
 
-* `id` is the `sellerId` to use in later calls.
-* Store `sellerId` in your own system.
+- `id` is the `sellerId` to use in later calls.
+- Store `sellerId` in your own system.
 
 ## Step 2 – Create the first Single-Seller budget
 
 The first valid budget for (`sellerId`, `templateCampaignId`):
 
-* Creates the underlying **Single-Seller campaign** (if it doesn’t exist).
-* Defines **how much** the seller can spend and **over which period**.
+- Creates the underlying **Single-Seller campaign** (if it doesn’t exist).
+- Defines **how much** the seller can spend and **over which period**.
 
 ### Build the budget request
 
@@ -163,28 +172,28 @@ Accept: application/json
 
 **Guidelines:**
 
-* `campaignIds` must contain **exactly one ID**: your Single-Seller `templateCampaignId`.
-* `amount` must be more: the per-seller minimum by the number of days.
-* `startDate` and `endDate`:
-  * Must form a valid range (`startDate <= endDate`).
-  * Must not overlap any other budget for the same (`sellerId`, `templateCampaignId`).
+- `campaignIds` must contain **exactly one ID**: your Single-Seller `templateCampaignId`.
+- `amount` must be more: the per-seller minimum by the number of days.
+- `startDate` and `endDate`:
+  - Must form a valid range (`startDate <= endDate`).
+  - Must not overlap any other budget for the same (`sellerId`, `templateCampaignId`).
 
 ### Interpret the response
 
 A successful response returns:
 
-* A generated `budgetId`.
-* The budget fields (dates, `amount`, `isSuspended`, status).
+- A generated `budgetId`.
+- The budget fields (dates, `amount`, `isSuspended`, status).
 
 Once accepted:
 
-* Criteo creates the **Single-Seller campaign** for (`sellerId`, `templateCampaignId`) if needed.
-* Expect a short **provisioning delay** before impressions appear.
+- Criteo creates the **Single-Seller campaign** for (`sellerId`, `templateCampaignId`) if needed.
+- Expect a short **provisioning delay** before impressions appear.
 
 Store:
 
-* `budgetId` for future updates and troubleshooting.
-* Mapping between `sellerId`, `templateCampaignId`, and budget(s).
+- `budgetId` for future updates and troubleshooting.
+- Mapping between `sellerId`, `templateCampaignId`, and budget(s).
 
 ## Step 3 – Restrict products with `productSet` (Optional)
 
@@ -213,7 +222,7 @@ Accept: application/json
 ]
 ```
 
-* `id` is the **seller-campaign identifier** you’ll use when updating `productSet`.
+- `id` is the **seller-campaign identifier** you’ll use when updating `productSet`.
 
 ### Attach a `productSet`
 
@@ -252,15 +261,15 @@ Accept: application/json
 
 **Behavior:**
 
-* Creates a `productSet` if none exists.
-* Replaces the existing rule if one exists.
-* Only products with `ExternalItemId` in `values` are eligible.
+- Creates a `productSet` if none exists.
+- Replaces the existing rule if one exists.
+- Only products with `ExternalItemId` in `values` are eligible.
 
 **Constraints:**
 
-* `operator`: `IsIn` or `IsNotIn`.
-* `field`: `ExternalItemId`.
-* Advertiser-specific **minimum number of product IDs** may apply.
+- `operator`: `IsIn` or `IsNotIn`.
+- `field`: `ExternalItemId`.
+- Advertiser-specific **minimum number of product IDs** may apply.
 
 ### Remove the filter later
 
@@ -298,9 +307,9 @@ Accept: application/json
 
 **Check:**
 
-* Dates and `amount` match expectations.
-* `isSuspended` is `false` for active budgets.
-* No overlapping periods for the same (`sellerId`, `templateCampaignId`).
+- Dates and `amount` match expectations.
+- `isSuspended` is `false` for active budgets.
+- No overlapping periods for the same (`sellerId`, `templateCampaignId`).
 
 ### Monitor performance
 
@@ -314,9 +323,9 @@ GET /marketplace-performance-outcomes/stats/seller-campaigns
 
 Combine:
 
-* `sellerId`
-* `templateCampaignId`
-* `sellerCampaignId`
+- `sellerId`
+- `templateCampaignId`
+- `sellerCampaignId`
 
 to build dashboards and automated checks.
 
@@ -324,20 +333,20 @@ to build dashboards and automated checks.
 
 **Scale to more sellers:**
 
-* Repeat Steps 1–2 for each new seller.
-* Optionally configure `productSet` per seller.
+- Repeat Steps 1–2 for each new seller.
+- Optionally configure `productSet` per seller.
 
 **Adjust spend mid-flight:**
 
-* `PATCH` budgets to change `amount` or `endDate`.
-* Always avoid **overlapping periods**.
+- `PATCH` budgets to change `amount` or `endDate`.
+- Always avoid **overlapping periods**.
 
 **Pause or resume a seller:**
 
-* **Pause**: set `isSuspended = true` on the active budget.
-* **Resume**: set `isSuspended = false` on a valid active/future budget.
+- **Pause**: set `isSuspended = true` on the active budget.
+- **Resume**: set `isSuspended = false` on a valid active/future budget.
 
 For more details, refer to:
 
-* [Single-Seller Campaigns – Concept Guide](https://criteo.atlassian.net/wiki/display/~g.handley/Single-Seller+Campaigns+%E2%80%93+Concept+Guide)
-* [Single-Seller API Reference](/marketing-solutions/docs/single-seller-campaigns#/versions)
+- [Single-Seller Campaigns – Concept Guide](https://criteo.atlassian.net/wiki/display/~g.handley/Single-Seller+Campaigns+%E2%80%93+Concept+Guide)
+- [Single-Seller API Reference](/marketing-solutions/docs/single-seller-campaigns#/versions)
