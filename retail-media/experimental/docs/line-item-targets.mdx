@@ -1,0 +1,208 @@
+---
+title: Targeting
+description: Retrieve the targets configured for a line item.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Overview
+
+Targeting defines where and how a line item can serve. Each target has a target type and type-specific details. The Get Targets endpoint retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for a line item.
+
+Clients should inspect the `errors` array even when the endpoint returns `200 OK`. The endpoint supports partial success by target type: if a target type is unavailable, other available target types can still be included in the response.
+
+***
+
+## Endpoints
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/retail-media/line-items/{line-item-id}/targets` | Retrieves targets for a line item |
+
+***
+
+## Get Targets
+
+Retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for the specified line item. Use `offset` and `limit` to page through the targets retrieved successfully.
+
+**Prerequisites:**
+
+- OAuth 2.0 bearer token with the `RetailMedia_Campaign_Read` scope
+- Access to the requested line item
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/targets
+```
+</EndpointBadge>
+
+### Request Attributes
+
+| Attribute | Type | Required | Description |
+| :-------- | :--- | :------- | :---------- |
+| `line-item-id` | string | Yes | Line item ID. Provided in the URL path. |
+| `offset` | integer | No | Zero-based offset applied to the targets retrieved successfully. Defaults to `0`. |
+| `limit` | integer | No | Maximum number of targets returned. Defaults to `500`; maximum `50,000`. |
+
+### Response Attributes
+
+| Attribute | Type | Description |
+| :-------- | :--- | :---------- |
+| `metadata.count` | integer | Total number of targets retrieved successfully before pagination is applied. |
+| `metadata.offset` | integer | Zero-based offset applied to the returned targets. |
+| `metadata.limit` | integer | Maximum number of targets requested for the page. |
+| `data` | array | Paginated target resources. |
+| `errors` | array | Errors encountered while retrieving targets. This array is not paginated. |
+| `warnings` | array | Warnings encountered while retrieving targets. This array is not paginated. |
+
+### Target Attributes
+
+| Attribute | Type | Description |
+| :-------- | :--- | :---------- |
+| `targetType` | enum | Target type: `ManualKeyword`, `PageType`, or `Category`. |
+| `negative` | boolean | Whether the target excludes matching inventory. Page type targets always return `false`. |
+| `bidMultiplier` | number or null | Bid multiplier for the target. Category target bid multipliers are supported. |
+| `approvalStatus` | enum | Approval status of the target: `Unknown`, `Approved`, `AutoApproved`, `InReview`, `Rejected`, `AutoRejected`, or `Unsubmitted`. Page type targets return `AutoApproved`. |
+| `manualKeywordTargetDetails` | object | Details for a manual keyword target. Present only when `targetType` is `ManualKeyword`. |
+| `pageTypeTargetDetails` | object | Details for a page type target. Present only when `targetType` is `PageType`. |
+| `categoryTargetDetails` | object | Details for a category target. Present only when `targetType` is `Category`. |
+
+Each target contains exactly one target details object:
+
+| Target details object | Attribute | Type | Description |
+| :-------------------- | :-------- | :--- | :---------- |
+| `manualKeywordTargetDetails` | `keywordInput` | string | Manual keyword used for targeting. |
+| `manualKeywordTargetDetails` | `matchType` | enum | Keyword match type: `Broad` or `Exact`. |
+| `pageTypeTargetDetails` | `pageType` | enum | Page type targeted by the line item: `Unknown`, `Search`, `Home`, `Browse`, `Checkout`, `Category`, `ProductDetail`, `Confirmation`, `Merchandising`, `Deals`, `Favorites`, `SearchBar`, `CategoryMenu`, or `AiAssistant`. |
+| `categoryTargetDetails` | `categoryId` | string | Category ID targeted by the line item. |
+| `categoryTargetDetails` | `includeChildren` | boolean | Whether the target includes child categories. |
+
+**Sample Request**
+
+```bash
+curl -L -X GET \
+  'https://api.criteo.com/experimental/retail-media/line-items/1234567890123456789/targets?offset=0&limit=500' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response** — `200 OK`
+
+```json
+{
+  "metadata": {
+    "count": 3,
+    "offset": 0,
+    "limit": 500
+  },
+  "data": [
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "ManualKeyword",
+        "negative": false,
+        "bidMultiplier": 1.25,
+        "approvalStatus": "Approved",
+        "manualKeywordTargetDetails": {
+          "keywordInput": "trail running shoes",
+          "matchType": "Broad"
+        }
+      }
+    },
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "PageType",
+        "negative": false,
+        "bidMultiplier": null,
+        "approvalStatus": "AutoApproved",
+        "pageTypeTargetDetails": {
+          "pageType": "Search"
+        }
+      }
+    },
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "Category",
+        "negative": false,
+        "bidMultiplier": 1.5,
+        "approvalStatus": "Approved",
+        "categoryTargetDetails": {
+          "categoryId": "1001",
+          "includeChildren": true
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+### Partial Success
+
+The endpoint supports partial success by target type. If one or more target types are available, it returns `200 OK` with those targets in `data` and describes any unavailable target types in `errors`. If retrieval fails for every supported target type, it returns a non-`200` response with no target data.
+
+The `metadata.count` value is the total number of targets retrieved successfully before pagination. If `offset` is greater than or equal to `metadata.count`, `data` is empty. The `errors` and `warnings` arrays apply to the full response and are not affected by pagination.
+
+The following example shows a successful response when `ManualKeyword` targets are unavailable. The response still includes the available `PageType` and `Category` targets. Clients should process those targets and inspect `errors` before treating the response as complete.
+
+**`ManualKeyword` targets unavailable** — `200 OK`
+
+```json
+{
+  "metadata": {
+    "count": 2,
+    "offset": 0,
+    "limit": 500
+  },
+  "data": [
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "PageType",
+        "negative": false,
+        "bidMultiplier": null,
+        "approvalStatus": "AutoApproved",
+        "pageTypeTargetDetails": {
+          "pageType": "Home"
+        }
+      }
+    },
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "Category",
+        "negative": false,
+        "bidMultiplier": 1.2,
+        "approvalStatus": "Approved",
+        "categoryTargetDetails": {
+          "categoryId": "1002",
+          "includeChildren": false
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": [
+    {
+      "traceId": "example-trace-id",
+      "type": "availability",
+      "code": "keyword-targets-unavailable",
+      "detail": "Failed to fetch keyword targets."
+    }
+  ]
+}
+```
+
+### Responses
+
+| Response | Meaning | Troubleshooting |
+| :------- | :------ | :-------------- |
+| 🟢 `200` | All supported target types were retrieved, or the request partially succeeded for the available target types. | Always inspect `errors` and `warnings`; a `200` response can contain only a subset of the supported target types. |
+| 🔴 `400` `targets-max-page-size-exceeded` | The requested `limit` is greater than `50,000`. | Reduce `limit` to `50,000` or less. |
+| 🔴 `401` | The access token is missing, invalid, or expired. | Obtain a valid access token and retry the request. |
+| 🔴 `403` | The caller lacks Campaign Read permission or access to the requested line item. | Verify the bearer token includes the `RetailMedia_Campaign_Read` scope and the caller has access to the requested line item. |
+| 🔴 `500` | An unexpected internal error prevented the endpoint from completing the request. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
+| 🔴 `502` | Retrieval failed for every supported target type. | Retry the request. If the failure persists, use the response trace ID when contacting support. |
