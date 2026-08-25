@@ -122,19 +122,39 @@ https://api.criteo.com/preview/retail-media/insights/digital-shelf-intelligence
 | Attribute | Type | Required | Description |
 | --------- | ---- | :------: | ----------- |
 | `accountId` | `string` | Yes | External Retail Media account ID. Must be numeric. |
-| `startDate` | `string` (date) | Yes | Inclusive start date. If not a Monday, the report is accepted and shifted back to the Monday of that week, with a warning. |
-| `endDate` | `string` (date) | Yes | Inclusive end date. If not a Sunday, the report is accepted and shifted forward to the Sunday of that week, with a warning. |
+| `startDate` | `string` (date) | Yes | Inclusive start date, as an ISO calendar date `YYYY-MM-DD` (no time component). A value with a time component (e.g. `2025-08-11T00:00:00Z`) is rejected with `400 Bad Request`. If not a Monday, the report is accepted and shifted back to the Monday of that week, with a warning. |
+| `endDate` | `string` (date) | Yes | Inclusive end date, as an ISO calendar date `YYYY-MM-DD` (no time component). A value with a time component (e.g. `2025-08-11T00:00:00Z`) is rejected with `400 Bad Request`. If not a Sunday, the report is accepted and shifted forward to the Sunday of that week, with a warning. |
 | `aggregationLevel` | `string` | Yes | One of `brand` or `sku`. |
 | `metrics` | `string[]` | Yes | At least one metric. Allowed values: `considerationIndex`, `listingPrice`, `pdpViewRank`, `salesIndex`, `salesRank`, `totalPdpPageViews`, `totalSalesOnline`, `totalSoldUnitsOnline`. |
-| `retailerIds` | `string[]` | No | Retailer IDs to filter on. Must be numeric internal IDs. |
-| `brandIds` | `string[]` | No | Brand IDs to filter on. Must be numeric external IDs. |
-| `skuIds` | `object[]` | No | SKU filters grouped by retailer. Ignored with a warning when `aggregationLevel` is `brand`. Each entry requires `retailerId` (string) and `retailerSkuIds` (string[]). |
-| `categories` | `string[]` | No | Category names to filter on. |
+| `filters` | `object` | No | Optional filters applied to the report. If omitted, no filters are applied. See the **Filters object** table below. Default: an empty filters object (no filtering). |
 | `format` | `string` | No | Output format. One of `json`, `json-compact`, `json-newline`, `csv`. Default: `json-compact`. |
 
 <Note>
   `startDate` must not be after `endDate`, and the requested interval must be **100 days or less**.
 </Note>
+
+### Filters object
+
+| Field | Type | Required | Description |
+| ----- | ---- | :------: | ----------- |
+| `retailerIds` | `string[]` | No | Retailer IDs to filter on. Must be numeric internal IDs. Default: `[]`. |
+| `brandIds` | `string[]` | No | Brand IDs to filter on. Must be numeric external IDs. Default: `[]`. |
+| `skuIds` | `object[]` | No | SKU filters grouped by retailer. Ignored with a warning when `aggregationLevel` is `brand`. Each entry requires `retailerId` (string) and `retailerSkuIds` (string[]). Default: `[]`. |
+| `categories` | `string[]` | No | Category names to filter on. Default: `[]`. |
+
+<Info>
+  **Filters behavior**
+
+  * `filters` is optional. Omit it entirely and the report runs with no filters — identical to omitting all four fields before.
+  * Each field inside `filters` keeps its own default (empty array). Supply only the filters you need, e.g. `"filters": { "brandIds": ["2001"] }`.
+  * Validation is unchanged and still enforced. Invalid IDs inside `filters` (e.g. a non-numeric `brandIds` value) are still rejected with `400 Bad Request`.
+  * Do not send `"filters": null`. Explicitly passing `null` is rejected with `400 Bad Request`. To apply no filters, omit the field.
+  * The `skuIds` + brand-aggregation rule is unchanged: when `aggregationLevel` is `brand`, `filters.skuIds` is ignored and the response carries a warning.
+</Info>
+
+<Warning>
+  **Breaking change (v2026-preview):** The `retailerIds`, `brandIds`, `skuIds`, and `categories` request parameters have moved into a new optional `filters` object. Update your request bodies to nest these fields under `filters`. Requests that still send them at the top level will have those values ignored (they are no longer read).
+</Warning>
 
 ### Sample request
 
@@ -153,15 +173,17 @@ curl --request POST \
         "endDate": "2025-08-17",
         "aggregationLevel": "sku",
         "metrics": ["totalSalesOnline", "totalSoldUnitsOnline", "listingPrice"],
-        "retailerIds": ["101", "102"],
-        "brandIds": ["2001", "2002"],
-        "skuIds": [
-          {
-            "retailerId": "101",
-            "retailerSkuIds": ["sku-001", "sku-002"]
-          }
-        ],
-        "categories": ["Beverages", "Snacks"],
+        "filters": {
+          "retailerIds": ["101", "102"],
+          "brandIds": ["2001", "2002"],
+          "skuIds": [
+            {
+              "retailerId": "101",
+              "retailerSkuIds": ["sku-001", "sku-002"]
+            }
+          ],
+          "categories": ["Beverages", "Snacks"]
+        },
         "format": "json-compact"
       }
     }
@@ -184,10 +206,12 @@ payload = {
             "endDate": "2025-08-17",
             "aggregationLevel": "sku",
             "metrics": ["totalSalesOnline", "totalSoldUnitsOnline", "listingPrice"],
-            "retailerIds": ["101", "102"],
-            "brandIds": ["2001", "2002"],
-            "skuIds": [{"retailerId": "101", "retailerSkuIds": ["sku-001", "sku-002"]}],
-            "categories": ["Beverages", "Snacks"],
+            "filters": {
+                "retailerIds": ["101", "102"],
+                "brandIds": ["2001", "2002"],
+                "skuIds": [{"retailerId": "101", "retailerSkuIds": ["sku-001", "sku-002"]}],
+                "categories": ["Beverages", "Snacks"],
+            },
             "format": "json-compact",
         }
     }
@@ -210,10 +234,12 @@ RequestBody body = RequestBody.create(mediaType, """
       "endDate": "2025-08-17",
       "aggregationLevel": "sku",
       "metrics": ["totalSalesOnline", "totalSoldUnitsOnline", "listingPrice"],
-      "retailerIds": ["101", "102"],
-      "brandIds": ["2001", "2002"],
-      "skuIds": [{"retailerId": "101", "retailerSkuIds": ["sku-001", "sku-002"]}],
-      "categories": ["Beverages", "Snacks"],
+      "filters": {
+        "retailerIds": ["101", "102"],
+        "brandIds": ["2001", "2002"],
+        "skuIds": [{"retailerId": "101", "retailerSkuIds": ["sku-001", "sku-002"]}],
+        "categories": ["Beverages", "Snacks"]
+      },
       "format": "json-compact"
     }
   }
@@ -243,10 +269,12 @@ $request->setBody(json_encode([
             'endDate' => '2025-08-17',
             'aggregationLevel' => 'sku',
             'metrics' => ['totalSalesOnline', 'totalSoldUnitsOnline', 'listingPrice'],
-            'retailerIds' => ['101', '102'],
-            'brandIds' => ['2001', '2002'],
-            'skuIds' => [['retailerId' => '101', 'retailerSkuIds' => ['sku-001', 'sku-002']]],
-            'categories' => ['Beverages', 'Snacks'],
+            'filters' => [
+                'retailerIds' => ['101', '102'],
+                'brandIds' => ['2001', '2002'],
+                'skuIds' => [['retailerId' => '101', 'retailerSkuIds' => ['sku-001', 'sku-002']]],
+                'categories' => ['Beverages', 'Snacks'],
+            ],
             'format' => 'json-compact',
         ],
     ],
@@ -425,9 +453,11 @@ echo $request->send()->getBody();
 | `200 OK` | — | `status: "Pending"` — report is still processing. | Retry the status call later. |
 | `200 OK` | — | `status: "Success"` — output is ready. | Call `/insights/{reportId}/output` to download. |
 | `200 OK` + warning | `invalid-date` | `startDate` not a Monday or `endDate` not a Sunday. Request accepted and shifted to week boundaries. | Send Monday–Sunday dates to avoid auto-adjustment warnings. |
-| `200 OK` + warning | `incompatible-filter` | `skuIds` sent with `aggregationLevel: brand` — filter ignored. | Use `aggregationLevel: sku` when filtering by SKU. |
+| `200 OK` + warning | `incompatible-filter` | `filters.skuIds` sent with `aggregationLevel: brand` — filter ignored. | Use `aggregationLevel: sku` when filtering by SKU. |
 | `200 OK` + warning | `invalid-metric` | `listingPrice` requested with `aggregationLevel: brand` — metric omitted. | Use `aggregationLevel: sku` when requesting `listingPrice`. |
 | `400 Bad Request` | `attribute-required` | Missing required attribute, invalid ID format, `startDate > endDate`, or interval > 100 days. | Validate the request body before submitting. |
+| `400 Bad Request` | `json-serialization-error` | `startDate` or `endDate` includes a time component (e.g. `2025-08-11T00:00:00Z`) instead of a plain `YYYY-MM-DD` date. | Send a calendar date only, with no time component. |
+| `400 Bad Request` | `attribute-required` | `filters` sent as `null` instead of an object. | Omit `filters` entirely to apply no filtering; do not send `null`. |
 | `400 Bad Request` | `insight-not-ready` | Output endpoint called before report reached `Success`. | Poll the status endpoint first. |
 | `403 Forbidden` | `forbidden` | Caller not allowed to access the requested account or endpoint. | Confirm account permissions and feature enablement. |
 | `404 Not Found` | `insight-not-found` | Report ID does not exist. | Verify the `reportId` and try again. |
