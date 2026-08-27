@@ -1,8 +1,3 @@
----
-title: "Product Level Reporting API"
-hidden: true
----
-
 ## **Overview**
 
 The Product Level Reporting API provides product-level (SKU) performance data for Marketplace Performance Outcomes (MPO). It is designed for use cases where you need to understand how individual products perform across clicks, displays, and cost -at a granularity that campaign or seller-level reporting does not provide.
@@ -57,7 +52,7 @@ Creates a new asynchronous product-level report job. Returns a `reportId` to use
 
 #### Request Body
 
-`{`<br />`  "data": {`<br />`    "type": "ProductReportJob",`<br />`    "attributes": {`<br />`      "fileFormat": "csv",`<br />`      "advertiserIds": ["2914"],`<br />`      "adSetIds": ["106509"],`<br />`      "dimensions": ["advertiserId", "adSetId", "sellerId", "productId"],`<br />`      "metrics": ["displays", "clicks", "cost"],`<br />`      "startDate": "2026-03-09T00:00:00Z",`<br />`      "endDate": "2026-03-11T00:00:00Z"`<br />`    }`<br />`  }`<br />`}`<br />
+`{`<br />`  "data": {`<br />`    "type": "ProductReportJob",`<br />`    "attributes": {`<br />`      "fileFormat": "csv",`<br />`      "advertiserIds": ["2914"],`<br />`      "adSetIds": ["106509"],`<br />`      "dimensions": ["AdvertiserId", "AdSetId", "SellerId", "ProductId"],`<br />`      "metrics": ["Displays", "Clicks", "Cost"],`<br />`      "startDate": "2026-03-09T00:00:00Z",`<br />`      "endDate": "2026-03-11T00:00:00Z"`<br />`    }`<br />`  }`<br />`}`<br />
 
 #### Request Parameters
 
@@ -67,8 +62,8 @@ Creates a new asynchronous product-level report job. Returns a `reportId` to use
 | `advertiserIds` | string\[\] | Yes | Advertiser account IDs. Maximum 5. Must be numeric |
 | `campaignIds` | string\[\] | No | Filter by marketing campaign IDs. Maximum 10. MPO Pro only |
 | `adSetIds` | string\[\] | No | Filter by ad set IDs. Maximum 10. For Multi-Seller/Single-Seller, these are the IDs the legacy API calls `campaignId` |
-| `dimensions` | string\[\] | No | Dimensions to group by. Defaults to `["advertiserId", "adSetId", "sellerId", "productId"]`. Duplicates not allowed. Time dimensions are not supported |
-| `metrics` | string\[\] | No | Metrics to include. Defaults to `["clicks", "displays", "cost"]`. Duplicates not allowed |
+| `dimensions` | string\[\] | No | Dimensions to group by. Defaults to `["AdvertiserId", "AdSetId", "SellerId", "ProductId"]`. Duplicates not allowed. Time dimensions are not supported |
+| `metrics` | string\[\] | No | Metrics to include. Defaults to `["Clicks", "Displays", "Cost"]`. Duplicates not allowed |
 | `startDate` | string | Yes | Start of reporting interval (ISO-8601, UTC). Cannot be more than 1 year in the past |
 | `endDate` | string | No | End of reporting interval (ISO-8601, UTC). Defaults to the last complete day. The current day is never included |
 
@@ -129,11 +124,11 @@ Downloads the completed report file. Only available when job status is `DONE`.
 
 One row per combination of the requested dimensions, with metrics totalled over the full reporting interval. There is no date column -the report returns interval totals only.
 
-`advertiserId,adSetId,sellerId,productId,displays,clicks,cost`<br />`2914,106509,515151,847392011,220,45,4400`<br />`2914,106509,515151,847392012,800,4,400`<br />`2914,106509,131313,564656664,1832,3,450`<br />
+`AdvertiserId,AdSetId,SellerId,ProductId,Displays,Clicks,Cost`<br />`2914,106509,515151,847392011,220,45,4400`<br />`2914,106509,515151,847392012,800,4,400`<br />`2914,106509,131313,564656664,1832,3,450`<br />
 
 #### Response -JSON (`application/json`)
 
-`{`<br />`  "data": [`<br />`    [2914, 106509, 515151, 847392011, 220, 45, 4400],`<br />`    [2914, 106509, 515151, 847392012, 800, 4, 400],`<br />`    [2914, 106509, 131313, 564656664, 1832, 3, 450]`<br />`  ],`<br />`  "metadata": {`<br />`    "columns": ["advertiserId", "adSetId", "sellerId", "productId", "displays", "clicks", "cost"],`<br />`    "rows": 3`<br />`  }`<br />`}`<br />
+`{`<br />`  "data": [`<br />`    [2914, 106509, 515151, 847392011, 220, 45, 4400],`<br />`    [2914, 106509, 515151, 847392012, 800, 4, 400],`<br />`    [2914, 106509, 131313, 564656664, 1832, 3, 450]`<br />`  ],`<br />`  "metadata": {`<br />`    "columns": ["AdvertiserId", "AdSetId", "SellerId", "ProductId", "Displays", "Clicks", "Cost"],`<br />`    "rows": 3`<br />`  }`<br />`}`<br />
 
 ---
 
@@ -141,12 +136,12 @@ One row per combination of the requested dimensions, with metrics totalled over 
 
 | Dimension | Description |
 | :-- | :-- |
-| `advertiserId` | ID of the advertiser |
-| `partnerId` | ID of the partner |
-| `campaignId` | ID of the marketing campaign. MPO Pro only -not available for Multi-Seller or Single-Seller |
-| `adSetId` | ID of the ad set. For Multi-Seller/Single-Seller, this is the ID the legacy API calls `campaignId` |
-| `sellerId` | Seller ID, consistent with the other MPO APIs |
-| `productId` | Product ID as provided in your catalog feed |
+| `AdvertiserId` | ID of the advertiser |
+| `PartnerId` | ID of the partner |
+| `CampaignId` | ID of the marketing campaign. MPO Pro only -not available for Multi-Seller or Single-Seller |
+| `AdSetId` | ID of the ad set. For Multi-Seller/Single-Seller, this is the ID the legacy API calls `campaignId` |
+| `SellerId` | Seller ID, consistent with the other MPO APIs |
+| `ProductId` | Product ID as provided in your catalog feed |
 
 Duplicate dimension values in the same request are not permitted. Time dimensions (`date`, `day`, `hour`) are not supported by this API -the report always returns interval totals.
 
@@ -156,9 +151,9 @@ Duplicate dimension values in the same request are not permitted. Time dimension
 
 | Metric | Type | Description |
 | :-- | :-- | :-- |
-| `clicks` | int | Number of clicks, totalled over the reporting interval |
-| `displays` | int | Number of display opportunities, totalled over the reporting interval |
-| `cost` | float | Click-attributed cost in the advertiser's local currency, totalled over the reporting interval. Consistent with the `cost` metric in the MPO Statistics API |
+| `Clicks` | int | Number of clicks, totalled over the reporting interval |
+| `Displays` | int | Number of display opportunities, totalled over the reporting interval |
+| `Cost` | float | Click-attributed cost in the advertiser's local currency, totalled over the reporting interval. Consistent with the `cost` metric in the MPO Statistics API |
 
 Duplicate metric values in the same request are not permitted.
 
