@@ -251,7 +251,9 @@ Each target contains exactly one target details object:
 | `categoryTargetDetails` | `categoryId` | string | Category ID to target. |
 | `categoryTargetDetails` | `includeChildren` | boolean | Whether the target includes child categories. |
 
-**Sample Request**
+### Examples
+
+**Successful Request**
 
 ```bash
 curl -L -X POST \
@@ -275,6 +277,98 @@ curl -L -X POST \
     ]
   }'
 ```
+
+**Successful Response** — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "PageType",
+        "negative": false,
+        "bidMultiplier": null,
+        "approvalStatus": "AutoApproved",
+        "pageTypeTargetDetails": {
+          "pageType": "Search"
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+**Partial-Success Request**
+
+```bash
+curl -L -X POST \
+  'https://api.criteo.com/experimental/retail-media/line-items/1234567890123456789/targets/create' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -H 'Content-Type: application/json' \
+  --data-raw '{
+    "data": [
+      {
+        "type": "Target",
+        "attributes": {
+          "targetType": "ManualKeyword",
+          "negative": false,
+          "bidMultiplier": null,
+          "manualKeywordTargetDetails": {
+            "keywordInput": "trail running shoes",
+            "matchType": "Broad"
+          }
+        }
+      },
+      {
+        "type": "Target",
+        "attributes": {
+          "targetType": "PageType",
+          "negative": false,
+          "bidMultiplier": null,
+          "pageTypeTargetDetails": {
+            "pageType": "Search"
+          }
+        }
+      }
+    ]
+  }'
+```
+
+**Partial-Success Response** — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "type": "Target",
+      "attributes": {
+        "targetType": "PageType",
+        "negative": false,
+        "bidMultiplier": null,
+        "approvalStatus": "AutoApproved",
+        "pageTypeTargetDetails": {
+          "pageType": "Search"
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": [
+    {
+      "type": "validation",
+      "code": "unknown-match-type",
+      "detail": "Cannot create target [trail running shoes] because positive broad is not a supported match type.",
+      "instance": "@data/0"
+    }
+  ]
+}
+```
+
+The error points to the first requested target, while the valid PageType target was created successfully.
 
 ### Partial Success
 
