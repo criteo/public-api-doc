@@ -1,27 +1,39 @@
 ---
 title: Line Item Products
-description: Add products to a line item's product pool.
+description: Add products to a line item's product pool and remove products from it.
 ---
 
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
 ## Overview
 
-The product pool of a line item holds the products that the line item can promote. Adding a product makes it available to the line item; it does not assign it to a Creative Product Collection.
+The product pool of a line item holds the products that the line item can promote. Adding a product makes it available to the line item; it does not assign it to a Creative Product Collection. Removing a product takes it out of the pool, so the line item stops promoting it.
 
-Adding products is the step that follows creating a line item with [Line Item Core](/retail-media/experimental/docs/line-items-core). Identify eligible products to add by accessing your account [catalog](/retail-media/experimental/docs/catalogs).
+Adding products is the step that follows creating a line item with [Line Item Core](/retail-media/experimental/docs/line-items-core). Identify eligible products to add by accessing your account [catalog](/retail-media/experimental/docs/catalogs). Products can be removed from the pool at any point in the line item's lifecycle.
 
 <Info>
-  The long-term goal is to support product operations across line item types. Initial documented support targets Onsite Display Auction line items and uses `productType` `DisplayProduct` with `displayProductDetails`. Additional product types will be documented as support is added.
+  The long-term goal is to support product operations across line item types. Initial documented support targets Onsite Display Auction line items and uses `productType` `DisplayProduct`. Additional product types will be documented as support is added.
 </Info>
 
-This endpoint replaces the [Add Products to specific Line Item, or Update Bid Override](/retail-media/docs/promoted-products) route (`/line-items/{lineItemId}/products/append`), which remains available in the meantime.
+### Relationship to the current API
+
+These endpoints replace the equivalent routes documented in [Promoted Products](/retail-media/docs/promoted-products), which remain available on stable versions in the meantime.
+
+| Experimental endpoint | Route it replaces |
+| --- | --- |
+| `POST /line-items/{lineItemId}/products/add` | `POST /line-items/{lineItemId}/products/append` |
+| `POST /line-items/{lineItemId}/products/delete` | `POST /line-items/{lineItemId}/products/delete` on stable versions |
+
+<Warning>
+  The removal route uses the same path on Experimental and on stable versions, but the request body is different. On `experimental`, send the `productIds` body described below. On a stable version, keep sending the array of promoted product resources documented in [Promoted Products](/retail-media/docs/promoted-products).
+</Warning>
 
 ## Endpoints
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `POST` | `/line-items/{lineItemId}/products/add` | Add products to a line item's product pool. |
+| `POST` | `/line-items/{lineItemId}/products/delete` | Remove products from a line item's product pool. |
 
 ## Add Products to a Line Item
 
@@ -112,4 +124,104 @@ The resource `type` is `Products`. Do not send response-only fields such as `app
 | `401` | `unauthenticated` | The caller is not authenticated. |
 | `403` | `forbidden` | The caller cannot modify the target line item, or the line item does not exist. |
 | `501` | `unsupported-line-item-type` | The line item buy type is not Auction, which the current implementation does not support. |
+| `503` | `catalog-unavailable` | The catalog service could not be reached to validate the products. Retry the request later. |
+
+## Remove Products from a Line Item
+
+Removes one or more products from the product pool of an existing line item.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}/products/delete
+```
+</EndpointBadge>
+
+### Path parameters
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `lineItemId` | Yes | External ID of the line item that owns the product pool. |
+
+### Request attributes
+
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `productIds` | Yes | IDs of the products to remove from the product pool. At least one ID is required, and a single request accepts at most 1500 IDs. |
+| `productType` | No | Type of products being removed. It must match the type of the target line item. Defaults to `DisplayProduct`, which is the only value currently supported. |
+
+The resource `type` is `Products`. Unlike the add operation, products are supplied as a flat list of IDs in `productIds`, not as objects in a details array.
+
+<Info>
+  The contract also accepts `SponsoredProduct` as a `productType`. Only `DisplayProduct` on Onsite Display Auction line items is supported by the service today. Other combinations are rejected.
+</Info>
+
+### Behavior
+
+- Removal is a soft delete. The product's status becomes `Removed` and the line item stops promoting it. The product is not erased, and it remains in your account catalog.
+- Products are removed from both the current line item and its proposal, so a pending change set stays consistent with the live one.
+- The operation is idempotent. Removing a `productId` that is not in the product pool succeeds and removes nothing for that ID. It is not reported as an error, and repeating the same request has no further effect.
+- Duplicate `productId` values within the same request are deduplicated. Each product is removed once.
+- Validation is all-or-nothing. If any `productId` is malformed or unknown to the catalog, or the request exceeds 1500 IDs, the entire request is rejected and the product pool is left unchanged.
+- Products are removed from the product pool only. They are not yet removed from Creative Product Collections that reference them; that behavior will follow.
+- Removing every product from a line item is allowed. The line item may stop being served as a result.
+
+**Sample Request**
+
+```json
+{
+  "data": {
+    "type": "Products",
+    "attributes": {
+      "productType": "DisplayProduct",
+      "productIds": [
+        "sku-12345",
+        "sku-67890"
+      ]
+    }
+  }
+}
+```
+
+**Sample Response**
+
+A successful call returns `200` with an empty outcome.
+
+```json
+{
+  "errors": [],
+  "warnings": []
+}
+```
+
+The response does not list the products that were removed. To confirm the resulting state of the pool, read the line item's products with `GET /line-items/{lineItemId}/products`.
+
+**Sample Error Response**
+
+```json
+{
+  "warnings": [],
+  "errors": [
+    {
+      "traceId": "1a2b3c4d5e6f7890",
+      "code": "products-limit-exceeded",
+      "type": "validation",
+      "title": "Products limit exceeded",
+      "detail": "Payload limit exceeded: request contains 1501 products, exceeds max allowed 1500 per request.",
+      "instance": "/experimental/retail-media/line-items/{lineItemId}/products/delete"
+    }
+  ]
+}
+```
+
+### Errors
+
+| HTTP status | Code | Description |
+| --- | --- | --- |
+| `400` | `product-invalid` | One or more of the supplied product IDs are invalid. No products are removed. |
+| `400` | `products-limit-exceeded` | More than 1500 product IDs were supplied. No products are removed. |
+| `400` | `invalid-line-item-type` | The target line item's type is not supported, or `productType` does not match the type of the target line item. |
+| `401` | `unauthenticated` | The caller is not authenticated. |
+| `403` | `forbidden` | The caller cannot modify the target line item. |
+| `403` | `line-item-not-found` | The line item does not exist. A `403` is returned rather than a `404` so that the API does not reveal whether a line item exists to a caller that is not authorized for it. |
+| `500` | `internal-error` | The request could not be completed because of an unexpected service failure. |
 | `503` | `catalog-unavailable` | The catalog service could not be reached to validate the products. Retry the request later. |
