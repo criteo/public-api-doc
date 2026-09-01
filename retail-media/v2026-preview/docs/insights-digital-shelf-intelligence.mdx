@@ -126,10 +126,11 @@ https://api.criteo.com/preview/retail-media/insights/digital-shelf-intelligence
 | `endDate` | `string` (date) | Yes | Inclusive end date. If not a Sunday, the report is accepted and shifted forward to the Sunday of that week, with a warning. |
 | `aggregationLevel` | `string` | Yes | One of `brand` or `sku`. |
 | `metrics` | `string[]` | Yes | At least one metric. Allowed values: `considerationIndex`, `listingPrice`, `pdpViewRank`, `salesIndex`, `salesRank`, `totalPdpPageViews`, `totalSalesOnline`, `totalSoldUnitsOnline`. |
-| `retailerIds` | `string[]` | No | Retailer IDs to filter on. Must be numeric internal IDs. |
-| `brandIds` | `string[]` | No | Brand IDs to filter on. Must be numeric external IDs. |
-| `skuIds` | `object[]` | No | SKU filters grouped by retailer. Ignored with a warning when `aggregationLevel` is `brand`. Each entry requires `retailerId` (string) and `retailerSkuIds` (string[]). |
-| `categories` | `string[]` | No | Category names to filter on. |
+| `filters` | `object` | No | Optional filter criteria applied to the report. |
+| `filters.retailerIds` | `string[]` | No | Retailer IDs to filter on. Must be numeric internal IDs. |
+| `filters.brandIds` | `string[]` | No | Brand IDs to filter on. Must be numeric external IDs. |
+| `filters.skuIds` | `object[]` | No | SKU filters grouped by retailer. Ignored with a warning when `aggregationLevel` is `brand`. Each entry requires `retailerId` (string) and `retailerSkuIds` (string[]). |
+| `filters.categories` | `string[]` | No | Category names to filter on. |
 | `format` | `string` | No | Output format. One of `json`, `json-compact`, `json-newline`, `csv`. Default: `json-compact`. |
 
 <Note>
@@ -153,15 +154,17 @@ curl --request POST \
         "endDate": "2025-08-17",
         "aggregationLevel": "sku",
         "metrics": ["totalSalesOnline", "totalSoldUnitsOnline", "listingPrice"],
-        "retailerIds": ["101", "102"],
-        "brandIds": ["2001", "2002"],
-        "skuIds": [
-          {
-            "retailerId": "101",
-            "retailerSkuIds": ["sku-001", "sku-002"]
-          }
-        ],
-        "categories": ["Beverages", "Snacks"],
+        "filters": {
+          "retailerIds": ["101", "102"],
+          "brandIds": ["2001", "2002"],
+          "skuIds": [
+            {
+              "retailerId": "101",
+              "retailerSkuIds": ["sku-001", "sku-002"]
+            }
+          ],
+          "categories": ["Beverages", "Snacks"]
+        },
         "format": "json-compact"
       }
     }
@@ -184,10 +187,12 @@ payload = {
             "endDate": "2025-08-17",
             "aggregationLevel": "sku",
             "metrics": ["totalSalesOnline", "totalSoldUnitsOnline", "listingPrice"],
-            "retailerIds": ["101", "102"],
-            "brandIds": ["2001", "2002"],
-            "skuIds": [{"retailerId": "101", "retailerSkuIds": ["sku-001", "sku-002"]}],
-            "categories": ["Beverages", "Snacks"],
+            "filters": {
+                "retailerIds": ["101", "102"],
+                "brandIds": ["2001", "2002"],
+                "skuIds": [{"retailerId": "101", "retailerSkuIds": ["sku-001", "sku-002"]}],
+                "categories": ["Beverages", "Snacks"],
+            },
             "format": "json-compact",
         }
     }
@@ -210,10 +215,12 @@ RequestBody body = RequestBody.create(mediaType, """
       "endDate": "2025-08-17",
       "aggregationLevel": "sku",
       "metrics": ["totalSalesOnline", "totalSoldUnitsOnline", "listingPrice"],
-      "retailerIds": ["101", "102"],
-      "brandIds": ["2001", "2002"],
-      "skuIds": [{"retailerId": "101", "retailerSkuIds": ["sku-001", "sku-002"]}],
-      "categories": ["Beverages", "Snacks"],
+      "filters": {
+        "retailerIds": ["101", "102"],
+        "brandIds": ["2001", "2002"],
+        "skuIds": [{"retailerId": "101", "retailerSkuIds": ["sku-001", "sku-002"]}],
+        "categories": ["Beverages", "Snacks"]
+      },
       "format": "json-compact"
     }
   }
@@ -243,10 +250,12 @@ $request->setBody(json_encode([
             'endDate' => '2025-08-17',
             'aggregationLevel' => 'sku',
             'metrics' => ['totalSalesOnline', 'totalSoldUnitsOnline', 'listingPrice'],
-            'retailerIds' => ['101', '102'],
-            'brandIds' => ['2001', '2002'],
-            'skuIds' => [['retailerId' => '101', 'retailerSkuIds' => ['sku-001', 'sku-002']]],
-            'categories' => ['Beverages', 'Snacks'],
+            'filters' => [
+                'retailerIds' => ['101', '102'],
+                'brandIds' => ['2001', '2002'],
+                'skuIds' => [['retailerId' => '101', 'retailerSkuIds' => ['sku-001', 'sku-002']]],
+                'categories' => ['Beverages', 'Snacks'],
+            ],
             'format' => 'json-compact',
         ],
     ],
