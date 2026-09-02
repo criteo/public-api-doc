@@ -1,0 +1,298 @@
+---
+title: "MPO Seller Reporting API"
+---
+
+## Overview
+
+The MPO Seller Reporting API provides aggregated performance reports for Marketplace Performance Outcomes (MPO). You can request reporting data at campaign, ad set, or seller level, with optional time-based aggregation.
+
+The API supports synchronous report generation. Asynchronous report generation will be available in a later phase.
+
+Reports are available in CSV or JSON format.
+
+## When to use this API
+
+Use the MPO Seller Reporting API to:
+
+- Generate seller-level performance reports.
+- Analyze performance by campaign, ad set, seller, or time period.
+- Apply custom sales attribution windows.
+- Retrieve metrics such as impressions, clicks, cost, sales, revenue, return on ad spend, seller visits, and seller unique users.
+- Export reporting data for dashboards, analytics workflows, or data warehouses.
+
+> For some metrics, data associated with the new attribution windows will be available from October 1, 2026.
+
+## Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | `/marketing-solutions/marketplace-performance-outcomes/stats/report` | Generate and download a report synchronously. |
+
+The base URL is:
+
+```http
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/
+```
+
+## Request model
+
+The synchronous report endpoint uses the `SellerReportRequest` request body.
+
+### Request fields
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `advertiserId` | string | Yes | Advertiser for which to generate the report. |
+| `startDate` | string | Yes | Start of the reporting interval, inclusive, in `yyyy-MM-dd` format. |
+| `endDate` | string | Yes | End of the reporting interval, inclusive, in `yyyy-MM-dd` format. |
+| `dimensions` | string array | Yes | Dimension identifiers used to aggregate the report. At least one dimension is required. |
+| `metrics` | string array | Yes | Metric identifiers to include in the report. At least one metric is required. |
+| `campaignIds` | string array | No | Filters the report by marketing campaign. Limited to 10 values. |
+| `adSetIds` | string array | No | Filters the report by ad set. Limited to 10 values. |
+| `sellerIds` | string array | No | Filters the report by seller. Limited to 10 values. |
+| `timezone` | string | No | IANA time zone used for daily aggregation. Defaults to UTC. |
+| `format` | enum | No | Report format: `csv` or `json`. Defaults to `json`. |
+
+### Dimensions
+
+The following dimensions are supported:
+
+| Dimension | Description |
+| --- | --- |
+| `CampaignId` | Marketing campaign identifier. |
+| `AdSetId` | Ad set identifier. |
+| `SellerId` | Seller identifier. |
+| `Hour` | Hour of the reporting interval. |
+| `Day` | Day of the reporting interval. |
+| `Month` | Month of the reporting interval. |
+| `Year` | Year of the reporting interval. |
+
+### Metrics
+
+The following metrics are supported:
+
+| Metric |
+| --- |
+| `Impressions` |
+| `Clicks` |
+| `Cost` |
+| `SaleUnitsPc1dSameSeller` |
+| `SaleUnitsPc1dAnySeller` |
+| `SaleUnitsPc7dSameSeller` |
+| `SaleUnitsPc7dAnySeller` |
+| `SaleUnitsPc30dSameSeller` |
+| `SaleUnitsPc30dAnySeller` |
+| `SaleUnitsPc1dPv1dSameSeller` |
+| `SaleUnitsPc1dPv1dAnySeller` |
+| `SaleUnitsPc1dPv7dSameSeller` |
+| `SaleUnitsPc1dPv7dAnySeller` |
+| `SaleUnitsPc7dPv1dSameSeller` |
+| `SaleUnitsPc7dPv1dAnySeller` |
+| `SaleUnitsPc7dPv7dSameSeller` |
+| `SaleUnitsPc7dPv7dAnySeller` |
+| `SaleUnitsPc30dPv1dSameSeller` |
+| `SaleUnitsPc30dPv1dAnySeller` |
+| `SaleUnitsPc30dPv7dSameSeller` |
+| `SaleUnitsPc30dPv7dAnySeller` |
+| `RevenuePc1dSameSeller` |
+| `RevenuePc1dAnySeller` |
+| `RevenuePc7dSameSeller` |
+| `RevenuePc7dAnySeller` |
+| `RevenuePc30dSameSeller` |
+| `RevenuePc30dAnySeller` |
+| `RevenuePc1dPv1dSameSeller` |
+| `RevenuePc1dPv1dAnySeller` |
+| `RevenuePc1dPv7dSameSeller` |
+| `RevenuePc1dPv7dAnySeller` |
+| `RevenuePc7dPv1dSameSeller` |
+| `RevenuePc7dPv1dAnySeller` |
+| `RevenuePc7dPv7dSameSeller` |
+| `RevenuePc7dPv7dAnySeller` |
+| `RevenuePc30dPv1dSameSeller` |
+| `RevenuePc30dPv1dAnySeller` |
+| `RevenuePc30dPv7dSameSeller` |
+| `RevenuePc30dPv7dAnySeller` |
+| `CrPc1dSameSeller` |
+| `CrPc1dAnySeller` |
+| `CrPc7dSameSeller` |
+| `CrPc7dAnySeller` |
+| `CrPc30dSameSeller` |
+| `CrPc30dAnySeller` |
+| `CrPc1dPv1dSameSeller` |
+| `CrPc1dPv1dAnySeller` |
+| `CrPc1dPv7dSameSeller` |
+| `CrPc1dPv7dAnySeller` |
+| `CrPc7dPv1dSameSeller` |
+| `CrPc7dPv1dAnySeller` |
+| `CrPc7dPv7dSameSeller` |
+| `CrPc7dPv7dAnySeller` |
+| `CrPc30dPv1dSameSeller` |
+| `CrPc30dPv1dAnySeller` |
+| `CrPc30dPv7dSameSeller` |
+| `CrPc30dPv7dAnySeller` |
+| `CpoPc1dSameSeller` |
+| `CpoPc1dAnySeller` |
+| `CpoPc7dSameSeller` |
+| `CpoPc7dAnySeller` |
+| `CpoPc30dSameSeller` |
+| `CpoPc30dAnySeller` |
+| `CpoPc1dPv1dSameSeller` |
+| `CpoPc1dPv1dAnySeller` |
+| `CpoPc1dPv7dSameSeller` |
+| `CpoPc1dPv7dAnySeller` |
+| `CpoPc7dPv1dSameSeller` |
+| `CpoPc7dPv1dAnySeller` |
+| `CpoPc7dPv7dSameSeller` |
+| `CpoPc7dPv7dAnySeller` |
+| `CpoPc30dPv1dSameSeller` |
+| `CpoPc30dPv1dAnySeller` |
+| `CpoPc30dPv7dSameSeller` |
+| `CpoPc30dPv7dAnySeller` |
+| `CosPc1dSameSeller` |
+| `CosPc1dAnySeller` |
+| `CosPc7dSameSeller` |
+| `CosPc7dAnySeller` |
+| `CosPc30dSameSeller` |
+| `CosPc30dAnySeller` |
+| `CosPc1dPv1dSameSeller` |
+| `CosPc1dPv1dAnySeller` |
+| `CosPc1dPv7dSameSeller` |
+| `CosPc1dPv7dAnySeller` |
+| `CosPc7dPv1dSameSeller` |
+| `CosPc7dPv1dAnySeller` |
+| `CosPc7dPv7dSameSeller` |
+| `CosPc7dPv7dAnySeller` |
+| `CosPc30dPv1dSameSeller` |
+| `CosPc30dPv1dAnySeller` |
+| `CosPc30dPv7dSameSeller` |
+| `CosPc30dPv7dAnySeller` |
+| `RoasPc1dSameSeller` |
+| `RoasPc1dAnySeller` |
+| `RoasPc7dSameSeller` |
+| `RoasPc7dAnySeller` |
+| `RoasPc30dSameSeller` |
+| `RoasPc30dAnySeller` |
+| `RoasPc1dPv1dSameSeller` |
+| `RoasPc1dPv1dAnySeller` |
+| `RoasPc1dPv7dSameSeller` |
+| `RoasPc1dPv7dAnySeller` |
+| `RoasPc7dPv1dSameSeller` |
+| `RoasPc7dPv1dAnySeller` |
+| `RoasPc7dPv7dSameSeller` |
+| `RoasPc7dPv7dAnySeller` |
+| `RoasPc30dPv1dSameSeller` |
+| `RoasPc30dPv1dAnySeller` |
+| `RoasPc30dPv7dSameSeller` |
+| `RoasPc30dPv7dAnySeller` |
+| `SellerVisits` |
+| `SellerUniqueUsers` |
+
+## Generate a report synchronously
+
+Use the synchronous endpoint to generate and download a report in a single request. The synchronous endpoint is limited to 300,000 results.
+
+```http
+POST https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/report
+Content-Type: application/json
+```
+
+### Example request
+
+```json
+{
+  "data": {
+    "type": "SellerReportRequest",
+    "attributes": {
+      "advertiserId": "52949",
+      "dimensions": [
+        "CampaignId",
+        "AdSetId",
+        "SellerId",
+        "Day"
+      ],
+      "metrics": [
+        "Impressions",
+        "Clicks",
+        "Cost",
+        "SaleUnitsPc7dPv1dSameSeller",
+        "RevenuePc7dPv1dSameSeller",
+        "RoasPc7dPv1dSameSeller",
+        "SellerVisits",
+        "SellerUniqueUsers"
+      ],
+      "startDate": "2026-06-01",
+      "endDate": "2026-06-30",
+      "sellerIds": [
+        "1200972"
+      ],
+      "timezone": "UTC",
+      "format": "json"
+    }
+  }
+}
+```
+
+The response format is determined by the `format` value:
+
+- `json` returns `application/json`.
+- `csv` returns `text/csv`.
+
+### JSON response structure
+
+JSON reports use a `columns` array and a `data` array. Each row in `data` follows the same order as the columns.
+
+```json
+{
+  "columns": [
+    "CampaignId",
+    "AdSetId",
+    "SellerId",
+    "Day",
+    "Impressions",
+    "Clicks",
+    "Cost",
+    "SaleUnitsPc7dPv1dSameSeller",
+    "RevenuePc7dPv1dSameSeller",
+    "RoasPc7dPv1dSameSeller",
+    "SellerVisits",
+    "SellerUniqueUsers"
+  ],
+  "data": [
+    [
+      "168423",
+      "708171",
+      "1200972",
+      "2026-06-01",
+      14542,
+      48,
+      3.36,
+      12,
+      45210.0,
+      13455.4,
+      312,
+      187
+    ]
+  ],
+  "rows": 1
+}
+```
+
+## Errors and HTTP status codes
+
+| Code | Description |
+| --- | --- |
+| 400 | Invalid syntax or validation error. |
+| 401 | Authentication failed because the access token is missing or expired. |
+| 403 | The caller does not have permission to access the requested advertiser or report. |
+| 429 | The request was throttled. |
+| 500 | Internal server error. Retry with backoff. |
+
+### Domain errors
+
+| Code | Description |
+| --- | --- |
+| `insufficient-account-permissions` | The caller does not have the rights required to generate a report for the specified advertiser. |
+| `invalid-query` | The request contains unsupported dimensions or metrics, an invalid time zone, or invalid IDs. |
+| `unsupported-file-format` | The requested report format is not supported. Supported formats are CSV and JSON. |
+| `export-not-found` | The requested report job does not exist or is not available to the caller. |
+| `export-already-expired` | The report job exists, but its result is no longer available. |
