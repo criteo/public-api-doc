@@ -1,0 +1,320 @@
+---
+title: FilterBased Audience Segments
+description: Create and manage filter-based audience segments targeting users by seller and product category signals.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+<Warning>
+  **Restricted access**
+
+  FilterBased audience segments are available to authorized partners only. Contact your Criteo representative to request access.
+</Warning>
+
+## Overview
+
+A `FilterBased` segment targets users based on behavioral signals filtered by seller and product category. Unlike other segment types, it uses a boolean algebra tree that lets you combine filters with `and`, `or`, and `not` operators.
+
+FilterBased segments are created, searched, and updated through the same [Audience Segments](/marketing-solutions/docs/audience-segments) endpoints used for all other segment types. This page documents the additional fields specific to the `FilterBased` type.
+
+The feature is available in all Marketing Solutions API versions.
+
+---
+
+## FilterBased fields
+
+These fields are added to the `attributes` object when creating or updating a FilterBased segment.
+
+| Field | Type | Required | Description |
+| ----- | ---- | :------: | ----------- |
+| `filterBased` | `FilterBased` | Yes | Filter-based settings. Must be the only segment-type settings object present. |
+| `filterBased.algebra` | `AlgebraNode` | Yes | Boolean algebra tree combining filter leaves with `and`, `or`, and `not` operators. |
+| `filterBased.algebra.filter` | `FilterDefinition` | No | Leaf node defining one or more filter criteria. All filters in a leaf are AND-ed together. |
+| `filterBased.algebra.and` | `AlgebraNode[]` | No | Matches users that satisfy all child nodes. |
+| `filterBased.algebra.or` | `AlgebraNode[]` | No | Matches users that satisfy any child node. |
+| `filterBased.algebra.not` | `AlgebraNode` | No | Excludes users that satisfy the child node. |
+| `filterBased.countryCodes` | `string[]` | No | Restrict signals to partners from these countries (ISO 3166-1 alpha-2). |
+
+### FilterDefinition
+
+Defines the filters applied at a leaf node. If multiple filters are set, a user signal must match **all** of them.
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `partnerId` | `IntegerFilter` | Restrict to one partner. Required when `sellerId` or `productCategory` is set. The only valid operator is `Equals`. Accepts one value. |
+| `sellerId` | `LongFilter` | Filter signals for a seller known to the marketplace. The only valid operator is `Equals`. Accepts one value (int64). |
+| `productCategory` | `ProductCategoryFilter` | Filter signals for one or more product categories. Valid operators: `Equals` (one category) or `In` (one or more categories). |
+
+### IntegerFilter (`partnerId`)
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `operator` | `enum` | `Equals` only. |
+| `values` | `integer[]` (int32) | Exactly one partner ID. |
+
+### LongFilter (`sellerId`)
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `operator` | `enum` | `Equals` only. |
+| `values` | `integer[]` (int64) | Exactly one seller ID. |
+
+### ProductCategoryFilter
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `operator` | `enum` | `Equals` or `In`. `Equals` accepts one category; `In` accepts one or more. |
+| `values` | `ProductCategory[]` | Product categories identified by `id`. |
+
+### ProductCategory
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `id` | `string` | Product category identifier. |
+| `level` | `integer?` | Category level in the hierarchy (1–3). |
+
+---
+
+## Endpoint: Create a FilterBased segment
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/marketing-solutions/audience-segments/create
+```
+</EndpointBadge>
+
+**Sample request**
+
+```json
+{
+  "data": [
+    {
+      "type": "AudienceSegment",
+      "attributes": {
+        "name": "Test product category visitors",
+        "description": "Visitors for seller 42 in selected categories",
+        "advertiserId": "4949",
+        "filterBased": {
+          "algebra": {
+            "filter": {
+              "partnerId": {
+                "operator": "Equals",
+                "values": [5855]
+              },
+              "sellerId": {
+                "operator": "Equals",
+                "values": [42]
+              },
+              "productCategory": {
+                "operator": "In",
+                "values": [
+                  {
+                    "id": "10001",
+                    "level": 1
+                  }
+                ]
+              }
+            }
+          },
+          "countryCodes": ["US"]
+        }
+      }
+    }
+  ]
+}
+```
+
+**Sample response**
+
+```json
+{
+  "data": [
+    {
+      "id": "1639392",
+      "type": "AudienceSegment",
+      "attributes": {
+        "name": "Test product category visitors",
+        "description": "Visitors for seller 42 in selected categories",
+        "type": "FilterBased",
+        "advertiserId": "4949",
+        "filterBased": {
+          "algebra": {
+            "filter": {
+              "sellerId": {
+                "operator": "Equals",
+                "values": [42]
+              },
+              "productCategory": {
+                "operator": "In",
+                "values": [
+                  {
+                    "id": "10001",
+                    "level": 1
+                  }
+                ]
+              }
+            }
+          },
+          "countryCodes": ["US"]
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+---
+
+## Endpoint: Search for FilterBased segments
+
+Pass `FilterBased` in `audienceSegmentTypes` to filter results to this segment type.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/{version}/marketing-solutions/audience-segments/search
+```
+</EndpointBadge>
+
+**Sample request**
+
+```json
+{
+  "data": {
+    "type": "AudienceSegmentSearch",
+    "attributes": {
+      "advertiserIds": ["4949"],
+      "audienceSegmentTypes": ["FilterBased"]
+    }
+  }
+}
+```
+
+**Sample response**
+
+```json
+{
+  "meta": {
+    "totalItems": 1,
+    "limit": 50,
+    "offset": 0
+  },
+  "data": [
+    {
+      "id": "1639392",
+      "type": "AudienceSegment",
+      "attributes": {
+        "name": "Test product category visitors",
+        "type": "FilterBased",
+        "advertiserId": "4949",
+        "filterBased": {
+          "algebra": {
+            "filter": {
+              "sellerId": { "operator": "Equals", "values": [42] },
+              "productCategory": { "operator": "In", "values": [{ "id": "10001", "level": 1 }] }
+            }
+          },
+          "countryCodes": ["US"]
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+---
+
+## Endpoint: Update a FilterBased segment
+
+<EndpointBadge method="patch">
+```http
+https://api.criteo.com/{version}/marketing-solutions/audience-segments
+```
+</EndpointBadge>
+
+**Sample request**
+
+```json
+{
+  "data": [
+    {
+      "id": "1639392",
+      "type": "AudienceSegment",
+      "attributes": {
+        "filterBased": {
+          "algebra": {
+            "filter": {
+              "partnerId": {
+                "operator": "Equals",
+                "values": [5855]
+              },
+              "sellerId": {
+                "operator": "Equals",
+                "values": [84]
+              },
+              "productCategory": {
+                "operator": "Equals",
+                "values": [
+                  {
+                    "id": "10002",
+                    "level": 1
+                  }
+                ]
+              }
+            }
+          },
+          "countryCodes": ["US"]
+        }
+      }
+    }
+  ]
+}
+```
+
+**Sample response**
+
+```json
+{
+  "data": [
+    {
+      "id": "1639392",
+      "type": "AudienceSegment",
+      "attributes": {
+        "name": "Test product category visitors",
+        "type": "FilterBased",
+        "advertiserId": "4949",
+        "filterBased": {
+          "algebra": {
+            "filter": {
+              "sellerId": { "operator": "Equals", "values": [84] },
+              "productCategory": { "operator": "Equals", "values": [{ "id": "10002", "level": 1 }] }
+            }
+          },
+          "countryCodes": ["US"]
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}
+```
+
+---
+
+## Validation errors
+
+These error codes are specific to FilterBased segments and are returned with HTTP `200` in the `warnings` array (partial approval model).
+
+| Error code | Description |
+| ---------- | ----------- |
+| `filter-based-must-have-one-partner-at-most` | At most one distinct partner ID may be provided across the algebra tree. |
+| `filter-based-fields-must-have-partner-id` | A `partnerId` filter must be present in any leaf that contains `sellerId` or `productCategory`. |
+| `partner-must-be-authorized-for-advertiser` | The partner must be authorized for the owning advertiser. |
+| `sellerid-must-exist` | Every seller ID in the segment must identify an existing seller. |
+| `filter-seller-id-must-have-partner-id` | A `partnerId` must be provided in any leaf that contains a `sellerId`. |
+| `filter-based-product-category-values-must-be-valid` | Every product category value must be non-null and its hierarchy level must be between 1 and 3. |
+| `filter-based-product-category-values-must-be-unique` | Product category values must not be duplicated within the same filter. |
