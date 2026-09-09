@@ -1,0 +1,281 @@
+---
+title: Launch a Sponsored Products Campaign
+description: Step-by-step guide to creating a Sponsored Products campaign, adding a line item, and loading products — ready to go live.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## What you'll build
+
+By the end of this guide, you'll have a live-ready Sponsored Products campaign with:
+- A campaign tied to your account
+- An auction-based line item with a start date and bid
+- A product pool loaded with SKUs to promote
+
+**Time to complete:** ~15 minutes
+
+## Before you start
+
+Make sure you have:
+- [ ] A valid access token — see [Authentication](/retail-media/experimental/docs/authentication)
+- [ ] Your `accountId` — visible in the Criteo platform URL or returned by `GET /retail-media/accounts`
+- [ ] Your `retailerId` — the ID of the retailer you're advertising on
+- [ ] At least one SKU available in your catalog
+
+<Info>
+  All endpoints on this page are part of the [Line Item Core](/retail-media/experimental/docs/line-items-core) API. They use the path prefix `/experimental/retail-media/`.
+</Info>
+
+***
+
+## Step 1 — Create a campaign
+
+A campaign is the top-level container. It holds shared settings like flight dates and budget, and groups your line items together.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{account-id}/campaigns
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url 'https://api.criteo.com/experimental/retail-media/accounts/123/campaigns' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "data": {
+      "type": "Campaign",
+      "attributes": {
+        "name": "My SP Campaign",
+        "campaignType": "SponsoredProducts",
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-31"
+      }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.criteo.com/experimental/retail-media/accounts/123/campaigns",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={
+        "data": {
+            "type": "Campaign",
+            "attributes": {
+                "name": "My SP Campaign",
+                "campaignType": "SponsoredProducts",
+                "startDate": "2026-10-01",
+                "endDate": "2026-10-31",
+            },
+        }
+    },
+)
+campaign_id = response.json()["data"]["id"]
+```
+
+</CodeGroup>
+
+**From the response, save the `data.id` field — this is your `campaignId`, needed in the next step.**
+
+```json
+{
+  "data": {
+    "id": "camp-456",   // <-- save this
+    "type": "Campaign",
+    "attributes": { ... }
+  }
+}
+```
+
+<Warning>
+  `startDate` must be today or in the future. A campaign with a past `startDate` will be rejected with `400 invalid-date`.
+</Warning>
+
+***
+
+## Step 2 — Create a line item
+
+A line item sits inside your campaign and controls delivery: the retailer, buy type, bid, and targeting. You'll create an Auction buy-type line item here, which uses real-time bidding.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url 'https://api.criteo.com/experimental/retail-media/line-items' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "data": {
+      "type": "LineItem",
+      "attributes": {
+        "name": "My SP Line Item",
+        "campaignId": "camp-456",
+        "retailerId": "101",
+        "targetRetailerId": "101",
+        "campaignType": "SponsoredProducts",
+        "buyType": "Auction",
+        "flightDates": {
+          "startDate": "2026-10-01",
+          "endDate": "2026-10-31"
+        },
+        "bidding": {
+          "bidType": "CPC",
+          "bidAmount": 0.50
+        }
+      }
+    }
+  }'
+```
+
+```python Python
+response = requests.post(
+    "https://api.criteo.com/experimental/retail-media/line-items",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={
+        "data": {
+            "type": "LineItem",
+            "attributes": {
+                "name": "My SP Line Item",
+                "campaignId": "camp-456",      # from Step 1
+                "retailerId": "101",
+                "targetRetailerId": "101",
+                "campaignType": "SponsoredProducts",
+                "buyType": "Auction",
+                "flightDates": {
+                    "startDate": "2026-10-01",
+                    "endDate": "2026-10-31",
+                },
+                "bidding": {
+                    "bidType": "CPC",
+                    "bidAmount": 0.50,
+                },
+            },
+        }
+    },
+)
+line_item_id = response.json()["data"]["id"]
+```
+
+</CodeGroup>
+
+**Save the `data.id` from the response — this is your `lineItemId`.**
+
+<Info>
+  `retailerId` and `targetRetailerId` are both required and should be the same value for standard campaigns. `targetRetailerId` controls where ads actually serve.
+</Info>
+
+<Warning>
+  If you get `403 forbidden` here, your app is missing the `RetailMedia_Campaign_Manage` scope. Scopes are set at app creation and cannot be changed — you'll need to create a new app. See [App Scopes](/retail-media/experimental/docs/app-scopes).
+</Warning>
+
+***
+
+## Step 3 — Add products to the line item
+
+Now load the SKUs you want to promote into the line item's product pool. You can add products in batches.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/products/append
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url 'https://api.criteo.com/experimental/retail-media/line-items/li-789/products/append' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "data": {
+      "type": "RetailMediaLineItemProducts",
+      "attributes": {
+        "skus": [
+          { "retailerId": "101", "retailerSkuId": "sku-001" },
+          { "retailerId": "101", "retailerSkuId": "sku-002" }
+        ]
+      }
+    }
+  }'
+```
+
+```python Python
+requests.post(
+    "https://api.criteo.com/experimental/retail-media/line-items/li-789/products/append",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={
+        "data": {
+            "type": "RetailMediaLineItemProducts",
+            "attributes": {
+                "skus": [
+                    {"retailerId": "101", "retailerSkuId": "sku-001"},
+                    {"retailerId": "101", "retailerSkuId": "sku-002"},
+                ]
+            },
+        }
+    },
+)
+```
+
+</CodeGroup>
+
+A `204 No Content` response means the products were added successfully — there is no response body.
+
+<Info>
+  Products must exist in your account's catalog for this retailer. If a SKU is unknown, the entire batch is rejected. Use [Catalogs](/retail-media/experimental/docs/catalogs) to verify available SKUs first.
+</Info>
+
+***
+
+## Step 4 — Submit the line item
+
+Submitting transitions the line item from draft to active. It will start delivering when its `startDate` is reached.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/submit
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url 'https://api.criteo.com/experimental/retail-media/line-items/li-789/submit' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{ "data": { "type": "LineItemSubmit", "attributes": { "comment": "Ready for launch" } } }'
+```
+
+```python Python
+requests.post(
+    "https://api.criteo.com/experimental/retail-media/line-items/li-789/submit",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={"data": {"type": "LineItemSubmit", "attributes": {"comment": "Ready for launch"}}},
+)
+```
+
+</CodeGroup>
+
+A `204 No Content` response confirms the submission was accepted.
+
+***
+
+## What's next
+
+- [Run a performance report](/retail-media/experimental/docs/workflows/run-performance-report) to measure campaign delivery
+- [Set up audience targeting](/retail-media/experimental/docs/workflows/set-up-audience-targeting) to reach specific shopper segments
+- [Line Item Core reference](/retail-media/experimental/docs/line-items-core) for the full field reference

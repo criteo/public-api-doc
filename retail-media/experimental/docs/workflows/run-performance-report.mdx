@@ -1,0 +1,202 @@
+---
+title: Run a Performance Report
+description: Request, poll, and download a campaign or line item performance report using the async reporting API.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## What you'll build
+
+A three-step async flow that returns a downloadable report with campaign or line item performance metrics for a date range you define.
+
+**Time to complete:** ~10 minutes (plus report processing time, typically under 2 minutes)
+
+## Before you start
+
+- [ ] A valid access token — see [Authentication](/retail-media/experimental/docs/authentication)
+- [ ] At least one campaign or line item with delivery data in the date range you want to report on
+
+<Info>
+  The reporting API is **asynchronous**: you submit a job, poll until it's ready, then download. You cannot get results in a single call.
+</Info>
+
+***
+
+## Step 1 — Submit the report request
+
+Choose the report type based on what you want to measure:
+
+| Report type | Endpoint | Use when |
+| ----------- | -------- | -------- |
+| Campaign-level | `POST /reports/sync/campaigns` | Aggregate metrics per campaign |
+| Line item-level | `POST /reports/sync/line-items` | Metrics broken down per line item |
+
+This example uses campaign-level reporting.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/reports/sync/campaigns
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url 'https://api.criteo.com/experimental/retail-media/reports/sync/campaigns' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "data": {
+      "type": "RetailMediaReportRequest",
+      "attributes": {
+        "accountId": "123",
+        "startDate": "2026-09-01",
+        "endDate": "2026-09-07",
+        "timeZone": "America/New_York",
+        "reportType": "summary",
+        "metrics": ["impressions", "clicks", "spend"],
+        "dimensions": ["date", "campaignId", "campaignName"],
+        "format": "json"
+      }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.criteo.com/experimental/retail-media/reports/sync/campaigns",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={
+        "data": {
+            "type": "RetailMediaReportRequest",
+            "attributes": {
+                "accountId": "123",
+                "startDate": "2026-09-01",
+                "endDate": "2026-09-07",
+                "timeZone": "America/New_York",
+                "reportType": "summary",
+                "metrics": ["impressions", "clicks", "spend"],
+                "dimensions": ["date", "campaignId", "campaignName"],
+                "format": "json",
+            },
+        }
+    },
+)
+report_id = response.json()["data"]["id"]
+```
+
+</CodeGroup>
+
+**Save the `data.id` from the response — this is your `reportId`.**
+
+```json
+{
+  "data": {
+    "id": "rpt-abc123",   // <-- save this
+    "type": "RetailMediaReport",
+    "attributes": {
+      "status": "pending"
+    }
+  }
+}
+```
+
+<Warning>
+  `startDate` and `endDate` must be in `YYYY-MM-DD` format. Requesting more than 31 days in a single call will be rejected — split large date ranges into multiple requests.
+</Warning>
+
+***
+
+## Step 2 — Poll for completion
+
+The report processes asynchronously. Poll the status endpoint every few seconds until `status` is `"success"`.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/reports/{reportId}/status
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url 'https://api.criteo.com/experimental/retail-media/reports/rpt-abc123/status' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>'
+```
+
+```python Python
+import time
+
+while True:
+    r = requests.get(
+        "https://api.criteo.com/experimental/retail-media/reports/rpt-abc123/status",
+        headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    )
+    status = r.json()["data"]["attributes"]["status"]
+    if status == "success":
+        break
+    if status == "failure":
+        raise Exception("Report failed")
+    time.sleep(5)  # wait 5 seconds before retrying
+```
+
+</CodeGroup>
+
+Possible status values:
+
+| Status | Meaning |
+| ------ | ------- |
+| `pending` | Still processing — keep polling |
+| `success` | Ready to download |
+| `failure` | Processing failed — submit a new request |
+
+<Info>
+  Reports typically complete in under 2 minutes. Polling every 5 seconds is a good default — polling more aggressively won't make it faster.
+</Info>
+
+***
+
+## Step 3 — Download the results
+
+Once status is `success`, fetch the report output.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/reports/{reportId}/output
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url 'https://api.criteo.com/experimental/retail-media/reports/rpt-abc123/output' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>'
+```
+
+```python Python
+output = requests.get(
+    "https://api.criteo.com/experimental/retail-media/reports/rpt-abc123/output",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+)
+print(output.json())
+```
+
+</CodeGroup>
+
+The response is your report data in the format you requested (`json` or `csv`).
+
+<Warning>
+  Calling `/output` before the report reaches `success` returns `400 report-not-ready`. Always check the status first.
+</Warning>
+
+***
+
+## What's next
+
+- [Launch a Sponsored Products campaign](/retail-media/experimental/docs/workflows/launch-sponsored-products-campaign) to set up campaigns to report on
+- [Set up audience targeting](/retail-media/experimental/docs/workflows/set-up-audience-targeting) to segment your reporting by audience
