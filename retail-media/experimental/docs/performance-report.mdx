@@ -32,6 +32,10 @@ POST /2026-07/retail-media/reports/performance
 
 ### Optional fields
 
+<Note>
+  Enum-style `filters.*` values are case-insensitive on input (e.g. `Online`, `ONLINE`, and `online` are all accepted).
+</Note>
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `timezone` | string | `UTC` | Timezone for date bucketing. IANA format (e.g. `America/New_York`). |
@@ -40,15 +44,15 @@ POST /2026-07/retail-media/reports/performance
 | `viewAttributionWindow` | string | — | Attribution window for view-based conversions: `none`, `1D`, `7D`, `14D`, or `30D`. |
 | `clickMatchLevel` | string | — | Match level for click attribution. |
 | `viewMatchLevel` | string | — | Match level for view attribution. |
-| `filters.campaignTypes[]` | array of strings | — | Filter by campaign type. Values constrain eligible campaigns and may affect metric eligibility. |
-| `filters.salesChannels[]` | array of strings | — | Filter by sales channel. |
-| `filters.mediaTypes[]` | array of strings | — | Filter by media type. |
-| `filters.buyTypes[]` | array of strings | — | Filter by buy type. |
-| `filters.budgetModels[]` | array of strings | — | Filter by budget model. |
-| `filters.activationPlatforms[]` | array of strings | — | Filter by activation platform. |
-| `filters.searchTermTypes[]` | array of strings | — | Filter by search term type. |
-| `filters.searchTermTargetings[]` | array of strings | — | Filter by search term targeting strategy. |
-| `filters.targetedKeywordTypes[]` | array of strings | — | Filter by targeted keyword type. |
+| `filters.campaignTypes[]` | array of strings | — | Filter by campaign type. Accepted values: `sponsoredProducts`, `onSiteDisplays`. Values constrain eligible campaigns and may affect metric eligibility. |
+| `filters.salesChannels[]` | array of strings | — | Filter by sales channel. Accepted values: `online`, `offline`. |
+| `filters.mediaTypes[]` | array of strings | — | Filter by media type. Accepted values: `unknown`, `video`, `display`. |
+| `filters.buyTypes[]` | array of strings | — | Filter by buy type. Accepted values: `auction`, `preferredDeals`, `sponsorship`. |
+| `filters.budgetModels[]` | array of strings | — | Filter by budget model. Accepted values: `CriteoBudget`, `RetailerBudget`. |
+| `filters.activationPlatforms[]` | array of strings | — | Filter by activation platform. Accepted values: `CommerceMax`, `PrivateMarket`. |
+| `filters.searchTermTypes[]` | array of strings | — | Filter by search term type. Accepted values: `unknown`, `searched`, `entered`. |
+| `filters.searchTermTargetings[]` | array of strings | — | Filter by search term targeting strategy. Accepted values: `unknown`, `automatic`, `manual`. |
+| `filters.targetedKeywordTypes[]` | array of strings | — | Filter by targeted keyword type. Accepted values: `unknown`, `generic`, `branded`, `conquesting`. |
 
 ### Example request
 
@@ -181,7 +185,7 @@ Authorization: Bearer {token}
 | `accountName` | Account name. |
 | `campaignId` | Campaign ID. |
 | `campaignName` | Campaign name. |
-| `campaignType` | Campaign type. |
+| `campaignType` | Campaign type: `sponsoredProducts` or `onSiteDisplays`. |
 | `lineItemId` | Line item ID. |
 | `lineItemName` | Line item name. |
 | `retailerId` | Retailer ID where the line item served. |
@@ -192,24 +196,28 @@ Authorization: Bearer {token}
 | `productId` | Advertised product ID. References the Catalogs product ID. |
 | `productName` | Name of the advertised product. |
 | `salesChannel` | Purchase channel: `online` or `offline`. |
-| `mediaType` | Media type of the line item. |
-| `buyType` | Buy type of the line item. |
-| `budgetModel` | Budget model of the line item. |
-| `activationPlatform` | Activation platform of the line item. |
+| `mediaType` | Media type of the line item: `unknown`, `video`, or `display`. |
+| `buyType` | Buy type of the line item: `auction`, `preferredDeals`, or `sponsorship`. |
+| `budgetModel` | Budget model of the line item: `CriteoBudget` or `RetailerBudget`. |
+| `activationPlatform` | Activation platform of the line item: `CommerceMax` or `PrivateMarket`. |
 | `environment` | Type of environment: `web`, `mobile`, `app`. |
 | `pageType` | Type of retailer page where the ad rendered: `home`, `search`, `category`, `productDetail`, `merchandising`, `deals`, `checkout`, `confirmation`. |
 | `pageCategory` | Retailer-defined category of the page where ads rendered. **Retailer catalog only.** |
 | `servedCategory` | Category of the page where the ad was served. Retailer-specific taxonomy. **Retailer catalog only.** |
 | `keyword` | Keyword or phrase used on the search page where the ad rendered. |
 | `searchTerm` | Keyword or phrase searched by the shopper on the retailer site. |
-| `searchTermType` | Match type: `Entered`, `Searched`, or `Null`. |
-| `searchTermTargeting` | Targeting strategy: `Manual` or `Automatic`. |
+| `searchTermType` | Match type: `Entered`, `Searched`, or `Unknown`. |
+| `searchTermTargeting` | Targeting strategy — see note below. |
 | `creativeId` | Creative ID. Onsite display only. |
 | `creativeName` | Creative name. Onsite display only. |
 | `creativeType` | Creative type: Commerce Display, Commerce Video, Standard Display, Standard Video. Onsite display only. |
 | `creativeTemplateId` | Creative template ID. Onsite display only. |
 | `creativeTemplateName` | Ad format: Flagship, Showcase, SponsoredProducts, Butterfly, BundleBoost, IAB, DisplayPanel, DigitalShelfTalker, CommerceVideoSpotlight, Custom. |
-| `targetedKeywordType` | Conquesting strategy: `Conquesting`, `Branded`, `Generic`, or `Unknown`. |
+| `targetedKeywordType` | Conquesting strategy: `Conquesting`, `Branded`, or `Generic`. Returns `null` when not applicable. |
+
+<Note>
+  **`searchTermTargeting` output values pending confirmation.** Live testing has observed `ManualTargeting`, `AutomaticTargeting`, `Unknown`, and `UnknownTargeting` — two distinct strings for what should be a single "unknown" state. This is being checked with engineering before the exact output value list is finalized here.
+</Note>
 
 ***
 
