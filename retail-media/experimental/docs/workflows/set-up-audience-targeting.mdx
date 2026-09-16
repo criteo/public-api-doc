@@ -1,0 +1,199 @@
+---
+title: Set Up Audience Targeting
+description: Create an audience segment from a contact list and attach it to a line item to target specific shoppers.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## What you'll build
+
+An audience segment built from a list of customer emails or phone numbers, attached to a line item so your ads reach only those shoppers.
+
+**Time to complete:** ~10 minutes
+
+## Before you start
+
+- [ ] A valid access token — see [Authentication](/retail-media/experimental/docs/authentication)
+- [ ] Your `accountId`
+- [ ] A line item ID to attach the audience to — see [Launch a Sponsored Products campaign](/retail-media/experimental/docs/workflows/launch-sponsored-products-campaign)
+- [ ] A customer contact list (emails or hashed phone numbers)
+
+<Info>
+  Audience segments are scoped to your account. A segment created here can be reused across multiple line items and campaigns.
+</Info>
+
+***
+
+## Step 1 — Create an audience segment
+
+Create the segment that will hold your contact list.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{account-id}/audience-segments/create
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url 'https://api.criteo.com/experimental/retail-media/accounts/123/audience-segments/create' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "data": {
+      "type": "CreateAudienceSegment",
+      "attributes": {
+        "name": "High-value customers Q4",
+        "description": "Customers who purchased in the last 90 days",
+        "type": "ContactList"
+      }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.criteo.com/experimental/retail-media/accounts/123/audience-segments/create",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={
+        "data": {
+            "type": "CreateAudienceSegment",
+            "attributes": {
+                "name": "High-value customers Q4",
+                "description": "Customers who purchased in the last 90 days",
+                "type": "ContactList",
+            },
+        }
+    },
+)
+segment_id = response.json()["data"]["id"]
+```
+
+</CodeGroup>
+
+**Save the `data.id` — this is your `segmentId`, needed in the next steps.**
+
+***
+
+## Step 2 — Upload your contact list
+
+Add customer identifiers to the segment. Criteo hashes them before matching — you can send plain emails or pre-hashed values.
+
+<EndpointBadge method="patch">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{account-id}/audience-segments/{audience-segment-id}/contact-list
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request PATCH \
+  --url 'https://api.criteo.com/experimental/retail-media/accounts/123/audience-segments/seg-456/contact-list' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "data": {
+      "type": "ContactListOperation",
+      "attributes": {
+        "operation": "add",
+        "identifierType": "email",
+        "identifiers": [
+          "customer1@example.com",
+          "customer2@example.com"
+        ]
+      }
+    }
+  }'
+```
+
+```python Python
+requests.patch(
+    "https://api.criteo.com/experimental/retail-media/accounts/123/audience-segments/seg-456/contact-list",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={
+        "data": {
+            "type": "ContactListOperation",
+            "attributes": {
+                "operation": "add",
+                "identifierType": "email",
+                "identifiers": [
+                    "customer1@example.com",
+                    "customer2@example.com",
+                ],
+            },
+        }
+    },
+)
+```
+
+</CodeGroup>
+
+A `204 No Content` response confirms the contacts were queued for processing. Matching happens asynchronously — segment size updates within a few hours.
+
+<Info>
+  Minimum segment size for targeting is typically 1,000 matched users. Segments below this threshold are accepted but may not deliver. Use [Audience Segment Size](/retail-media/experimental/docs/audience-segments-size) to check your segment's reach before attaching it.
+</Info>
+
+<Warning>
+  Contact lists must comply with your data processing agreements with Criteo. Only upload contacts who have given appropriate consent under your applicable privacy regulations.
+</Warning>
+
+***
+
+## Step 3 — Attach the segment to a line item
+
+With the segment created and populated, attach it to a line item to activate audience targeting on that line item's delivery.
+
+<EndpointBadge method="patch">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{account-id}/audience-segments
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request PATCH \
+  --url 'https://api.criteo.com/experimental/retail-media/accounts/123/audience-segments' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "data": {
+      "type": "UpdateAudienceSegment",
+      "attributes": {
+        "id": "seg-456",
+        "lineItemIds": ["li-789"]
+      }
+    }
+  }'
+```
+
+```python Python
+requests.patch(
+    "https://api.criteo.com/experimental/retail-media/accounts/123/audience-segments",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={
+        "data": {
+            "type": "UpdateAudienceSegment",
+            "attributes": {
+                "id": "seg-456",
+                "lineItemIds": ["li-789"],  # line item from your campaign
+            },
+        }
+    },
+)
+```
+
+</CodeGroup>
+
+***
+
+## What's next
+
+- [Run a performance report](/retail-media/experimental/docs/workflows/run-performance-report) to measure audience segment impact
+- [Audience Segments reference](/retail-media/experimental/docs/audience-segments) for the full field reference and segment types

@@ -1,0 +1,205 @@
+---
+title: Import Your Product Catalog
+description: Submit product data to Criteo using the batch catalog API — add, update, or delete products at scale.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## What you'll build
+
+A catalog import that keeps Criteo's product database in sync with your store — submitting product updates in batches and checking the import status.
+
+**Time to complete:** ~15 minutes (plus up to 1 hour for Criteo to process the import)
+
+## Before you start
+
+- [ ] A valid access token — see [Authentication](/retail-media/experimental/docs/authentication)
+- [ ] Your `accountId`
+- [ ] Product data in JSON format (see field reference below)
+
+<Info>
+  The catalog API is designed for **incremental updates** — only send products that have actually changed. Do not send your full catalog daily; send only what's new, updated, or deleted.
+</Info>
+
+***
+
+## Step 1 — Submit a product batch
+
+Send a batch of product additions, updates, or deletions. You can mix all three operations in a single request.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/catalog/products/batch
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url 'https://api.criteo.com/experimental/retail-media/catalog/products/batch' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "data": {
+      "type": "RetailMediaCatalogBatch",
+      "attributes": {
+        "accountId": "123",
+        "products": [
+          {
+            "operation": "upsert",
+            "id": "prod-001",
+            "itemGroupId": "group-A",
+            "title": "Running Shoes - Blue - Size 10",
+            "description": "Lightweight running shoes with cushioned sole.",
+            "price": "89.99 USD",
+            "imageLink": "https://example.com/images/shoes-blue-10.jpg",
+            "link": "https://example.com/products/shoes-blue-10",
+            "brand": "RunFast",
+            "gtin": "0123456789012",
+            "mpn": "RF-SHOE-B-10",
+            "availability": "in stock",
+            "productType": "Apparel & Accessories > Shoes"
+          },
+          {
+            "operation": "delete",
+            "id": "prod-discontinued-99"
+          }
+        ]
+      }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.criteo.com/experimental/retail-media/catalog/products/batch",
+    headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    json={
+        "data": {
+            "type": "RetailMediaCatalogBatch",
+            "attributes": {
+                "accountId": "123",
+                "products": [
+                    {
+                        "operation": "upsert",
+                        "id": "prod-001",
+                        "itemGroupId": "group-A",
+                        "title": "Running Shoes - Blue - Size 10",
+                        "description": "Lightweight running shoes.",
+                        "price": "89.99 USD",
+                        "imageLink": "https://example.com/images/shoes-blue-10.jpg",
+                        "link": "https://example.com/products/shoes-blue-10",
+                        "brand": "RunFast",
+                        "availability": "in stock",
+                    },
+                    {
+                        "operation": "delete",
+                        "id": "prod-discontinued-99",
+                    },
+                ],
+            },
+        }
+    },
+)
+operation_token = response.json()["data"]["attributes"]["operationToken"]
+```
+
+</CodeGroup>
+
+**Save the `operationToken` from the response — you'll use it to check import status.**
+
+```json
+{
+  "data": {
+    "type": "RetailMediaCatalogBatchResponse",
+    "attributes": {
+      "operationToken": "op-xyz789",   // <-- save this
+      "status": "pending"
+    }
+  }
+}
+```
+
+<Warning>
+  Never include multiple operations for the **same product ID** in a single batch — the batch will be rejected entirely. Split updates by product ID across separate requests.
+</Warning>
+
+***
+
+## Step 2 — Check the import status
+
+The batch processes asynchronously. Poll the report endpoint with your `operationToken` until the status is complete.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/catalog/products/batch/report/{operation-token}
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url 'https://api.criteo.com/experimental/retail-media/catalog/products/batch/report/op-xyz789' \
+  --header 'Authorization: Bearer <ACCESS_TOKEN>'
+```
+
+```python Python
+import time
+
+while True:
+    r = requests.get(
+        "https://api.criteo.com/experimental/retail-media/catalog/products/batch/report/op-xyz789",
+        headers={"Authorization": "Bearer <ACCESS_TOKEN>"},
+    )
+    status = r.json()["data"]["attributes"]["status"]
+    if status in ("success", "failure"):
+        print(r.json())
+        break
+    time.sleep(30)  # catalog processing can take minutes — don't poll too frequently
+```
+
+</CodeGroup>
+
+The report shows how many products were accepted, rejected, and why.
+
+***
+
+## Product fields reference
+
+| Field | Required | Notes |
+| ----- | :------: | ----- |
+| `operation` | Yes | `upsert` to add or update, `delete` to remove |
+| `id` | Yes | Your unique product identifier. Must differ from `itemGroupId`. |
+| `itemGroupId` | Yes (upsert) | Groups product variants (e.g. same shoe, different sizes). |
+| `title` | Yes (upsert) | Product name as shown to shoppers. |
+| `price` | Yes (upsert) | Format: `"9.99 USD"` |
+| `imageLink` | Yes (upsert) | Direct URL to a product image. HTTPS required. |
+| `link` | Yes (upsert) | URL to the product page on your site. |
+| `availability` | Yes (upsert) | `in stock`, `out of stock`, or `preorder` |
+| `description` | No | Used for relevance matching. |
+| `brand` | No | Brand name. |
+| `gtin` / `mpn` | No | Identifiers for better catalog matching. |
+| `expirationDate` | No | Keep the product active past the default 30-day window (max 1 year). |
+
+<Info>
+  Product variants (same item in different colors, sizes, etc.) should share the same `itemGroupId` but each have a unique `id`. This lets Criteo group them correctly in reporting and targeting.
+</Info>
+
+***
+
+## Best practices
+
+- **Send updates as they happen** — don't batch changes and submit weekly. Stale product data reduces ad relevance.
+- **Delete discontinued products immediately** — don't wait for expiration, which would let ads serve for unavailable products.
+- **Use `expirationDate`** for seasonal products to keep them active beyond the 30-day default.
+
+***
+
+## What's next
+
+- [Launch a Sponsored Products campaign](/retail-media/experimental/docs/workflows/launch-sponsored-products-campaign) to advertise your imported products
+- [Catalogs reference](/retail-media/experimental/docs/catalogs) for the full field specification
