@@ -73,7 +73,13 @@ The Ad Set name, set by the advertiser.
 Read-only. The environment that an ad click will lead a user to.
 
 **`objective`**  
-The intended optimization for the Ad Set. Can be `customAction`, `clicks`, `conversions`, `displays`, `appPromotion`, `revenue`, `storeConversions`, `value`, `reach`, `visits` or `videoViews` (only when mediaType is set to Video)
+The outcome the Ad Set is intended to optimize.
+
+Supported values are `customAction`, `clicks`, `conversions`, `displays`, `appPromotion`, `revenue`, `storeConversions`, `reach`, `visits`, and `videoViews`.
+
+An objective is not necessarily supported for every media type and cost controller. The API validates `objective`, `mediaType`, and `bidding.costController` together. See [Cost-controller compatibility](#cost-controller-compatibility) before creating an Ad Set.
+
+`videoViews` is supported only when `mediaType` is `Video`. `revenue` is not supported when `mediaType` is `Video` and `bidding.costController` is `dailyBudget`.
 
 **`mediaType`**  
 The type of media the ad set will deliver on. Can be `Display` or `Video`
@@ -111,6 +117,28 @@ Decimal value target relating to the `objective` specified. May be `null` for st
 
 **`bidding.costController`**  
 How spend is controlled and optimized. Can be `COS` (Cost of Sale), `CPC` (Cost per Click), `CPI` (Cost per Install), `CPM` (Cost per Mille), `CPO` (Cost per Order), `CPSV` (Cost per Site Visit), `CPV` (Cost per View), or `dailyBudget`.
+
+### Cost-controller compatibility
+
+A cost-controller value is not valid with every combination of `mediaType` and `objective`. The API uses these three fields together to select the Ad Set's optimization model.
+
+For budget-controlled performance Ad Sets, the following combinations are supported:
+
+| `mediaType` | `objective` | `bidding.costController` | Optimization behavior |
+|---|---|---|---|
+| `Display` | `visits` | `dailyBudget` | Maximize qualified visits while delivering toward the budget. |
+| `Display` | `conversions` | `dailyBudget` | Maximize attributed conversions while delivering toward the budget. |
+| `Display` | `revenue` | `dailyBudget` | Maximize attributed revenue or order value while delivering toward the budget. |
+| `Video` | `visits` | `dailyBudget` | Maximize attributed post-view visits while delivering toward the budget. |
+| `Video` | `conversions` | `dailyBudget` | Maximize attributed post-view conversions while delivering toward the budget. |
+
+<Warning>
+  **Video revenue optimization is not supported**
+
+  Do not combine `mediaType: video`, `objective: revenue`, and `bidding.costController: dailyBudget`. Criteo does not currently provide a budget based video optimization model for attributed revenue or order value. Use `objective: conversions` to optimize a video Ad Set for post-view conversions.
+</Warning>
+
+Unsupported combinations are rejected during Ad Set creation with the `campaign--ad-set-creation-check--invalid-bidding-configuration` validation error.
 
 ### Ad Set Targeting
 
@@ -731,7 +759,9 @@ The Ad set has invalid audience ID(s). To create this Ad Set, get in touch with 
 The Ad Set is configured with an invalid spend strategy. To create this Ad Set, get in touch with our support team for assistance.
 
 **`campaign--ad-set-creation-check--invalid-bidding-configuration`**  
-The bidding configuration is not valid with the selected MediaType.
+The combination of `objective`, `mediaType`, and `bidding.costController` is not supported.
+
+For example, `mediaType: Video`, `objective: revenue`, and `bidding.costController: dailyBudget` is invalid because no budget-based video revenue optimization model is available. Review the [cost-controller compatibility](#cost-controller-compatibility) guidance and select a supported combination.
 
 **`campaign--ad-set-creation-check--media-type-not-compatible-with-automated-budget`**  
 The media type has to be the same as the one chosen for the marketing campaign.
