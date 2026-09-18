@@ -15,12 +15,10 @@ A campaign groups line items that share attribution settings, flight dates and b
 
 The campaigns endpoint is shared across campaign types. It exposes common fields through one contract instead of separate Sponsored Products and Onsite Display routes.
 
-The `campaignType` attribute is the discriminator. Type-specific fields are carried in a matching details object alongside the common attributes. Include only the details objects supported by the campaign type.
+The `campaignType` attribute is the discriminator. Type-specific fields are carried in a matching details object alongside the common attributes: `sponsoredProductsDetails` for a `SponsoredProducts` campaign, `onsiteDisplayDetails` for an `OnsiteDisplay` one. Send only the object that matches the type.
 
 <Info>
-  `scheduleDetails` and `budgetDetails` apply to `SponsoredProducts` campaigns only. `OnsiteDisplay` campaigns reject them.
-
-  `objective` accepts `Manual` for either type. The automatic objectives `Clicks`, `Conversion` and `Revenue` require a `SponsoredProducts` campaign with the `Auction` buy type.
+  The objective and the budget belong to the details object, not to the campaign root. A `SponsoredProducts` campaign sets its own objective; an `OnsiteDisplay` campaign created through this endpoint is always an impressions campaign, so it carries a budget but no objective.
 </Info>
 
 ## Endpoints Overview
@@ -59,9 +57,10 @@ All attributes below are nested under `data.attributes` in the request envelope,
 | `companyName` | string | No | Name of the company associated with the advertisement. Available to European Union marketplaces only, in compliance with the Digital Services Act. Only supply accounts may set it. |
 | `onBehalfCompanyName` | string | No | Name of the company the advertisement runs on behalf of. Available to European Union marketplaces only, in compliance with the Digital Services Act. Only supply accounts may set it. |
 | `billByRetailerId` | string | No | Identifier of the retailer the campaign is billed to, set only on creation. Required when drawing from a retailer budget balance. Only network demand accounts may set it. |
-| `objective` | string | No | Campaign budget allocation control. `Manual` keeps existing behavior; `Clicks`, `Conversion` and `Revenue` activate campaign-level allocation and require a `SponsoredProducts` campaign with the `Auction` buy type. Defaults to `Manual`. |
-| `scheduleDetails` | object | No | `SponsoredProducts` only. Active period of the campaign. `OnsiteDisplay` campaigns reject it. |
-| `budgetDetails` | object | No | `SponsoredProducts` only. Budget and pacing of the campaign. |
+| `regulatedCategory` | string | No | Regulated category the campaign advertises. `None` or `Alcohol`. |
+| `scheduleDetails` | object | Yes | Active period of the campaign. Both campaign types own their flight dates and require it. |
+| `sponsoredProductsDetails` | object | No | `SponsoredProducts` only. Objective and budget of the campaign. Sending it on a campaign of another type is refused. |
+| `onsiteDisplayDetails` | object | No | `OnsiteDisplay` only. Budget of the campaign. |
 
 ### Attribution settings attributes
 
@@ -88,14 +87,37 @@ Defaults applied when a setting is omitted:
 | `startDate` | string | Yes | Start of the campaign's active period, as a date-time. |
 | `endDate` | string | Yes | End of the campaign's active period, as a date-time. |
 
-### Budget details attributes
+A `SponsoredProducts` campaign that runs indefinitely sends exactly `9999-12-30T00:00:00Z` as its `endDate`. Any other far-future date is treated as a real end date. An `OnsiteDisplay` `Auction` campaign cannot run indefinitely and rejects that value.
+
+### Sponsored Products details attributes
+
+Nested under `sponsoredProductsDetails`.
 
 | Attribute | Type | Required | Description |
 | --- | --- | --- | --- |
-| `budget` | number | No | Total budget of the campaign. Omit for an uncapped budget. |
-| `dailyPacing` | number | No | Maximum spend per day. Omit for uncapped daily spend. |
-| `monthlyPacing` | number | No | Maximum spend per month. Omit for uncapped monthly spend. |
-| `isAutoDailyPacing` | boolean | No | Whether daily spend is paced automatically across the campaign's active period. |
+| `objective` | string | No | What the campaign optimizes for. `Manual`, `Clicks`, `Conversion` or `Revenue`. Defaults to `Manual`. |
+| `budget` | object | No | Financial intent of the campaign. A `Manual` campaign does not accept one. |
+
+### Onsite Display details attributes
+
+Nested under `onsiteDisplayDetails`.
+
+| Attribute | Type | Required | Description |
+| --- | --- | --- | --- |
+| `budget` | object | No | Financial intent of the campaign. An amount only: per-period cappings and pacing apply to `SponsoredProducts`. |
+
+### Budget attributes
+
+| Attribute | Type | Required | Description |
+| --- | --- | --- | --- |
+| `amount` | number | No | Total the campaign may spend over its flight. Must be greater than zero. |
+| `cappings` | array | No | `SponsoredProducts` only. Per-period ceilings, at most one entry per period. |
+| `cappings[].type` | string | Yes | Period the ceiling applies to. `Daily` or `Monthly`. |
+| `cappings[].amount` | number | Yes | Ceiling for the period. |
+| `pacing` | object | No | `SponsoredProducts` only. Asks the platform to spread the budget rather than cap it per period. |
+| `pacing.type` | string | Yes | `Automatic`. |
+
+Automatic pacing sets the daily amount itself, so it cannot be combined with a `Daily` capping.
 
 ### Sample request
 
@@ -118,21 +140,24 @@ curl -X POST "https://api.criteo.com/experimental/retail-media/accounts/12345/ca
           "viewAttributionScope": "SameSku"
         },
         "drawableBalanceIds": ["1122"],
-        "objective": "Conversion",
         "scheduleDetails": {
           "startDate": "2026-09-01T00:00:00Z",
           "endDate": "2026-09-30T23:59:59Z"
         },
-        "budgetDetails": {
-          "budget": 5000.0,
-          "isAutoDailyPacing": true
+        "sponsoredProductsDetails": {
+          "objective": "Conversion",
+          "budget": {
+            "amount": 5000.0,
+            "cappings": [{ "type": "Monthly", "amount": 1000.0 }],
+            "pacing": { "type": "Automatic" }
+          }
         }
       }
     }
   }'
 ```
 
-An `OnsiteDisplay` campaign omits `scheduleDetails` and `budgetDetails`:
+An `OnsiteDisplay` campaign carries its budget under `onsiteDisplayDetails` and sets no objective:
 
 ```bash
 curl -X POST "https://api.criteo.com/experimental/retail-media/accounts/12345/campaigns" \
@@ -152,7 +177,14 @@ curl -X POST "https://api.criteo.com/experimental/retail-media/accounts/12345/ca
           "clickAttributionScope": "SameSkuCategory",
           "viewAttributionScope": "SameSkuCategory"
         },
-        "drawableBalanceIds": ["1122"]
+        "drawableBalanceIds": ["1122"],
+        "scheduleDetails": {
+          "startDate": "2026-09-01T00:00:00Z",
+          "endDate": "2026-09-30T23:59:59Z"
+        },
+        "onsiteDisplayDetails": {
+          "budget": { "amount": 5000.0 }
+        }
       }
     }
   }'
@@ -168,8 +200,8 @@ All attributes below are nested under `data.attributes` in the response envelope
 | `status` | string | Campaign status, derived from the status of the line items it holds. `Active` when at least one line item is active, otherwise `Inactive`. |
 | `createdAt` | string | When the campaign was created. |
 | `updatedAt` | string | When the campaign was last modified. |
-| `budgetDetails.budgetSpent` | number | Amount spent against the campaign budget. |
-| `budgetDetails.budgetRemaining` | number | Amount left on the campaign budget. Omitted when the budget is uncapped. |
+
+The details object that does not match the campaign type is returned as `null`.
 
 ### Sample response
 
@@ -196,19 +228,20 @@ All attributes below are nested under `data.attributes` in the response envelope
       "onBehalfCompanyName": null,
       "billByRetailerId": null,
       "drawableBalanceIds": ["1122"],
-      "objective": "Conversion",
+      "regulatedCategory": "None",
       "scheduleDetails": {
         "startDate": "2026-09-01T00:00:00Z",
         "endDate": "2026-09-30T23:59:59Z"
       },
-      "budgetDetails": {
-        "budget": 5000.0,
-        "dailyPacing": null,
-        "monthlyPacing": null,
-        "isAutoDailyPacing": true,
-        "budgetSpent": 0.0,
-        "budgetRemaining": 5000.0
-      }
+      "sponsoredProductsDetails": {
+        "objective": "Conversion",
+        "budget": {
+          "amount": 5000.0,
+          "cappings": [{ "type": "Monthly", "amount": 1000.0 }],
+          "pacing": { "type": "Automatic" }
+        }
+      },
+      "onsiteDisplayDetails": null
     }
   }
 }
@@ -223,13 +256,17 @@ Validation failures return `type: validation` and a `code` identifying the rule 
 | `201 Created` | | Returns the created campaign. |
 | `400 Bad Request` | `campaign-name-cannot-be-null-or-whitespace` | The campaign name is missing or blank. |
 | `400 Bad Request` | `invalid-name` | The campaign name exceeds 255 characters. |
-| `400 Bad Request` | `invalid-campaign-type` | The campaign type is not a supported value. |
-| `400 Bad Request` | `invalid-buy-type` | The buy type is not a supported value. |
-| `400 Bad Request` | `invalid-objective` | The objective is not a supported value. |
-| `400 Bad Request` | `invalid-objective-campaign-type` | An automatic objective was set on a campaign that is not `SponsoredProducts`. |
+| `400 Bad Request` | `campaign-name-already-exists` | Another campaign in the account already uses this name. |
+| `400 Bad Request` | `json-serialization-error` | A value is outside its enum, for example an unsupported `campaignType`, `buyType` or `objective`. |
+| `400 Bad Request` | `invalid-objective-campaign-type` | The objective is not accepted for the campaign type. |
 | `400 Bad Request` | `invalid-objective-buy-type` | An automatic objective was set without the `Auction` buy type. |
+| `400 Bad Request` | `missing-flight-dates` | `scheduleDetails` is absent, or carries only one of the two dates. |
 | `400 Bad Request` | `invalid-date-range` | The start date is after the end date. |
-| `400 Bad Request` | `invalid-cd-flight-dates` | `scheduleDetails` was supplied for an `OnsiteDisplay` campaign. |
+| `400 Bad Request` | `invalid-cd-flight-dates` | An `OnsiteDisplay` `Auction` campaign was given the indefinite end date. |
+| `400 Bad Request` | `manual-objective-refuses-budget` | A budget was supplied for a `Manual` campaign. |
+| `400 Bad Request` | `invalid-budget-amount` | A budget or capping amount is not greater than zero. |
+| `400 Bad Request` | `duplicate-budget-capping` | The budget carries more than one capping for the same period. |
+| `400 Bad Request` | `invalid-budget-pacing` | Automatic pacing was combined with a `Daily` capping. |
 | `400 Bad Request` | `invalid-company-name` | The company name exceeds 255 characters. |
 | `400 Bad Request` | `invalid-on-behalf` | The on-behalf company name exceeds 255 characters. |
 | `400 Bad Request` | `only-supply-can-set-paying-company-name` | Only supply accounts can set the company name paying for the ad. |
@@ -241,5 +278,4 @@ Validation failures return `type: validation` and a `code` identifying the rule 
 | `400 Bad Request` | `invalid-view-match-level` | The view attribution scope is not a supported value. |
 | `400 Bad Request` | `click-attribution-window-not-greater-than-view-attribution-window` | The click attribution window is shorter than the view attribution window. |
 | `400 Bad Request` | `click-attribution-scope-smaller-than-view-attribution-scope` | The click attribution scope is narrower than the view attribution scope. |
-| `400 Bad Request` | `bad-request` | `budgetDetails` was supplied for an `OnsiteDisplay` campaign. |
-| `403 Forbidden` | | The account does not exist or is not accessible. For security, the response does not identify which condition occurred. |
+| `403 Forbidden` | `forbidden` | The account, or a referenced drawable balance, does not exist or is not accessible. For security, the response does not identify which condition occurred. |
