@@ -9,9 +9,14 @@ actions:
   - target: $.paths['/2026-07/retail-media/reports/sync/line-items']
     remove: true
 
-  # Retag all operations to match capability-map structure.
-  # Uses path-level [*] wildcard to target all HTTP methods at once.
-  # One action per path (100 paths -> 10 capability groups).
+  # Step 1: Remove existing tags from all operations.
+  # Required because Mintlify overlay 'update' appends to arrays,
+  # not replaces them. Removing first ensures a clean slate.
+  - target: $.paths[*][*].tags
+    remove: true
+
+  # Step 2: Set capability-map tags per path.
+  # [*] targets all HTTP methods on each path at once.
 
   # Account Management (14 paths)
   - target: "$.paths['/2026-07/retail-media/account-management/accounts/{accountId}/brands/add'][*]"
