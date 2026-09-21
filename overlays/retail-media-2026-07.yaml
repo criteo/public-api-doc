@@ -3,7 +3,340 @@ info:
   title: Retail Media 2026-07 overlay
   version: 1.0.0
 actions:
+  # Hide sync report endpoints (not yet publicly documented)
   - target: $.paths['/2026-07/retail-media/reports/sync/campaigns']
     remove: true
   - target: $.paths['/2026-07/retail-media/reports/sync/line-items']
     remove: true
+  # Hide deprecated keyword recommendations endpoint (replaced by POST /retailers/{retailerId}/recommend-keywords)
+  - target: $.paths['/2026-07/retail-media/line-items/{externalLineItemId}/keywords/recommended']
+    remove: true
+
+  # Step 1: Remove existing tags from all operations.
+  # Required because Mintlify overlay 'update' appends to arrays,
+  # not replaces them. Removing first ensures a clean slate.
+  - target: $.paths[*][*].tags
+    remove: true
+
+  # Step 2: Set capability-map tags per path.
+  # [*] targets all HTTP methods on each path at once.
+
+  # Account Management (14 paths)
+  - target: "$.paths['/2026-07/retail-media/account-management/accounts/{accountId}/brands/add'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/account-management/accounts/{accountId}/brands/remove'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/account-management/accounts/{accountId}/create-brand-account'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/account-management/accounts/{accountId}/create-seller-account'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/account-management/accounts/{accountId}/private-market-child-accounts'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/account-management/accounts/{accountId}/sellers'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/accounts'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/accounts/fees/search'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/accounts/fees/update'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/accounts/sellers/search'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{accountId}/brands'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{accountId}/grant-consent'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/brands/search'][*]"
+    update:
+      tags: ["Account Management"]
+  - target: "$.paths['/2026-07/retail-media/me'][*]"
+    update:
+      tags: ["Account Management"]
+
+  # Campaigns (5 paths)
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/campaigns'][*]"
+    update:
+      tags: ["Campaigns"]
+  - target: "$.paths['/2026-07/retail-media/balances/{balanceId}/campaigns/append'][*]"
+    update:
+      tags: ["Campaigns"]
+  - target: "$.paths['/2026-07/retail-media/balances/{balanceId}/campaigns/delete'][*]"
+    update:
+      tags: ["Campaigns"]
+  - target: "$.paths['/2026-07/retail-media/campaigns/{campaignId}'][*]"
+    update:
+      tags: ["Campaigns"]
+  - target: "$.paths['/2026-07/retail-media/campaigns/{campaignId}/campaign-budget-overrides'][*]"
+    update:
+      tags: ["Campaigns"]
+
+  # Line Items (17 paths)
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/line-items'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/auction-line-items/{lineItemId}'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/campaigns/{campaign-id}/preferred-line-items'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/campaigns/{campaignId}/auction-line-items'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{line-item-id}'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{line-item-id}/bid-multipliers'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{lineItemId}/line-item-budget-overrides'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/add-to-basket'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/add-to-basket/append'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/add-to-basket/delete'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/audiences'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/audiences/append'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/audiences/delete'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/stores'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/stores/append'][*]"
+    update:
+      tags: ["Line Items"]
+  - target: "$.paths['/2026-07/retail-media/preferred-line-items/{line-item-id}/targeting/stores/delete'][*]"
+    update:
+      tags: ["Line Items"]
+
+  # Keywords (6 paths)
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/keywords/in-review-report'][*]"
+    update:
+      tags: ["Keywords"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{externalLineItemId}/keywords/recommended'][*]"
+    update:
+      tags: ["Keywords"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{id}/keywords'][*]"
+    update:
+      tags: ["Keywords"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{id}/keywords/add-remove'][*]"
+    update:
+      tags: ["Keywords"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{id}/keywords/set-bid'][*]"
+    update:
+      tags: ["Keywords"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{line-item-id}/keywords/review'][*]"
+    update:
+      tags: ["Keywords"]
+
+  # Promoted Products (5 paths)
+  - target: "$.paths['/2026-07/retail-media/line-items/{line-item-id}/products'][*]"
+    update:
+      tags: ["Promoted Products"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{line-item-id}/products/append'][*]"
+    update:
+      tags: ["Promoted Products"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{line-item-id}/products/delete'][*]"
+    update:
+      tags: ["Promoted Products"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{line-item-id}/products/pause'][*]"
+    update:
+      tags: ["Promoted Products"]
+  - target: "$.paths['/2026-07/retail-media/line-items/{line-item-id}/products/unpause'][*]"
+    update:
+      tags: ["Promoted Products"]
+
+  # Creatives & Assets (6 paths)
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/creatives'][*]"
+    update:
+      tags: ["Creatives & Assets"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/creatives/search'][*]"
+    update:
+      tags: ["Creatives & Assets"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/creatives/{creative-id}'][*]"
+    update:
+      tags: ["Creatives & Assets"]
+  - target: "$.paths['/2026-07/retail-media/assets'][*]"
+    update:
+      tags: ["Creatives & Assets"]
+  - target: "$.paths['/2026-07/retail-media/retailers/{retailer-id}/templates'][*]"
+    update:
+      tags: ["Creatives & Assets"]
+  - target: "$.paths['/2026-07/retail-media/retailers/{retailer-id}/templates/{template-id}'][*]"
+    update:
+      tags: ["Creatives & Assets"]
+
+  # Catalog & Retailer Planning (16 paths)
+  - target: "$.paths['/2026-07/retail-media/accounts/{accountId}/brand-catalog-export'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{accountId}/catalogs'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{accountId}/catalogs/sellers'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{accountId}/retailers/search'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{accountId}/seller-catalog-export'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/catalog/merchants/{merchantId}/store-inventory/delete'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/catalog/merchants/{merchantId}/store-inventory/upsert'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/catalogs/{catalogId}/output'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/catalogs/{catalogId}/status'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/categories'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/categories/{categoryId}'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/retailers/{retailerId}/categories/search'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/retailers/{retailerId}/cpc-min-bids'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/retailers/{retailerId}/pages'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/retailers/{retailerId}/recommend-categories'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+  - target: "$.paths['/2026-07/retail-media/retailers/{retailerId}/recommend-keywords'][*]"
+    update:
+      tags: ["Catalog & Retailer Planning"]
+
+  # Balances & Billing (11 paths)
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/balances'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/balances/{balance-id}'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/balances/{balance-id}/add-funds'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/balances/{balance-id}/change-dates'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{accountId}/balances'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/balances/{balance-id}/campaigns'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/balances/{balanceId}'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/balances/{balanceId}/history'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/billing/partner-report'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/billing/partner-report/{requestId}/output'][*]"
+    update:
+      tags: ["Balances & Billing"]
+  - target: "$.paths['/2026-07/retail-media/billing/partner-report/{requestId}/status'][*]"
+    update:
+      tags: ["Balances & Billing"]
+
+  # Audiences (8 paths)
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/audience-segments'][*]"
+    update:
+      tags: ["Audiences"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/audience-segments/create'][*]"
+    update:
+      tags: ["Audiences"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/audience-segments/delete'][*]"
+    update:
+      tags: ["Audiences"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/audience-segments/search'][*]"
+    update:
+      tags: ["Audiences"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/audience-segments/{audience-segment-id}/contact-list'][*]"
+    update:
+      tags: ["Audiences"]
+  - target: "$.paths['/2026-07/retail-media/accounts/{account-id}/audiences/search'][*]"
+    update:
+      tags: ["Audiences"]
+  - target: "$.paths['/2026-07/retail-media/audience-segments/{audience-segment-id}/contact-list/add-remove'][*]"
+    update:
+      tags: ["Audiences"]
+  - target: "$.paths['/2026-07/retail-media/audience-segments/{audience-segment-id}/contact-list/clear'][*]"
+    update:
+      tags: ["Audiences"]
+
+  # Performance Reporting (12 paths)
+  - target: "$.paths['/2026-07/retail-media/reports/attributed-transactions'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/fillrate'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/missed-opportunities'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/performance'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/revenue'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/sync/attributed-transactions'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/sync/campaigns'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/sync/line-items'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/sync/real-time-performance'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/unfilled-placements'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/{reportId}/output'][*]"
+    update:
+      tags: ["Performance Reporting"]
+  - target: "$.paths['/2026-07/retail-media/reports/{reportId}/status'][*]"
+    update:
+      tags: ["Performance Reporting"]
