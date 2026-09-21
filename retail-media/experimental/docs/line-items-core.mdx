@@ -7,7 +7,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
 ## Overview
 
-A line item is a unit within a campaign that controls how ads are delivered. It identifies the retailer where ads can run, defines the active flight dates, and holds delivery settings for its campaign type. A campaign can contain multiple line items.
+A line item is a unit within a campaign that controls how ads are delivered. It identifies the retailer where ads can run and holds delivery settings for its campaign type. A campaign can contain multiple line items.
 
 The line item core endpoints are shared across campaign types. They expose common fields through one contract instead of separate Sponsored Products and Onsite Display routes.
 
@@ -47,7 +47,6 @@ https://api.criteo.com/experimental/retail-media/line-items
 | `name` | Yes | Display name of the line item. It must be unique within the campaign and contain 2–255 characters after trimming. |
 | `retailerId` | Yes | External ID of the retailer associated with the line item. If the campaign specifies a retailer, the line-item retailer must match it. |
 | `campaignId` | Yes | External ID of the existing campaign that owns the line item and determines which type-specific details object is accepted. |
-| `flightDates` | Yes | Active date range. `startDate` is required and must precede `endDate`; whether `endDate` is required depends on the campaign and buy type. |
 | `isPaused` | No | Whether the line item is paused. Defaults to `false`. |
 | `serveToOptOutUser` | No | Whether ads can serve to users who opted out of personalization. |
 | `onsiteDisplayDetails.frequencyCapping` | No | Limits how often one user may be shown this Onsite Display line item's ads. Omit it to leave the line item uncapped. |
@@ -68,10 +67,6 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
       "isPaused": false,
       "retailerId": "12345",
       "campaignId": "987654321",
-      "flightDates": {
-        "startDate": "2026-09-01T00:00:00Z",
-        "endDate": "2026-09-30T23:59:59Z"
-      },
       "serveToOptOutUser": false,
       "onsiteDisplayDetails": {
         "frequencyCapping": {
@@ -133,7 +128,7 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
 | --- | --- | --- |
 | `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the campaign or buy type, or auction attributes were supplied for a non-auction campaign. |
 | `400` | `invalid-name` | The name is blank or outside the supported length. |
-| `400` | `invalid-flight-dates` | The flight dates are missing or invalid. |
+| `400` | `invalid-campaign-schedule` | The campaign has no schedule from which the API can derive the line item's flight dates. |
 | `400` | `invalid-retailer-id` | The retailer ID is improperly formatted or, when the campaign specifies a retailer, does not match it. |
 | `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
 | `400` | `invalid-frequency-capping` | The duration is not `Session` or `Day`, the count is outside `1`–`20`, or the parent campaign already has frequency capping. |
