@@ -26,6 +26,9 @@ The `campaignType` attribute is the discriminator. Type-specific fields are carr
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `POST` | `/accounts/{accountId}/campaigns` | Create a campaign under an account. |
+| `GET` | `/accounts/{accountId}/campaigns/{campaignId}` | Fetch a campaign by id. |
+| `PATCH` | `/accounts/{accountId}/campaigns/{campaignId}` | Selectively update a campaign. |
+| `POST` | `/accounts/{accountId}/campaigns/search` | Search campaigns under an account. |
 
 ## Create a Campaign
 
@@ -246,6 +249,174 @@ The details object that does not match the campaign type is returned as `null`.
   }
 }
 ```
+
+***
+
+## Get a Campaign
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{accountId}/campaigns/{campaignId}
+```
+</EndpointBadge>
+
+### Path parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account-id` | string | Yes | Identifier of the account that owns the campaign. |
+| `campaign-id` | string | Yes | Identifier of the campaign to fetch. |
+
+### Response
+
+Returns the campaign as a `CampaignResponseModel`. See [Create a Campaign — Response attributes](#response-attributes) for the full field list.
+
+| Status | Description |
+| --- | --- |
+| `200 OK` | Returns the campaign. |
+| `403 Forbidden` | The account or campaign does not exist or is not accessible. |
+| `404 Not Found` | No campaign with the given id exists under the account. |
+
+***
+
+## Update a Campaign
+
+Selectively updates a campaign. Only the fields you include in the request are changed — omitted fields remain unchanged.
+
+`campaignType`, `buyType`, `billByRetailerId`, and `drawableBalanceIds` cannot be changed after creation.
+
+<EndpointBadge method="patch">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{accountId}/campaigns/{campaignId}
+```
+</EndpointBadge>
+
+### Path parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account-id` | string | Yes | Identifier of the account that owns the campaign. |
+| `campaign-id` | string | Yes | Identifier of the campaign to update. |
+
+### Request attributes
+
+All attributes are nested under `data.attributes`. The resource `type` is `CampaignUpdateModel`. All fields are optional — include only what you want to change.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `name` | string | New display name. Must be unique within the account and up to 255 characters. |
+| `attributionSettings` | object | Attribution windows and scopes. Same structure as on creation; any sub-field omitted remains unchanged. |
+| `scheduleDetails` | object | New flight dates. When present, both `startDate` and `endDate` are required. Only valid for campaigns that own their dates (`SponsoredProducts` and `OnsiteDisplay Auction`). |
+| `sponsoredProductsDetails.budget` | object | `SponsoredProducts` only. When present, the whole budget node replaces the previous one. Accepts `amount`, `cappings` (array of `{type, amount}`), and `pacing.type`. |
+| `onsiteDisplayDetails.budget` | object | `OnsiteDisplay` only. When present, the whole budget node replaces the previous one. Accepts `amount`. |
+| `companyName` | object | Nillable. Name of the company paying for the ad (EU DSA). Pass `{"value": null}` to clear. |
+| `onBehalfCompanyName` | object | Nillable. Name of the company the ad runs on behalf of (EU DSA). Pass `{"value": null}` to clear. |
+
+### Sample request
+
+```bash
+curl -X PATCH "https://api.criteo.com/experimental/retail-media/accounts/12345/campaigns/987654321" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "data": {
+      "type": "CampaignUpdateModel",
+      "attributes": {
+        "name": "Back-to-school sponsored products — updated",
+        "sponsoredProductsDetails": {
+          "budget": {
+            "amount": 8000.0,
+            "pacing": { "type": "Automatic" }
+          }
+        }
+      }
+    }
+  }'
+```
+
+### Response
+
+Returns the updated campaign as a `CampaignResponseModel`.
+
+| Status | Description |
+| --- | --- |
+| `200 OK` | Returns the updated campaign. |
+| `400 Bad Request` | Validation error. See [Responses](#responses) for error codes. |
+| `403 Forbidden` | The account or campaign does not exist or is not accessible. |
+| `404 Not Found` | No campaign with the given id exists under the account. |
+
+***
+
+## Search Campaigns
+
+Search campaigns under an account using optional filters and pagination.
+
+<Note>
+  Budget details in search results come from a search index and may be **eventually consistent** with the values returned by the GET endpoint. If you need guaranteed up-to-date budget figures, fetch the campaign individually. `drawableBalanceIds` is not included in search results.
+</Note>
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{accountId}/campaigns/search
+```
+</EndpointBadge>
+
+### Path parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account-id` | string | Yes | Identifier of the account to search within. |
+
+### Request attributes
+
+All attributes are nested under `data.attributes`. The resource `type` is `CampaignSearchModel`. All fields are optional. Values within a single filter are ORed; distinct filters are ANDed.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `campaignIdFilter` | array of strings | Return only campaigns with these ids. |
+| `campaignTypeFilter` | array of strings | `SponsoredProducts`, `OnsiteDisplay`. |
+| `campaignStatusFilter` | array of strings | `Active`, `Inactive`. |
+| `buyTypeFilter` | array of strings | `Auction`, `PreferredDeals`, `Sponsorship`. |
+| `limit` | integer | Maximum number of campaigns to return per page. |
+| `offset` | integer | Number of matching campaigns to skip. |
+
+### Sample request
+
+```bash
+curl -X POST "https://api.criteo.com/experimental/retail-media/accounts/12345/campaigns/search" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "data": {
+      "type": "CampaignSearchModel",
+      "attributes": {
+        "campaignTypeFilter": ["SponsoredProducts"],
+        "campaignStatusFilter": ["Active"],
+        "limit": 25,
+        "offset": 0
+      }
+    }
+  }'
+```
+
+### Response
+
+Returns a paginated list of campaigns as `CampaignResponseModel` entries. See [Create a Campaign — Response attributes](#response-attributes) for the full field list.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `metadata.count` | integer | Total number of campaigns matching the filters, across all pages. |
+| `metadata.limit` | integer | Page size applied to this response. |
+| `metadata.offset` | integer | Offset applied to this response. |
+
+| Status | Description |
+| --- | --- |
+| `200 OK` | Returns matching campaigns and pagination metadata. |
+| `403 Forbidden` | The account does not exist or is not accessible. |
+
+***
 
 ## Responses
 
