@@ -1,0 +1,42 @@
+---
+title: Async Patterns
+description: How to use the submit, poll, and download pattern for asynchronous endpoints in the Retail Media API.
+---
+
+Several Retail Media API endpoints are asynchronous — you submit a request, poll for status, and download the result when ready. Calling the download endpoint before the job completes returns an error.
+
+## The Pattern
+
+| Step | Action | Endpoint shape |
+|---|---|---|
+| 1. Submit | `POST` the request. Receives a job or report ID immediately. | `POST /reports/{type}` |
+| 2. Poll | `GET` the status until `success` or `failure`. | `GET /reports/{reportId}/status` |
+| 3. Download | `GET` the output file (CSV or JSON). | `GET /reports/{reportId}/output` |
+
+## Where It Applies
+
+| Resource | Submit endpoint |
+|---|---|
+| DSP analytics (performance) | `POST /retail-media/reports/performance` |
+| SSP revenue report | `POST /retail-media/reports/revenue` |
+| Fill rate report | `POST /retail-media/reports/fillrate` |
+| Missed opportunities report | `POST /retail-media/reports/missed-opportunities` |
+| Attributed transactions report | `POST /retail-media/reports/attributed-transactions` |
+| Partner billing report | `POST /retail-media/billing/partner-report` |
+| Catalog retrieval | `POST /retail-media/accounts/{accountId}/catalogs` |
+
+Status and output endpoints follow the same pattern:
+- Reports: `GET /retail-media/reports/{reportId}/status` and `GET /retail-media/reports/{reportId}/output`
+- Billing: `GET /retail-media/billing/partner-report/{requestId}/status` and `GET /retail-media/billing/partner-report/{requestId}/output`
+- Catalogs: `GET /retail-media/catalogs/{catalogId}/status` and `GET /retail-media/catalogs/{catalogId}/output`
+
+## Caching and File Availability
+
+| Behavior | Value |
+|---|---|
+| Report file availability after generation | 72 hours |
+| Identical request caching | Submitting the same parameters within the availability window returns the same file — no new job is triggered. |
+
+## Polling
+
+Poll at a reasonable interval — every 5–10 seconds is sufficient for most report types. Terminal statuses are `success` and `failure`. Any other value means the job is still running.
