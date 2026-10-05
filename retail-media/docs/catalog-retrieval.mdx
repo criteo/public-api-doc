@@ -1,6 +1,37 @@
 ---
 title: Catalog Retrieval
-description: How to retrieve catalog data using the asynchronous catalog endpoint.
+description: How to retrieve the product catalog available to a Retail Media account.
 ---
 
-<Info>This guide is coming soon.</Info>
+A catalog is a daily snapshot of all products an account is eligible to promote. Use it to discover available products, validate SKUs, or build product selection workflows.
+
+Both endpoints are asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
+
+<Note>
+  Output is a [newline-delimited JSON stream](https://en.wikipedia.org/wiki/JSON_streaming) (`application/x-json-stream`), not a JSON array. Parse it line by line.
+</Note>
+
+## Brand Catalog
+
+[→ `POST /retail-media/accounts/{accountId}/brand-catalog-export`](/retail-media/reference/create-brand-catalog-export)
+
+All parameters are optional. Omitting all returns the full catalog for the account.
+
+- `brandIdFilter` — restrict to specific brand IDs
+- `retailerIdFilter` — restrict to specific retailer IDs
+- `advertisementChannels` — restrict to products advertisable on **all** listed channels (`RM_ONSITE`, `RM_OFFSITE`, `PERF_MEDIA`). This is an intersection: a product is excluded if it cannot be advertised on any one of the listed channels.
+- `modifiedAfter` — return only products modified after this timestamp. Use for incremental pulls on large catalogs.
+- `includeFields` — opt in to optional fields: `Description`, `ImageUrl`, `GoogleCategory`, `RetailerName`, `Category`, `BrandName`, `ExcludedChannels`.
+
+## Seller Catalog
+
+[→ `POST /retail-media/accounts/{accountId}/seller-catalog-export`](/retail-media/reference/create-seller-catalog-export)
+
+Same shape as the brand catalog. Use `sellers` to restrict to specific seller IDs.
+
+## Output notes
+
+- Product attributes are scoped to the retailer — the same product may have different attributes across retailers.
+- Brand attributes are standardized across retailers.
+- Prices are in the retailer's currency.
+- Catalogs reflect the last daily snapshot — not real-time inventory.
