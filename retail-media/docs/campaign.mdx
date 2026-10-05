@@ -1,14 +1,9 @@
 ---
 title: Campaigns
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/campaign/index.md
-description: This page is an overview of how to get started with Campaigns
+description: A campaign defines a marketing objective and contains one or more line items. Campaign status is derived from the state of its line items.
 ---
 
-
-
-## The Campaign Level
-
-Campaigns are created at the account level and are composed of one or several Line Items.
+A campaign is the organizational unit that groups line items under a shared marketing objective. It does not deliver ads directly — delivery happens at the line item level. Campaign status reflects the aggregate state of its line items.
 
 ```mermaid
 graph TD
@@ -17,68 +12,35 @@ graph TD
     Campaign -->|"contains 1..N"| LineItem["Line Item"]
 ```
 
-***
-
-## Open Auction Campaigns
-
-An Open Auction campaign operates on a first-price auction model using cost-per-click (CPC). Advertisers set their bid for each shopper interaction with their ad, competing in an inventory auction to secure ad placements.
-
-<Info>
-  **Important to know:**
-
-  * A campaign represents a marketing objective and includes line items.
-  * Campaigns can contain line items across multiple brands and retailers.
-  * Campaigns offer optional controls for budgeting and attribution windows.
-  * Budgets can also be managed at the line item level.
-  * Various [reports](/retail-media/docs/report-types) are available to track and measure campaign performance.
-  * Accounts are capped at 100,000 active campaigns.
-  * Currently, only Open Auction campaigns are supported via the API.
-</Info>
-
 [→ API Reference](/retail-media/reference/get-campaigns-by-account-id)
 
-***
-
-## Quick Start
-
-1. **Select products** to promote from your account catalog.
-
-2. **Create a campaign** to define your marketing objective.
-
-3. **Create a line item** within the campaign.
-
-4. **Add products to the line item** to specify what you are promoting.
-
-5. **Assign the campaign** to an account balance to manage spending.
-
-6. **Activate your line item** to start running the campaign!
-
----
-
-## Key Attributes
-
-<Info>Coming soon.</Info>
-
----
+<Info>
+  Only Open Auction campaigns are supported via the API. Open Auction operates on a first-price CPC model.
+</Info>
 
 ## Lifecycle & Statuses
 
-<Info>Coming soon.</Info>
+Campaign status is derived from its line items — there is no independent campaign-level delivery switch.
 
----
+| Status | Meaning |
+|---|---|
+| **Active** | At least one line item is active and delivering. |
+| **Inactive** | All line items are off or inactive. |
+| **Scheduled** | The campaign start date (earliest line item start date) is in the future. A campaign can appear Scheduled even if its line items are still Draft or In Review. |
+| **Ended** | The end date has passed. Delivery stops; this is an outcome, not a formal persistent status. |
+
+Line items have their own richer status model — see [Line Items](/retail-media/docs/line-items).
 
 ## Constraints
 
-<Info>Coming soon.</Info>
-
----
+- Campaigns must be linked to an active balance to spend. Without one, the line item shows a **No Funds** condition.
+- Accounts are capped at **100,000 active campaigns**.
+- Campaign budgets are a spend ceiling, not a delivery guarantee. Inventory availability, targeting, and pacing affect how much of the budget is actually spent.
+- A small budget overshoot can occur operationally — the delivery engine may place ads briefly after a budget cap is reached. Excess impressions and clicks from those placements can still appear in reporting, which may cause reported CPC to temporarily dip.
+- Campaigns can contain line items across multiple brands and retailers.
 
 ## What's next
 
 <Card title="Line Items" icon="arrow-right" href="/retail-media/docs/line-items">
   Create line items to select products and retailers, and configure budgets and bids.
 </Card>
-
-<br />
-
-

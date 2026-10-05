@@ -1,27 +1,9 @@
 ---
 title: Line Items
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/line-items/index.md
+description: A line item is the delivery unit — it targets one retailer, holds promoted products, and controls bids, budgets, and flight dates.
 ---
 
-
-
-## Overview
-
-Each campaign consists of one or more line items. You can only run ads after creating a campaign and at least one line item.
-
-A line item allows you to select the products and the retailer where you'd like to advertise. Each line item can include multiple featured products but is restricted to a single retailer. To advertise across multiple retailers, you must create separate line items for each.
-
-Several settings are available to help you manage your budget and optimize ad delivery effectively.
-
-With the Criteo API, you can:
-
-* Manage your retail media line items
-
-* Configure line items, including budgets, flight dates, bids (for Onsite Sponsored Products), and targeting options (for Preferred Deals)
-
-* Retrieve products from your product catalog to advertise
-
-### Line Item Settings
+A line item is where ad delivery is configured and controlled. Each line item targets exactly one retailer, holds one or more promoted products, and carries its own bid, budget, and flight date settings.
 
 ```mermaid
 graph TD
@@ -31,84 +13,46 @@ graph TD
     LineItem --> PromotedProduct["Promoted Product"]
 ```
 
-* A line item promotes products for ads on a specific retailer.
-
-* Line items include settings such as start and end dates, optional budget controls, and associated retailers where ads are served.
-
-* Campaigns can manage budgets at both the line item and campaign level.
-
-* Several [reports](/retail-media/docs/demand-side-analytics-get-started) are available to measure line item performance.
-
-* Campaigns are limited to 10,000 non-archived line items.
-
-* Line items are automatically archived 90 days after their end date.
-
-### Promoted Products
-
-```mermaid
-graph TD
-    LineItem["Line Item"] -->|"contains 1..N"| PromotedProduct["Promoted Product"]
-    Catalog -->|"source for"| PromotedProduct
-```
-
-* A promoted product defines the product to be advertised on a line item.
-
-* Use your account [catalog](/retail-media/docs/catalogs) to identify eligible products for promotion.
-
-* Each product can have a specific bid amount if desired.
-
-* Line items can include up to 500 promoted products.
-
 [→ API Reference](/retail-media/reference/get-line-items-by-campaign-id)
-
-***
-
-## Getting started
-
-1. **Select products** from your account catalog to promote.
-
-2. **Create a campaign** to define the marketing objective.
-
-3. **Create a line item** within the campaign.
-
-4. **Add products** to the line item to specify which products to promote.
-
-5. **Assign the campaign** to an account balance for budget management.
-
-6. **Activate your line item** to begin running ads!
-
-<Warning>
-  **Access to Preferred Deals capabilities**
-
-  Preferred Deals are currently in beta and available only to our Retailer partners. To access Preferred Deals documentation, please contact your Criteo Account Manager.
-</Warning>
-
----
-
-## Key Attributes
-
-<Info>Coming soon.</Info>
-
----
 
 ## Lifecycle & Statuses
 
-<Info>Coming soon.</Info>
+| Status | Meaning |
+|---|---|
+| **Draft / Incomplete** | Created but required configuration is unfinished or not yet submitted. |
+| **In Review** | Submitted to the retailer for approval. Submission cannot be retracted. If an edit requires re-review, the previously approved version continues delivering while the new version is reviewed. |
+| **Scheduled** | Fully configured and approved, but start date is in the future. Automatically becomes Active on the start date. |
+| **Active** | On and eligible to spend. Active does not guarantee delivery — see Constraints below. |
+| **Paused** | Manually switched off. Switching it back on resumes delivery if all other conditions are met. |
+| **Ended** | End date reached. Delivery stops. |
+| **Budget Hit** | A spend cap was reached — daily (resumes next day) or total (stops permanently). |
+| **No Funds** | No active balance is linked to the campaign. Link a balance to resume. |
+| **Pending** | Delivery temporarily unavailable — for example, an audience is still aggregating. |
+| **Archived** | Inactive for more than 90 days. Cannot be reactivated — duplicate with updated flight dates instead. |
 
----
+### Onsite Display Auction: retailer review layer
+
+Onsite Display Auction line items have an additional property-level approval status:
+
+- **Fully approved** — all reviewed properties approved; serving with full configuration.
+- **Partially approved** — some properties approved, others rejected; serving with approved properties only while rejected ones are corrected.
+- **Not active** — all properties rejected; not serving.
+
+Properties subject to retailer review: creatives, products, manual keywords and categories. Recommended keywords and categories are auto-approved.
 
 ## Constraints
 
-<Info>Coming soon.</Info>
-
----
+- Each line item can only target **one retailer**. To advertise across multiple retailers, create separate line items.
+- Each line item can hold up to **500 promoted products**.
+- Campaigns are limited to **10,000 non-archived line items**.
+- Line items are **automatically archived 90 days after their end date**. Archived line items cannot be reactivated.
+- **Active ≠ delivering.** A line item can be Active but not serving due to: no linked balance, budget cap reached, no eligible inventory, all products inactive, missing targeting, minimum CPM not met, or audience still aggregating.
+- Some fields are locked once a line item is Active — including retailer and start date. Sponsorship line items have additional lock rules (end date, budget).
+- Editing a creative in the creative library propagates automatically — if it triggers re-review, it affects all line items sharing that creative.
+- A paused but retailer-approved line item still counts as booked inventory.
 
 ## What's next
 
 <Card title="Onsite Sponsored Products" icon="arrow-right" href="/retail-media/docs/onsite-sponsored-products">
   Configure keyword targeting and bids for your Onsite Sponsored Products line items.
 </Card>
-
-<br />
-
-

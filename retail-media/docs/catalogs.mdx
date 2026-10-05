@@ -1,50 +1,29 @@
 ---
 title: Catalogs
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/catalogs/index.md
+description: A daily snapshot of all products an account is eligible to promote, scoped per retailer.
 ---
 
-
-
-A catalog is a snapshot of all catalog products from the brands and retailers associated with an account, typically updated once a day. Each account has a single catalog listing all the products that the account is eligible to promote.
-
-<Info>
-  **Important to Know**
-
-  * Catalogs are requested and retrieved through asynchronous endpoints.
-
-  * Product attributes are scoped to the retailer, except for universal identifiers such as GTIN, if available.
-
-  * Brand attributes are standardized across retailers.
-
-  * Catalogs are provided in the currency of the retailer.
-
-  * Catalog outputs are UTF-8 encoded.
-
-  * Catalogs are returned as a [newline-delimited JSON byte stream](https://en.wikipedia.org/wiki/JSON_streaming)
-</Info>
+A catalog is a daily snapshot of all products from the brands and retailers associated with an account. Each account has a single catalog listing all the products it is eligible to promote.
 
 [→ API Reference](/retail-media/reference/create-brand-catalog-export)
 
----
+## How catalogs work
 
-## Key Attributes
-
-<Info>Coming soon.</Info>
-
----
+- Catalogs are updated **once a day**. They reflect the state of the retailer's product feed at the time of the last sync, not real-time inventory.
+- Product attributes (price, availability, category) are **scoped to the retailer** — the same product may have different attributes across retailers.
+- Brand attributes (brand name, brand ID) are **standardized across retailers**.
+- Prices are in the **retailer's currency**.
+- GTIN and other universal identifiers are consistent across retailers where available.
 
 ## Constraints
 
-<Info>Coming soon.</Info>
-
----
+- Catalogs are retrieved via asynchronous endpoints — there is no synchronous catalog API.
+- Output is a **newline-delimited JSON stream** (`application/x-json-stream`), not a JSON array. Parse it line by line.
+- Use `modifiedAfter` to pull only products updated since a given timestamp — recommended for large catalogs to avoid re-downloading the full snapshot daily.
+- The `advertisementChannels` filter is an intersection: a product is only returned if it is eligible on **all** listed channels, not any one of them.
 
 ## What's next
 
 <Card title="Balances" icon="arrow-right" href="/retail-media/docs/balances">
   Fund your campaigns by assigning them to a balance.
 </Card>
-
-<br />
-
-
