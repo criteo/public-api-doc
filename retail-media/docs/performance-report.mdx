@@ -1,280 +1,66 @@
 ---
 title: Performance Report
-description: POST /reports/performance — flexible campaign performance reporting for Retail Media DSP partners.
+description: Flexible campaign performance reporting for Retail Media DSP partners.
 ---
 
-This endpoint enables Retail Media DSP partners to request flexible performance reporting across any level of granularity. Provide a scope filter under `filters` to define the data returned — the output granularity is then determined by the dimensions you include in the request.
+Flexible performance reporting across any level of granularity. Scope the report to an account, campaign, or line item — the output granularity is determined by the dimensions you include.
 
-The endpoint supports asynchronous report generation and provides access to the full set of performance metrics and dimensions, including video, new-to-brand, and keyword data. Submit a request, poll for status, and download the output when ready.
+Supports the full set of performance metrics and dimensions, including video, new-to-brand, and keyword data.
 
-***
+## Prerequisites
 
-## Request
+- Authenticated with scope `retail-media:read`
+- Account, campaign, or line item ID to scope the report
 
-```http
-POST /2026-07/retail-media/reports/performance
-```
+## Steps
 
-### Required fields
+This endpoint is asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
 
-`filters` (with exactly one scope filter), `startDate`, `endDate`, `metrics`, and `dimensions` are all required. Requests with no scope filter (or more than one) will return `400 Bad Request`.
+### 1. Submit
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `filters` | object | Required. Must contain exactly one of the scope filters below. |
-| `filters.accountIds[]` | array of strings | Scope the report to all campaigns under this account. Mutually exclusive with `campaignIds` and `lineItemIds`. |
-| `filters.campaignIds[]` | array of strings | Scope the report to all line items under this campaign. Mutually exclusive with `accountIds` and `lineItemIds`. |
-| `filters.lineItemIds[]` | array of strings | Scope the report to this line item. Mutually exclusive with `accountIds` and `campaignIds`. |
-| `startDate` | string | Start of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
-| `endDate` | string | End of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
-| `metrics` | array of strings | One or more metric names. See [Metrics](#metrics) below. |
-| `dimensions` | array of strings | One or more dimension names. See [Dimensions](#dimensions) below. |
+[→ `POST /retail-media/reports/performance`](/retail-media/reference/generate-async-performance-report)
 
-### Optional fields
+Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`), plus `startDate`, `endDate`, `metrics`, and `dimensions`. All five are required.
+
+**Returns:** `reportId` — used in steps 2 and 3.
+
+<Warning>`filters` must contain exactly one scope filter. Passing multiple or none returns `400 Bad Request`.</Warning>
 
 <Note>
-  Enum-style `filters.*` values are case-insensitive on input (e.g. `Online`, `ONLINE`, and `online` are all accepted).
+  The `winRate` metric is meaningful only for Sponsored Products campaigns. If your account also runs other campaign types, include `campaignType` in `dimensions` (or filter to Sponsored Products) so `winRate` is attributed to the right campaigns.
 </Note>
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `timezone` | string | `UTC` | Timezone for date bucketing. IANA format (e.g. `America/New_York`). |
-| `format` | string | `json-compact` | Output format: `json`, `json-compact`, `json-newline`, or `csv`. |
-| `clickAttributionWindow` | string | — | Attribution window for click-based conversions: `none`, `7D`, `14D`, or `30D`. |
-| `viewAttributionWindow` | string | — | Attribution window for view-based conversions: `none`, `1D`, `7D`, `14D`, or `30D`. |
-| `clickMatchLevel` | string | — | Match level for click attribution. |
-| `viewMatchLevel` | string | — | Match level for view attribution. |
-| `filters.campaignTypes[]` | array of strings | — | Filter by campaign type. Accepted values: `sponsoredProducts`, `onSiteDisplays`. Values constrain eligible campaigns and may affect metric eligibility. |
-| `filters.salesChannels[]` | array of strings | — | Filter by sales channel. Accepted values: `online`, `offline`. |
-| `filters.mediaTypes[]` | array of strings | — | Filter by media type. Accepted values: `unknown`, `video`, `display`. |
-| `filters.buyTypes[]` | array of strings | — | Filter by buy type. Accepted values: `auction`, `preferredDeals`, `sponsorship`. |
-| `filters.budgetModels[]` | array of strings | — | Filter by budget model. Accepted values: `CriteoBudget`, `RetailerBudget`. |
-| `filters.activationPlatforms[]` | array of strings | — | Filter by activation platform. Accepted values: `CommerceMax`, `PrivateMarket`. |
-| `filters.searchTermTypes[]` | array of strings | — | Filter by search term type. Accepted values: `unknown`, `searched`, `entered`. |
-| `filters.searchTermTargetings[]` | array of strings | — | Filter by search term targeting strategy. Accepted values: `unknown`, `automatic`, `manual`. |
-| `filters.targetedKeywordTypes[]` | array of strings | — | Filter by targeted keyword type. Accepted values: `unknown`, `generic`, `branded`, `conquesting`. |
+### 2. Poll for status
 
-### Example request
+[→ `GET /retail-media/reports/{reportId}/status`](/retail-media/reference/get-async-export-status)
 
-```http
-POST /2026-07/retail-media/reports/performance
-Authorization: Bearer {token}
-Content-Type: application/json
+Poll until `status` is `success` or `failure`.
 
-{
-  "data": {
-    "type": "AsyncPerformanceReport",
-    "attributes": {
-      "filters": {
-        "campaignIds": ["301234567890123456"]
-      },
-      "startDate": "2026-05-01",
-      "endDate": "2026-05-07",
-      "timezone": "America/New_York",
-      "metrics": ["impressions", "clicks", "spend", "roas"],
-      "dimensions": ["date", "campaignName", "lineItemName"]
-    }
-  }
-}
-```
+### 3. Download
 
-***
+[→ `GET /retail-media/reports/{reportId}/output`](/retail-media/reference/get-async-export-output)
 
-## Response
+Default output format is `json-compact` — a `columns`/`data` array shape rather than an array of row objects.
 
-A successful request returns `200 OK` with a `reportId`. Use this ID to poll for status and retrieve the output.
+## Constraints
 
-```json
-{
-  "data": {
-    "type": "StatusResponse",
-    "id": "c378da57-960e-4ce4-a297-770f9512af56",
-    "attributes": {
-      "status": "pending",
-      "rowCount": 0,
-      "fileSizeBytes": 0,
-      "md5CheckSum": null,
-      "createdAt": "2026-07-28T13:37:17.000Z",
-      "expiresAt": null,
-      "message": null,
-      "id": "c378da57-960e-4ce4-a297-770f9512af56"
-    }
-  }
-}
-```
+| Limit | Value |
+|---|---|
+| Max date range | 100 days — [Hard Limits](/retail-media/docs/hard-limits) |
+| Data retention | 3 years |
 
-Once the report finishes processing, the status response is fully populated:
+## Metrics & Dimensions
 
-```json
-{
-  "data": {
-    "type": "StatusResponse",
-    "id": "c378da57-960e-4ce4-a297-770f9512af56",
-    "attributes": {
-      "status": "success",
-      "rowCount": 7,
-      "fileSizeBytes": 1125,
-      "md5CheckSum": "cb448a82ac773d48672cdf30c4fae9de",
-      "createdAt": "2026-07-28T13:37:17.000Z",
-      "expiresAt": "2026-08-04T13:37:18.000Z",
-      "message": "rows_count=7",
-      "id": "c378da57-960e-4ce4-a297-770f9512af56"
-    }
-  }
-}
-```
-
-**Poll for status** until `status` is `success` or `failure`:
-
-```http
-GET /2026-07/retail-media/reports/{reportId}/status
-Authorization: Bearer {token}
-```
-
-**Download the output** when status is `success`:
-
-```http
-GET /2026-07/retail-media/reports/{reportId}/output
-Authorization: Bearer {token}
-```
-
-With no `format` specified, the output defaults to `json-compact` — a `columns`/`data` array shape rather than an array of row objects:
-
-```json
-{
-  "columns": ["date", "campaignName", "lineItemName", "impressions", "clicks", "spend", "roas"],
-  "data": [
-    ["2026-05-01", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 2176050, 6461, 15506.65, 22.14],
-    ["2026-05-02", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 1902829, 6396, 15295.60, 20.36],
-    ["2026-05-03", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 2061778, 6782, 16234.17, 21.70],
-    ["2026-05-04", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 1965894, 6287, 15034.17, 24.13],
-    ["2026-05-05", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 1968091, 6261, 12959.99, 30.44],
-    ["2026-05-06", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 2075084, 6648, 14762.81, 25.46],
-    ["2026-05-07", "Spring Sale - Kitchen Search", "Spring Sale - Kitchen Search - Broad", 2089278, 6551, 15127.54, 20.34]
-  ],
-  "rows": 7
-}
-```
-
-***
-
-## Response Codes
-
-For the full list of status and error codes for this endpoint — including `404` (report not found) and `410` (report expired) — see [Response Codes](/retail-media/docs/demand-side-analytics-overview#response-codes) in the Overview.
-
-***
-
-## Metrics
+See [Metrics & Dimensions Reference](/retail-media/docs/metrics-dimensions-reference) for the full list of available fields for this report.
 
 <Note>
-  Fields marked **Retailer catalog only** are available only for retailers that provide a product catalog to Criteo. For retailers without a catalog, they are not populated.
+  **`searchTermTargeting` output values pending confirmation.** Live testing has observed `ManualTargeting`, `AutomaticTargeting`, `Unknown`, and `UnknownTargeting` — two distinct strings for what should be a single "unknown" state. Being checked with engineering.
 </Note>
 
-| Metric | Description |
-|--------|-------------|
-| `impressions` | Counted once per ad creative render on a page. |
-| `clicks` | Counted when an ad creative is clicked. |
-| `spend` | Total media spend. Includes platform fees for Criteo-billed; media only for retailer-billed. |
-| `roas` | Return on ad spend — revenue per unit of currency spent. |
-| `ctr` | Click-through rate: clicks / impressions. |
-| `cpc` | Average cost per click. Sponsored products only. |
-| `cpm` | Average cost per 1,000 impressions. Onsite display only. |
-| `cpo` | Cost per order: spend / attributed orders. |
-| `attributedSales` | Sales revenue directly attributed to the campaign per your attribution settings. |
-| `attributedUnits` | Units sold attributed to the campaign. Excludes assisted units. |
-| `attributedOrders` | Orders attributed per your attribution settings. |
-| `assistedSales` | Revenue from ads that were not the final ad before purchase but contributed to the conversion. |
-| `assistedUnits` | Units sold through assisted conversions. Excluded from `attributedUnits`. |
-| `newToBrandAttributedSales` | Attributed sales from customers who had not purchased from this brand in the prior 12 months. **Retailer catalog only.** |
-| `newToBrandAttributedSalesRate` | `newToBrandAttributedSales` / `attributedSales`. **Retailer catalog only.** |
-| `newToBrandAttributedUnits` | Attributed units from new-to-brand customers. **Retailer catalog only.** |
-| `newToBrandAttributedUnitsRate` | `newToBrandAttributedUnits` / `attributedUnits`. **Retailer catalog only.** |
-| `frequency` | Average number of times the same user saw an impression in the reporting period. |
-| `uniqueVisitors` | Distinct shoppers exposed to an ad in the reporting period. |
-| `winRate` | Bids won divided by bids participated. Based on a 25% sample. Sponsored products only. |
-| `sampledBidsWon` | Bids won across auctions. Based on a 25% sample. |
-| `sampledBidsParticipated` | Bids participated in auctions. Based on a 25% sample. |
-| `videosStarted` | Count of videos that started playing. |
-| `videoStartingRate` | Percentage of printed videos that started playing. |
-| `videoViews` | Videos meeting the MRC viewability standard (50% visible for 2+ continuous seconds). |
-| `videoViewability` | Percentage of video ads considered viewable per MRC standards. |
-| `videoCompletionRate` | Percentage of started videos that played to completion. |
-| `videosPlayedTo25` | Videos that played at least 25% of their duration. |
-| `videosPlayedTo50` | Videos that played at least 50% of their duration. |
-| `videosPlayedTo75` | Videos that played at least 75% of their duration. |
-| `videosPlayedTo100` | Videos that played to 100% of their duration. |
-| `videoPlayingRate` | Average played percentage of a started video. |
-| `videoMuted` | Count of video mute button clicks. |
-| `videoUnmuted` | Count of video unmute button clicks. |
-| `videoPaused` | Count of video pause activations. |
-| `videoResumed` | Count of video resume activations. |
-| `videoImpressions` | Count of video ad impressions. |
-| `videoAvgInteractionRate` | Average interaction rate across video engagements. |
-| `videoCPC` | Average cost per video click. |
-| `videoCPCV` | Cost per completed video view. |
+## Related
 
-<Note>
-  The `winRate` metric is meaningful only for Sponsored Products campaigns. For accounts that also run other campaign types, include `campaignType` in your `dimensions` (or filter to Sponsored Products) so `winRate` can be attributed to the right campaigns.
-</Note>
-
-***
-
-## Dimensions
-
-<Note>
-  Fields marked **Retailer catalog only** are available only for retailers that provide a product catalog to Criteo. For retailers without a catalog, they are not populated.
-</Note>
-
-| Dimension | Description |
-|-----------|-------------|
-| `date` | Date events occurred (`YYYY-MM-DD`). |
-| `hour` | Hour events occurred (0–23). |
-| `accountId` | Account ID. |
-| `accountName` | Account name. |
-| `campaignId` | Campaign ID. |
-| `campaignName` | Campaign name. |
-| `campaignType` | Campaign type: `sponsoredProducts` or `onSiteDisplays`. |
-| `lineItemId` | Line item ID. |
-| `lineItemName` | Line item name. |
-| `retailerId` | Retailer ID where the line item served. |
-| `retailerName` | Retailer name where the line item served. |
-| `brandId` | Brand ID of the advertised product. **Retailer catalog only.** |
-| `brandName` | Brand name of the advertised product. **Retailer catalog only.** |
-| `productCategory` | Category of the advertised product. Standardized categories. **Retailer catalog only.** |
-| `productId` | Advertised product ID. References the Catalogs product ID. |
-| `productName` | Name of the advertised product. |
-| `salesChannel` | Purchase channel: `online` or `offline`. |
-| `mediaType` | Media type of the line item: `unknown`, `video`, or `display`. |
-| `buyType` | Buy type of the line item: `auction`, `preferredDeals`, or `sponsorship`. |
-| `budgetModel` | Budget model of the line item: `CriteoBudget` or `RetailerBudget`. |
-| `activationPlatform` | Activation platform of the line item: `CommerceMax` or `PrivateMarket`. |
-| `environment` | Type of environment: `web`, `mobile`, `app`. |
-| `pageType` | Type of retailer page where the ad rendered: `home`, `search`, `category`, `productDetail`, `merchandising`, `deals`, `checkout`, `confirmation`. |
-| `pageCategory` | Retailer-defined category of the page where ads rendered. **Retailer catalog only.** |
-| `servedCategory` | Category of the page where the ad was served. Retailer-specific taxonomy. **Retailer catalog only.** |
-| `keyword` | Keyword or phrase used on the search page where the ad rendered. |
-| `searchTerm` | Keyword or phrase searched by the shopper on the retailer site. |
-| `searchTermType` | Match type: `Entered`, `Searched`, or `Unknown`. |
-| `searchTermTargeting` | Targeting strategy — see note below. |
-| `creativeId` | Creative ID. Onsite display only. |
-| `creativeName` | Creative name. Onsite display only. |
-| `creativeType` | Creative type: Commerce Display, Commerce Video, Standard Display, Standard Video. Onsite display only. |
-| `creativeTemplateId` | Creative template ID. Onsite display only. |
-| `creativeTemplateName` | Ad format: Flagship, Showcase, SponsoredProducts, Butterfly, BundleBoost, IAB, DisplayPanel, DigitalShelfTalker, CommerceVideoSpotlight, Custom. |
-| `targetedKeywordType` | Conquesting strategy: `Conquesting`, `Branded`, or `Generic`. Returns `null` when not applicable. |
-
-<Note>
-  **`searchTermTargeting` output values pending confirmation.** Live testing has observed `ManualTargeting`, `AutomaticTargeting`, `Unknown`, and `UnknownTargeting` — two distinct strings for what should be a single "unknown" state. This is being checked with engineering before the exact output value list is finalized here.
-</Note>
-
-***
-
-## Data Retention
-
-This endpoint supports a lookback window of up to **3 years** (36 months). A request with a `startDate` older than that returns `400 Bad Request` — `StartDate cannot be older than 3 years.` Separately, a single report may span at most **100 days** between `startDate` and `endDate`, regardless of whether you scope by account, campaign, or line item.
-
-***
-
-## Migrating from legacy endpoints
-
-The full legacy → new mapping (all endpoints and every `reportType` value) is documented in the [Analytics Overview — Migrating from the legacy reporting API](/retail-media/docs/demand-side-analytics-overview#migrating-from-the-legacy-reporting-api).
+- [Async Patterns](/retail-media/docs/async-patterns)
+- [Hard Limits](/retail-media/docs/hard-limits)
+- [Missed Opportunities Report](/retail-media/docs/missed-opportunities-report)
+- [Attributed Transactions Report](/retail-media/docs/attributed-transactions-report)
+- [Migrating from the Legacy Reporting API](/retail-media/docs/dsp-analytics-migration-guide)
