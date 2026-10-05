@@ -1,0 +1,24 @@
+---
+title: Initialize Before Append
+description: Targeting resources that require a PUT to initialize the scope before POST append or DELETE operations will work.
+---
+
+Several targeting sub-resources must be initialized with a `PUT` before you can append or remove items. Sending a `POST` or `DELETE` without prior initialization returns a 4xx error.
+
+## Resources Requiring Initialization
+
+| Resource | Initialize with | Then you can |
+|---|---|---|
+| Audience targeting | `PUT /line-items/{id}/targeting/audiences` | `POST` to append segments, `DELETE` to remove |
+| Store targeting | `PUT /line-items/{id}/targeting/stores` | `POST` to append stores, `DELETE` to remove |
+| Add-to-basket targeting | `PUT /line-items/{id}/targeting/add-to-basket` | `POST` to append, `DELETE` to remove |
+
+## Additional Constraints
+
+| Resource | Constraint |
+|---|---|
+| Add-to-basket targeting | `productIds` and `categoryIds` are mutually exclusive within a single scope — a scope can target one or the other, not both. |
+
+## Diagnosing the Error
+
+If a `POST` or `DELETE` on a targeting sub-resource returns a 4xx, check whether the scope was initialized with `PUT` first. A missing initialization is the most common cause.
