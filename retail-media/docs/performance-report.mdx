@@ -12,17 +12,13 @@ Supports the full set of performance metrics and dimensions, including video, ne
 - Authenticated with scope `retail-media:read`
 - Account, campaign, or line item ID to scope the report
 
-## Steps
+## Submit
 
 This endpoint is asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
-
-### 1. Submit
 
 [→ `POST /retail-media/reports/performance`](/retail-media/reference/generate-async-performance-report)
 
 Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`), plus `startDate`, `endDate`, `metrics`, and `dimensions`. All five are required.
-
-**Returns:** `reportId` — used in steps 2 and 3.
 
 <Warning>`filters` must contain exactly one scope filter. Passing multiple or none returns `400 Bad Request`.</Warning>
 
@@ -30,17 +26,7 @@ Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`)
   The `winRate` metric is meaningful only for Sponsored Products campaigns. If your account also runs other campaign types, include `campaignType` in `dimensions` (or filter to Sponsored Products) so `winRate` is attributed to the right campaigns.
 </Note>
 
-### 2. Poll for status
-
-[→ `GET /retail-media/reports/{reportId}/status`](/retail-media/reference/get-async-export-status)
-
-Poll until `status` is `success` or `failure`.
-
-### 3. Download
-
-[→ `GET /retail-media/reports/{reportId}/output`](/retail-media/reference/get-async-export-output)
-
-Default output format is `json-compact` — a `columns`/`data` array shape rather than an array of row objects.
+Output format defaults to `json-compact` — a `columns`/`data` array shape rather than an array of row objects.
 
 ## Constraints
 

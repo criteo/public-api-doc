@@ -16,35 +16,19 @@ Transaction-level log of every purchase event attributed to your campaigns. Each
 - Authenticated with scope `retail-media:read`
 - Account, campaign, or line item ID to scope the report
 
-## Steps
+## Submit
 
 This endpoint is asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
-
-### 1. Submit
 
 [→ `POST /retail-media/reports/attributed-transactions`](/retail-media/reference/generate-async-attributed-transactions-report)
 
 Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`), plus `startDate`, `endDate`, `dimensions`, and `metrics`. All five are required.
-
-**Returns:** `reportId` — used in steps 2 and 3.
 
 <Warning>`filters` must contain exactly one scope filter. Passing multiple or none returns `400 Bad Request`.</Warning>
 
 <Note>
   `startDate`/`endDate` filter on the **transaction date**, not the ad delivery date. Because attribution spans several days, `advertisedDate` values in the output can fall outside the requested range.
 </Note>
-
-### 2. Poll for status
-
-[→ `GET /retail-media/reports/{reportId}/status`](/retail-media/reference/get-async-export-status)
-
-Poll until `status` is `success` or `failure`.
-
-### 3. Download
-
-[→ `GET /retail-media/reports/{reportId}/output`](/retail-media/reference/get-async-export-output)
-
-Default output format is `json-compact`.
 
 ## Understanding advertised vs. purchased product fields
 
