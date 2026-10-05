@@ -1,6 +1,33 @@
 ---
 title: Retailer
-description: The retailer entity in the Retail Media API and how it scopes campaigns, budgets, and targeting.
+description: A retailer is the publisher providing ad inventory — each line item targets exactly one retailer.
 ---
 
-<Info>This page is coming soon.</Info>
+A retailer is the publisher providing advertising inventory in Commerce Max. Each retailer offers a set of page types (Search, Category, Home, ProductDetail, etc.) that campaigns can target. An account can have access to one or more retailers, managed by Criteo.
+
+The retailer answers **"where is the ad served?"** — distinct from the catalog, which answers **"what product is being promoted?"**
+
+[→ API Reference](/retail-media/reference/search-account-retailers)
+
+## Role in the campaign structure
+
+- **Standard campaigns** can contain line items across multiple retailers, but **each line item targets exactly one retailer**. To advertise on three retailers, create three separate line items.
+- **Retailer Budget campaigns** are retailer-scoped at the campaign level. The campaign's `retailerId`, the balance's `retailerId`, and every line item's `targetRetailerId` must all match.
+
+## Retailer authorization
+
+Before targeting a retailer, confirm access using the retailer search endpoint. The response includes `campaignAvailabilities[].budgetModel` — the values (`retailerBilled`, `capped`, `uncapped`) tell you which campaign types the retailer supports for your account.
+
+Using an unauthorized retailer ID returns `403`. Using a valid retailer ID with an incompatible budget model returns `400`.
+
+## Constraints
+
+- Each line item can target **one retailer only**. Multi-retailer coverage requires separate line items per retailer.
+- For Retailer Budget campaigns, retailer consistency is enforced across balance → campaign → line item. Any mismatch returns `400 RetailerMismatchWithBalance` or `400 RetailerMismatchWithCampaign`.
+- Selecting a product from the catalog does not scope the line item to a retailer — the retailer is set separately on the line item. The same catalog product can be promoted on different retailers via separate line items, provided the product is eligible at each destination.
+
+## What's next
+
+<Card title="Retailer Budgets" icon="arrow-right" href="/retail-media/docs/retailer-budgets">
+  Set up campaigns funded by the retailer rather than the advertiser.
+</Card>
