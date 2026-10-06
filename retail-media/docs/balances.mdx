@@ -13,7 +13,27 @@ A balance is the account-level spend cap that funds campaigns. When the combined
   Learn more about balances in the [CMax Help Center](https://help.retailmedia.criteo.com/kb/guide/en/about-balances-dp2VSA0YeL/Steps/973366).
 </Note>
 
-## Balance Statuses
+## Balance types
+
+| Type | Funded by | Scope | `retailerId` |
+|---|---|---|---|
+| **Criteo balance** | Advertiser (Brand or Seller) | Account-wide | `null` |
+| **Retailer-budgets balance** | Retailer | Retailer-scoped | Set — must match campaign and line item |
+
+Retailer-budgets balances require the retailer to have authorized the account as a buyer. They are not available for Offsite campaigns.
+
+## Who can do what
+
+| Action | Brand / Seller | Retailer |
+|---|---|---|
+| View balances | ✓ | ✓ |
+| Link campaigns to a balance | ✓ | ✓ |
+| Create or edit Criteo balances | — (Billing portal only) | ✓ |
+| Create retailer-budgets balances | — (created by Criteo account team) | — (created by Criteo account team) |
+| Unlink campaigns from a Criteo balance | ✓ | ✓ |
+| Unlink campaigns from a retailer-budgets balance | — | — |
+
+## Balance statuses
 
 | Status | Meaning |
 |---|---|
@@ -21,22 +41,14 @@ A balance is the account-level spend cap that funds campaigns. When the combined
 | **Scheduled** | Funds are available but the start date is in the future. Linked campaigns cannot spend yet. |
 | **Ended** | Funds are exhausted or the end date has passed. Linked campaigns can no longer spend from this balance. |
 
-## Budget models
-
-| Model | Who pays working media | Retailer authorization required |
-|---|---|---|
-| **Criteo Budget** | Criteo invoices working media + fees together | No |
-| **Retailer Budget** | Retailer invoices working media; Criteo invoices fees separately | Yes — account must be an Authorized Buyer for that retailer |
-
-Retailer Budget is not available for Offsite campaigns. Linking a campaign to the wrong budget model causes mapping validation to fail.
-
 ## Constraints
 
 - Campaigns must be assigned to at least one balance to run.
 - A balance can be linked to multiple campaigns, but it is a **shared spend cap** — it does not allocate or distribute funds between campaigns. Campaign and line item budgets are separate controls.
 - A balance can be uncapped. In that case, campaign and line item budgets are the effective spending controls.
 - **If a campaign is linked to multiple active balances**, costs are drawn in this order: (1) balance with the soonest end date; (2) if no end dates, balance with the earliest start date; (3) if start dates are also identical, the balance created first.
-- Balances must match the campaign on **budget model** (Criteo vs. Retailer), **retailer** (for Retailer Budget), and **demand account**. Mismatches cause the mapping request to fail for the entire batch — if one campaign in a bulk request is incompatible, no campaigns are added.
-- In Demand accounts, balances are **read-only** via the API. Only Admins or Business Managers can create or modify them via the Billing portal. Supply and Private Market accounts can create and modify balances via the API with the right permissions.
-- Retailer Budget balances are created by the Criteo account team after retailer authorization — they cannot be created via the API.
-- Use the **supply account ID** when querying balances to discover Retailer Budget balances. API version `2026-01` or later is required — earlier versions hide them.
+- Balances must match the campaign on **type** (Criteo vs. Retailer-budgets), **retailer** (for Retailer-budgets), and **demand account**. A mismatch in a bulk request fails the entire batch.
+- Retailer-budgets balances cannot be unlinked from a campaign — `DELETE /balances/{balanceId}/campaigns` returns `400 RetailerBilledBalanceImmutable`.
+- Use the **supply account ID** when querying balances to discover Retailer-budgets balances. API version `2026-01` or later is required — earlier versions hide them.
+
+For the full Retailer Budgets workflow, see [Retailer Budgets](/retail-media/docs/retailer-budgets).
