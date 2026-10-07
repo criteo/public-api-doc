@@ -1,0 +1,211 @@
+---
+title: UI Label to API Field Mapping
+description: Maps Commerce Max (DSP) and Retailer Analytics (SSP) UI metric and dimension labels to their API field names.
+---
+
+UI labels and API field names often differ in Retail Media reporting. This page is a lookup: find the label you see in the interface, get the field name to use in your API request. Covers Sponsored Products and Onsite Display only — Offsite is excluded.
+
+`—` means no API field exists for that concept on the current endpoint.
+
+---
+
+## DSP (Commerce Max)
+
+### Metrics
+
+#### Performance
+
+| UI Label | API Field | Notes |
+|---|---|---|
+| Impressions (net) | `impressions` | |
+| Clicks (net) | `clicks` | |
+| CTR | `ctr` | |
+| Spend | `spend` | |
+| Avg. CPC | `cpc` | Sponsored Products only |
+| Avg. CPM | `cpm` | Onsite Display only |
+| CPO | `cpo` | |
+| Frequency | `frequency` | |
+| Exposed users | `uniqueVisitors` | |
+| Win Rate | `winRate` | 25% sample; Sponsored Products only |
+| Impressions (gross) | — | UI only |
+| Impressions (invalid) | — | UI only |
+| Clicks (gross) | — | UI only |
+| Clicks (invalid) | — | UI only |
+
+#### Attribution
+
+| UI Label | API Field | Notes |
+|---|---|---|
+| Sales | `attributedSales` | UI shows "Sales"; API prefixes with `attributed` |
+| Units | `attributedUnits` | |
+| ROAS | `roas` | Formula: `attributedSales / spend` |
+| Assisted sales | `assistedSales` | |
+| Assisted units | `assistedUnits` | |
+| New to brand attributed sales | `newToBrandAttributedSales` | Retailer catalog only. UI lookback: 180 days; API lookback: 12 months — confirm with Criteo support if reconciling numbers |
+| Percent of new to brand attributed sales | `newToBrandAttributedSalesRate` | |
+| New to brand attributed units | `newToBrandAttributedUnits` | |
+| Percent of new to brand attributed units | `newToBrandAttributedUnitsRate` | |
+
+#### Missed Opportunities
+
+| UI Label | API Field |
+|---|---|
+| Missed traffic | `missedTraffic` |
+| Est. missed spend | `missedSpend` |
+| Est. missed clicks | `missedClicks` |
+| Est. missed impressions | `missedImpressions` |
+| Est. missed sales | `missedSales` |
+
+#### Video
+
+| UI Label | API Field | Notes |
+|---|---|---|
+| Viewability | `videoViewability` | Video ads only |
+| Video Views | `videoViews` | ≥50% visible for ≥2 continuous seconds (MRC) |
+| Starting Rate | `videoStartingRate` | |
+| Playing Rate | `videoPlayingRate` | |
+| Completion Rate | `videoCompletionRate` | |
+| Played to 25% | `videosPlayedTo25` | |
+| Played to 50% | `videosPlayedTo50` | |
+| Played to 75% | `videosPlayedTo75` | |
+| Played to 100% | `videosPlayedTo100` | |
+| Video Muted | `videoMuted` | |
+| Video Unmuted | `videoUnmuted` | |
+| Video Paused | `videoPaused` | |
+| Video Resumed | `videoResumed` | |
+| Average Interaction Rate | `videoAvgInteractionRate` | |
+| Cost Per View (CPV) | — | No direct API equivalent. The API's `videoCPC` is cost per video *click* — a different denominator. |
+| Cost Per Completed View (CPCV) | `videoCPCV` | |
+
+### Dimensions
+
+| UI Label | API Field | Notes |
+|---|---|---|
+| Account | `accountName` / `accountId` | |
+| Campaign | `campaignName` / `campaignId` | |
+| Line item | `lineItemName` / `lineItemId` | |
+| Campaign type | `campaignType` | Values: `sponsoredProducts`, `onSiteDisplays`. Not the same concept as SSP's `campaignTypeName` — see [Cross-surface differences](#cross-surface-naming-differences) |
+| Buy type | `buyType` | Values: `auction`, `preferredDeals`, `sponsorship` |
+| Budget model | `budgetModel` | Values: `CriteoBudget`, `RetailerBudget` |
+| Activation platform | `activationPlatform` | Values: `CommerceMax`, `PrivateMarket` |
+| Retailer | `retailerName` / `retailerId` | |
+| Product | `productName` / `productId` | |
+| Product brand | `brandName` / `brandId` | |
+| Product category | `productCategory` | |
+| GTIN | — | UI only in the 2026.07 API. Available as `advProductGtin` on older endpoints. |
+| SKU ID | — | UI only in the 2026.07 API |
+| MPN | — | UI only in the 2026.07 API. Available as `advProductMpn` on older endpoints. |
+| Page type | `pageType` | Values: `home`, `search`, `category`, `productDetail`, `merchandising`, `deals`, `checkout`, `confirmation` |
+| Served category | `servedCategory` | |
+| Environment | `environment` | Values: `web`, `mobile`, `app` |
+| Search term | `searchTerm` | |
+| Stemmed search term | — | UI only; no API equivalent |
+| Search term type | `searchTermType` | Values: `Entered`, `Searched`, `Unknown` |
+| Search term targeting | `searchTermTargeting` | |
+| Targeted keyword type | `targetedKeywordType` | Values: `Conquesting`, `Branded`, `Generic` |
+| Creative name | `creativeName` | Onsite Display only |
+| Creative type | `creativeType` | Onsite Display only |
+| Ad format | `creativeTemplateName` | Onsite Display only |
+| Date | `date` | |
+| Hour | `hour` | |
+| Month | — | UI only; no API equivalent |
+
+---
+
+## SSP (Retailer Analytics)
+
+### Metrics
+
+#### Revenue
+
+| UI Label | API Field | Notes |
+|---|---|---|
+| Total Revenue | `revenue` | |
+| Onsite sponsored products revenue | `sponsoredProductRevenue` | |
+| Onsite display revenue | `onsiteDisplayRevenue` | |
+| — | `netRevenue` | API only; not labeled "net revenue" in the UI |
+| — | `workingMedia` | API only; brand's total media spend before fees |
+| Sales | `sales` | SSP UI shows "Sales"; SSP API uses plain `sales` (vs. DSP API's `attributedSales`) |
+| Units | `units` | |
+| ROAS | `roas` | Formula differs by report in the UI — see [Cross-surface differences](#cross-surface-naming-differences) |
+| Avg. CPC | `cpc` | |
+| Impressions | `impressions` | |
+| Clicks | `productClicks` / `placementClicks` | SSP splits by click type; check which your report type uses |
+| CTR | `ctr` | Formula branches by report type; see [SSP metrics reference](/retail-media/docs/metrics-dimensions-reference#ssp-metrics) |
+| Assisted sales | `assistedSales` | |
+| Assisted units | `assistedUnits` | |
+| Unique visitors | `uniqueVisitors` | |
+| Frequency | `frequency` | |
+
+#### Fill Rate
+
+<Note>
+  Fill rate-specific fields (`fillRate`, `availablePlacements`, `unfilledPlacements`, `coverageRate`) are on the `POST /reports/fillrate` and `POST /reports/unfilled-placements` endpoints. See the [→ API Reference](/retail-media/reference/generate-async-fill-rate-report).
+</Note>
+
+| UI Label | API Field |
+|---|---|
+| Placement Impressions | `placementImpressions` |
+| Product Impressions | `productImpressions` |
+
+#### Video
+
+| UI Label | API Field | Notes |
+|---|---|---|
+| Viewability | `videoViewability` | SSP UI label drops `video` prefix; same underlying MRC metric as DSP |
+| Video Views | `videoViews` | |
+| Starting Rate | `videoStartingRate` | |
+| Playing Rate | `videoPlayingRate` | |
+| Completion Rate | `videoCompletionRate` | |
+| Played to 25% / 50% / 75% / 100% | `videosPlayedTo25` / `videosPlayedTo50` / `videosPlayedTo75` / `videosPlayedTo100` | |
+| Video Muted / Unmuted | `videoMuted` / `videoUnmuted` | |
+| Video Paused / Resumed | `videoPaused` / `videoResumed` | |
+
+### Dimensions
+
+| UI Label | API Field | Notes |
+|---|---|---|
+| Advertiser | `accountName` | SSP UI calls it "Advertiser"; the API field is `accountName` |
+| Advertiser type | `advertiserType` | Values: `retailer`, `brand`, `seller` |
+| Campaign | `campaignName` / `campaignId` | |
+| Campaign type | `campaignTypeName` | Values: `Open Auction`, `Preferred Deals`. Tracks pricing model — not the same concept as DSP's `campaignType` (ad format) |
+| Date | `date` | |
+| Page type | `pageTypeName` | Note: DSP uses `pageType`; SSP uses `pageTypeName` |
+| Page category | `pageCategory` | Fill Rate only |
+| Environment | `environment` | Fill Rate only |
+| Retailer | `retailerName` / `retailerId` | |
+| Sold by | `soldBy` | Values: `Direct Sold`, `Indirect Sold`, `Private Market` |
+| Ad server type | — | UI only (Fill Rate filter) |
+| Reason (unfilled) | — | UI only (Fill Rate "Unfilled placements" table) |
+
+---
+
+## Cross-surface naming differences
+
+These fields share a concept across DSP and SSP but use different names in each API.
+
+| Concept | DSP API | SSP API |
+|---|---|---|
+| Attributed sales | `attributedSales` | `sales` |
+| Attributed units | `attributedUnits` | `units` |
+| Attributed orders | `attributedOrders` | `transactions` |
+| Video starts | `videosStarted` | `videoStarts` |
+| Product ID | `productId` | `advProductId` |
+| Product name | `productName` | `advProductName` |
+| Page type | `pageType` | `pageTypeName` |
+
+<Warning>
+  **`campaignType` (DSP) and `campaignTypeName` (SSP) are not the same concept.** DSP's `campaignType` (`sponsoredProducts` / `onSiteDisplays`) identifies the ad format. SSP's `campaignTypeName` (`Open Auction` / `Preferred Deals`) identifies the pricing model. Mapping them 1:1 will produce incorrect data.
+</Warning>
+
+<Warning>
+  **`spend` (DSP) and `workingMedia` (SSP) are not confirmed to be the same value.** Both represent brand-side media cost, but their exact scope differs depending on campaign type and fee structure. Do not assume they reconcile without verifying with Criteo support.
+</Warning>
+
+<Note>
+  **New to brand lookback window:** The Commerce Max UI displays a 180-day lookback for new-to-brand metrics. The API documentation states 12 months. If you are reconciling new-to-brand numbers between the UI and the API, confirm the active window with Criteo support before drawing conclusions.
+</Note>
+
+<Note>
+  **SSP ROAS formula:** The Retailer Analytics UI defines ROAS differently depending on the report — `Sales ÷ Net Revenue` on the Revenue report, and `Sales ÷ Spend` on Onsite Sponsored Products and Onsite Display reports. The SSP API's `roas` field uses a single formula (`sales / openAuctionRevenue` or `sales / preferredDealsRevenue`). Verify which denominator matches your use case before reconciling.
+</Note>
