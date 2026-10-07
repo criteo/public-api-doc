@@ -1,0 +1,59 @@
+---
+title: Demand Side (DSP) Reporting
+description: Performance reporting for brands and agencies — what's available, how scope works, and key constraints.
+---
+
+DSP reporting covers Onsite Sponsored Products and Onsite Display campaigns. All endpoints are asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
+
+<Note>
+  See the full list of endpoints and parameters in the [→ API Reference](/retail-media/reference/generate-async-performance-report)
+</Note>
+
+---
+
+## Available reports
+
+| Report | Endpoint | What it answers |
+|---|---|---|
+| **Performance** | `POST /reports/performance` | Impressions, clicks, spend, attributed sales — across any dimension combination |
+| **Missed Opportunities** | `POST /reports/missed-opportunities` | When and how much budget was capped; estimated missed traffic, clicks, and spend |
+| **Attributed Transactions** | `POST /reports/attributed-transactions` | Row-level log of individual transactions attributed to an ad interaction |
+| **Real-Time Performance** | `POST /reports/sync/real-time-performance` | Same-day performance data with a short delay; synchronous |
+
+---
+
+## Scope model
+
+Every request to `/reports/performance`, `/reports/missed-opportunities`, and `/reports/attributed-transactions` requires exactly one scope filter — you cannot combine them in a single request:
+
+| Filter | Use when you want |
+|---|---|
+| `filters.accountIds[]` | All campaigns across an account |
+| `filters.campaignIds[]` | Specific campaigns |
+| `filters.lineItemIds[]` | Specific line items |
+
+---
+
+## Attribution windows
+
+Attribution windows are set per request, not per campaign. Both windows are required on Performance report calls:
+
+- **Click window:** `none`, `7D`, `14D`, `30D`
+- **View window:** `none`, `1D`, `7D`, `14D`, `30D`
+
+Results reflect only conversions that fall within the requested windows. Changing the windows on the same date range will produce different attributed sales numbers — this is expected behavior, not a data issue.
+
+---
+
+## Constraints
+
+- **Date range:** maximum 100 days between `startDate` and `endDate`.
+- **Campaign scope:** `sponsoredProducts` and `onSiteDisplays` only. Offsite campaigns are not covered by this endpoint.
+- **`metrics` and `dimensions` are required** on every call — there are no preset report shapes.
+- **`timezone`** must be lowercase IANA format (e.g. `America/New_York`). The legacy field `timeZone` (capital Z) is not accepted.
+
+---
+
+## Metrics and dimensions
+
+See [Metrics & Dimensions Reference](/retail-media/docs/metrics-dimensions-reference) for the full field list with availability by report.

@@ -1,0 +1,53 @@
+---
+title: Supply Side (SSP) Reporting
+description: Revenue and fill rate reporting for retailers — what's available, how numbers are calculated, and key constraints.
+---
+
+SSP reporting is for supply accounts (retailers). It shows revenue earned from hosted ads and fill rate across placements. All endpoints are asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
+
+<Note>
+  See the full list of endpoints and parameters in the [→ API Reference](/retail-media/reference/generate-async-revenue-report)
+</Note>
+
+<Warning>
+  Supply account access only. Requires the `retail-media:read` scope on a supply account. Demand account credentials will not return data from these endpoints.
+</Warning>
+
+---
+
+## Available reports
+
+| Report | Endpoint | What it answers |
+|---|---|---|
+| **Revenue** | `POST /reports/revenue` | Total revenue from all advertisers, broken out by advertiser, campaign, date, and format |
+| **Fill Rate** | `POST /reports/fillrate` | What percentage of deliverable placements were filled, by page type, environment, or placement |
+| **Unfilled Placements** | `POST /reports/unfilled-placements` | Why specific placements went unfilled — by reason code, page type, and date |
+
+**Fill Rate vs Unfilled Placements** answer different questions about the same inventory. Use Fill Rate to track aggregate coverage trends; use Unfilled Placements to diagnose specific supply/demand gaps by reason.
+
+---
+
+## How revenue numbers work
+
+The Revenue report shows what brands paid as revenue to the retailer — not what brands see in their DSP reports.
+
+- `revenue` — gross revenue across all formats
+- `netRevenue` — revenue after account fees are applied
+- `workingMedia` — the brand's total ad spend (before Criteo fees); what you see as `spend` on the DSP side
+
+These three fields are not interchangeable. If you're reconciling numbers with an advertiser, `workingMedia` and the DSP's `spend` are the closest match — but confirm with Criteo support, as they are not guaranteed to be identical.
+
+---
+
+## Constraints
+
+- **Supply account only.** Demand accounts cannot call these endpoints.
+- **`metrics` and `dimensions` are required** on every call.
+- **Date range:** check per-endpoint limits in the API reference.
+- Revenue data for Offsite campaigns may be delayed up to 72 hours.
+
+---
+
+## Metrics and dimensions
+
+See [Metrics & Dimensions Reference](/retail-media/docs/metrics-dimensions-reference) for the full field list with availability by report.
