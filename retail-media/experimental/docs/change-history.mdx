@@ -10,6 +10,8 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
   Experimental endpoints may change without prior notice. See the [versioning policy](/criteo-apis/docs/versioning-policy) for details.
 </Info>
 
+{/* REVIEW: Is there a planned stable release for these endpoints? If so, add a Road to Stable section. */}
+
 ## Overview
 
 The change history endpoints return a time-ordered log of configuration changes made to Retail Media objects — campaigns, line items, and related entities. Each entry records what changed, on which entity, when it occurred, and the role of the actor who made the change.
@@ -21,6 +23,8 @@ Two scopes are available: account-level (demand side) and retailer-level (supply
 - **Authentication**: a valid access token. See [Authentication](/retail-media/experimental/docs/authentication).
 - **App permissions**: the `RetailMedia_Campaign_Read` scope must be enabled on your app. See [App Scopes](/retail-media/experimental/docs/app-scopes).
 - **Account or retailer access**: the authenticated app must have access to the requested account or retailer. A `403` is returned for unknown or inaccessible identifiers.
+
+{/* REVIEW: Confirm which account type is required for each endpoint — demand account for /accounts, retailer account for /retailers? Any restriction on network accounts? */}
 
 ## Endpoints
 
@@ -58,6 +62,8 @@ https://api.criteo.com/experimental/retail-media/accounts/{accountId}/change-his
 | `limit` | integer | No | Maximum number of entries per page. Between `1` and `100`. Default: `25`. |
 | `offset` | integer | No | Zero-based starting position. Default: `0`. |
 
+{/* REVIEW: List the accepted values for entity-types (e.g. Campaign, LineItem, Balance?) and event-types (e.g. campaignCreated, lineItemUpdated?). These are not published in the OAS spec. */}
+
 ### Response Attributes
 
 All attributes below are nested under each `data[]` item's `attributes` object.
@@ -74,6 +80,10 @@ All attributes below are nested under each `data[]` item's `attributes` object.
 | `changes[].field` | string | Name of the field that changed. |
 | `changes[].previousValue` | string or null | Value before the change. Null for newly created fields. |
 | `changes[].newValue` | string or null | Value after the change. Null for deleted fields. |
+
+{/* REVIEW: Confirm the full enum for eventType and entity.type. The "e.g." values above are inferred from the reference page — replace with the actual lists once confirmed. */}
+
+{/* REVIEW: Are changes[].field values documented anywhere? If so, link to or list them. */}
 
 Pagination metadata is returned in the `meta` object:
 
@@ -127,6 +137,8 @@ curl -L -X GET 'https://api.criteo.com/experimental/retail-media/accounts/{accou
   "warnings": []
 }
 ```
+
+{/* REVIEW: Confirm the sample response field names and values match what the service actually returns. isPaused, type: LineItem, and type: ChangeHistoryEntry are inferred. */}
 
 ---
 
@@ -206,8 +218,12 @@ curl -L -X GET 'https://api.criteo.com/experimental/retail-media/retailers/{reta
 - The order of entries with identical `occurredAt` timestamps is not defined.
 - `entity-types` and `event-types` enum values are not yet published in the spec. Unknown values are accepted but match no entries.
 
+{/* REVIEW: Are there additional limitations to document — e.g. maximum lookback period, rate limits, entities not yet covered? */}
+
 ## Error Codes
 
 | Code | HTTP Status | When It Occurs |
 | --- | --- | --- |
 | `Forbidden` | `403` | The account or retailer does not exist or the caller does not have access to it. |
+
+{/* REVIEW: Are there additional error codes to document (e.g. 400 for invalid date range or limit out of bounds)? */}
