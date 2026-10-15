@@ -1,0 +1,131 @@
+---
+title: Publishing Experimental API Docs
+description: How to write and submit a guide for a new Retail Media experimental endpoint.
+---
+
+{/*
+  Contributor guide — not published in the nav.
+  Direct link: /retail-media/experimental/docs/contributing-experimental-docs
+*/}
+
+Two paths are available depending on your GitHub access:
+
+- **Push to the repo yourself** — follow steps 1–7 below. Open an issue on [`criteo/public-api-doc`](https://github.com/criteo/public-api-doc) to request access if needed.
+- **Send the filled template to the Documentation Engineer (GTM)** — skip to [Using the template](#using-the-template), fill it in, and share it. They will push and open the PR.
+
+After the guide is submitted, the Documentation Engineer (GTM) monitors the OpenAPI spec and publishes the guide when the endpoint appears in the public spec. They verify the content against the spec, make corrections if needed, request your review, and merge. The page goes live within a few minutes of merge. Changes in the OpenAPI spec reflect in the API Reference section within 24 hours. The Documentation Engineer (GTM) generates a changelog entry announcing the new guide.
+
+---
+
+## Using the Template
+
+The repository includes a ready-to-use template at `retail-media/experimental/docs/_guide-template.mdx`.
+
+Copy it, rename the copy (drop the leading underscore), and fill in the `[placeholders]`. Delete any sections marked `[DELETE IF NOT APPLICABLE]` and include the ones marked `[OPTIONAL]` only when you have content for them.
+
+The template covers:
+
+- **Prerequisites** — authentication, required app scopes, account type, resource dependencies
+- **Road to Stable** *(optional)* — whether and when the endpoint is expected to be promoted
+- **Quick Start** *(optional)* — step-by-step test flow from first call to verification and cleanup
+- **Endpoints** — full CRUD sections with `EndpointBadge`, path parameters, request/response attribute tables, sample curl, sample JSON
+- **Known Limitations** *(if applicable)* — what is intentionally incomplete or may change
+- **Error Codes** *(if applicable)*
+
+Label each capability at the top of its section:
+
+- **Available** — ready for partners to use.
+- **Coming soon** — documented before availability. May be merged, but the status must be clear.
+
+---
+
+## Step-by-Step for Repo Contributors
+
+### 1. Get Repository Access
+
+You need access to [`criteo/public-api-doc`](https://github.com/criteo/public-api-doc). If you do not have access, open an issue on the repository to request it.
+
+### 2. Create a Branch
+
+Clone the repository if needed:
+
+```bash
+git clone https://github.com/criteo/public-api-doc.git
+cd public-api-doc
+```
+
+Create a branch from the latest `main`:
+
+```bash
+git switch main
+git pull --ff-only origin main
+git switch -c <descriptive-branch-name>
+```
+
+### 3. Write the Guide
+
+- Copy `retail-media/experimental/docs/_guide-template.mdx`, rename it, and fill it in.
+- Add the new filename to the `rm-experimental` navigation group in `docs.json`.
+- If the guide replaces an existing experimental page, remove the legacy page and its nav entry in the same pull request.
+
+Follow nearby experimental pages for endpoint badge usage, table format, terminology, and links.
+
+### 4. Verify the Content
+
+- Check field names, serialized names, examples, defaults, validation rules, and error codes against the service implementation and generated OpenAPI spec.
+- Distinguish fields present in the contract from behavior the service currently supports — schema presence does not establish operational support.
+- Use fictional identifiers. Do not include credentials, customer data, or internal-only hosts.
+- Check that all links and navigation entries resolve correctly.
+
+### 5. Open a Pull Request
+
+Push the branch and open a pull request against `main` using this description:
+
+```markdown
+## Summary
+
+- Describe the documentation change.
+- Note any navigation or legacy-page changes.
+
+## Availability
+
+- Available: list capabilities ready for partners.
+- Coming soon: list capabilities documented ahead of availability.
+
+## Validation
+
+- Confirm the content was checked against the implementation and generated OpenAPI.
+- Note what was verified in the Mintlify preview.
+```
+
+### 6. Review the Preview
+
+Mintlify posts a comment on the pull request with a **View Preview** link. Verify that:
+
+- Pages render and navigation works.
+- Links resolve correctly.
+- Examples are readable and use safe fictional data.
+- Availability labels are clear.
+
+Resolve any automated check failures introduced by your change.
+
+### 7. Request Review and Publish
+
+1. Request the Documentation Engineer (GTM) as a GitHub reviewer.
+2. Address comments and recheck the preview.
+3. Merge after approval.
+4. Verify the change is live on [developers.criteo.com](https://developers.criteo.com).
+
+---
+
+## Checklist
+
+- [ ] Pages and navigation are in the Experimental locations.
+- [ ] Each capability is labeled **Available** or **Coming soon**.
+- [ ] Contract details and current service support are accurate and clearly distinguished.
+- [ ] Examples use safe fictional data (no credentials, customer data, or internal hosts).
+- [ ] The capability is explained before endpoint details.
+- [ ] Replaced legacy pages and navigation are removed in the same PR.
+- [ ] The Mintlify preview, navigation, and changed links work.
+- [ ] The pull request describes the change, availability, and validation.
+- [ ] The Documentation Engineer (GTM) is requested as a reviewer.
