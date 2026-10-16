@@ -1,0 +1,229 @@
+---
+title: Change History
+description: Retrieve a paginated log of configuration changes to campaigns and line items within an account or retailer.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+<Info>
+  This endpoint is available in the **Experimental** version of the Retail Media API only.
+  Experimental endpoints may change without prior notice. See the [versioning policy](/criteo-apis/docs/versioning-policy) for details.
+</Info>
+
+{/* REVIEW: Is there a planned stable release for these endpoints? If so, add a Road to Stable section. */}
+
+## Overview
+
+The change history endpoints return a time-ordered log of configuration changes made to Retail Media objects — campaigns, line items, and related entities. Each entry records what changed, on which entity, when it occurred, and the role of the actor who made the change.
+
+Two scopes are available: account-level (demand side) and retailer-level (supply side). Changes are returned in descending order by time. Only changes the caller has access to are returned; inaccessible entries are silently omitted.
+
+## Prerequisites
+
+- **Authentication**: a valid access token. See [Authentication](/retail-media/experimental/docs/authentication).
+- **App permissions**: the `RetailMedia_Campaign_Read` scope must be enabled on your app. See [App Scopes](/retail-media/experimental/docs/app-scopes).
+- **Account or retailer access**: the authenticated app must have access to the requested account or retailer. A `403` is returned for unknown or inaccessible identifiers.
+
+{/* REVIEW: Confirm which account type is required for each endpoint — demand account for /accounts, retailer account for /retailers? Any restriction on network accounts? */}
+
+## Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/accounts/{accountId}/change-history-entries` | List configuration changes within an account. |
+| `GET` | `/retailers/{retailerId}/change-history-entries` | List configuration changes within a retailer. |
+
+---
+
+## Get Change History Entries
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{accountId}/change-history-entries
+```
+</EndpointBadge>
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `accountId` | string | Yes | Identifier of the advertiser account whose change history is requested. |
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `campaign-ids` | array[string] | No | Filter to changes on these campaigns. Campaigns the caller cannot access are silently excluded. |
+| `line-item-ids` | array[string] | No | Filter to changes on these line items. Line items the caller cannot access are silently excluded. |
+| `entity-types` | array[string] | No | Filter to these entity types. Unknown values match no entries and do not error. |
+| `event-types` | array[string] | No | Filter to these event types. Unknown values match no entries and do not error. |
+| `start-time` | string (ISO 8601) | No | Inclusive lower bound on change timestamp. Defaults to 7 days before the request time. |
+| `end-time` | string (ISO 8601) | No | Inclusive upper bound on change timestamp. Defaults to the request time. |
+| `limit` | integer | No | Maximum number of entries per page. Between `1` and `100`. Default: `25`. |
+| `offset` | integer | No | Zero-based starting position. Default: `0`. |
+
+{/* REVIEW: List the accepted values for entity-types (e.g. Campaign, LineItem, Balance?) and event-types (e.g. campaignCreated, lineItemUpdated?). These are not published in the OAS spec. */}
+
+### Response Attributes
+
+All attributes below are nested under each `data[]` item's `attributes` object.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `occurredAt` | string (ISO 8601) | When the change was recorded. Results are sorted descending by this field. |
+| `eventType` | string | Type of event that produced the change (e.g. creation, update). |
+| `actorRole` | string | Role of the actor who made the change. One of: `unknown`, `internal`, `external`, `api`, `automatedTask`. User identifiers are not returned. |
+| `entity.id` | string | Identifier of the changed entity. |
+| `entity.type` | string | Type of the changed entity (e.g. `Campaign`, `LineItem`). |
+| `entity.campaignId` | string or null | Identifier of the parent campaign, when applicable. |
+| `changes[]` | array | List of field-level changes. |
+| `changes[].field` | string | Name of the field that changed. |
+| `changes[].previousValue` | string or null | Value before the change. Null for newly created fields. |
+| `changes[].newValue` | string or null | Value after the change. Null for deleted fields. |
+
+{/* REVIEW: Confirm the full enum for eventType and entity.type. The "e.g." values above are inferred from the reference page — replace with the actual lists once confirmed. */}
+
+{/* REVIEW: Are changes[].field values documented anywhere? If so, link to or list them. */}
+
+Pagination metadata is returned in the `meta` object:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `offset` | integer | Starting position echoed from the request. |
+| `limit` | integer | Page size echoed from the request. |
+| `count` | integer | Number of entries returned on the current page. |
+
+**Sample Request**
+
+```bash
+curl -L -X GET 'https://api.criteo.com/experimental/retail-media/accounts/{accountId}/change-history-entries?start-time=2026-10-01T00:00:00Z&end-time=2026-10-15T00:00:00Z&limit=25&offset=0' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response** — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "abc123",
+      "type": "ChangeHistoryEntry",
+      "attributes": {
+        "occurredAt": "2026-10-14T09:32:11Z",
+        "eventType": "Update",
+        "actorRole": "api",
+        "entity": {
+          "id": "112233445566778899",
+          "type": "LineItem",
+          "campaignId": "987654321"
+        },
+        "changes": [
+          {
+            "field": "isPaused",
+            "previousValue": "false",
+            "newValue": "true"
+          }
+        ]
+      }
+    }
+  ],
+  "meta": {
+    "offset": 0,
+    "limit": 25,
+    "count": 1
+  },
+  "errors": [],
+  "warnings": []
+}
+```
+
+{/* REVIEW: Confirm the sample response field names and values match what the service actually returns. isPaused, type: LineItem, and type: ChangeHistoryEntry are inferred. */}
+
+---
+
+## Get Change History Entries (Retailer)
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/retailers/{retailerId}/change-history-entries
+```
+</EndpointBadge>
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `retailerId` | string | Yes | Identifier of the retailer whose change history is requested. |
+
+### Query Parameters
+
+Same as the [account endpoint](#get-change-history-entries) above.
+
+### Response Attributes
+
+Same shape as the [account endpoint](#get-change-history-entries) above.
+
+**Sample Request**
+
+```bash
+curl -L -X GET 'https://api.criteo.com/experimental/retail-media/retailers/{retailerId}/change-history-entries?start-time=2026-10-01T00:00:00Z&end-time=2026-10-15T00:00:00Z&limit=25&offset=0' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response** — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "def456",
+      "type": "ChangeHistoryEntry",
+      "attributes": {
+        "occurredAt": "2026-10-13T14:05:22Z",
+        "eventType": "Update",
+        "actorRole": "internal",
+        "entity": {
+          "id": "556677889900112233",
+          "type": "Campaign",
+          "campaignId": null
+        },
+        "changes": [
+          {
+            "field": "status",
+            "previousValue": "active",
+            "newValue": "paused"
+          }
+        ]
+      }
+    }
+  ],
+  "meta": {
+    "offset": 0,
+    "limit": 25,
+    "count": 1
+  },
+  "errors": [],
+  "warnings": []
+}
+```
+
+---
+
+## Known Limitations
+
+- The default time window is the last 7 days. There is no documented maximum lookback period.
+- User identifiers are not returned — only the actor's role (`api`, `internal`, etc.).
+- The order of entries with identical `occurredAt` timestamps is not defined.
+- `entity-types` and `event-types` enum values are not yet published in the spec. Unknown values are accepted but match no entries.
+
+{/* REVIEW: Are there additional limitations to document — e.g. maximum lookback period, rate limits, entities not yet covered? */}
+
+## Error Codes
+
+| Code | HTTP Status | When It Occurs |
+| --- | --- | --- |
+| `Forbidden` | `403` | The account or retailer does not exist or the caller does not have access to it. |
+
+{/* REVIEW: Are there additional error codes to document (e.g. 400 for invalid date range or limit out of bounds)? */}
