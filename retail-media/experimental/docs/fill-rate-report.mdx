@@ -198,7 +198,7 @@ The report generation uses an asynchronous endpoint that is used to receive the 
     </p>
     <p>
      Accepted values: refer to
-     <a href="/retail-media/docs/metrics-and-dimensions-ssp">
+     <a href="/retail-media/experimental/docs/metrics-dimensions-fill-rate-report">
       Metrics and Dimensions
      </a>
      for the complete list of supported dimensions
@@ -228,7 +228,7 @@ The report generation uses an asynchronous endpoint that is used to receive the 
     </p>
     <p>
      Accepted values: refer to
-     <a href="/retail-media/docs/metrics-and-dimensions-ssp">
+     <a href="/retail-media/experimental/docs/metrics-dimensions-fill-rate-report">
       Metrics and Dimensions
      </a>
      for the complete list of supported metrics
@@ -510,7 +510,9 @@ curl -X 'POST' \
           "deliverablePlacements",
           "placementsWithCandidates",
           "coveredPlacements",
-          "coverageRate"
+          "coverageRate",
+          "coveredSlots",
+          "deliverableSlotsInferred"
                 ],
       "adServerType": "all",
       "format": "csv",
@@ -547,6 +549,88 @@ curl -X 'POST' \
 
 ***
 
+## Slot-level metrics
+
+Placement-level fill rate counts a placement as filled if at least one ad rendered. For Sponsored Products, where one placement can host a grid or carousel of several slots, a placement configured for 10 slots with only 1 painted still counts as filled. The following metrics expose slot-level inputs so you can measure how many slots are actually filled.
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Metric
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      coveredSlots
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Sum of the ads returned across all deliverable placements.
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      deliverableSlotsInferred
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Inferred number of paintable slots across all deliverable placements.
+    </p>
+    <p>
+     <b>
+      Formula
+     </b>
+     :
+     <code>
+      deliverablePlacements
+     </code>
+     x
+     <code>
+      inferredMaxPaintableAds
+     </code>
+    </p>
+    <p>
+     <code>
+      inferredMaxPaintableAds
+     </code>
+     is the inferred number of slots in a placement: the maximum product impressions observed for that placement over a rolling 24-hour window. It is modeled from observed impressions, not a directly logged signal. The value returned is the overall total across deliverable placements, not a per-placement value.
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+### Calculating slot fill rate and slot coverage rate
+
+The API does not return a slot fill rate or slot coverage rate. Calculate them from the raw metrics:
+
+* Slot fill rate against inferred slots: `coveredSlots` / `deliverableSlotsInferred`
+
+<Warning>
+  `deliverableSlotsInferred` is a modeled approximation, not an exact count of slots on the page. Do not treat it as an authoritative count when making supply-expansion decisions. New slot metrics are available from the reporting start date only; there is no historical backfill.
+</Warning>
+
+***
+
 ## Retrieve Unfilled Reasons
 
 ```http
@@ -558,7 +642,7 @@ https://api.criteo.com/experimental/retail-media/reports/unfilled-placements
 <Info>
   **List of Unfilled Reasons**
 
-  Check the full list of supported unfilled reasons [here](/retail-media/docs/metrics-and-dimensions-ssp#fill-rate-unfilled-reasons)
+  Check the full list of supported unfilled reasons [here](/retail-media/experimental/docs/metrics-dimensions-fill-rate-report#fill-rate-unfilled-reasons)
 </Info>
 
 ```bash expandable
@@ -748,7 +832,9 @@ Fill Rate and Coverage Rate
     "deliverablePlacements": 0,
     "placementsWithCandidates": 0,
     "coveredPlacements": 0,
-    "coverageRate": null
+    "coverageRate": null,
+    "coveredSlots": 0,
+    "deliverableSlotsInferred": 0
   },
   {
     "date": "2025-09-08",
@@ -785,7 +871,9 @@ Fill Rate and Coverage Rate
     "deliverablePlacements": 43,
     "placementsWithCandidates": 179,
     "coveredPlacements": 0,
-    "coverageRate": 0
+    "coverageRate": 0,
+    "coveredSlots": 0,
+    "deliverableSlotsInferred": 430
   }
 ]
 ```
