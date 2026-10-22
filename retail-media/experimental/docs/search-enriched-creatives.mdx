@@ -1,0 +1,182 @@
+---
+title: Search Enriched Creatives
+description: Search an account's creatives with stable creative IDs and retailer-specific product collection constraints.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Overview
+
+Use enriched creative search to retrieve an account's creatives together with the product collection constraints of each creative's template. This helps you prepare product assignments and check how many collections and products a template supports without a separate template lookup for every creative.
+
+Each result contains the latest creative version, identified by a creative ID that stays the same across edits. Template constraints include retailer-specific overrides.
+
+<Info>
+  **Availability: Coming soon**
+
+  This endpoint is documented ahead of confirmed availability in the Experimental Retail Media API.
+  Experimental endpoints may change without prior notice. See the [versioning policy](/criteo-apis/docs/versioning-policy).
+</Info>
+
+The endpoint requires the `RetailMedia_Campaign_Read` scope and permission to view creatives in the account. See [Authentication](/retail-media/experimental/docs/authentication) and [App Scopes](/retail-media/experimental/docs/app-scopes).
+
+## Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/accounts/{account-id}/creatives/search-enriched` | Search an account's creatives with template product collection constraints. |
+
+---
+
+## Search Enriched Creatives
+
+Returns the latest non-archived version of each matching creative, with optional filters on creative, retailer, template, and page type.
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{account-id}/creatives/search-enriched
+```
+</EndpointBadge>
+
+### Path Parameters
+
+| Parameter | Description |
+| --- | --- |
+| `account-id` | External ID of the account whose creatives to search. |
+
+### Query Parameters
+
+| Parameter | Required | Type | Description |
+| --- | --- | --- | --- |
+| `offset` | No | integer | Number of matching results to skip. Minimum `0`; default `0`. |
+| `limit` | No | integer | Maximum results in a page. From `1` to `500`; default `50`. |
+
+### Request Attributes
+
+All attributes below are nested under `data.attributes`. The resource `type` is `CreativeSearchEnrichedRequest`. All filters are optional; send `attributes: {}` to search without filters.
+
+| Attribute | Required | Type | Description |
+| --- | --- | --- | --- |
+| `creativeIds` | No | array of strings | Creative IDs to search for. Maximum 500 IDs, each a numeric string within the signed 64-bit integer range. |
+| `creativeName` | No | string | Filter by a substring of the creative name. |
+| `pageTypes` | No | array of strings | Page types to filter on. Supply `retailerIds` when filtering by page type; placement matching depends on the retailer's template configuration. See values below. |
+| `creativeTypes` | No | array of strings | `CommerceDisplay`, `CommerceVideo`, `StandardVideo`, or `StandardDisplay`. |
+| `retailerIds` | No | array of strings | Retailer IDs to filter on. Maximum 100 IDs, each a numeric string within the signed 32-bit integer range. |
+| `templateIds` | No | array of strings | Template IDs to filter on. Maximum 100 IDs, each a numeric string within the signed 32-bit integer range. |
+
+The `pageTypes` contract accepts `Unknown`, `Search`, `Home`, `Browse`, `Checkout`, `Category`, `ProductDetail`, `Confirmation`, `Merchandising`, `Deals`, `Favorites`, `SearchBar`, and `CategoryMenu`. Actual matches depend on configured placements.
+
+**Sample Request**
+
+```json
+{
+  "data": {
+    "type": "CreativeSearchEnrichedRequest",
+    "attributes": {
+      "retailerIds": ["54321"],
+      "creativeTypes": ["CommerceDisplay"],
+      "templateIds": ["305"]
+    }
+  }
+}
+```
+
+### Response Attributes
+
+Results are returned as a paginated array under `data`. Each result has a stable creative `id`, resource `type` of `CreativeSearchEnrichedResponse`, and the following read-only attributes in `data[].attributes`.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `name` | string or null | Creative name. |
+| `status` | string | The contract includes `Ready`, `In Use`, and `Archived`. This search excludes archived creatives. |
+| `retailerId` | string or null | Retailer ID. |
+| `modifiedAt` | date-time | Last modification time. |
+| `createdAt` | date-time | Creative creation time. |
+| `creativeType` | string | `CommerceDisplay`, `CommerceVideo`, `StandardVideo`, `StandardDisplay`, or `Unknown`. |
+| `pageType` | string[] or null | Page types associated with the creative's template placements. Note the singular response attribute name, `pageType`. |
+| `preview` | string or null | Creative preview URL. |
+| `templateId` | string or null | Template used by the creative. |
+
+#### Product Collection Constraints
+
+These values describe what the template allows, with retailer-specific overrides applied. They do not report how many products are currently assigned to a creative or line item.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `productCollectionsMin` | integer | Minimum number of product collections required. |
+| `productCollectionsMax` | integer or null | Maximum number of product collections allowed. `null` means no limit. |
+| `productsPerCollectionMin` | integer | Minimum number of products required per collection. |
+| `productsPerCollectionMax` | integer or null | Maximum number of products allowed per collection. `null` means no limit. |
+| `displayableProductsMax` | integer or null | Maximum number of displayable products. `null` means no limit. |
+| `productCollectionsHaveText` | boolean | Whether the template's product collections carry text. |
+| `productCollectionsHaveImages` | boolean | Whether the template's product collections carry images. |
+
+For example, `productCollectionsMin: 0` and `productCollectionsMax: 0` mean that the template has no product collections. A minimum of `0` with a positive or unlimited maximum allows optional collections. A positive minimum requires at least that many collections; `productsPerCollectionMin` specifies the minimum number of products in each collection.
+
+The response also includes a `metadata` object with pagination fields:
+
+| Field | Description |
+| --- | --- |
+| `count` | Total number of creatives matching the search. |
+| `limit` | Page size used for this response. |
+| `offset` | Offset used for this response. |
+
+For the next page, keep the same filters and increase `offset` by `limit`. A search with no matches returns `200 OK`, an empty `data` array, and `metadata.count: 0`.
+
+**Sample Response** — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "112233445566778899",
+      "type": "CreativeSearchEnrichedResponse",
+      "attributes": {
+        "name": "Summer campaign banner",
+        "status": "Ready",
+        "retailerId": "54321",
+        "modifiedAt": "2026-10-20T09:41:00Z",
+        "createdAt": "2026-09-02T14:03:00Z",
+        "creativeType": "CommerceDisplay",
+        "pageType": ["Search", "Browse"],
+        "preview": "https://example.com/creative-preview.png",
+        "templateId": "305",
+        "productCollectionsMin": 1,
+        "productCollectionsMax": 5,
+        "productsPerCollectionMin": 1,
+        "productsPerCollectionMax": 20,
+        "displayableProductsMax": 10,
+        "productCollectionsHaveText": true,
+        "productCollectionsHaveImages": false
+      }
+    }
+  ],
+  "metadata": {
+    "count": 1,
+    "offset": 0,
+    "limit": 50
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+### Stable Creative IDs
+
+The `id` stays the same across creative edits. Store this ID for creative retrieval and update operations. It can differ from the latest-version ID returned by [Search for Creatives](/retail-media/experimental/docs/search-for-creatives).
+
+This endpoint uses the `CreativeSearchEnrichedRequest` and `CreativeSearchEnrichedResponse` resource types. It adds the seven template constraint attributes, omits `brandId` and `lineItems` from the response, and has no `brandIds` request filter.
+
+### Errors and Warnings
+
+Invalid IDs within a filter produce warnings rather than failing the request. The service drops invalid IDs and searches using the valid IDs that remain. If any supplied ID filter contains only invalid IDs, the response is `200 OK` with an empty `data` array, `metadata.count: 0`, and warnings. This does not broaden the search to all creatives.
+
+| HTTP status | Code | Description |
+| --- | --- | --- |
+| `200` | `warning-invalid-creative-id` | One or more `creativeIds` entries are not valid signed 64-bit numeric strings. |
+| `200` | `warning-invalid-retailer-id` | One or more `retailerIds` entries are not valid signed 32-bit numeric strings. |
+| `200` | `warning-invalid-template-id` | One or more `templateIds` entries are not valid signed 32-bit numeric strings. |
+| `400` | `model-validation-error` | Invalid JSON or model values, unsupported enum values, too many IDs in a filter, negative `offset`, or `limit` outside `1` to `500`. |
+| `401` | — | Access token is missing or invalid. |
+| `403` | — | The caller lacks permission to view creatives in the account. |
+| `500` | — | The service could not complete the request. |
