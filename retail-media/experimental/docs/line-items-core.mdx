@@ -97,17 +97,7 @@ curl -L -X GET \
           "endDate": "2026-09-30T23:59:59Z"
         },
         "serveToOptOutUser": false,
-        "conquestingSettings": {
-          "conquestingAdStrategyEnabled": false,
-          "neutralAdStrategyEnabled": true,
-          "defensiveAdStrategyEnabled": true,
-          "isAdStrategyLocked": false
-        },
         "onsiteDisplayDetails": {
-          "frequencyCapping": {
-            "cappingCount": 5,
-            "cappingDurationType": "Day"
-          },
           "auctionDetails": {
             "isDynamicMatch": true
           }
@@ -230,14 +220,11 @@ https://api.criteo.com/experimental/retail-media/line-items
 | `name` | Yes | Display name of the line item. It must be unique within the campaign and contain 2–255 characters after trimming. |
 | `retailerId` | Yes | External ID of the retailer associated with the line item. If the campaign specifies a retailer, the line-item retailer must match it. |
 | `campaignId` | Yes | External ID of the existing campaign that owns the line item and determines which type-specific details object is accepted. |
-| `isPaused` | No | Whether the line item is paused. Defaults to `false`. |
 | `serveToOptOutUser` | No | Whether ads can serve to users who opted out of personalization. |
-| `onsiteDisplayDetails.frequencyCapping` | No | Limits how often one user may be shown this Onsite Display line item's ads. Omit it to leave the line item uncapped. |
-| `onsiteDisplayDetails.frequencyCapping.cappingCount` | Required when `frequencyCapping` is supplied | Maximum number of times the ads may be shown within the selected duration. Must be from `1` to `20`. |
-| `onsiteDisplayDetails.frequencyCapping.cappingDurationType` | Required when `frequencyCapping` is supplied | Period the count applies to: `Session` or `Day`. |
+| `onsiteDisplayDetails.isPaused` | No | Whether the Onsite Display line item is paused. Defaults to `false`. |
 | `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | No | Initial Onsite Display Auction-specific setting. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
 
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, `effectiveFlightDates`, or `conquestingSettings` inside `attributes`.
+The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
 
 **Sample Request**
 
@@ -247,15 +234,11 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
     "type": "line-item",
     "attributes": {
       "name": "Back-to-school display",
-      "isPaused": false,
       "retailerId": "12345",
       "campaignId": "987654321",
       "serveToOptOutUser": false,
       "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Day"
-        },
+        "isPaused": false,
         "auctionDetails": {
           "isDynamicMatch": true
         }
@@ -294,17 +277,7 @@ All attributes below are nested under `data.attributes`. Alongside the attribute
         "endDate": "2026-09-30T23:59:59Z"
       },
       "serveToOptOutUser": false,
-      "conquestingSettings": {
-        "conquestingAdStrategyEnabled": false,
-        "neutralAdStrategyEnabled": true,
-        "defensiveAdStrategyEnabled": true,
-        "isAdStrategyLocked": false
-      },
       "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Day"
-        },
         "auctionDetails": {
           "isDynamicMatch": true
         }
@@ -323,7 +296,6 @@ All attributes below are nested under `data.attributes`. Alongside the attribute
 | `400` | `invalid-campaign-schedule` | The campaign has no schedule from which the API can derive the line item's flight dates. |
 | `400` | `invalid-retailer-id` | The retailer ID is improperly formatted or, when the campaign specifies a retailer, does not match it. |
 | `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
-| `400` | `invalid-frequency-capping` | The duration is not `Session` or `Day`, the count is outside `1`–`20`, or the parent campaign already has frequency capping. |
 | `400` | `unsupported-campaign-type` | The campaign type is not supported by the current implementation. |
 | `401` | `unauthorized` | The caller is not authenticated. |
 | `403` | `forbidden` | The caller cannot create a line item for the target campaign and retailer. |
@@ -355,12 +327,9 @@ https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}
 | `name` | New display name. Must be unique within the campaign and contain 2–255 characters after trimming. |
 | `isPaused` | Set to `true` to pause the line item or `false` to unpause it. |
 | `serveToOptOutUser` | Whether ads can serve to users who opted out of personalization. |
-| `onsiteDisplayDetails.frequencyCapping` | Frequency-cap setting for an Onsite Display line item. Omit it to leave the cap unchanged; send `{ "value": null }` to remove the cap. |
-| `onsiteDisplayDetails.frequencyCapping.value.cappingCount` | Maximum number of times the ads may be shown within the selected duration. Must be from `1` to `20`; required when setting a cap. |
-| `onsiteDisplayDetails.frequencyCapping.value.cappingDurationType` | Period the count applies to: `Session` or `Day`. Required when setting a cap. |
 | `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | Onsite Display Auction-specific. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
 
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, `effectiveFlightDates`, or `conquestingSettings` inside `attributes`.
+The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
 
 **Sample Request**
 
@@ -372,11 +341,8 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
       "name": "Back-to-school display — extended",
       "isPaused": false,
       "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "value": {
-            "cappingCount": 5,
-            "cappingDurationType": "Session"
-          }
+        "auctionDetails": {
+          "isDynamicMatch": true
         }
       }
     }
@@ -406,17 +372,7 @@ The response attributes are the same as for [Create](#create-a-line-item-core).
         "endDate": "2026-09-30T23:59:59Z"
       },
       "serveToOptOutUser": false,
-      "conquestingSettings": {
-        "conquestingAdStrategyEnabled": false,
-        "neutralAdStrategyEnabled": true,
-        "defensiveAdStrategyEnabled": true,
-        "isAdStrategyLocked": false
-      },
       "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Session"
-        },
         "auctionDetails": {
           "isDynamicMatch": true
         }
@@ -432,7 +388,6 @@ The response attributes are the same as for [Create](#create-a-line-item-core).
 | --- | --- | --- |
 | `400` | `invalid-name` | The name is blank or outside the supported length. |
 | `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
-| `400` | `invalid-frequency-capping` | The duration is not `Session` or `Day`, the count is outside `1`–`20`, or the parent campaign already has frequency capping. |
 | `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the line item's campaign or buy type. |
 | `400` | `invalid-dynamic-match` | `isDynamicMatch` cannot be changed once the line item is approved, or set to `false` once set to `true`. |
 | `401` | `unauthorized` | The caller is not authenticated. |
