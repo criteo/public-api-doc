@@ -3,34 +3,103 @@ title: MCP Troubleshooting
 description: "Diagnose and resolve common issues when connecting to and using the Criteo MCP server."
 ---
 
-This page covers common issues that may arise during early MCP setup and testing.
+This page covers the most common issues when connecting to the Criteo MCP server: authentication failures, missing tools, and unexpected reporting behavior.
 
-## Authentication or Consent Issues
+<Warning>
+  Never share secrets, API keys, access tokens, or full `Authorization` headers in tickets, screenshots, or chat. An MCP URL containing `?api-key=...` is a credential: anyone holding the URL holds the access.
+</Warning>
 
-Examples:
+***
 
-* Invalid credentials.
-* Missing redirect URI registration.
-* Consent flow not completing successfully.
-* Using a production server without required production access approval.
+## First checks
 
-## Scope or Permissions Mismatch
+* Your client uses the MCP URL Criteo provided, including the flavor path segment if you were given one.
+* Your organization is approved for MCP access. This should already be the case if Criteo provided your credentials.
+* Your client supports remote MCP over Streamable HTTP.
+* For OAuth clients, the redirect URIs requested by your client are registered on your application. See [Access Flows](/mcp/docs/access-flows).
 
-Examples:
+Then ask your client which tools are available, or which accounts are visible. If either fails, fix setup before testing workflows.
 
-* The partner can connect, but the returned accounts or tools do not match expectations.
-* The credentials do not include the scopes needed for the workflow being tested.
+***
 
-## Tool Discovery Issues
+## Common issues
 
-Examples:
+| Symptom | Cause | Fix |
+| :------ | :---- | :-- |
+| `401` "Invalid credentials: a valid Authorization or x-api-key header, or an api-key query parameter, is required." | No usable credentials reached the server. | Check your auth method and that your client sends credentials on every request. |
+| `401` "The provided token is invalid, expired or revoked." | The access token has expired or been revoked. | Disconnect, reconnect, and re-consent. |
+| `401` "Organization with id: … is not allowed to access the MCP server." | Your organization has not been approved for MCP access. | Ask your Criteo representative to approve your API organization. |
+| `403` "The access token is missing scopes to access MCP Flavor '…'" | Your application lacks the scopes this flavor requires. | Create a new application with the required scopes. Existing applications cannot be updated. |
+| `404` "MCP Flavor '…' not found" | The flavor segment in the MCP URL is not valid. | Use the exact URL Criteo provided. |
+| Redirect URI error | The OAuth callback URL is not registered on the application, or does not match exactly. | Register the redirect URI shown by your client. |
+| Connected, but tools are missing | The client did not refresh tool discovery, or your application lacks the scopes for the flavor. | Reconnect. If tools are still missing, create a new application with the required scopes. |
+| Report returns an ID but no data | Reporting is asynchronous. | Ask the client to check the report status and retrieve the output. |
+| "The API rate limit was reached." | Too many requests in a short period. | Wait before retrying. See [Rate limits](#rate-limits). |
 
-* The MCP client connects, but expected tools are not visible.
-* The client platform has limitations in how it surfaces tools to end users.
+***
 
-## Async Reporting Confusion
+## Authentication errors
 
-Examples:
+If your OAuth token request to `/oauth2/token` fails with `invalid_client`, `unauthorized_client`, `invalid_grant`, `invalid_scope`, or `unsupported_grant_type`, the usual causes are:
 
-* Reporting workflows require polling or multiple steps.
-* Expecting synchronous output for workflows that are asynchronous underneath.
+* Wrong or swapped `client_id` and `client_secret`.
+* A `grant_type` that does not match the application's configured flow.
+* A missing or mismatched `redirect_uri`. It must match the registered value exactly.
+* An authorization code that was already used or has expired. Codes are single-use.
+* Credentials from one environment used against another.
+
+***
+
+## Scope errors and missing tools
+
+Each flavor requires specific scopes. If your application is missing any, the flavor returns a `403` or its tools do not appear. An application's scopes cannot be changed after creation, so create a new application with the required scopes, then reconnect. Re-authorizing for extra scopes during a session is not supported.
+
+***
+
+## Redirect URI and consent problems
+
+Common causes when OAuth starts but does not return to the MCP client:
+
+* The redirect URI is missing from the application, or has a typo, a trailing-slash difference, or the wrong domain.
+* The application is not an Authorization Code application with PKCE enabled.
+* The client expects Dynamic Client Registration, which is not currently supported. Pre-register the client instead.
+
+For Claude, register both callback URIs:
+
+* `https://claude.ai/api/mcp/auth_callback`
+* `https://claude.com/api/mcp/auth_callback`
+
+After making changes, disconnect the MCP server in your client and connect again.
+
+***
+
+## Reporting takes multiple steps
+
+Report and catalog exports are asynchronous. The client starts the export, polls the status until it succeeds, then downloads the output. If you get a report ID but no answer, ask:
+
+```text
+Check the status of the latest report and retrieve it if complete.
+```
+
+If a report times out or fails, narrow the date range or reduce dimensions and filters, and keep the report ID for support. See the [Tool Reference](/mcp/docs/retail-media/tool-reference) for the start, status, and download tools.
+
+If a report returns empty or surprising data, ask the client to show the parameters it used (dates, filters, metrics, dimensions, attribution windows, timezone) and check them against what you expected.
+
+***
+
+## Rate limits
+
+Repeated calls in a short period, such as repeated account discovery, can hit API rate limits. The tool result is an error that begins "The API rate limit was reached." and tells the client how long to wait. Wait at least that long before retrying, and cache account and retailer lookups within a session instead of re-querying them. If your agent cannot wait, it should tell the user about the limit.
+
+***
+
+## Contacting Criteo
+
+If you are still blocked, contact your Criteo representative with:
+
+* MCP client and version, and the MCP URL (secrets removed)
+* Authentication method, organization ID, and application ID
+* The prompt or workflow, the expected and actual result, and the exact error message
+* Any request ID, trace ID, or report ID, and the timestamp with timezone
+
+Redact all credentials from logs and screenshots before sending.
