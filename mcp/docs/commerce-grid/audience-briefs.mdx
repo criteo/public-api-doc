@@ -1,0 +1,368 @@
+---
+title: Audience Briefs MCP
+description: "Connect your agent to the Commerce Grid Audience Briefs MCP to research audience segments, create audience planning briefs, and share them."
+---
+
+## Overview
+
+The Commerce Grid Audience Briefs MCP lets your AI application or agent work with Commerce Grid audience planning briefs. Your agent can research AI-recommended audience segments, review audience insights, create briefs, find existing briefs, and share them through a link.
+
+Typical uses include:
+
+* **Researching audiences** for a campaign before committing to a brief
+* **Creating audience planning briefs** from campaign details in natural language
+* **Reviewing and sharing** existing briefs with stakeholders
+
+***
+
+## Add the endpoint
+
+Add the Audience Briefs MCP as an MCP server in your MCP-compatible client or agent environment:
+
+```
+https://mcp.criteo.com/commerce-grid-supply-audience-briefs/mcp
+```
+
+Refer to [Access Flows](/mcp/docs/access-flows) for the step-by-step setup on Claude, ChatGPT, or other platforms.
+
+Refer to [MCP Troubleshooting](/mcp/docs/mcp-troubleshooting) if you run into connection, authentication, or tool discovery issues.
+
+<Info>
+  Access to the Commerce Grid Audience Briefs MCP is set up by Criteo. Please reach out to your Criteo representative to get credentials for your use case before connecting.
+</Info>
+
+***
+
+## Client selection
+
+Most tools operate under a single Commerce Grid client (contract) and require a `clientId` parameter.
+
+* Call `get_available_clients` first to list the clients available to the connected credentials.
+* If more than one client is returned, the agent asks you which one to use.
+* The selected client ID is then passed as `clientId` to every client-scoped tool.
+
+<Note>
+  Results are limited to the clients accessible to the credentials used by the MCP client. A brief can only be retrieved or shared under the client it belongs to.
+</Note>
+
+***
+
+## Tools
+
+The Audience Briefs MCP exposes eight tools:
+
+<table>
+  <colgroup>
+    <col style={{ width: "38%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "52%" }} />
+  </colgroup>
+  <thead>
+    <tr><th>Tool</th><th>Type</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><a href="#get_available_clients"><code style={{ whiteSpace: "nowrap" }}>get_available_clients</code></a></td><td>Read</td><td>Lists the clients (contracts) available to you.</td></tr>
+    <tr><td><a href="#get_recommended_segments"><code style={{ whiteSpace: "nowrap" }}>get_recommended_segments</code></a></td><td>Read</td><td>Returns AI-recommended audience segments for campaign parameters, without creating a brief.</td></tr>
+    <tr><td><a href="#get_segment_insights"><code style={{ whiteSpace: "nowrap" }}>get_segment_insights</code></a></td><td>Read</td><td>Returns audience insights for a list of segments.</td></tr>
+    <tr><td><a href="#create_brief"><code style={{ whiteSpace: "nowrap" }}>create_brief</code></a></td><td>Write</td><td>Creates and processes a brief, then returns recommended segments.</td></tr>
+    <tr><td><a href="#create_brief_with_segments"><code style={{ whiteSpace: "nowrap" }}>create_brief_with_segments</code></a></td><td>Write</td><td>Creates a brief with pre-selected segments.</td></tr>
+    <tr><td><a href="#query_briefs"><code style={{ whiteSpace: "nowrap" }}>query_briefs</code></a></td><td>Read</td><td>Searches existing briefs for a client.</td></tr>
+    <tr><td><a href="#get_brief_by_id"><code style={{ whiteSpace: "nowrap" }}>get_brief_by_id</code></a></td><td>Read</td><td>Returns the details of one brief.</td></tr>
+    <tr><td><a href="#share_brief"><code style={{ whiteSpace: "nowrap" }}>share_brief</code></a></td><td>Write</td><td>Creates a shareable link for a brief.</td></tr>
+  </tbody>
+</table>
+
+Read tools do not persist anything. Write tools create briefs or share links under the selected client.
+
+***
+
+### Client discovery
+
+<a id="get_available_clients" />
+
+**`get_available_clients`**
+
+Returns the clients (contracts) available to you. If more than one client is returned, choose the one to use; its ID must then be passed as `clientId` to client-scoped tools.
+
+This tool takes no parameters.
+
+***
+
+### Segment research
+
+These tools are read-only and do not persist anything. Use them to explore segments before deciding whether to create a brief.
+
+<a id="get_recommended_segments" />
+
+**`get_recommended_segments`**
+
+Returns AI-recommended audience segments based on campaign parameters, without creating a brief. Returns up to 30 recommended segments with relevance scores, audience sizes, and targeting details.
+
+<table>
+  <colgroup>
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "13%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "45%" }} />
+  </colgroup>
+  <thead>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>clientId</code></td><td>string</td><td>Yes</td><td>—</td><td>Client ID returned by <code>get_available_clients</code>.</td></tr>
+    <tr><td><code>brand</code></td><td>string</td><td>Yes</td><td>—</td><td>Brand name for the campaign.</td></tr>
+    <tr><td><code>countryCode</code></td><td>string</td><td>Yes</td><td>—</td><td>Country code, e.g. <code>US</code>, <code>GB</code>, <code>FR</code>, <code>DE</code>.</td></tr>
+    <tr><td><code>description</code></td><td>string</td><td>Yes</td><td>—</td><td>Description of the campaign goals and target audience.</td></tr>
+    <tr><td><code>products</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Comma-separated product keywords to narrow segment matching.</td></tr>
+  </tbody>
+</table>
+
+<a id="get_segment_insights" />
+
+**`get_segment_insights`**
+
+Returns audience insights for a list of segments: UCs, brands, PCAs, genders, and buying power. Use it to analyze segments before deciding which ones to include in a brief.
+
+<table>
+  <colgroup>
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "13%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "45%" }} />
+  </colgroup>
+  <thead>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>countryCode</code></td><td>string</td><td>Yes</td><td>—</td><td>Country code, e.g. <code>US</code>, <code>GB</code>, <code>FR</code>, <code>DE</code>.</td></tr>
+    <tr><td><code>segmentsJson</code></td><td>string</td><td>Yes</td><td>—</td><td>JSON array of segments. Each segment must include <code>skuKeywords</code> (string) and <code>segmentSize</code> (number).</td></tr>
+  </tbody>
+</table>
+
+Example `segmentsJson` value:
+
+```json
+[{"skuKeywords": "running shoes", "segmentSize": 150000}]
+```
+
+***
+
+### Brief creation
+
+Both tools persist a new brief under the selected client. Use parameter values exactly as provided by the user — if a required value is missing, the agent should ask for it rather than infer it.
+
+<a id="create_brief" />
+
+**`create_brief`**
+
+Creates and processes an audience planning brief from campaign details, then returns AI-recommended audience segments.
+
+<Info>
+  Processing may take 10–30 seconds.
+</Info>
+
+<table>
+  <colgroup>
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "13%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "45%" }} />
+  </colgroup>
+  <thead>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>clientId</code></td><td>string</td><td>Yes</td><td>—</td><td>Client ID returned by <code>get_available_clients</code>.</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td>Yes</td><td>—</td><td>Name of the brief.</td></tr>
+    <tr><td><code>brand</code></td><td>string</td><td>Yes</td><td>—</td><td>Brand name for the campaign.</td></tr>
+    <tr><td><code>brief</code></td><td>string</td><td>Yes</td><td>—</td><td>Description of the campaign goals and target audience.</td></tr>
+    <tr><td><code>budget</code></td><td>number</td><td>Yes</td><td>—</td><td>Campaign budget in USD, e.g. <code>50000.00</code>.</td></tr>
+    <tr><td><code>countryCode</code></td><td>string</td><td>Yes</td><td>—</td><td>Country code, e.g. <code>US</code>, <code>GB</code>, <code>FR</code>, <code>DE</code>.</td></tr>
+    <tr><td><code>startDate</code></td><td>string</td><td>Yes</td><td>—</td><td>Campaign start date in <code>YYYY-MM-DD</code> format.</td></tr>
+    <tr><td><code>endDate</code></td><td>string</td><td>Yes</td><td>—</td><td>Campaign end date in <code>YYYY-MM-DD</code> format.</td></tr>
+    <tr><td><code>advancedSettings</code></td><td>boolean</td><td>No</td><td><code>false</code></td><td>Enables advanced targeting settings.</td></tr>
+    <tr><td><code>keywords</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Comma-separated targeting keywords.</td></tr>
+    <tr><td><code>products</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Comma-separated product keywords for targeting.</td></tr>
+    <tr><td><code>excludeTerms</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Comma-separated terms to exclude from targeting.</td></tr>
+  </tbody>
+</table>
+
+<a id="create_brief_with_segments" />
+
+**`create_brief_with_segments`**
+
+Creates a brief with pre-selected segments, typically taken from `get_recommended_segments` output. Unlike `create_brief`, it skips the segment recommendation step: it fetches insights for the provided segments and persists everything.
+
+<table>
+  <colgroup>
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "13%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "45%" }} />
+  </colgroup>
+  <thead>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>clientId</code></td><td>string</td><td>Yes</td><td>—</td><td>Client ID returned by <code>get_available_clients</code>.</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td>Yes</td><td>—</td><td>Name of the brief.</td></tr>
+    <tr><td><code>brand</code></td><td>string</td><td>Yes</td><td>—</td><td>Brand name for the campaign.</td></tr>
+    <tr><td><code>description</code></td><td>string</td><td>Yes</td><td>—</td><td>Description of the campaign goals and target audience.</td></tr>
+    <tr><td><code>budget</code></td><td>number</td><td>Yes</td><td>—</td><td>Campaign budget in USD, e.g. <code>50000.00</code>.</td></tr>
+    <tr><td><code>countryCode</code></td><td>string</td><td>Yes</td><td>—</td><td>Country code, e.g. <code>US</code>, <code>GB</code>, <code>FR</code>, <code>DE</code>.</td></tr>
+    <tr><td><code>startDate</code></td><td>string</td><td>Yes</td><td>—</td><td>Campaign start date in <code>YYYY-MM-DD</code> format.</td></tr>
+    <tr><td><code>endDate</code></td><td>string</td><td>Yes</td><td>—</td><td>Campaign end date in <code>YYYY-MM-DD</code> format.</td></tr>
+    <tr><td><code>segmentsJson</code></td><td>string</td><td>Yes</td><td>—</td><td>JSON array of segments to include. See <a href="#segment-format">Segment format</a>.</td></tr>
+    <tr><td><code>keywords</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Comma-separated targeting keywords.</td></tr>
+    <tr><td><code>products</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Comma-separated product keywords.</td></tr>
+    <tr><td><code>excludeTerms</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Comma-separated terms to exclude.</td></tr>
+  </tbody>
+</table>
+
+<a id="segment-format" />
+
+**Segment format**
+
+Each segment in `segmentsJson` contains:
+
+* **Required:** `skuKeywords`, `segmentSize`, `segmentType`, `description`, `relevanceScore`
+* **Optional:** `dataProviderId`, `externalSegmentId`, `alreadyCreated`
+
+Some segment types also require a targeting configuration:
+
+| Segment type | Required configuration | Fields |
+| :----------- | :--------------------- | :----- |
+| InMarket | `inMarketConfiguration` | `country`, `buyingPower`, `gender`, `interestIds`, `brandIds`, `priceRange` |
+| Affinity | `affinityConfiguration` | `country`, `targetingCategoryIds`, `customCategoryIds`, `lookbackDays`, `numberOfEvents` |
+
+Other segment types do not require a configuration.
+
+<Warning>
+  Copy the complete configuration from the recommendation or segment details, even for segments that are already created. Preserve empty lists and a `null` gender, and never invent targeting values.
+</Warning>
+
+***
+
+### Brief management
+
+<a id="query_briefs" />
+
+**`query_briefs`**
+
+Searches existing briefs for the selected client.
+
+<table>
+  <colgroup>
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "13%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "45%" }} />
+  </colgroup>
+  <thead>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>clientId</code></td><td>string</td><td>Yes</td><td>—</td><td>Client ID returned by <code>get_available_clients</code>.</td></tr>
+    <tr><td><code>searchTerm</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Filters by brief name or brand.</td></tr>
+    <tr><td><code>brand</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Filters by brand name.</td></tr>
+    <tr><td><code>country</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Filters by ISO country code, e.g. <code>US</code>.</td></tr>
+    <tr><td><code>status</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Filters by brief status: <code>SUBMITTED</code>, <code>PROCESSING</code>, <code>PROCESSED</code>, or <code>ARCHIVED</code>.</td></tr>
+    <tr><td><code>page</code></td><td>integer</td><td>No</td><td><code>1</code></td><td>Page number, 1-based.</td></tr>
+    <tr><td><code>pageSize</code></td><td>integer</td><td>No</td><td><code>10</code></td><td>Results per page, maximum <code>100</code>.</td></tr>
+  </tbody>
+</table>
+
+<a id="get_brief_by_id" />
+
+**`get_brief_by_id`**
+
+Returns detailed information about one brief. The brief must belong to the selected client.
+
+<table>
+  <colgroup>
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "13%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "45%" }} />
+  </colgroup>
+  <thead>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>clientId</code></td><td>string</td><td>Yes</td><td>—</td><td>Client ID returned by <code>get_available_clients</code>.</td></tr>
+    <tr><td><code>briefId</code></td><td>string (UUID)</td><td>Yes</td><td>—</td><td>Unique identifier of the brief.</td></tr>
+  </tbody>
+</table>
+
+<a id="share_brief" />
+
+**`share_brief`**
+
+Creates a shareable link for a brief. If the brief is already shared, returns the existing share link with the brief details.
+
+<table>
+  <colgroup>
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "13%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "10%" }} />
+    <col style={{ width: "45%" }} />
+  </colgroup>
+  <thead>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>clientId</code></td><td>string</td><td>Yes</td><td>—</td><td>Client ID returned by <code>get_available_clients</code>.</td></tr>
+    <tr><td><code>briefId</code></td><td>string (UUID)</td><td>Yes</td><td>—</td><td>Unique identifier of the brief.</td></tr>
+    <tr><td><code>email</code></td><td>string</td><td>No</td><td><code>null</code></td><td>Email address of the recipient.</td></tr>
+    <tr><td><code>expirationDays</code></td><td>integer</td><td>No</td><td><code>30</code></td><td>Number of days from now until the link expires.</td></tr>
+  </tbody>
+</table>
+
+***
+
+## Typical workflow
+
+<Steps>
+<Step title="Select the client">
+
+Call `get_available_clients` to get the `clientId`. If several clients are available, pick the right one.
+</Step>
+
+<Step title="Research segments">
+
+Call `get_recommended_segments`, then `get_segment_insights` to explore and compare segments. Nothing is saved at this stage.
+</Step>
+
+<Step title="Create the brief">
+
+Call `create_brief_with_segments` with the segments you selected, or `create_brief` to let the MCP recommend segments for you.
+</Step>
+
+<Step title="Review the brief">
+
+Call `query_briefs` or `get_brief_by_id` to find and review the brief.
+</Step>
+
+<Step title="Share the brief">
+
+Call `share_brief` to get a shareable link.
+</Step>
+</Steps>
+
+***
+
+## Example questions
+
+* "Which Commerce Grid clients can I access through this connection?"
+* "Recommend audience segments for a running shoes campaign by Acme in the US targeting active millennials."
+* "Show me audience insights for the top five recommended segments."
+* "Create a brief named 'Acme Spring Running' for Acme in the US, budget $50,000, from 2026-03-01 to 2026-04-30, using the segments we selected."
+* "List my processed briefs for Acme in the US."
+* "Share the 'Acme Spring Running' brief with jane.doe@example.com for 14 days."
