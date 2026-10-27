@@ -65,15 +65,15 @@ Catalog export is asynchronous. Follow the [async export pattern](#asynchronous-
 
 ## Performance reporting
 
-Performance report export is asynchronous. Follow the [async export pattern](#asynchronous-export-pattern).
+Report generation is asynchronous. Follow the [async export pattern](#asynchronous-export-pattern).
 
 | Tool | Method | Endpoint | Description |
 | ---- | ------ | -------- | ----------- |
-| `StartRetailMediaAccountReportExport` | `POST` | `/mcp/retail-media/reports/accounts` | Starts an asynchronous performance report for one or more accessible accounts. The request must include account IDs, inclusive `startDate` and `endDate` in `YYYY-MM-DD` format, metrics, dimensions, attribution settings, timezone, and supported filters. A single request interval must be under 31 days. Subject to report rate limits. |
-| `StartRetailMediaCampaignReportExport` | `POST` | `/mcp/retail-media/reports/campaigns` | Starts an asynchronous performance report for one or more known campaigns. Supply either one campaign ID or a non-empty `ids` array, plus inclusive `YYYY-MM-DD` dates, metrics, dimensions, and timezone. Use account reporting when campaign scope is not known. Subject to report rate limits. |
-| `StartRetailMediaLineItemReportExport` | `POST` | `/mcp/retail-media/reports/line-items` | Starts an asynchronous performance report for known line items. Supply the line-item scope, inclusive `YYYY-MM-DD` dates, metrics, dimensions, and timezone. Subject to report rate limits. |
-| `GetRetailMediaReportExportStatus` | `GET` | `/mcp/retail-media/reports/{reportId}/status` | Returns the state of an account, campaign, or line-item report export. Use the report ID returned by a report-start tool and download the output only after the export completes successfully. |
-| `DownloadRetailMediaReportExportOutput` | `GET` | `/mcp/retail-media/reports/{reportId}/output` | Downloads a successfully completed account, campaign, or line-item report. Call the report status tool first. |
+| `GenerateAsyncPerformanceReport` | `POST` | `/mcp/retail-media/reports/performance` | Starts an asynchronous report of historical performance at account, campaign, or line-item level, such as impressions, clicks, spend, and ROAS. Requires `startDate` and `endDate` in `YYYY-MM-DD` format (maximum 100-day window), exactly one scope array in `filters` (`accountIds`, `campaignIds`, or `lineItemIds`), and explicit `metrics` and `dimensions`. Dimensions set the output breakdown; do not send `reportType`. Returns a `reportId`, not report rows. |
+| `GenerateAsyncMissedOpportunitiesReport` | `POST` | `/mcp/retail-media/reports/missed-opportunities` | Starts an asynchronous report to diagnose budget cap-out or reduced participation in eligible auctions and estimate missed traffic, spend, clicks, impressions, or sales. Requires a date range (maximum 100 days), exactly one account, campaign, or line-item scope array in `filters`, and explicit `metrics` and `dimensions` (for example, `missedTraffic` and `capoutHour`). "Missed" values are modeled estimates. Returns a `reportId`. |
+| `GenerateAsyncAttributedTransactionsReport` | `POST` | `/mcp/retail-media/reports/attributed-transactions` | Starts an asynchronous report of attributed purchases at transaction level, including the advertised product, purchased product, and attribution details. Requires a date range (maximum 100 days), exactly one account, campaign, or line-item scope array in `filters`, selected `dimensions`, and `attributedSales` and/or `attributedUnits` as `metrics`. Use the performance report for aggregate impressions, clicks, or spend. Returns a `reportId`. |
+| `GetRetailMediaReportExportStatus` | `GET` | `/mcp/retail-media/reports/{reportId}/status` | Returns the state of a performance, missed opportunities, or attributed transactions report. Use the `reportId` returned by a report-start tool and download the output only after the report completes successfully. |
+| `DownloadRetailMediaReportExportOutput` | `GET` | `/mcp/retail-media/reports/{reportId}/output` | Downloads a successfully completed performance, missed opportunities, or attributed transactions report. Call the report status tool first. |
 
 ***
 
@@ -94,7 +94,7 @@ Insight export is asynchronous. Follow the [async export pattern](#asynchronous-
 
 Catalog, performance report, and insight workflows all follow the same three-step pattern:
 
-1. Call a **Start...** tool to request the export and receive an export ID.
+1. Call a **Start...** or **GenerateAsync...** tool to request the export and receive an export ID.
 2. Call the corresponding **Get...Status** tool until the status is `Success`.
 3. Call the corresponding **Download...Output** tool to retrieve the result.
 
