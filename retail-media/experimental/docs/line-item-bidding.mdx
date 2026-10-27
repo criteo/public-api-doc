@@ -1,0 +1,156 @@
+---
+title: Line Item Bidding
+description: Retrieve and set the bidding configuration for an Onsite Display Auction or Sponsored Product Auction line item.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+## Overview
+
+Use the Line Item Bidding endpoints to retrieve and set the bidding configuration for a line item.
+
+<Info>
+    **Availability: Available**
+
+  This endpoint is available in the Experimental Retail Media API.
+</Info>
+
+The endpoints support both Onsite Display Auction and Sponsored Product Auction line items.
+
+## Endpoints
+
+| Method | Endpoint | Description | Availability |
+| --- | --- | --- | --- |
+| `GET` | `/retail-media/line-items/{line-item-id}/bidding` | Retrieve the current bidding configuration for a line item. | Available |
+| `POST` | `/retail-media/line-items/{line-item-id}/set-bidding` | Set the bidding configuration for a line item. | Available |
+
+## Get bidding
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/bidding
+```
+</EndpointBadge>
+
+### Path parameter
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `line-item-id` | string | Yes | Identifier of the Onsite Display Auction or Sponsored Product Auction line item. |
+
+The authenticated user must have permission to view the requested line item.
+
+### Sample request
+
+```bash
+curl -X GET "https://api.criteo.com/experimental/retail-media/line-items/123456789012345678/bidding" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Accept: application/json"
+```
+
+### Response attributes
+
+All attributes below are nested under `data.attributes` in the response envelope.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `maxBid` | number or null | The maximum bid that the adaptive strategy may use. |
+
+### Sample response
+
+```json
+{
+  "data": {
+    "type": "LineItemBiddingResponse",
+    "attributes": {
+      "maxBid": 2.8
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+### Responses
+
+| Status | Code | Description |
+| --- | --- | --- |
+| `200 OK` | | Returns the current bidding configuration for a line item. |
+| `400 Bad Request` | `unsupported-line-item-type` | The bidding configuration is available only for Onsite Display Auction and Sponsored Product Auction line items. |
+| `400 Bad Request` | `unsupported-bid-strategy` | The bidding configuration is available only for line items that use Adaptive bidding. |
+| `401 Unauthorized` | `authorization-token-missing` | The access token is missing. |
+| `401 Unauthorized` | `authorization-token-invalid` | The access token is invalid. |
+| `401 Unauthorized` | `authorization-token-expired` | The access token has expired. Obtain a new token and retry the request. |
+| `403 Forbidden` | `not-authorized` | The line item does not exist or is not accessible. For security, the response does not identify which condition occurred or include an error code. |
+| `500 Internal Server Error` | `internal-error` | The bidding configuration could not be retrieved, usually because a dependent service failed. Retry the request. If the failure persists, contact support. |
+
+***
+
+## Set Bidding
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/set-bidding
+```
+</EndpointBadge>
+
+### Path parameter
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `line-item-id` | string | Yes | Identifier of the Onsite Display Auction or Sponsored Product Auction line item. |
+
+The authenticated user must have permission to edit the requested line item.
+
+### Request attributes
+
+All attributes below are nested under `data.attributes` in the request envelope.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `maxBid` | number or null | The maximum bid that the adaptive strategy may use. |
+
+### Sample request
+
+```bash
+curl -X POST "https://api.criteo.com/experimental/retail-media/line-items/123456789012345678/set-bidding" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  --data-raw '{
+    "data": {
+      "type": "LineItemBiddingRequest",
+      "attributes": {
+        "maxBid": 4.2
+      }
+    }
+  }'
+```
+
+### Sample response
+
+```json
+{
+  "data": {
+    "type": "LineItemBiddingResponse",
+    "attributes": {
+      "maxBid": 4.2
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+### Responses
+
+| Status | Code | Description |
+| --- | --- | --- |
+| `200 OK` | | Returns the saved bidding configuration for the line item. Inspect `errors` and `warnings` before treating the response as complete. |
+| `400 Bad Request` | `unsupported-line-item-type` | The bidding configuration is available only for Onsite Display Auction and Sponsored Product Auction line items. |
+| `400 Bad Request` | `unsupported-bid-strategy` | The bidding configuration is available only for line items that use Adaptive bidding. |
+| `401 Unauthorized` | `authorization-token-missing` | The access token is missing. |
+| `401 Unauthorized` | `authorization-token-invalid` | The access token is invalid. |
+| `401 Unauthorized` | `authorization-token-expired` | The access token has expired. Obtain a new token and retry the request. |
+| `403 Forbidden` | `not-authorized` | The line item does not exist or is not accessible. For security, the response does not identify which condition occurred or include an error code. |
+| `500 Internal Server Error` | `internal-error` | The bidding configuration could not be set, usually because a dependent service failed. Retry the request. If the failure persists, contact support. |
