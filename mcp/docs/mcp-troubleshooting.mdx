@@ -1,52 +1,52 @@
 ---
 title: MCP Troubleshooting
-description: "Diagnose and resolve common issues when connecting to and using the Criteo MCP server."
+description: "Fixes for common problems when connecting to the Criteo MCP server."
 ---
 
-This page covers the most common issues when connecting to the Criteo MCP server: authentication failures, missing tools, and unexpected reporting behavior.
+If you can't connect to the Criteo MCP server, can't see the tools you expect, or get odd results from a report, start here.
 
 <Warning>
-  Never share secrets, API keys, access tokens, or full `Authorization` headers in tickets, screenshots, or chat. An MCP URL containing `?api-key=...` is a credential: anyone holding the URL holds the access.
+  Don't paste secrets, API keys, access tokens or `Authorization` headers into tickets, screenshots or chat. An MCP URL with `?api-key=...` in it is a credential too: anyone who has the URL has your access.
 </Warning>
 
 ***
 
-## First checks
+## Before you start
 
-* Your client uses the MCP URL Criteo provided, including the flavor path segment if you were given one.
-* Your organization is approved for MCP access. This should already be the case if Criteo provided your credentials.
-* For OAuth clients, the redirect URIs requested by your client are registered on your application. See [Access Flows](/mcp/docs/access-flows).
+* Use the MCP URL Criteo gave you, including the flavor in the path if there is one.
+* Make sure your organization is approved for MCP access. If Criteo supplied your credentials, it already is.
+* If you use OAuth, register the redirect URIs your client asks for on your application. See [Access Flows](/mcp/docs/access-flows).
 
 ***
 
-## Common issues
+## Common problems
 
-| Symptom | Cause | Fix |
-| :------ | :---- | :-- |
-| `401` "Invalid credentials: a valid Authorization or x-api-key header, or an api-key query parameter, is required." | No usable credentials reached the server. | Check your auth method and that your client sends credentials on every request. |
-| `401` "The provided token is invalid, expired or revoked." | The access token has expired or been revoked. | Disconnect, reconnect, and re-consent. |
-| `401` "Organization with id: … is not allowed to access the MCP server." | Your organization has not been approved for MCP access. | Ask your Criteo representative to approve your API organization. |
-| `403` "The access token is missing scopes to access MCP Flavor '…'" | Your application lacks the scopes this flavor requires. | Create a new application with the required scopes. Existing applications cannot be updated. |
-| `404` "MCP Flavor '…' not found" | The flavor segment in the MCP URL is not valid. | Use the exact URL Criteo provided. |
-| Redirect URI error | The OAuth callback URL is not registered on the application, or does not match exactly. | Register the redirect URI shown by your client, then disconnect and reconnect. |
-| Connected, but tools are missing | The client did not refresh tool discovery, or your application lacks the scopes for the flavor. | Reconnect. If tools are still missing, create a new application with the required scopes. |
-| Report returns an ID but no data | Reporting is asynchronous. | Ask the client to check the report status and retrieve the output. |
+| What you see | Why | What to do |
+| :----------- | :-- | :--------- |
+| `401` "Invalid credentials: a valid Authorization or x-api-key header, or an api-key query parameter, is required." | The server received no usable credentials. | Check your auth method, and that your client sends credentials with every request. |
+| `401` "The provided token is invalid, expired or revoked." | Your access token has expired or been revoked. | Disconnect, reconnect and consent again. |
+| `401` "Organization with id: … is not allowed to access the MCP server." | Your organization isn't approved for MCP access. | Ask your Criteo representative to approve your API organization. |
+| `403` "The access token is missing scopes to access MCP Flavor '…'" | Your application doesn't have the scopes this flavor needs. | Create a new application with the right scopes. You can't add scopes to an existing one. |
+| `404` "MCP Flavor '…' not found" | The flavor in your MCP URL is wrong. | Use the exact URL Criteo gave you. |
+| Redirect URI error | The callback URL isn't registered on your application, or doesn't match exactly. | Register the redirect URI your client shows, then disconnect and reconnect. |
+| Connected, but tools are missing | Your client hasn't refreshed its tool list, or your application lacks the scopes for the flavor. | Reconnect. If the tools still don't show, create a new application with the right scopes. |
+| A report returns an ID but no data | Reports run asynchronously. | Ask your client to check the report status and fetch the output. |
 
-For Claude, register both callback URIs:
+If you use Claude, register both of these callback URIs:
 
 * `https://claude.ai/api/mcp/auth_callback`
 * `https://claude.com/api/mcp/auth_callback`
 
-Dynamic Client Registration is not currently supported, so pre-register your client.
+Dynamic Client Registration isn't supported yet, so you need to register your client yourself.
 
 ***
 
-## Reporting takes multiple steps
+## Reports
 
-Report and catalog exports are asynchronous: the client starts the export, polls the status until it succeeds, then downloads the output. See the [Tool Reference](/mcp/docs/retail-media/tool-reference) for the tools involved.
+Report and catalog exports don't return results straight away. The client starts the export, checks its status until it finishes, then downloads the output. The [Tool Reference](/mcp/docs/retail-media/tool-reference) lists the tools for each step.
 
 ***
 
-## Contacting Criteo
+## Still stuck?
 
-If you are still blocked, contact your Criteo representative with the MCP URL (secrets removed), your organization and application IDs, the exact error message, and any report ID or timestamp.
+Contact your Criteo representative. Include the MCP URL (with secrets removed), your organization and application IDs, the exact error message, and the report ID and time if a report is involved.
