@@ -1,0 +1,131 @@
+---
+title: Generating a Retailer Visitor ID
+---
+
+## Overview
+
+The `retailer-visitor-id` is a unique, persistent identifier for a visitor on your site. It must be stable across sessions on the same device and browser, and it must be set as a cookie with a maximum age of at least 30 days (up to 13 months).
+
+This page shows how to generate and persist a `retailer-visitor-id` in JavaScript.
+
+<Info>
+  For native mobile apps, use the platform-provided advertising ID instead of a cookie-based approach:
+  - **Android**: [AdvertisingIdClient API](https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info)
+  - **iOS**: [advertisingIdentifier](https://developer.apple.com/documentation/adsupport/asidentifiermanager/advertisingidentifier)
+</Info>
+
+---
+
+## JavaScript Implementation
+
+The snippet below generates a UUID v4, stores it in a first-party cookie on first visit, and returns the existing value on subsequent visits.
+
+```javascript
+// ---- Cookie utilities ----
+function setCookie(name, value, options = {}) {
+  const {
+    maxAge = 60 * 60 * 24 * 30, // 30 days
+    path = '/',
+    sameSite = 'Lax',
+    secure = true,
+    domain,
+  } = options;
+
+  let cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
+  if (typeof maxAge === 'number') cookie += `; Max-Age=${maxAge}`;
+  if (path) cookie += `; Path=${path}`;
+  if (domain) cookie += `; Domain=${domain}`;
+  if (sameSite) cookie += `; SameSite=${sameSite}`;
+  if (secure) cookie += `; Secure`;
+  document.cookie = cookie;
+}
+
+function getCookie(name) {
+  const target = `${encodeURIComponent(name)}=`;
+  const parts = document.cookie.split('; ');
+  for (const part of parts) {
+    if (part.startsWith(target)) {
+      return decodeURIComponent(part.substring(target.length));
+    }
+  }
+  return null;
+}
+
+// ---- UUID generators ----
+function generateUUID() {
+  if (crypto && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return uuidv4Fallback();
+}
+
+function uuidv4Fallback() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+  const hex = [...bytes].map(b => b.toString(16).padStart(2, '0'));
+  return [
+    hex.slice(0, 4).join(''),
+    hex.slice(4, 6).join(''),
+    hex.slice(6, 8).join(''),
+    hex.slice(8, 10).join(''),
+    hex.slice(10, 16).join(''),
+  ].join('-');
+}
+
+// ---- Visitor ID management ----
+const VISITOR_COOKIE_NAME = 'visitor_id';
+
+function ensureVisitorId(options = {}) {
+  let id = getCookie(VISITOR_COOKIE_NAME);
+  if (id) return id;
+
+  id = generateUUID();
+  setCookie(VISITOR_COOKIE_NAME, id, {
+    maxAge: 60 * 60 * 24 * 30,
+    path: '/',
+    sameSite: 'Lax',
+    secure: isHttps(),
+    ...options,
+  });
+  return id;
+}
+
+function isHttps() {
+  return window.location.protocol === 'https:' || location.hostname === 'localhost';
+}
+
+// ---- Initialize on page load ----
+document.addEventListener('DOMContentLoaded', () => {
+  const visitorId = ensureVisitorId();
+  console.log('Visitor ID:', visitorId);
+});
+```
+
+---
+
+## How It Works
+
+| Step | Description |
+| --- | --- |
+| **Read cookie** | `getCookie` checks `document.cookie` for an existing `visitor_id`. |
+| **Generate UUID** | If no cookie exists, `generateUUID` uses `crypto.randomUUID()` when available, falling back to a manual UUID v4 implementation using `crypto.getRandomValues`. |
+| **Persist cookie** | `setCookie` writes the ID with a 30-day `Max-Age`, `SameSite=Lax`, and `Secure` (on HTTPS). |
+| **Return ID** | The same ID is returned on all subsequent page loads within the cookie lifetime. |
+
+---
+
+## Key Requirements
+
+- **Minimum lifetime**: 30 days. Longer lifetimes (up to 13 months) improve attribution accuracy.
+- **Not a session cookie**: Always set `Max-Age` or `Expires`. A session cookie that clears on browser close is not acceptable.
+- **Consistency**: The same value must be passed in the `retailer-visitor-id` parameter on every ad request for that visitor.
+
+---
+
+## What's Next
+
+- [API Parameters](/retailer-integration/docs/api-parameters-1) — full reference for all Delivery API parameters
+- [API Calls](/retailer-integration/docs/api-calls) — how to structure ad requests
