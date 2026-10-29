@@ -7,7 +7,7 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
 ## Overview
 
-Use the Line Item Bidding endpoints to retrieve and set the bidding configuration for a line item.
+Use the Line Item Bidding endpoints to retrieve and set the bidding configuration of a line item.
 
 <Info>
     **Availability: Available**
@@ -24,7 +24,7 @@ The endpoints support both Onsite Display Auction and Sponsored Product Auction 
 | `GET` | `/retail-media/line-items/{line-item-id}/bidding` | Retrieve the current bidding configuration for a line item. | Available |
 | `POST` | `/retail-media/line-items/{line-item-id}/set-bidding` | Set the bidding configuration for a line item. | Available |
 
-## Get bidding
+## Get Bidding
 
 <EndpointBadge method="get">
 ```http
@@ -54,7 +54,7 @@ All attributes below are nested under `data.attributes` in the response envelope
 
 | Attribute | Type | Description |
 | --- | --- | --- |
-| `maxBid` | number or null | The maximum bid that the adaptive strategy may use. |
+| `maxBid` | number or null | The ceiling on how much the auction may bid for the line item, in the line item's currency. |
 
 ### Sample response
 
@@ -78,10 +78,8 @@ All attributes below are nested under `data.attributes` in the response envelope
 | `200 OK` | | Returns the current bidding configuration for a line item. |
 | `400 Bad Request` | `unsupported-line-item-type` | The bidding configuration is available only for Onsite Display Auction and Sponsored Product Auction line items. |
 | `400 Bad Request` | `unsupported-bid-strategy` | The bidding configuration is available only for line items that use Adaptive bidding. |
-| `401 Unauthorized` | `authorization-token-missing` | The access token is missing. |
-| `401 Unauthorized` | `authorization-token-invalid` | The access token is invalid. |
-| `401 Unauthorized` | `authorization-token-expired` | The access token has expired. Obtain a new token and retry the request. |
-| `403 Forbidden` | `not-authorized` | The line item does not exist or is not accessible. For security, the response does not identify which condition occurred or include an error code. |
+| `401 Unauthorized` | `unauthorized` | 	The caller is not authenticated. |
+| `403 Forbidden` | `forbidden` | The caller does not have access to the requested line item. |
 | `500 Internal Server Error` | `internal-error` | The bidding configuration could not be retrieved, usually because a dependent service failed. Retry the request. If the failure persists, contact support. |
 
 ***
@@ -108,7 +106,7 @@ All attributes below are nested under `data.attributes` in the request envelope.
 
 | Attribute | Type | Description |
 | --- | --- | --- |
-| `maxBid` | number or null | The maximum bid that the adaptive strategy may use. |
+| `maxBid` | number or null | The ceiling on how much the auction may bid for the line item, in the line item's currency. |
 
 ### Sample request
 
@@ -126,6 +124,14 @@ curl -X POST "https://api.criteo.com/experimental/retail-media/line-items/123456
     }
   }'
 ```
+
+### Response attributes
+
+All attributes below are nested under `data.attributes` in the response envelope.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `maxBid` | number or null | The ceiling on how much the auction may bid for the line item, in the line item's currency. |
 
 ### Sample response
 
@@ -149,8 +155,6 @@ curl -X POST "https://api.criteo.com/experimental/retail-media/line-items/123456
 | `200 OK` | | Returns the saved bidding configuration for the line item. Inspect `errors` and `warnings` before treating the response as complete. |
 | `400 Bad Request` | `unsupported-line-item-type` | The bidding configuration is available only for Onsite Display Auction and Sponsored Product Auction line items. |
 | `400 Bad Request` | `unsupported-bid-strategy` | The bidding configuration is available only for line items that use Adaptive bidding. |
-| `401 Unauthorized` | `authorization-token-missing` | The access token is missing. |
-| `401 Unauthorized` | `authorization-token-invalid` | The access token is invalid. |
-| `401 Unauthorized` | `authorization-token-expired` | The access token has expired. Obtain a new token and retry the request. |
-| `403 Forbidden` | `not-authorized` | The line item does not exist or is not accessible. For security, the response does not identify which condition occurred or include an error code. |
+| `401 Unauthorized` | `unauthorized` | 	The caller is not authenticated. |
+| `403 Forbidden` | `forbidden` | The caller does not have access to the requested line item. |
 | `500 Internal Server Error` | `internal-error` | The bidding configuration could not be set, usually because a dependent service failed. Retry the request. If the failure persists, contact support. |
