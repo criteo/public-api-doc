@@ -1,13 +1,13 @@
 ---
-title: Minimum Bid Details
-description: Retrieve minimum and recommended CPM bid guidance calculated from applicable retailer rates for an Onsite Display auction line item.
+title: Line Item Minimum Bid Details
+description: Retrieve the minimum valid bid, and the recommended minimum CPM bid, for an Onsite Display or Sponsored Products auction line item.
 ---
 
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
 ## Overview
 
-Minimum Bid Details returns CPM bid guidance calculated from the retailer rates applicable to an Onsite Display auction line item's configured page types, targeting, and creatives. Use the returned minimum bids when setting Standard page-type bids or the Adaptive maximum bid.
+Line Item Minimum Bid Details returns the lowest valid bid for a line item. Call it before you set the line item's max bid so you know the minimum you can use. If you set a max bid below this value, the request is rejected.
 
 <Info>
   **Availability: Available**
@@ -15,19 +15,22 @@ Minimum Bid Details returns CPM bid guidance calculated from the retailer rates 
   This endpoint is available in the Experimental Retail Media API.
 </Info>
 
-The endpoint supports Display auction line items with at least one creative. `minBid` is the lowest applicable retailer rate and is the inclusive minimum valid bid. `recommendedMinBid` is the highest applicable retailer rate for a page type across the line item's associated creative formats and category targets. Setting a bid at or above `recommendedMinBid` meets the applicable rate for every such combination on that page type; it does not guarantee delivery, which also depends on auction conditions and other line item settings.
+The endpoint supports Onsite Display and Sponsored Products auction line items. The response depends on the line item's bidding type:
+
+- **Onsite Display** line items bid use CPM bidding.
+- **Sponsored Products** line items bid use CPC bidding.
 
 ## Endpoint
 
 | Method | Endpoint | Description | Availability |
 | --- | --- | --- | --- |
-| `GET` | `/retail-media/line-items/{line-item-id}/min-bids` | Retrieve minimum and recommended CPM bid guidance for a line item. | Available |
+| `GET` | `/retail-media/line-items/{line-item-id}/min-bid` | Retrieve the minimum bid for a line item. | Available |
 
-## Retrieve Minimum Bid Details
+## Retrieve Line Item Minimum Bid Details
 
 <EndpointBadge method="get">
 ```http
-https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/min-bids
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/min-bid
 ```
 </EndpointBadge>
 
@@ -35,49 +38,84 @@ https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/min-b
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `line-item-id` | string | Yes | Identifier of the Display auction line item. |
+| `line-item-id` | string | Yes | Identifier of the Onsite Display or Sponsored Products auction line item. |
 
 The authenticated user must have permission to view the requested line item.
 
 ### Sample request
 
 ```bash
-curl -X GET "https://api.criteo.com/experimental/retail-media/line-items/123456789012345678/min-bids" \
+curl -X GET "https://api.criteo.com/experimental/retail-media/line-items/123456789012345678/min-bid" \
   -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
   -H "Accept: application/json"
 ```
 
 ### Response attributes
 
-All attributes below are nested under `data.attributes` in the response envelope. Amounts are expressed in the line item's currency.
+All attributes below are nested under `data.attributes` in the response envelope. Amounts are in the line item's currency.
 
 | Attribute | Type | Description |
 | --- | --- | --- |
-| `pageTypeMinBids` | array | Minimum and recommended bid guidance for the per-page-type bids in a Standard bidding configuration. Contains each page type configured on the line item. |
-| `pageTypeMinBids[].pageType` | string | Page type to which the guidance applies. |
-| `pageTypeMinBids[].minBid` | number | Inclusive minimum valid bid for the page type. |
-| `pageTypeMinBids[].recommendedMinBid` | number or null | Highest applicable retailer rate for the page type across the line item's creative formats and category targets. A bid at or above it meets all applicable rates for that page type. |
-| `adaptiveMinBid` | number | Lowest positive page-type `minBid`; `0` when no positive minimum exists. |
-| `adaptiveRecommendedMinBid` | number or null | Highest `recommendedMinBid` across configured page types. An Adaptive maximum bid at or above it meets all applicable rate recommendations for the line item. |
+| `biddingType` | string | Bidding type of the line item: `CpmBidding` or `CpcBidding`.|
+| `cpmMinBidDetails` | object or null | Minimum bid values for CPM line items. `null` when `biddingType` is `CpcBidding`. |
+| `cpmMinBidDetails.minBid` | number | Lowest bid the line item accepts. |
+| `cpmMinBidDetails.recommendedMinBid` | number or null | Recommended minimum bid. This is a recommendation, not a requirement. See [How minimum bids are calculated](#how-minimum-bids-are-calculated). |
+| `cpcMinBidDetails` | object or null | Minimum bid values for CPC line items. `null` when `biddingType` is `CpmBidding`. |
+| `cpcMinBidDetails.minBid` | number | Lowest bid the line item accepts. |
 
-Supported `pageType` contract values are `Unknown`, `Search`, `Home`, `Browse`, `Checkout`, `Category`, `ProductDetail`, `Confirmation`, `Merchandising`, `Deals`, `Favorites`, `SearchBar`, `CategoryMenu`, and `AiAssistant`. The response contains only page types configured on the line item.
+### How minimum bids are calculated
 
-### Sample response
+#### Onsite Display (CPM)
+
+The retailer sets CPM rates per page type. The rate for a page type depends on the creative format and the product category. For each page type configured on the line item, the endpoint finds the rates that match the line item's creatives and category targets, then calculates:
+
+- **`minBid`:** The lowest rate across the line item's page types, ignoring rates of `0`. A bid below this value is rejected.
+- **`recommendedMinBid`:** The highest rate across the line item's page types. A bid below this value is accepted but returns a warning. A bid at or above it meets the applicable rate for every page type, but doesn't guarantee delivery. Delivery also depends on auction conditions and other line item settings.
+
+If the line item has no page types, `minBid` is `0` and `recommendedMinBid` is `null`.
+
+#### Sponsored Products (CPC)
+
+The retailer sets a minimum CPC bid for each product category. The minimum bid is calculated from the categories of the SKUs on the line item.
+
+- **`minBid`:** The highest minimum bid across the categories of the SKUs on the line item. A bid below this value is rejected.
+
+If the line item has no SKUs, `minBid` is the retailer's default minimum bid.
+
+### Sample responses
+
+An Onsite Display line item:
 
 ```json
 {
   "data": {
-    "type": "LineItemMinBids",
+    "type": "LineItemMinBidResponse",
     "attributes": {
-      "pageTypeMinBids": [
-        {
-          "pageType": "Search",
-          "minBid": 1.25,
-          "recommendedMinBid": 1.75
-        }
-      ],
-      "adaptiveMinBid": 1.25,
-      "adaptiveRecommendedMinBid": 1.75
+      "biddingType": "CpmBidding",
+      "cpmMinBidDetails": {
+        "minBid": 1.25,
+        "recommendedMinBid": 2.00
+      },
+      "cpcMinBidDetails": null
+    }
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+A Sponsored Products line item:
+
+```json
+{
+  "data": {
+    "type": "LineItemMinBidResponse",
+    "attributes": {
+      "biddingType": "CpcBidding",
+      "cpmMinBidDetails": null,
+      "cpcMinBidDetails": {
+        "minBid": 0.50
+      }
     }
   },
   "warnings": [],
@@ -89,9 +127,10 @@ Supported `pageType` contract values are `Unknown`, `Search`, `Home`, `Browse`, 
 
 | Status | Code | Description |
 | --- | --- | --- |
-| `200 OK` | | Returns minimum and recommended bid guidance for the line item. |
-| `400 Bad Request` | `unsupported-line-item-type` | Minimum bid guidance is supported only for Display auction line items. |
-| `400 Bad Request` | `minimum-bid-guidance-requires-creative` | The line item must have at least one creative. |
-| `401 Unauthorized` | | The access token is missing, invalid, or expired. |
-| `403 Forbidden` | | The line item does not exist or is not accessible. For security, the response does not identify which condition occurred or include an error code. |
-| `500 Internal Server Error` | `internal-error` | Minimum bid guidance could not be calculated. Retry the request. If the failure persists, contact support. |
+| `200 OK` | | Returns the minimum bid for the line item. |
+| `400 Bad Request` | `unsupported-line-item-type` | The minimum bid is available only for Onsite Display and Sponsored Products auction line items. |
+| `400 Bad Request` | `unsupported-bid-strategy` | The minimum bid is available only for line items that use Adaptive bidding. |
+| `400 Bad Request` | `minimum-bid-guidance-requires-creative` | An Onsite Display line item must have at least one creative. |
+| `401 Unauthorized` | `unauthorized` | The caller is not authenticated. |
+| `403 Forbidden` | `forbidden` | The caller does not have access to the requested line item. |
+| `500 Internal Server Error` | `internal-error` | The minimum bid could not be calculated, usually because a dependent service failed. Retry the request. If the failure persists, contact support. |
