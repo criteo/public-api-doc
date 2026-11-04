@@ -1,0 +1,13 @@
+## Rate Limits
+
+The limit depends on which call you make, not only on the OAuth flow. Report creation is limited to **40 calls per minute**, while polling the status and downloading the output use the default limit.
+
+| Call | Limit |
+| ---- | ----- |
+| Report creation (`POST` to a `/reports/...` endpoint) | **40 calls per minute** |
+| Report status (`GET /reports/{reportId}/status`) | **250 calls per minute** (default) |
+| Report output (`GET /reports/{reportId}/output`) | **250 calls per minute** (default) |
+
+The 40 calls per minute allowance is shared across all report creation calls, so creating a report of a different type still consumes it. Polling and output download do not, so polling for status does not reduce the number of reports you can create.
+
+Calls above the limit return `429 Too Many Requests`, with `x-ratelimit-limit`, `x-ratelimit-remaining`, and `x-ratelimit-reset` headers. See [Rate Limits](/criteo-apis/docs/rate-limits) for the full policy and backoff guidance.
