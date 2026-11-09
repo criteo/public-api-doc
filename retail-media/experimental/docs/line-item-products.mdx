@@ -1,523 +1,84 @@
 ---
-title: Line Item Products
-description: Add products to a line item's product pool, remove products from it, and retrieve products from it.
+title: Manage Line Item Products
+description: How to add and remove products from a line item's product pool, and fetch the current pool.
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+This guide covers adding products to a line item's promotion pool, removing products, and retrieving the current pool. By the end, products will be available for the line item to promote and ready for creative assignment.
 
-## Overview
+---
 
-The product pool of a line item holds the products that the line item can promote. Adding a product makes it available to the line item; it does not assign it to a Creative Product Collection. Removing a product takes it out of the pool, so the line item stops promoting it.
+## Prerequisites
 
-Adding products is the step that follows creating a line item with [Line Item Core](/retail-media/experimental/docs/line-items-core). Identify eligible products to add by accessing your account [catalog](/retail-media/experimental/docs/catalogs). Products can be removed from the pool at any point in the line item's lifecycle.
-
-All three endpoints use the same product resource. A product is identified by its resource `id`, its `type` is always `LineItemProduct`, and its type-specific fields are grouped under a single detail object selected by `productType`. The products returned by an add are therefore in the same shape as the products you later fetch.
+- **Auth scope**: `retail-media:manage` for add/remove, `retail-media:read` for fetch — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Line item ID**: an existing `lineItemId` from [Create and Submit a Line Item](/retail-media/experimental/docs/line-items-core)
+- **Product IDs**: product IDs from your account's [catalog](/retail-media/experimental/docs/catalogs) — only products present in the retailer catalog are accepted
 
 <Info>
-  The long-term goal is to support product operations across line item types. Adding and removing products currently supports Onsite Display Auction line items, with `productType` `DisplayProduct`. Fetching products supports both Onsite Display and Sponsored Products line items. Additional product types will be documented as support is added.
+  Add and remove currently support Onsite Display Auction line items (`productType: DisplayProduct`). Fetch supports both Onsite Display and Sponsored Products line items.
 </Info>
 
-### Relationship to the current API
+---
 
-The add and delete endpoints replace the equivalent routes documented in [Promoted Products](/retail-media/docs/promoted-products), which remain available on stable versions in the meantime.
+## Steps
 
-| Experimental endpoint | Route it replaces |
-| --- | --- |
-| `POST /line-items/{line-item-id}/products/add` | `POST /line-items/{line-item-id}/products/append` |
-| `POST /line-items/{line-item-id}/products/delete` | `POST /line-items/{line-item-id}/products/delete` on stable versions |
+### 1. Add products to the pool
+
+[→ `POST /retail-media/line-items/{line-item-id}/products/add`](/retail-media/experimental/reference/line-item/add-line-item-products)
+
+Provide an array of product resources, each with `id`, `type: LineItemProduct`, `productType: DisplayProduct`, and an empty `displayProductDetails: {}`.
+
+```bash
+curl -X POST "https://api.criteo.com/experimental/retail-media/line-items/112233445566778899/products/add" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": [
+      {
+        "id": "sku-12345",
+        "type": "LineItemProduct",
+        "attributes": {
+          "productType": "DisplayProduct",
+          "displayProductDetails": {}
+        }
+      }
+    ]
+  }'
+```
 
 <Warning>
-  The removal route uses the same path on Experimental and on stable versions, but the request body is different. On `experimental`, send the `productIds` body described below. On a stable version, keep sending the array of promoted product resources documented in [Promoted Products](/retail-media/docs/promoted-products).
+  Add is all-or-nothing — if any product fails validation (e.g., not in the retailer catalog), the entire request fails and the pool is unchanged. Adding a product already in the pool is a no-op.
 </Warning>
 
-## Endpoints
+### 2. Fetch the product pool
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `POST` | `/line-items/{line-item-id}/products/add` | Add products to a line item's product pool. |
-| `POST` | `/line-items/{line-item-id}/products/delete` | Remove products from a line item's product pool. |
-| `GET` | `/line-items/{line-item-id}/products` | Retrieve a page of a line item's product pool. |
+[→ `GET /retail-media/line-items/{line-item-id}/products`](/retail-media/experimental/reference/line-item/get-line-item-products)
 
-## Product resource
+Returns a paginated list of products currently in the pool. Products are returned in ascending `productId` order. Each product includes its `approvalStatus` for display products or `status` for sponsored products.
 
-| Field | Description |
-| --- | --- |
-| `id` | ID of the product in the retailer catalog. |
-| `type` | Always `LineItemProduct`. |
-| `attributes.productType` | `DisplayProduct` or `SponsoredProduct`. Selects which detail object is present. |
-| `attributes.displayProductDetails` | Present when `productType` is `DisplayProduct`, and absent otherwise. |
-| `attributes.sponsoredProductDetails` | Present when `productType` is `SponsoredProduct`, and absent otherwise. |
+### 3. Remove products from the pool
 
-Exactly one detail object is present on each product. The other is omitted rather than returned as `null`.
+[→ `POST /retail-media/line-items/{line-item-id}/products/delete`](/retail-media/experimental/reference/line-item/delete-line-item-products)
 
-### Display product details
+Pass product IDs in the `productIds` array inside a single resource. Removal is idempotent — IDs not in the pool generate a `product-already-deleted` warning but the request still succeeds.
 
-| Field | Description |
-| --- | --- |
-| `approvalStatus` | Approval state of the product on the line item. It is calculated by Criteo's approval process and cannot be set by a client. One of `Approved`, `AutoApproved`, `InReview`, `Rejected`, `AutoRejected`, or `Unsubmitted`. |
+<Warning>
+  The `/products/delete` path exists on both experimental and stable but the request body is different. On experimental, send `data.attributes.productIds` (array of ID strings). On stable versions, send an array of product resources. Using the wrong body shape silently does nothing or errors.
+</Warning>
 
-When you add a display product, send `displayProductDetails` as an empty object, `{}`. It carries no request fields today.
+---
 
-### Sponsored product details
+## Verify
 
-| Field | Description |
-| --- | --- |
-| `status` | Status of the product in the Sponsored Products pool: `Active` or `Inactive`. |
+A successful add returns HTTP `200` with `data` listing the added products and their `approvalStatus: Unsubmitted`. After retailer approval, `approvalStatus` becomes `Approved`. A `200` from remove returns empty `warnings` and `errors` arrays — use a fetch to confirm the pool state.
 
-### Enum values
+---
 
-Enums are serialized as strings. New values may be added to `productType`, `approvalStatus`, and `status` without a version change, so do not fail on a value you do not recognize; treat it as `Unknown`.
+## Constraints
 
-## Add Products to a Line Item
-
-Adds one or more products to the product pool of an existing line item.
-
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/products/add
-```
-</EndpointBadge>
-
-### Path parameters
-
-| Parameter | Required | Description |
-| --- | --- | --- |
-| `line-item-id` | Yes | External ID of the line item that owns the product pool. |
-
-### Request body
-
-The body's `data` is an array with one product resource per product to add. At least one product is required.
-
-| Field | Required | Description |
-| --- | --- | --- |
-| `data[].id` | Yes | ID of the product to add. It must exist in the retailer catalog of the line item's account. |
-| `data[].type` | Yes | `LineItemProduct`. |
-| `data[].attributes.productType` | Yes | Type of the product. It must match the type of the target line item. Only `DisplayProduct` is currently supported. |
-| `data[].attributes.displayProductDetails` | Yes, for `DisplayProduct` | Send an empty object, `{}`. |
-
-A single request accepts at most 1500 distinct products, and a line item's product pool holds at most 1500 products.
-
-### Behavior
-
-- The add is all-or-nothing. If any product fails validation, the request fails and the product pool is left unchanged.
-- Every product in the request is validated, and the response reports every problem found, each pointing at the product it concerns, for example `@data/2/id`.
-- A product ID is invalid if it is not present in the retailer catalog available to the line item's account.
-- Adding a product that is already in the product pool is a no-op. No duplicate is created and no error is returned for that product.
-- Adding a product that was previously removed from the line item returns it to the product pool.
-- Duplicate product IDs within the same request are deduplicated, ignoring case. The product is added once and returned once.
-- Products are added to the product pool only. They are not assigned to a Creative Product Collection.
-
-### Response
-
-The response's `data` lists the requested products, once each and in request order, as product resources. Approval is tracked for a line item's products as a whole, so every display product in the response carries the same `approvalStatus`.
-
-### Sample Request
-
-<Accordion title="Example request">
-
-```json
-{
-  "data": [
-    {
-      "id": "sku-12345",
-      "type": "LineItemProduct",
-      "attributes": {
-        "productType": "DisplayProduct",
-        "displayProductDetails": {}
-      }
-    },
-    {
-      "id": "sku-67890",
-      "type": "LineItemProduct",
-      "attributes": {
-        "productType": "DisplayProduct",
-        "displayProductDetails": {}
-      }
-    }
-  ]
-}
-```
-
-</Accordion>
-
-### Sample Responses
-
-<Accordion title="Example response (200)">
-
-```json
-{
-  "data": [
-    {
-      "id": "sku-12345",
-      "type": "LineItemProduct",
-      "attributes": {
-        "productType": "DisplayProduct",
-        "displayProductDetails": {
-          "approvalStatus": "Unsubmitted"
-        }
-      }
-    },
-    {
-      "id": "sku-67890",
-      "type": "LineItemProduct",
-      "attributes": {
-        "productType": "DisplayProduct",
-        "displayProductDetails": {
-          "approvalStatus": "Unsubmitted"
-        }
-      }
-    }
-  ],
-  "warnings": [],
-  "errors": []
-}
-```
-
-</Accordion>
-
-When product IDs are not found in the catalog, the response includes one error per unknown product, and nothing is added.
-
-<Accordion title="Example error response (400)">
-
-```json
-{
-  "warnings": [],
-  "errors": [
-    {
-      "traceId": "unique-request-id",
-      "code": "product-invalid",
-      "type": "validation",
-      "title": "product-invalid",
-      "detail": "Product ID 'sku-12345' is not in the retailer catalog",
-      "instance": "@data/0/id"
-    },
-    {
-      "traceId": "unique-request-id",
-      "code": "product-invalid",
-      "type": "validation",
-      "title": "product-invalid",
-      "detail": "Product ID 'sku-99999' is not in the retailer catalog",
-      "instance": "@data/4/id"
-    }
-  ]
-}
-```
-
-</Accordion>
-
-### Errors
-
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `400` | `products-required` | No product was supplied, or a product is missing its `id`, its `attributes`, or the detail object for its `productType`. |
-| `400` | `invalid-product-details` | A product carries the detail object of the other product type, for example `sponsoredProductDetails` on a `DisplayProduct`. |
-| `400` | `invalid-product-type` | `productType` is missing, unknown, or not yet supported, or it does not match the type of the target line item. |
-| `400` | `product-invalid` | A product ID is not in the retailer catalog. One error is returned per unknown product. |
-| `400` | `products-limit-exceeded` | The request contains more than 1500 distinct products, or adding them would take the product pool over 1500 products. |
-| `400` | `unsupported-line-item-type` | The line item's buy type is not Auction, which the current implementation does not support. |
-| `401` | `unauthenticated` | The caller is not authenticated. |
-| `403` | `not-authorized` | The caller cannot modify the target line item, or the line item does not exist. The two cases return the same response by design, so the API does not reveal whether a line item exists. |
-| `500` | `internal-error` | The request could not be completed because of an unexpected service failure. |
-| `503` | `catalog-unavailable` | The catalog service could not be reached to validate the products. Retry the request later. |
-
-## Remove Products from a Line Item
-
-Removes one or more products from the product pool of an existing line item.
-
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/products/delete
-```
-</EndpointBadge>
-
-### Path parameters
-
-| Parameter | Required | Description |
-| --- | --- | --- |
-| `line-item-id` | Yes | External ID of the line item that owns the product pool. |
-
-### Request body
-
-Unlike the add operation, products are supplied as a flat list of IDs in `productIds`, inside a single resource.
-
-| Field | Required | Description |
-| --- | --- | --- |
-| `data.type` | Yes | `LineItemProduct`. |
-| `data.attributes.productIds` | Yes | IDs of the products to remove from the product pool. At least one ID is required, and a single request accepts at most 1500 distinct IDs. |
-
-### Behavior
-
-- Removal is a soft delete. The product's status becomes `Removed` and the line item stops promoting it. The product is not erased, and it remains in your account catalog.
-- Products are removed from both the current line item and its proposal, so a pending change set stays consistent with the live one.
-- The operation is idempotent. Removing a product ID that is not in the product pool, or that was already removed, succeeds, removes nothing for that ID, and is reported as a `product-already-deleted` warning. Repeating the same request has no further effect.
-- Duplicate product IDs within the same request are deduplicated, ignoring case. Each product is removed once.
-- Validation is all-or-nothing. If the request is invalid, for example because it exceeds 1500 IDs, the entire request is rejected and the product pool is left unchanged.
-- Products are removed from the product pool only. They are not yet removed from Creative Product Collections that reference them; that behavior will follow.
-- Removing every product from a line item is allowed. The line item may stop being served as a result.
-
-### Response
-
-The response carries `warnings` and `errors` only; it does not list the products that were removed. To confirm the resulting state of the pool, [fetch the line item's products](#fetch-products-of-a-line-item).
-
-### Sample Request
-
-<Accordion title="Example request">
-
-```json
-{
-  "data": {
-    "type": "LineItemProduct",
-    "attributes": {
-      "productIds": [
-        "sku-12345",
-        "sku-67890"
-      ]
-    }
-  }
-}
-```
-
-</Accordion>
-
-### Sample Responses
-
-When all requested products are removed without warnings, the endpoint returns `200` with an empty outcome.
-
-<Accordion title="Example response (200)">
-
-```json
-{
-  "warnings": [],
-  "errors": []
-}
-```
-
-</Accordion>
-
-When one or more product IDs are not in the product pool, the response includes a warning for each of them. Matching products are still removed.
-
-<Accordion title="Example response with warning (200)">
-
-```json
-{
-  "warnings": [
-    {
-      "traceId": "unique-request-id",
-      "code": "product-already-deleted",
-      "type": "validation",
-      "title": "product-already-deleted",
-      "detail": "Product ID 'sku-67890' is not in the line item's product pool",
-      "instance": "@data/attributes/productIds/1"
-    }
-  ],
-  "errors": []
-}
-```
-
-</Accordion>
-
-<Accordion title="Example error response (400)">
-
-```json
-{
-  "warnings": [],
-  "errors": [
-    {
-      "traceId": "unique-request-id",
-      "code": "products-limit-exceeded",
-      "type": "validation",
-      "title": "products-limit-exceeded",
-      "detail": "A request cannot contain more than 1500 distinct products",
-      "instance": "@data/attributes/productIds"
-    }
-  ]
-}
-```
-
-</Accordion>
-
-### Errors
-
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `200` | `product-already-deleted` | Warning. A product ID is not in the product pool, or was already removed. Nothing is removed for that ID. Previously `unmatched-product-id`. |
-| `400` | `products-required` | `productIds` is missing or empty. No products are removed. |
-| `400` | `products-limit-exceeded` | More than 1500 distinct product IDs were supplied. No products are removed. |
-| `400` | `unsupported-line-item-type` | The line item's buy type is not Auction, which the current implementation does not support. |
-| `401` | `unauthenticated` | The caller is not authenticated. |
-| `403` | `not-authorized` | The caller cannot modify the target line item, or the line item does not exist. The two cases return the same response by design, so the API does not reveal whether a line item exists. |
-| `500` | `internal-error` | The request could not be completed because of an unexpected service failure. |
-
-## Fetch Products of a Line Item
-
-Retrieves a page of the product pool of an existing line item.
-
-<EndpointBadge method="get">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}/products?offset=0&limit=500
-```
-</EndpointBadge>
-
-### Parameters
-
-| Parameter | Location | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `line-item-id` | Path | Yes | | External ID of the line item that owns the product pool. |
-| `offset` | Query | No | `0` | Zero-based offset into the product pool. Must be `0` or greater. |
-| `limit` | Query | No | `500` | Maximum number of products to return. Must be between `1` and `1000`. A larger value is rejected rather than reduced. |
-
-### Behavior
-
-- The operation is read-only and has no side effects.
-- Products are returned in ascending `productId` order. The order is stable across pages while the pool is unchanged, which makes `offset` and `limit` paging safe.
-- Only products currently in the pool are returned. Products that were removed are not.
-- The `productType` of every product is derived from the line item: an Onsite Display line item returns `DisplayProduct` products with `displayProductDetails`, and a Sponsored Products line item returns `SponsoredProduct` products with `sponsoredProductDetails`.
-- A line item with no products returns `200` with an empty `data` array. An `offset` at or beyond the end of the pool also returns an empty page, with `meta.count` still reporting the pool size.
-- A line item that does not exist and a line item that you cannot view return the same `403` response.
-
-### Response
-
-| Field | Description |
-| --- | --- |
-| `data` | The page of products, as product resources. Empty when the pool is empty or the offset is past its end. |
-| `meta.count` | Total number of products in the line item's pool. |
-| `meta.offset` | The requested offset. |
-| `meta.limit` | The applied page size: the requested `limit`, or the default when none was supplied. |
-| `meta.responseCount` | Number of products returned in this page. |
-
-### Sample Request
-
-<Accordion title="Example request">
-
-```http
-GET https://api.criteo.com/experimental/retail-media/line-items/123456789/products?offset=0&limit=500
-```
-
-</Accordion>
-
-### Sample Responses
-
-<Accordion title="Example response for an Onsite Display line item (200)">
-
-```json
-{
-  "data": [
-    {
-      "id": "sku-12345",
-      "type": "LineItemProduct",
-      "attributes": {
-        "productType": "DisplayProduct",
-        "displayProductDetails": {
-          "approvalStatus": "Approved"
-        }
-      }
-    },
-    {
-      "id": "sku-67890",
-      "type": "LineItemProduct",
-      "attributes": {
-        "productType": "DisplayProduct",
-        "displayProductDetails": {
-          "approvalStatus": "InReview"
-        }
-      }
-    }
-  ],
-  "meta": {
-    "count": 57,
-    "offset": 0,
-    "limit": 500,
-    "responseCount": 2
-  },
-  "warnings": [],
-  "errors": []
-}
-```
-
-</Accordion>
-
-<Accordion title="Example response for a Sponsored Products line item (200)">
-
-```json
-{
-  "data": [
-    {
-      "id": "sku-12345",
-      "type": "LineItemProduct",
-      "attributes": {
-        "productType": "SponsoredProduct",
-        "sponsoredProductDetails": {
-          "status": "Active"
-        }
-      }
-    },
-    {
-      "id": "sku-67890",
-      "type": "LineItemProduct",
-      "attributes": {
-        "productType": "SponsoredProduct",
-        "sponsoredProductDetails": {
-          "status": "Inactive"
-        }
-      }
-    }
-  ],
-  "meta": {
-    "count": 2,
-    "offset": 0,
-    "limit": 500,
-    "responseCount": 2
-  },
-  "warnings": [],
-  "errors": []
-}
-```
-
-</Accordion>
-
-<Accordion title="Example response for an empty product pool (200)">
-
-```json
-{
-  "data": [],
-  "meta": {
-    "count": 0,
-    "offset": 0,
-    "limit": 500,
-    "responseCount": 0
-  },
-  "warnings": [],
-  "errors": []
-}
-```
-
-</Accordion>
-
-<Accordion title="Example error response (400)">
-
-```json
-{
-  "warnings": [],
-  "errors": [
-    {
-      "traceId": "unique-request-id",
-      "code": "invalid-request",
-      "type": "validation",
-      "title": "Invalid pagination parameters",
-      "detail": "limit must be between 1 and 1000."
-    }
-  ]
-}
-```
-
-</Accordion>
-
-### Errors
-
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `400` | `invalid-request` | `offset` is negative, or `limit` is outside `1` to `1000`. |
-| `401` | `unauthenticated` | The caller is not authenticated. |
-| `403` | `not-authorized` | The caller cannot view the line item, or the line item does not exist. The two cases are indistinguishable by design. |
-| `500` | `internal-error` | The request could not be completed because of an unexpected service failure. |
-| `503` | `approvals-unavailable` | The approval statuses of the products could not be retrieved. Retry the request later. |
+| Limit | Value |
+|---|---|
+| Max products per request / pool | 1,500 |
+| Fetch page `limit` | 1–1,000 (default 500) |
+| Products added to | Pool only — not automatically assigned to Creative Product Collections |
+| Remove behavior | Soft delete — product removed from pool and proposal, stays in catalog |
+| Duplicate IDs in request | Deduplicated case-insensitively — added or removed once |
