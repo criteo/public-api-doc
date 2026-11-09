@@ -21,6 +21,18 @@ Criteo Retail Media API releases twice a year: end of January and end of July.
 | `2027.07-rc` | Release candidate |
 | `2027.01` | Next stable (~January 2027) |
 
+## Content Structure
+
+The dev portal nav is organized into three layers:
+
+| Section | Purpose |
+|---|---|
+| **Concepts** | Explain what something is — data model, architecture, pricing logic. No curl examples. |
+| **API Workflows** | Goal-oriented guides: one guide per developer job-to-be-done. Curl examples, steps, verify. |
+| **Reference Pages for LLMs** | Dense structured pages for LLM consumption: hard limits, error codes, field matrices, semantic patterns. No prose padding. |
+
+The API Reference (auto-generated from OAS) sits below these three layers.
+
 ## Workflow Guide Template
 
 We are replacing encyclopedic endpoint guides that duplicate the API Reference with API Workflow guides that are goal-oriented and actionable — one guide per developer job-to-be-done, not one guide per endpoint.
