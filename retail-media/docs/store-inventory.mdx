@@ -1,582 +1,95 @@
 ---
-title: Store Inventory
-description: Manage product availability and pricing at the store level using the Store Inventory API
+title: Manage Store Inventory
+description: Send real-time store-level price and availability updates using the Store Inventory API.
 ---
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
-## Introduction
+Send batched inventory events (upserts and deletes) to keep store-level product availability and pricing current. This powers accurate PDP and ad experiences at the store level.
 
-**Store Inventory** enables retailers to manage product availability and pricing at the store level, supporting accurate PDP/ad experiences. Inventory events (upserts and deletes) are sent in batches, enabling real-time updates for price and availability per store.
+<Note>
+  Each event in a batch must have a unique `batchId` per request.
+</Note>
 
-This API is **event-driven** and **multi-tenant**.
+## Prerequisites
 
-<Info>
-  You can also find the Store Inventory endpoints in our API Reference for [`upsert`](/retail-media/reference/catalog/upsert-store-inventory-per-merchant-id) and [`delete`](/retail-media/reference/catalog/delete-store-inventory-per-merchant-id).
-</Info>
+- Authenticated with scope for catalog management (contact Criteo for the required scope)
+- Merchant ID (`merchantId`) — your `partnerId` in Criteo systems
 
-***
+## Regional URLs
 
-## URLs
+| Region | Base URL |
+|---|---|
+| Americas | `api.us.criteo.com` |
+| APAC | `api.as.criteo.com` |
+| EMEA | `api.eu.criteo.com` |
 
-* For AMERICAS: [api.us.criteo.com](https://api.us.criteo.com)
-* For APAC: [api.as.criteo.com](https://api.as.criteo.com)
-* For EMEA: [api.eu.criteo.com](https://api.eu.criteo.com)
+## Steps
 
-***
+### 1. Upsert inventory
 
-## Endpoints
+[→ `POST /retail-media/catalog/merchants/{merchantId}/store-inventory/upsert`](/retail-media/reference/catalog/upsert-store-inventory-per-merchant-id)
 
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Verb
-    </p>
-   </th>
-   <th>
-    <p>
-     Endpoint
-    </p>
-   </th>
-   <th>
-    <p>
-     Description
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     POST
-    </p>
-   </td>
-   <td>
-    <p>
-     <code>
-      /&#123;version&#125;/retail-media/catalog/merchants/&#123;merchantId&#125;/store-inventory/upsert
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     Insert or update store(s)
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     POST
-    </p>
-   </td>
-   <td>
-    <p>
-     <code>
-      /&#123;version&#125;/retail-media/catalog/merchants/&#123;merchantId&#125;/store-inventory/delete
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     Delete store(s)
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
+Send a batch of insert or update events. Each item in `data` requires `batchId`, `productId`, `storeId`, `availability`, and `price`.
 
-***
-
-## Store Inventory Attributes
-
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Attribute
-    </p>
-   </th>
-   <th>
-    <p>
-     Data Type
-    </p>
-   </th>
-   <th>
-    <p>
-     Description
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     <code>
-      merchantId
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     integer
-    </p>
-   </td>
-   <td>
-    <p>
-     The ID of the managing account.
-    </p>
-    <p>
-     Criteo: the
-     <code>
-      partnerId
-     </code>
-    </p>
-    <p>
-     Accepted values: integer (int32)
-    </p>
-    <p>
-     Writeable? N / Nullable? N
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      batchId
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     string
-    </p>
-   </td>
-   <td>
-    <p>
-     Identifies this event. Should be unique for a given endpoint call.
-    </p>
-    <p>
-     Writeable? Y / Nullable? N
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      productId
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     string
-    </p>
-   </td>
-   <td>
-    <p>
-     Identifies a product
-    </p>
-    <p>
-     Accepted values: up to 50 chars string
-    </p>
-    <p>
-     Writeable? Y / Nullable? N
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      storeId
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     string
-    </p>
-   </td>
-   <td>
-    <p>
-     Identifies the store for the customer.
-    </p>
-    <p>
-     Accepted values: up to 64 chars string
-    </p>
-    <p>
-     Writeable? Y / Nullable? N
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      availability
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     string
-    </p>
-   </td>
-   <td>
-    <p>
-     Accepted values:
-     <code>
-      in_stock
-     </code>
-     ,
-     <code>
-      out_of_stock
-     </code>
-     ,
-     <code>
-      preorder
-     </code>
-     ,
-     <code>
-      backorder
-     </code>
-    </p>
-    <p>
-     Writeable? Y / Nullable? N
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      price
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     string
-    </p>
-   </td>
-   <td>
-    <p>
-     Product's price at this store
-    </p>
-    <p>
-     Accepted values: up to 14 chars string
-    </p>
-    <p>
-     Writeable? Y / Nullable? N
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      salePrice
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     string
-    </p>
-   </td>
-   <td>
-    <p>
-     The sale price of the product
-    </p>
-    <p>
-     Accepted values: up to 14 chars string
-    </p>
-    <p>
-     Writeable? Y / Nullable? Y
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
-
-(*) Required
-
-<Info>
-  **Field Definitions**
-
-  * **Writeable (Y/N)**: Indicates if the field can be modified in requests.
-  * **Nullable (Y/N)**: Indicates if the field can accept null/empty values.
-  * **Primary Key**: A unique, immutable identifier of the entity, generated internally by Criteo. Primary keys are typically ID fields (e.g., `merchantId`, `batchId`, `productId`) and are usually required in the URL path.
-</Info>
-
-***
-
-## Upsert Store Inventory
-
-Send a batch of inventory upsert events for a merchant.
-
-<Info>
-  **Use case**: Insert or update store-level inventory (price, availability) for one or more products.
-</Info>
-
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/{version}/retail-media/catalog/merchants/{merchantId}/store-inventory/upsert
-```
-</EndpointBadge>
-
-### Sample Request
-
-```json
-{
-  "data": [
-    {
-      "type": "Upsert",
-      "attributes": {
-        "batchId": "batch1",
-        "productId": "product1",
-        "storeId": "store1",
-        "availability": "in_stock",
-        "price": "19.99",
-        "salePrice": "10.99"
+```bash
+curl -X POST "https://api.us.criteo.com/2026-07/retail-media/catalog/merchants/12345/store-inventory/upsert" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": [
+      {
+        "type": "Upsert",
+        "attributes": {
+          "batchId": "batch1",
+          "productId": "product1",
+          "storeId": "store1",
+          "availability": "in_stock",
+          "price": "19.99",
+          "salePrice": "10.99"
+        }
       }
-    },
-    {
-      "type": "Upsert",
-      "attributes": {
-        "batchId": "batch2",
-        "productId": "product2",
-        "storeId": "store2",
-        "availability": "out_of_stock",
-        "price": "29.99"
-      }
-    }
-  ]
-}
+    ]
+  }'
 ```
 
-### Sample Response
+<Warning>Each request can contain at most 1000 events. Exceeding this limit returns `400 Request too large`.</Warning>
 
-```json
-HTTP STATUS 204 (No Content)
-&lt;EMPTY PAYLOAD&gt;
-```
+A successful upsert returns `HTTP 204 No Content` with an empty payload.
 
-***
+---
 
-## Delete Store Inventory
+### 2. Delete inventory
 
-Send a batch of inventory delete events for a merchant.
+[→ `POST /retail-media/catalog/merchants/{merchantId}/store-inventory/delete`](/retail-media/reference/catalog/delete-store-inventory-per-merchant-id)
 
-<Info>
-  **Use case**: Remove outdated or unavailable inventory records.
-</Info>
+Send a batch of delete events. Each item requires `batchId`, `productId`, and `storeId`. The `availability` and `price` fields are not needed for deletes.
 
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/{version}/retail-media/catalog/merchants/{merchantId}/store-inventory/delete
-```
-</EndpointBadge>
+A successful delete returns `HTTP 204 No Content` with an empty payload.
 
-### Sample Request
+---
 
-```json
-{
-  "data": [
-    {
-      "type": "Delete",
-      "attributes": {
-        "batchId": "batch1",
-        "productId": "product1",
-        "storeId": "store1"
-      }
-    },
-    {
-      "type": "Delete",
-      "attributes": {
-        "batchId": "batch2",
-        "productId": "product2",
-        "storeId": "store2"
-      }
-    }
-  ]
-}
-```
+## Verify
 
-### Sample Response
+A successful operation returns `HTTP 204 No Content` with an empty payload. Any error returns a non-2xx status with an error body.
 
-```json
-HTTP STATUS 204 (No Content)
-&lt;EMPTY PAYLOAD&gt;
-```
+---
 
-***
+## Field reference
 
-## Error Codes
+| Field | Required | Type | Constraints |
+|---|---|---|---|
+| `batchId` | Yes | string | Must be unique per request |
+| `productId` | Yes | string | Up to 50 characters |
+| `storeId` | Yes | string | Up to 64 characters |
+| `availability` | Yes (upsert) | enum | `in_stock`, `out_of_stock`, `preorder`, `backorder` |
+| `price` | Yes (upsert) | string | Up to 14 characters |
+| `salePrice` | No | string | Up to 14 characters |
 
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Error code
-    </p>
-   </th>
-   <th>
-    <p>
-     Error text
-    </p>
-   </th>
-   <th>
-    <p>
-     Description
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     400
-    </p>
-   </td>
-   <td>
-    <p>
-     Bad request
-    </p>
-   </td>
-   <td>
-    <p>
-     Validation errors, required fields, unique
-     <code>
-      batchId
-     </code>
-     /
-     <code>
-      productId
-     </code>
-     /
-     <code>
-      storeCode
-     </code>
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     400
-    </p>
-   </td>
-   <td>
-    <p>
-     Request too large
-    </p>
-   </td>
-   <td>
-    <p>
-     Payload exceeds 1000 events
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     401
-    </p>
-   </td>
-   <td>
-    <p>
-     Unauthorized
-    </p>
-   </td>
-   <td>
-    <p>
-     Authentication required
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     403
-    </p>
-   </td>
-   <td>
-    <p>
-     Forbidden
-    </p>
-   </td>
-   <td>
-    <p>
-     Not authorized
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     429
-    </p>
-   </td>
-   <td>
-    <p>
-     Too Many Requests
-    </p>
-   </td>
-   <td>
-    <p>
-     Rate limiting
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     500
-    </p>
-   </td>
-   <td>
-    <p>
-     Internal Error
-    </p>
-   </td>
-   <td>
-    <p>
-     Server error
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     503
-    </p>
-   </td>
-   <td>
-    <p>
-     Service Unavailable
-    </p>
-   </td>
-   <td>
-    <p>
-     Service temporarily unavailable
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
+## Common errors
+
+| Code | Error | Cause |
+|---|---|---|
+| `400` | Bad request | Missing required fields; non-unique `batchId`/`productId`/`storeId` combination |
+| `400` | Request too large | Payload exceeds 1000 events |
+| `401` | Unauthorized | Authentication required |
+| `403` | Forbidden | Not authorized for this merchant ID |
+| `429` | Too Many Requests | Rate limit exceeded |

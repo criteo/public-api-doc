@@ -1,29 +1,159 @@
 ---
 title: Audiences
-original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/audiences/index.md
+description: Audience segments let you target users based on their shopping behavior — who they are, what they browsed, and what they bought.
 ---
 
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
-
-An audience represents all users who interacted with specific brands or categories over a defined period, and can be specifically targeted for your campaigns.
-
-[Audience Endpoints](/retail-media/docs/audience-endpoints)
-
-[Audience Segment Endpoints](/retail-media/docs/audience-segment-endpoints)
+An audience is a named collection of users defined by one or more audience segments. You attach audiences to line items to control who sees your ads. Audiences are built from segments — each segment captures a specific behavioral or demographic signal — and can be combined using boolean logic to reach exactly the right users.
 
 <Note>
-  **CMax Help Center**
-
-  You can find more information about audiences and audience segments in Criteo C-Max Help Center, on [this page](https://help.retailmedia.criteo.com/kb/guide/en/offsite-build-an-audience-bxFM6LtmvS/Steps/2973790,3269127) for Offsite, and [this page](https://help.retailmedia.criteo.com/kb/guide/en/onsite-display-build-an-audience-5a0BoXiXmP/Steps/2360680) for Onsite Display.
+  See the full list of endpoints and parameters in the [→ API Reference](/retail-media/reference/get-audiences)
 </Note>
 
-***
+<Note>
+  Learn more in the [CMax Help Center](https://help.retailmedia.criteo.com/kb/guide/en/offsite-build-an-audience-bxFM6LtmvS/Steps/2973790,3269127)
+</Note>
 
-<br />
+---
 
+## Audience Segment Types
 
-## What's next
+| Type | Description |
+|---|---|
+| **Contact List** | A list of users identified by email addresses or device IDs that you upload directly. Useful for retargeting known customers. |
+| **User Events (ATB)** | Users captured by their on-site behavior: product views, add-to-basket events, or purchases. Built from retailer event data. |
+| **Automated** | Segments managed by Criteo based on modeled signals — e.g. lookalike audiences built from your contact lists or buyers. |
 
-* [Audience Endpoints](/retail-media/docs/audience-endpoints)
-* [Audience Segment Endpoints](/retail-media/docs/audience-segment-endpoints)
-* [Algebra Nodes](/retail-media/docs/algebra-nodes)
+---
+
+## Lifecycle and Statuses
+
+Audience segments move through a processing pipeline after creation. The `status` field on a segment reflects its current state:
+
+| Status | Meaning |
+|---|---|
+| `pending` | Segment has been submitted and is queued for processing. |
+| `processing` | Criteo is building the segment. |
+| `ready` | Segment is active and eligible for targeting. |
+| `failed` | Processing failed. Check the segment's error details and resubmit. |
+| `expired` | The segment's lookback window has passed and it is no longer active. |
+
+An audience is only eligible for delivery once all its segments reach `ready` status.
+
+---
+
+## Constraints
+
+- An audience must belong to a single account — segments cannot be shared across accounts.
+- Contact list segments require a minimum size; Criteo does not surface the exact threshold for privacy reasons.
+- Lookback windows are fixed at segment creation and cannot be modified afterward.
+- Onsite and Offsite audiences use the same segment types but are configured on different line item formats.
+
+---
+
+## Algebra Nodes
+
+Each audience has one algebra node that defines the boolean logic used to combine its segments. You set this when creating or updating the audience's targeting expression.
+
+There are four node types:
+
+| Node | Operator | Description |
+|---|---|---|
+| **Segment node** | _(none)_ | Targets users in a single segment. |
+| **AND node** | Intersection | Targets users who belong to **all** listed segments simultaneously. |
+| **OR node** | Union | Targets users who belong to **any** of the listed segments. |
+| **NOT node** | Exclusion | Excludes users who belong to the listed segments. |
+
+Nodes can be nested — an AND node can contain OR nodes, and a NOT node can wrap any other node type.
+
+### Segment node
+
+```json
+// Target users in a single segment
+{
+    "audienceSegmentId": "920472839472539402"
+}
+```
+
+### AND node
+
+```json expandable
+// Target users that belong to all three segments
+"and": [
+    { "audienceSegmentId": "920472839472539402" },
+    { "audienceSegmentId": "233219483716673812" },
+    { "audienceSegmentId": "333772819393817832" }
+]
+
+// Target users in both groups (intersection of two OR groups)
+"and": [
+    {
+        "or": [
+            { "audienceSegmentId": "920472839472539402" },
+            { "audienceSegmentId": "233219483716673812" }
+        ]
+    },
+    {
+        "or": [
+            { "audienceSegmentId": "826202615157899221" },
+            { "audienceSegmentId": "100859273425167728" }
+        ]
+    }
+]
+
+// Target users in the first group but exclude a specific segment
+"and": [
+    {
+        "or": [
+            { "audienceSegmentId": "281929273626192303" },
+            { "audienceSegmentId": "625702934721171442" }
+        ]
+    },
+    {
+        "not": { "audienceSegmentId": "194652937100327617" }
+    }
+]
+```
+
+### OR node
+
+```json
+// Target users in any of these segments
+{
+    "or": [
+        { "audienceSegmentId": "194652937100327617" },
+        { "audienceSegmentId": "100859273425167728" },
+        { "audienceSegmentId": "826202615157899221" }
+    ]
+}
+```
+
+### NOT node
+
+```json
+// Exclude users in a single segment
+{
+    "not": { "audienceSegmentId": "194652937100327617" }
+}
+
+// Exclude users in any of these segments
+{
+    "not": {
+        "or": [
+            { "audienceSegmentId": "920472839472539402" },
+            { "audienceSegmentId": "826202615157899221" }
+        ]
+    }
+}
+
+// Exclude users in all of these segments (only excludes users who match every one)
+{
+    "not": {
+        "and": [
+            { "audienceSegmentId": "920472839472539402" },
+            { "audienceSegmentId": "826202615157899221" }
+        ]
+    }
+}
+```

@@ -1,0 +1,61 @@
+---
+title: Search Enriched Creatives
+description: How to find creatives with stable IDs and retailer-specific product collection constraints.
+---
+
+Use this endpoint to get creative IDs that are stable across edits, alongside the product collection constraints of each creative's template. New in `2027.01` — not available in stable.
+
+---
+
+## Prerequisites
+
+- **Auth scope**: `retail-media:read` — see [Authentication](/retail-media/v2027.01-rc/docs/authentication)
+- **Account ID**: the `accountId` whose creatives to search
+
+---
+
+## Steps
+
+### 1. Search enriched creatives
+
+[→ `POST /retail-media/accounts/{account-id}/creatives/search-enriched`](/retail-media/v2027.01-rc/reference/creative/search-enriched-creatives)
+
+All filters are optional — send `attributes: {}` to return all creatives. Supply `retailerIds` when filtering by `pageTypes` to get accurate placement matches.
+
+```bash
+curl -X POST "https://api.criteo.com/2027-01/retail-media/accounts/4567891234567891/creatives/search-enriched" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "CreativeSearchEnrichedRequest",
+      "attributes": {
+        "retailerIds": ["1141"],
+        "creativeTypes": ["CommerceDisplay"],
+        "templateIds": ["305"]
+      }
+    }
+  }'
+```
+
+Paginate with `offset` and `limit` query parameters (default 50, max 500).
+
+---
+
+## Verify
+
+A successful response returns HTTP `200` with a `data` array and `metadata.count`. Each creative includes a stable `id`, `creativeType`, `pageType`, `templateId`, and product collection constraints (`productCollectionsMin`, `productCollectionsMax`, `productsPerCollectionMin`, `productsPerCollectionMax`). An empty `data` array with `metadata.count: 0` means no creatives match — check for `warnings` about invalid filter IDs.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Default page size | 50; max 500 |
+| Max `creativeIds` per request | 500 |
+| Max `retailerIds` / `templateIds` | 100 each |
+| Stable creative ID | The `id` stays the same across edits |
+| Invalid filter IDs | Generate `warning-invalid-*-id` warnings; valid IDs in the same filter are still searched |
+| `productCollectionsMax: null` | No limit on collections; `productCollectionsMin: 0` and `Max: 0` means template has no product collections |
+| Availability | New in `2027.01` — not available in stable |

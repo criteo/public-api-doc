@@ -1,239 +1,92 @@
 ---
-title: Missed Opportunities Report
-description: POST /reports/missed-opportunities — diagnose budget cap-out and estimate missed delivery for Retail Media DSP campaigns.
+title: Analyze Missed Opportunities
+description: Diagnose budget cap-out and estimate missed delivery for DSP campaigns.
 ---
 
-import RateLimitsReport from "/snippets/retail-media/RateLimitsReport.mdx";
+This report identifies when line items exhaust their daily budget before the day ends, causing them to stop participating in eligible auctions. Use it to quantify delivery shortfalls and decide whether to increase budgets or adjust pacing. By the end of this guide, you will have a working async report request returning missed delivery data.
 
-This endpoint enables Retail Media DSP partners to diagnose budget cap-out and estimate missed delivery for their campaigns and line items. Cap-out occurs when a line item exhausts its daily budget before the day ends, causing it to stop participating in eligible auctions. Missed traffic is reported for any line item that did not participate in all eligible auctions during the day.
+<Info>
+  This is a diagnostic report — it covers delivery shortfalls only. For impressions, clicks, and revenue, use the [Performance Report](/retail-media/docs/performance-report).
+</Info>
 
-The response is aggregated — one row per day per line item (or per combination of dimensions you specify). All metrics relate to delivery shortfalls; no performance metrics (impressions served, clicks, revenue) are included. For performance metrics, use [`POST /reports/performance`](/retail-media/docs/performance-report).
+## Prerequisites
 
-**Primary audience:** Engineers and ops teams diagnosing delivery shortfalls. Not a campaign performance reporting surface.
+- Authenticated with scope `retail-media:read`
+- Account, campaign, or line item ID to scope the report (exactly one required)
 
-The endpoint supports asynchronous report generation. Submit a request, poll for status, and download the output when ready.
+## Steps
 
-***
+### 1. Submit the report request
 
-## Request
+[→ `POST /retail-media/reports/missed-opportunities`](/retail-media/reference/generate-async-missed-opportunities-report)
 
-```http
-POST /2026-07/retail-media/reports/missed-opportunities
-```
+This endpoint is asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
 
-<RateLimitsReport />
+Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`), plus `startDate`, `endDate`, `dimensions`, and `metrics`. All five are required.
 
-### Required fields
-
-`startDate`, `endDate`, `filters`, `dimensions`, and `metrics` are all required. `filters` must contain exactly one scope filter (`filters.accountIds[]`, `filters.campaignIds[]`, or `filters.lineItemIds[]`).
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `startDate` | string | Inclusive report start date. ISO 8601 date (`YYYY-MM-DD`). |
-| `endDate` | string | Inclusive report end date. ISO 8601 date (`YYYY-MM-DD`). Must be ≥ `startDate`. Dates are interpreted in UTC. |
-| `filters` | object | Required. Must contain exactly one of the scope filters below. |
-| `filters.accountIds[]` | array of strings | Scope to all line items under this account. Up to **5** IDs. Mutually exclusive with `campaignIds` and `lineItemIds`. |
-| `filters.campaignIds[]` | array of strings | Scope to all line items under this campaign. Up to **100** IDs. Mutually exclusive with `accountIds` and `lineItemIds`. |
-| `filters.lineItemIds[]` | array of strings | Scope to this line item. Up to **100** IDs. Mutually exclusive with `accountIds` and `campaignIds`. |
-| `dimensions` | array of strings | Required. Output grouping fields. See [Dimensions](#dimensions) below. |
-| `metrics` | array of strings | Required. Output measure fields. See [Metrics](#metrics) below. |
-
-### Optional fields
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `format` | string | `json-compact` | Output format: `json`, `json-compact`, `json-newline`, or `csv`. |
-| `filters.salesChannels[]` | array of strings | — | Filter by sales channel. |
-| `filters.mediaTypes[]` | array of strings | — | Filter by media type. |
-
-### Example request
-
-```http
-POST /2026-07/retail-media/reports/missed-opportunities
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "data": {
-    "type": "AsyncMissedOpportunitiesReport",
-    "attributes": {
-      "startDate": "2026-05-01",
-      "endDate": "2026-05-07",
-      "filters": {
-        "lineItemIds": ["301234567890123457"]
-      },
-      "dimensions": ["date", "lineItemId", "lineItemName"],
-      "metrics": ["missedTraffic", "missedSpend", "capoutHour"]
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/reports/missed-opportunities" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "filters": {
+          "campaignIds": ["9876543210987654"]
+        },
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-31",
+        "metrics": ["missedImpressions", "eligibleImpressions"],
+        "dimensions": ["date", "lineItemId"]
+      }
     }
-  }
-}
+  }'
 ```
 
-***
+Save `data.id` from the response — this is the `reportId` used in steps 2 and 3.
 
-## Response
+<Warning>`filters` must contain exactly one scope filter. Passing multiple or none returns `400 Bad Request`.</Warning>
 
-A successful request returns `200 OK` with a `reportId`:
+---
 
-```json
-{
-  "data": {
-    "type": "StatusResponse",
-    "id": "4ddbf658-e588-41b7-bd21-82b0f93bec32",
-    "attributes": {
-      "status": "pending",
-      "rowCount": 0,
-      "fileSizeBytes": 0,
-      "md5CheckSum": null,
-      "createdAt": "2026-07-28T13:37:21.000Z",
-      "expiresAt": null,
-      "message": null,
-      "id": "4ddbf658-e588-41b7-bd21-82b0f93bec32"
-    }
-  }
-}
-```
+### 2. Poll for status
 
-Poll for status until `status` is `success` or `failure`:
+Poll `data.id` using the status endpoint — see [Async Patterns](/retail-media/docs/async-patterns).
 
-```http
-GET /2026-07/retail-media/reports/{reportId}/status
-Authorization: Bearer {token}
-```
+Retry on `pending` or `running`. A `failure` status means the request was invalid — do not retry without changing the parameters.
 
-```json
-{
-  "data": {
-    "type": "StatusResponse",
-    "id": "4ddbf658-e588-41b7-bd21-82b0f93bec32",
-    "attributes": {
-      "status": "success",
-      "rowCount": 7,
-      "fileSizeBytes": 937,
-      "md5CheckSum": "a7113a91e30cc0b0de3827703280fe8f",
-      "createdAt": "2026-07-28T13:37:21.000Z",
-      "expiresAt": "2026-08-04T13:37:22.000Z",
-      "message": "rows_count=7",
-      "id": "4ddbf658-e588-41b7-bd21-82b0f93bec32"
-    }
-  }
-}
-```
+---
 
-Download the output when status is `success`:
+### 3. Download the result
 
-```http
-GET /2026-07/retail-media/reports/{reportId}/output
-Authorization: Bearer {token}
-```
+Once status is `success`, retrieve the output — see [Async Patterns](/retail-media/docs/async-patterns).
 
-```json
-{
-  "columns": ["date", "lineItemId", "lineItemName", "missedTraffic", "missedSpend", "capoutHour"],
-  "data": [
-    ["2026-05-01", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.0, 0.0, "No cap-out"],
-    ["2026-05-02", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.148558, 2676.70, "20:00"],
-    ["2026-05-03", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.155921, 2813.52, "20:00"],
-    ["2026-05-04", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.099693, 1686.55, "21:00"],
-    ["2026-05-05", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.01672, 251.76, "23:00"],
-    ["2026-05-06", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.001905, 29.17, "23:00"],
-    ["2026-05-07", "301234567890123457", "Spring Sale - Kitchen Search - Broad", 0.014384, 222.97, "23:00"]
-  ],
-  "rows": 7
-}
-```
+---
 
-Each row in the report output represents one day (or one combination of dimensions, if dimensions were specified).
+## Verify
 
-***
+A successful response has HTTP `200` with `data.attributes.status: success` and a non-empty `data.attributes.outputUri`. If `outputUri` is null, the report ran but returned no data — the line items may not have hit budget cap during the requested period.
 
-## Response Codes
+---
 
-For the full list of status and error codes for this endpoint — including `404` (report not found) and `410` (report expired) — see [Response Codes](/retail-media/docs/demand-side-analytics-overview#response-codes) in the Overview.
+## Constraints
 
-***
+| Limit | Value |
+|---|---|
+| Max date range | 100 days — [Hard Limits](/retail-media/docs/hard-limits) |
+| Data retention | 3 years |
+| File availability | 72 hours after generation |
 
-## Metrics
+## Metrics & Dimensions
 
-Select metrics using the `metrics[]` array in your request. `metrics` is required.
+See [Metrics & Dimensions Reference](/retail-media/docs/metrics-dimensions-reference) for the full list of available fields for this report.
 
-| Metric | Description |
-|--------|-------------|
-| `capoutHour` | Hour of the day when the line item exhausted its daily budget, on average, formatted as `HH:00` (e.g. `14:00` means budget was exhausted around 2pm on average). Returns the string `"No cap-out"` — not `null` or a numeric hour — for a day where the line item didn't cap out. |
-| `missedClicks` | Estimated clicks lost due to reduced auction participation. |
-| `missedImpressions` | Estimated impressions lost due to reduced auction participation. |
-| `missedSales` | Estimated revenue lost due to reduced auction participation, in the account's reporting currency. |
-| `missedSpend` | Estimated spend that would have occurred had the line item participated in all eligible auctions. |
-| `missedTraffic` | Percentage of the day's total eligible traffic the line item did not participate in. |
-| `daypartingScheduled` | Binary: whether dayparting was active at the time of the cap-out event. |
-| `totalSpend` | Total media spend for the line item. |
-| `roas` | Return on ad spend — revenue per unit of currency spent. |
-| `attributedSales` | Sales revenue attributed to the campaign per attribution settings. |
-| `impressions` | Impressions served. |
-| `clicks` | Clicks counted. |
-| `cpc` | Average cost per click. |
-| `cpm` | Average cost per 1,000 impressions. |
-| `ctr` | Click-through rate: clicks / impressions. |
+## Common errors
 
-All "missed" estimates are modeled — they represent what the line item would have delivered had it participated in all eligible auctions.
-
-***
-
-## Dimensions
-
-Select grouping dimensions using the `dimensions[]` array in your request. `dimensions` is required.
-
-| Dimension | Description |
-|-----------|-------------|
-| `date` | Date events occurred. |
-| `accountId` | Account ID. |
-| `accountName` | Account name. |
-| `campaignId` | Campaign ID. |
-| `campaignName` | Campaign name. |
-| `lineItemId` | Line item ID. |
-| `lineItemName` | Line item name. |
-| `retailerId` | Retailer ID where the line item served. |
-| `retailerName` | Retailer name where the line item served. |
-| `buyType` | Buy type of the line item. |
-| `bidStrategy` | Bid strategy of the line item. |
-
-***
-
-## Data Retention
-
-This endpoint supports a lookback window of up to **3 years** (36 months). A request with a `startDate` older than that returns `400 Bad Request` — `StartDate cannot be older than 3 years.` Separately, a single report may span at most **100 days** between `startDate` and `endDate`, regardless of whether you scope by account, campaign, or line item.
-
-***
-
-## Migrating from `reportType: capout`
-
-Replace your existing call on `/reports/campaigns` or `/reports/line-items` with a call to this endpoint. The underlying data is unchanged.
-
-**Endpoint change:**
-
-```
-POST /reports/campaigns   →   POST /reports/missed-opportunities
-POST /reports/line-items  →   POST /reports/missed-opportunities
-```
-
-**Request shape changes:**
-
-- Replace the top-level `accountId` / `campaignId` / `lineItemId` fields with a `filters` object containing `accountIds[]`, `campaignIds[]`, or `lineItemIds[]` arrays.
-- Add required `dimensions[]` and `metrics[]` arrays to select output columns.
-- `startDate` and `endDate` are now required (date-only `YYYY-MM-DD`; timestamps are rejected).
-- Remove `reportType: capout` — it is not accepted on this endpoint.
-
-**Metric renames:**
-
-| Old name | New name |
-|----------|----------|
-| `capoutMissedClicks` | `missedClicks` |
-| `capoutMissedImpressions` | `missedImpressions` |
-| `capoutMissedSales` | `missedSales` |
-| `capoutMissedSpend` | `missedSpend` |
-| `capoutMissedTraffic` | `missedTraffic` |
-| `capoutHour` | `capoutHour` *(unchanged)* |
-
-**Dimension changes:**
-
-`daypartingScheduled` has moved from a dimension to a metric in this endpoint. Add it to your `metrics[]` array instead of `dimensions[]`.
+| Error | Cause | Fix |
+|---|---|---|
+| `400` | Multiple or missing scope filter | Use exactly one of `accountIds`, `campaignIds`, or `lineItemIds` |
+| `400` | Date range exceeds 100 days | Reduce the range to 100 days or fewer |
+| `400` | `startDate` older than 3 years | Use a more recent start date |
+| `404` | Invalid `reportId` | Check the ID returned from step 1 |
+| `410` | Report expired | Files expire after 72 hours — resubmit |

@@ -1,154 +1,64 @@
 ---
-title: Catalog Ingestion Reporting
-description: Monitor catalog import activity and troubleshoot ingestion issues for a merchant.
+title: Monitor Catalog Ingestion
+description: How to check catalog import status and diagnose data quality issues for a merchant.
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+Use these endpoints to verify that catalog imports are running and to identify what's blocking or failing them.
 
-## Overview
+---
 
-The catalog ingestion reporting endpoints give read-only visibility into catalog import activity. Use them to monitor whether imports are running on schedule and to diagnose failures or data quality issues.
+## Prerequisites
 
-These endpoints do not trigger imports or modify catalog data.
+- **Auth scope**: `retail-media:read` — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Merchant ID**: the `merchant-id` whose ingestion history to retrieve
 
-**Required scope:** `RetailMedia_Catalog_Read`
+---
 
-| Verb | Endpoint | Description |
-| :--- | :------- | :---------- |
-| `GET` | `/experimental/retail-media/catalog/merchants/{merchant-id}/ingestion/reports` | List recent ingestions for a merchant |
-| `GET` | `/experimental/retail-media/catalog/ingestion/{ingestion-id}/reports/summary` | Get detailed report for one ingestion |
+## Steps
 
-***
+### 1. List recent ingestions
 
-## Use case 1: Monitor catalog ingestion activity
+[→ `GET /retail-media/catalog/merchants/{merchant-id}/ingestion/reports`](/retail-media/experimental/reference/catalog/list-ingestion-reports)
 
-List the most recent catalog imports for a merchant to verify that ingestions are running and check their status.
-
-<EndpointBadge method="get">
-```http
-https://api.criteo.com/experimental/retail-media/catalog/merchants/{merchant-id}/ingestion/reports
-```
-</EndpointBadge>
-
-### Path parameters
-
-| Parameter | Type | Description |
-| --------- | ---- | ----------- |
-| `merchant-id` | string | The merchant whose ingestion history you want to retrieve. |
-
-### Query parameters
-
-| Parameter | Type | Default | Description |
-| --------- | ---- | ------- | ----------- |
-| `limit` | integer | `25` | Number of ingestion reports per page. Maximum: `100`. |
-| `offset` | integer | `0` | Index of the first report in the page. Use with `limit` to page through results. |
-
-Results are ordered most recent first.
-
-### Response fields
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `id` | string | Ingestion execution identifier. Use this to fetch the detailed summary report. |
-| `merchantId` | string | Merchant identifier. |
-| `componentId` | string | Catalog component identifier. |
-| `startTime` | datetime | Import start time (ISO 8601). |
-| `endTime` | datetime | Import end time (ISO 8601). `null` if the import has not ended or no end time is available. |
-| `duration` | string | Total processing time (ISO 8601 duration). |
-| `ingestionStatus` | string | Lifecycle status. See [ingestion statuses](#ingestion-statuses). |
-| `ingestionType` | string | Pipeline that ran the import: `catalogImport` or `productImporter`. |
-| `multiSourceReportingStatus` | string | Outcome of the Multi-Source Catalog enrichment for this import. `notEnabled`, `inProgress`, `success` or `failed`. |
-
-### Ingestion statuses
+Returns recent ingestion runs ordered most-recent-first. Check `ingestionStatus` for each run:
 
 | Status | Meaning |
-| ------ | ------- |
-| `inProgress` | Import is currently running. |
-| `finished` | Import completed successfully. |
-| `failed` | Import failed with an error. Fetch the detailed summary report for the error message. |
-| `blocked` | Import was stopped by data quality rules. The catalog did not meet the quality threshold required to publish. |
+|---|---|
+| `inProgress` | Still running — poll again |
+| `finished` | Completed successfully |
+| `failed` | System error — fetch the summary report for the error message |
+| `blocked` | Catalog rejected by data quality rules — fetch the summary report to identify the failing fields |
 
-<Note>
-  A `blocked` status is not a system failure — it means the catalog data did not pass quality validation. Fetch the detailed summary report for that ingestion to inspect the data quality counters and identify which fields are causing rejections.
-</Note>
-
-***
-
-## Use case 2: Troubleshoot a specific ingestion
-
-Get the full diagnostic report for one ingestion execution: what triggered it, how long it ran, how many offers it processed, what changed versus the previous run, and where data quality issues occurred.
-
-<EndpointBadge method="get">
-```http
-https://api.criteo.com/experimental/retail-media/catalog/ingestion/{ingestion-id}/reports/summary
+```bash
+curl -X GET "https://api.criteo.com/experimental/retail-media/catalog/merchants/987654321/ingestion/reports?limit=25&offset=0" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Accept: application/json"
 ```
-</EndpointBadge>
 
-### Path parameters
-
-| Parameter | Type | Description |
-| --------- | ---- | ----------- |
-| `ingestion-id` | string | The ingestion execution identifier. Obtained from the list endpoint. |
-
-### Response fields
-
-In addition to all fields returned by the list endpoint, the summary report includes:
-
-**Merchant**
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `merchantName` | string | Display name of the merchant. |
-
-**Trigger**
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `trigger.type` | string | What initiated the import (e.g. scheduled, manual). |
-| `trigger.initiatedBy` | string | Identity that triggered the import, if available. |
-
-**Volume** — total offer counts in the ingested catalog
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `volume.totalOffers` | integer | Total number of offers in the catalog. |
-| `volume.totalParentOffers` | integer | Offers that are parents of variant groups. |
-| `volume.totalSingleOffers` | integer | Standalone offers (no variants). |
-| `volume.totalVariantOffers` | integer | Variant offers belonging to a parent. |
-| `volume.multisourceProducts` | integer | Products enriched via Multi-Source Catalog. |
-
-**Delta** — what changed compared to the previous ingestion
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `delta.addedOffers` | integer | Offers added since the previous ingestion. |
-| `delta.updatedOffers` | integer | Offers updated since the previous ingestion. |
-| `delta.deletedOffers` | integer | Offers removed since the previous ingestion. |
-| `delta.unchangedOffers` | integer | Offers that were present and unchanged. |
-
-**Data quality** — populated when an ingestion is `blocked` or `finished` with quality warnings
-
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| `dataQuality.quality` | object | Overall quality score and pass/fail decision. |
-| `dataQuality.summary` | object | Aggregate counts of offers with errors and warnings. |
-| `dataQuality.errors` | object | Per-error-type counts of affected offers (e.g. missing title, image, price, GTIN, brand). |
-| `dataQuality.warnings` | object | Per-warning-type counts of affected offers. |
+Save `data[].id` from any `blocked` or `failed` entry — this is the `ingestionId` for the summary report.
 
 <Note>
-  If an ingestion `failed` (as opposed to `blocked`), the `error` field at the top level of the response contains the failure code and message.
+  `blocked` is not a system failure. It means the catalog data did not pass quality validation (e.g., missing price, GTIN, or title on too many products). The catalog was not published.
 </Note>
 
-***
+### 2. Fetch the ingestion summary
 
-## Typical workflow
+[→ `GET /retail-media/catalog/ingestion/{ingestion-id}/reports/summary`](/retail-media/experimental/reference/catalog/get-ingestion-summary)
 
-1. Call the **list endpoint** for your merchant to retrieve recent ingestions.
-2. Check the `ingestionStatus` of the most recent entry.
-   - `finished` — catalog published successfully. Review delta counts to confirm expected changes landed.
-   - `inProgress` — import is still running. Poll again shortly.
-   - `blocked` — catalog was rejected by quality rules. Proceed to step 3.
-   - `failed` — system error. Proceed to step 3 for the error message.
-3. Take the `id` from the affected ingestion and call the **summary endpoint**.
-4. If `blocked`: inspect `dataQuality.errors` to identify which fields (e.g. missing price, GTIN) are causing the most rejections and fix them in the source catalog.
-5. If `failed`: read `error.code` and `error.message` to diagnose the system-level failure.
+Returns full diagnostic detail: trigger, volume counts, delta (added/updated/deleted/unchanged offers), and data quality breakdowns. If `ingestionStatus` is `blocked`, inspect `dataQuality.errors` to see which fields are causing the most rejections.
+
+---
+
+## Verify
+
+A successful list returns HTTP `200` with a `data` array. For a healthy catalog, the most recent entry has `ingestionStatus: finished` and `delta.addedOffers` or `delta.updatedOffers` matching your expected changes. A `blocked` ingestion with `dataQuality.quality` failing indicates catalog content issues to fix upstream.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| List page size | 1–100 (default 25) |
+| `ingestionType` | `catalogImport` or `productImporter` |
+| `multiSourceReportingStatus` | `notEnabled`, `inProgress`, `success`, `failed` |
