@@ -8,6 +8,8 @@ The `retailer-visitor-id` is a unique, persistent identifier for a visitor on yo
 
 This page shows how to generate and persist a `retailer-visitor-id` in JavaScript.
 
+The 13-month maximum aligns with Safari's Intelligent Tracking Prevention (ITP) cap on first-party cookies set via JavaScript.
+
 <Info>
   For native mobile apps, use the platform-provided advertising ID instead of a cookie-based approach:
   - **Android**: [AdvertisingIdClient API](https://developers.google.com/android/reference/com/google/android/gms/ads/identifier/AdvertisingIdClient.Info)
@@ -76,7 +78,7 @@ function uuidv4Fallback() {
 }
 
 // ---- Visitor ID management ----
-const VISITOR_COOKIE_NAME = 'visitor_id';
+const VISITOR_COOKIE_NAME = 'retailer-visitor-id';
 
 function ensureVisitorId(options = {}) {
   let id = getCookie(VISITOR_COOKIE_NAME);
@@ -88,6 +90,7 @@ function ensureVisitorId(options = {}) {
     path: '/',
     sameSite: 'Lax',
     secure: isHttps(),
+    // domain: '.example.com', // uncomment to share the ID across subdomains
     ...options,
   });
   return id;
@@ -100,7 +103,7 @@ function isHttps() {
 // ---- Initialize on page load ----
 document.addEventListener('DOMContentLoaded', () => {
   const visitorId = ensureVisitorId();
-  console.log('Visitor ID:', visitorId);
+  // use visitorId in your ad request parameters here
 });
 ```
 
@@ -110,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 | Step | Description |
 | --- | --- |
-| **Read cookie** | `getCookie` checks `document.cookie` for an existing `visitor_id`. |
+| **Read cookie** | `getCookie` checks `document.cookie` for an existing `retailer-visitor-id`. |
 | **Generate UUID** | If no cookie exists, `generateUUID` uses `crypto.randomUUID()` when available, falling back to a manual UUID v4 implementation using `crypto.getRandomValues`. |
 | **Persist cookie** | `setCookie` writes the ID with a 30-day `Max-Age`, `SameSite=Lax`, and `Secure` (on HTTPS). |
 | **Return ID** | The same ID is returned on all subsequent page loads within the cookie lifetime. |
@@ -119,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ## Key Requirements
 
-- **Minimum lifetime**: 30 days. Longer lifetimes (up to 13 months) improve attribution accuracy.
+- **Minimum lifetime**: 30 days. Longer lifetimes (up to 13 months, the ITP cap) improve attribution accuracy.
 - **Not a session cookie**: Always set `Max-Age` or `Expires`. A session cookie that clears on browser close is not acceptable.
 - **Consistency**: The same value must be passed in the `retailer-visitor-id` parameter on every ad request for that visitor.
 
