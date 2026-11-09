@@ -55,10 +55,11 @@ Additional details about the individual attributes of Ad Sets can be found below
       },
       "budget": {
         "budgetStrategy": "capped",
-        "budgetRenewal": "daily",
-        "budgetDeliverySmoothing": "accelerated",
-        "budgetDeliveryWeek": "undefined",
-        "budgetAmount": {"value": 123.45}
+        "budgetRenewal": "weekly",
+        "budgetDeliverySmoothing": "standard",
+        "budgetDeliveryWeek": "mondayToSunday",
+        "budgetAmount": 123.45,
+        "pacingBehavior": "targetFullBudget"
       },
       "attributionConfiguration": { 
         "attributionMethod": "criteoAttribution", 
@@ -200,6 +201,12 @@ For non-weekly budgets, this value should be `undefined`. This field can be upda
 
 **`budget.budgetAmount`**  
 A decimal value showing the remaining budget value for Ad Sets with `Capped` budget strategies. For uncapped budgets, the value will be `null`.
+
+**`budget.pacingBehavior`**  
+Controls how a standard capped budget is paced. Nullable. Possible values:
+- `targetFullBudget`: spend toward the full budget amount within the renewal period.
+- `targetAverageDailyBudget`: spend toward an average daily amount. Only supported for capped, standard, monthly budgets.
+- `undefined`: no explicit pacing behavior. Required for uncapped budgets and accelerated budgets.
 
 ### Ad Set Attribution Configuration
 
@@ -375,11 +382,12 @@ For example, the following call would create a new Ad Set targeting lookalike au
         }
       },
       "budget": {
-        "budgetStrategy": "Capped",
-        "budgetRenewal": "Daily",
-        "budgetDeliverySmoothing": "Accelerated",
-        "budgetDeliveryWeek": "Undefined",
-        "budgetAmount": 123.5
+        "budgetStrategy": "capped",
+        "budgetRenewal": "weekly",
+        "budgetDeliverySmoothing": "standard",
+        "budgetDeliveryWeek": "mondayToSunday",
+        "budgetAmount": 123.5,
+        "pacingBehavior": "targetFullBudget"
       },
       "attributionConfiguration": {
          "attributionMethod": "PostClick",
@@ -465,9 +473,16 @@ The bid amount value supports a maximum of 4 decimal digits. If more digits are 
                 "bidding": {
                     "bidAmount": { "value": 0.9 }
                 },
-              	"frequencyCapping": {
-                    "frequency": "hourly",
-                    "maximumImpressions": 12
+                "targeting": {
+                    "frequencyCapping": {
+                        "value": {
+                            "frequency": "hourly",
+                            "maximumImpressions": 12
+                        }
+                    }
+                },
+                "budget": {
+                    "pacingBehavior": "targetFullBudget"
                 },
                 "attributionConfiguration": { 
                     "attributionMethod": "LastClick", 

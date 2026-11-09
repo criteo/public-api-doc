@@ -277,6 +277,43 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      <code>
       "ImageUrl"
      </code>
+     ,
+     <code>
+      "ExcludedChannels"
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advertisementChannels
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     list\
+    </p>
+   </td>
+   <td>
+    <p>
+     Restricts the export to products advertisable on every listed channel: a product is returned only if it is excluded from none of them. If not provided, no channel filter is applied.
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      "PERF_MEDIA"
+     </code>
+     ,
+     <code>
+      "RM_ONSITE"
+     </code>
+     ,
+     <code>
+      "RM_OFFSITE"
+     </code>
     </p>
    </td>
   </tr>
@@ -412,6 +449,43 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
      ,
      <code>
       "ImageUrl"
+     </code>
+     ,
+     <code>
+      "ExcludedChannels"
+     </code>
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      advertisementChannels
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     list\
+    </p>
+   </td>
+   <td>
+    <p>
+     Restricts the export to products advertisable on every listed channel: a product is returned only if it is excluded from none of them. If not provided, no channel filter is applied.
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      "PERF_MEDIA"
+     </code>
+     ,
+     <code>
+      "RM_ONSITE"
+     </code>
+     ,
+     <code>
+      "RM_OFFSITE"
      </code>
     </p>
    </td>
@@ -1132,6 +1206,47 @@ import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
     </p>
    </td>
   </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      excludedChannels
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     list
+    </p>
+   </td>
+   <td>
+    <p>
+     Channels this product is excluded from advertising on. Only present in the response when
+     <code>
+      ExcludedChannels
+     </code>
+     is requested via
+     <code>
+      includeFields
+     </code>
+     ; omitted from the record entirely otherwise.
+    </p>
+    <p>
+     Values:
+     <code>
+      PERF_MEDIA
+     </code>
+     ,
+     <code>
+      RM_ONSITE
+     </code>
+     ,
+     <code>
+      RM_OFFSITE
+     </code>
+    </p>
+   </td>
+  </tr>
  </tbody>
 </table>
 
@@ -1177,7 +1292,8 @@ curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/4/brand-
         "456"
       ],
       "modifiedAfter": "2025-03-21T08:00:00-5:00",
-      "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description"]
+      "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description","ExcludedChannels"],
+      "advertisementChannels": ["RM_ONSITE"]
     }
   }
 }'
@@ -1200,7 +1316,8 @@ payload = json.dumps({
         "456"
       ],
       "modifiedAfter": "2025-03-21T08:00:00-5:00",
-      "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description"]
+      "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description","ExcludedChannels"],
+      "advertisementChannels": ["RM_ONSITE"]
     }
   }
 })
@@ -1221,7 +1338,7 @@ OkHttpClient client = new OkHttpClient().newBuilder()
 
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n   \"type\": \"<string>\",\n   \"attributes\": {\n     \"brandIdFilter\": [\n       \"123\"\n     ],\n     \"retailerIdFilter\": [\n       \"456\"\n     ],\n     \"modifiedAfter\": \"2025-03-21T08:00:00-5:00\",\n     \"includeFields\": [\"ImageUrl\",\"GoogleCategory\", \"RetailerName\", \"Category\", \"BrandName\",\"Description\"]\n   }\n }\n}");
+RequestBody body = RequestBody.create(mediaType, "{\n  \"data\": {\n   \"type\": \"<string>\",\n   \"attributes\": {\n     \"brandIdFilter\": [\n       \"123\"\n     ],\n     \"retailerIdFilter\": [\n       \"456\"\n     ],\n     \"modifiedAfter\": \"2025-03-21T08:00:00-5:00\",\n     \"includeFields\": [\"ImageUrl\",\"GoogleCategory\", \"RetailerName\", \"Category\", \"BrandName\",\"Description\",\"ExcludedChannels\"],\n     \"advertisementChannels\": [\"RM_ONSITE\"]\n   }\n }\n}");
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/accounts/4/brand-catalog-export")
@@ -1250,7 +1367,7 @@ $request->setHeader(array(
   'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
 
-$request->setBody('{\n  "data": {\n   "type": "<string>",\n   "attributes": {\n     "brandIdFilter": [\n       "123"\n     ],\n     "retailerIdFilter": [\n       "456"\n     ],\n     "modifiedAfter": "2025-03-21T08:00:00-5:00",\n     "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description"]\n   }\n }\n}');
+$request->setBody('{\n  "data": {\n   "type": "<string>",\n   "attributes": {\n     "brandIdFilter": [\n       "123"\n     ],\n     "retailerIdFilter": [\n       "456"\n     ],\n     "modifiedAfter": "2025-03-21T08:00:00-5:00",\n     "includeFields": ["ImageUrl","GoogleCategory", "RetailerName", "Category", "BrandName","Description","ExcludedChannels"],\n     "advertisementChannels": ["RM_ONSITE"]\n   }\n }\n}');
 try {
   $response = $request->send();
   if ($response->getStatus() == 200) {
@@ -1323,8 +1440,10 @@ curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/4/seller
       "modifiedAfter": "",
       "includeFields": [
         "ImageUrl",
-        "Description"
-      ]
+        "Description",
+        "ExcludedChannels"
+      ],
+      "advertisementChannels": ["RM_ONSITE"]
     }
   }
 }'
@@ -1349,8 +1468,10 @@ payload = json.dumps({
       "modifiedAfter": "",
       "includeFields": [
         "ImageUrl",
-        "Description"
-      ]
+        "Description",
+        "ExcludedChannels"
+      ],
+      "advertisementChannels": ["RM_ONSITE"]
     }
   }
 })
@@ -1371,7 +1492,7 @@ OkHttpClient client = new OkHttpClient().newBuilder()
 
 MediaType mediaType = MediaType.parse("application/json");
 
-RequestBody body = RequestBody.create(mediaType, "{\n \"data\": {\n   \"type\": \"<string>\",\n   \"attributes\": {\n     \"sellers\": [\n       {\n         \"retailerId\": \"123\",\n         \"sellerId\": \"5e0axxxxxxxxxx\"\n       }\n     ],\n     \"modifiedAfter\": \"\",\n     \"includeFields\": [\n     \"ImageUrl\",\n     \"Description\"\n     ]\n   }\n }}");
+RequestBody body = RequestBody.create(mediaType, "{\n \"data\": {\n   \"type\": \"<string>\",\n   \"attributes\": {\n     \"sellers\": [\n       {\n         \"retailerId\": \"123\",\n         \"sellerId\": \"5e0axxxxxxxxxx\"\n       }\n     ],\n     \"modifiedAfter\": \"\",\n     \"includeFields\": [\n     \"ImageUrl\",\n     \"Description\",\n     \"ExcludedChannels\"\n     ],\n     \"advertisementChannels\": [\"RM_ONSITE\"]\n   }\n }}");
 
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/accounts/4/seller-catalog-export")
@@ -1400,7 +1521,7 @@ $request->setHeader(array(
   'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
 ));
 
-$request->setBody('{\n "data": {\n   "type": "<string>",\n   "attributes": {\n     "sellers": [\n       {\n         "retailerId": "123",\n         "sellerId": "5e0axxxxxxxxxx"\n       }\n     ],\n     "modifiedAfter": "",\n     "includeFields": [\n     "ImageUrl",\n     "Description"\n     ]\n   }\n }}');
+$request->setBody('{\n "data": {\n   "type": "<string>",\n   "attributes": {\n     "sellers": [\n       {\n         "retailerId": "123",\n         "sellerId": "5e0axxxxxxxxxx"\n       }\n     ],\n     "modifiedAfter": "",\n     "includeFields": [\n     "ImageUrl",\n     "Description",\n     "ExcludedChannels"\n     ],\n     "advertisementChannels": ["RM_ONSITE"]\n   }\n }}');
 try {
   $response = $request->send();
   if ($response->getStatus() == 200) {

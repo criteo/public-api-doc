@@ -3,8 +3,8 @@ title: Real-Time Performance Report
 description: Retrieve near real-time campaign performance data synchronously using the Retail Media Real-Time Performance API
 ---
 
-
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+import RateLimitsRealTime from "/snippets/retail-media/RateLimitsRealTime.mdx";
 
 ## Introduction
 
@@ -25,9 +25,8 @@ Typical use-cases for this endpoint include, for example:
   This endpoint provides:
 
   * about **15 minute latency** from impression/click to availability in the API,
-  * a maximum **7-day look back window,**
   * **Onsite campaign** coverage only,
-  * A focused set of metrics: `impressions`, `clicks`, `spend`.
+  * A focused set of metrics: `impressions`, `clicks`, `spend`,
 </Info>
 
 <Warning>
@@ -36,351 +35,40 @@ Typical use-cases for this endpoint include, for example:
 
 ***
 
-## Endpoints Overview
+## Request
 
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Verb
-    </p>
-   </th>
-   <th>
-    <p>
-     Endpoint
-    </p>
-   </th>
-   <th>
-    <p>
-     Description
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     <b>
-      POST
-     </b>
-    </p>
-   </td>
-   <td>
-    <p>
-     <code>
-      /retail-media/reports/sync/real-time-performance
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     Retrieves real-time Retail Media performance metrics
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
+```http
+POST /2026-07/retail-media/reports/sync/real-time-performance
+```
 
-***
+<RateLimitsRealTime />
 
-## Attributes
+### Required fields
 
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Attribute
-    </p>
-   </th>
-   <th>
-    <p>
-     Data Type
-    </p>
-   </th>
-   <th>
-    <p>
-     Description
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     <code>
-      startDate
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     date
-    </p>
-   </td>
-   <td>
-    <p>
-     Start date (YYYY-MM-DD) for the reporting window. Must be no more than 7 days in the past in the requested timezone.
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      endDate
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     date
-    </p>
-   </td>
-   <td>
-    <p>
-     End date (YYYY-MM-DD) for the reporting window. Optional
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      retailerIds
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     array of strings
-    </p>
-   </td>
-   <td>
-    <p>
-     Single retailer ID filter. Optional
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      accountIds
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     array of strings
-    </p>
-   </td>
-   <td>
-    <p>
-     Filter by account IDs. Max 50 IDs.
-    </p>
-    <p>
-     Choose
-     <b>
-      one
-     </b>
-     of:
-     <code>
-      accountIds
-     </code>
-     ,
-     <code>
-      campaignIds
-     </code>
-     , or
-     <code>
-      lineItemIds
-     </code>
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      campaignIds
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     array of strings
-    </p>
-   </td>
-   <td>
-    <p>
-     Filter by campaign IDs. Max 50 IDs.
-    </p>
-    <p>
-     Choose
-     <b>
-      one
-     </b>
-     of:
-     <code>
-      accountIds
-     </code>
-     ,
-     <code>
-      campaignIds
-     </code>
-     , or
-     <code>
-      lineItemIds
-     </code>
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      lineItemIds
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     array of strings
-    </p>
-   </td>
-   <td>
-    <p>
-     Filter by line item IDs. Max 50 IDs.
-    </p>
-    <p>
-     Choose
-     <b>
-      one
-     </b>
-     of:
-     <code>
-      accountIds
-     </code>
-     ,
-     <code>
-      campaignIds
-     </code>
-     , or
-     <code>
-      lineItemIds
-     </code>
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      dimensions
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     array of strings
-    </p>
-   </td>
-   <td>
-    <p>
-     Grouping dimensions. Must contain at least
-     <b>
-      one
-     </b>
-     value.
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      metrics
-     </code>
-     <span>*</span>
-    </p>
-   </td>
-   <td>
-    <p>
-     array of strings
-    </p>
-   </td>
-   <td>
-    <p>
-     Requested metrics. Must contain at least
-     <b>
-      one
-     </b>
-     value.
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     <code>
-      timezone
-     </code>
-    </p>
-   </td>
-   <td>
-    <p>
-     string
-    </p>
-   </td>
-   <td>
-    <p>
-     Time zone identifier. Defaults to UTC if not provided.
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
+`startDate`, `dimensions`, and `metrics` are required. `dimensions` and `metrics` must each contain at least one value.
 
-(*) - _Required_
+| Field | Type | Description |
+|-------|------|-------------|
+| `startDate` | date | Start date (YYYY-MM-DD) for the reporting window. Must be no more than 7 days in the past in the requested timezone. |
+| `dimensions` | array of strings | Grouping dimensions. Must contain at least **one** value. |
+| `metrics` | array of strings | Requested metrics. Must contain at least **one** value. |
+
+### Optional fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `endDate` | date | End date (YYYY-MM-DD) for the reporting window. Optional. If omitted, returns data from `startDate` up to the current hour. |
+| `retailerIds` | array of strings | Single retailer ID filter. |
+| `accountIds` | array of strings | Filter by account IDs. Max 50 IDs. Use only one of `accountIds`, `campaignIds`, or `lineItemIds`. |
+| `campaignIds` | array of strings | Filter by campaign IDs. Max 50 IDs. Use only one of `accountIds`, `campaignIds`, or `lineItemIds`. |
+| `lineItemIds` | array of strings | Filter by line item IDs. Max 50 IDs. Use only one of `accountIds`, `campaignIds`, or `lineItemIds`. |
+| `timezone` | string | Time zone identifier. Defaults to UTC if not provided. |
 
 <Warning>
   At least **one of `dimensions`** and at least **one of `metrics`** must be provided.
 
   For **entity filters**: only one of `accountIds` or `campaignIds` or `lineItemIds` must be provided. This prevents unbounded queries on the full dataset.
 </Warning>
-
-### Supported Dimensions
-
-Values in the `dimensions` array must be selected from:
-
-* `accountId`,
-* `campaignId`,
-* `lineItemId`,
-* `retailerId`,
-* `accountName`,
-* `campaignName`,
-* `lineItemName`,
-* `retailerName`,
-* `date`,
-* `hour`.
-
-### Supported Metrics
-
-Values in the `metrics` array must be selected from:
-
-* `impressions`,
-* `clicks`,
-* `spend`.
-
-<Note>
-  `billableImpressions` and `billableClicks` are still accepted for backward compatibility with existing preview integrations, but are redundant with `impressions`/`clicks` and should not be used in new integrations.
-</Note>
 
 ### Behavioral Notes
 
@@ -390,21 +78,7 @@ Values in the `metrics` array must be selected from:
 * **Time zone handling**: All date/hour-based dimensions (date, hour) are computed in the requested timezone.  
   If timezone is omitted, UTC is used.
 
-***
-
-## Real-Time Performance Endpoint
-
-This endpoint retrieves real-time Retail Media performance metrics.
-
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance
-```
-</EndpointBadge>
-
-***
-
-### **Sample Request**
+### Example request
 
 <CodeGroup>
 
@@ -462,7 +136,6 @@ MediaType mediaType = MediaType.parse("application/json");
 
 RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"attributes\":{\"startDate\":\"2026-03-01\",\"timezone\":\"America/New_York\",\"campaignIds\":[\"561627568743333888\"],\"dimensions\":[\"date\",\"hour\",\"campaignId\",\"campaignName\"],\"metrics\":[\"impressions\",\"clicks\",\"spend\"]}}}");
 
-
 Request request = new Request.Builder()
   .url("https://api.criteo.com/{version}/retail-media/reports/sync/real-time-performance")
   .method("POST", body)
@@ -494,7 +167,9 @@ echo $response->getBody();
 
 ***
 
-### **Sample Response**
+## Response
+
+A successful request returns `200 OK` with the report data directly in the response. There is no report ID to poll and no output to download.
 
 ```json expandable
 {
@@ -539,7 +214,40 @@ echo $response->getBody();
 
 ***
 
-## Responses
+## Dimensions
+
+Values in the `dimensions` array must be selected from the following.
+
+| Dimension | Description |
+|-----------|-------------|
+| `accountId` | Account ID. |
+| `accountName` | Account name. |
+| `campaignId` | Campaign ID. |
+| `campaignName` | Campaign name. |
+| `lineItemId` | Line item ID. |
+| `lineItemName` | Line item name. |
+| `retailerId` | Retailer ID where the line item served. |
+| `retailerName` | Retailer name where the line item served. |
+| `date` | Date events occurred (`YYYY-MM-DD`). |
+| `hour` | Hour events occurred (0-23), in the requested timezone. |
+
+## Metrics
+
+Values in the `metrics` array must be selected from the following.
+
+| Metric | Description |
+|--------|-------------|
+| `impressions` | Counted once per ad creative render on a page. |
+| `clicks` | Counted when an ad creative is clicked. |
+| `spend` | Total media spend. Includes platform fees for Criteo-billed; media only for retailer-billed. |
+
+<Note>
+  `billableImpressions` and `billableClicks` are still accepted for backward compatibility with existing preview integrations, but are redundant with `impressions`/`clicks` and should not be used in new integrations.
+</Note>
+
+***
+
+## Response Codes
 
 <table>
  <thead>
@@ -829,6 +537,31 @@ echo $response->getBody();
    <td>
     <p>
      Check permissions
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      429
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Too Many Requests
+    </p>
+   </td>
+   <td>
+    <p>
+     Rate limit exceeded (default 10 calls per minute for this endpoint)
+    </p>
+   </td>
+   <td>
+    <p>
+     Wait before retrying and reduce call frequency
     </p>
    </td>
   </tr>

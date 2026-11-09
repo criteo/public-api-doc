@@ -21,23 +21,31 @@ Criteo Retail Media API releases twice a year: end of January and end of July.
 | `2027.07-rc` | Release candidate |
 | `2027.01` | Next stable (~January 2027) |
 
+## Content Structure
+
+The dev portal nav is organized into three layers:
+
+| Section | Purpose |
+|---|---|
+| **Concepts** | Explain what something is — data model, architecture, pricing logic. No curl examples. |
+| **API Workflows** | Goal-oriented guides: one guide per developer job-to-be-done. Curl examples, steps, verify. |
+| **Reference Pages for LLMs** | Dense structured pages for LLM consumption: hard limits, error codes, field matrices, semantic patterns. No prose padding. |
+
+The API Reference (auto-generated from OAS) sits below these three layers.
+
+**Ownership:** Reference Pages for LLMs are owned and maintained by the documentation team. API contributors should only create or edit content in **Concepts** and **API Workflows**.
+
 ## Workflow Guide Template
+
+We are replacing encyclopedic endpoint guides that duplicate the API Reference with API Workflow guides that are goal-oriented and actionable — one guide per developer job-to-be-done, not one guide per endpoint.
 
 New API Workflow guides must follow the template at `retail-media/docs/_workflow-template.mdx`. The leading underscore keeps it out of the published nav.
 
 **Structure:** frontmatter → one-sentence outcome statement → Prerequisites → numbered Steps (one curl per guide, requests only) → Verify → Constraints
 
-**Reference examples to consult:**
-
-| Pattern | Example file |
-|---|---|
-| Async (submit / poll / download) | `retail-media/docs/performance-report.mdx` |
-| Sync single-step | `retail-media/docs/real-time-performance-api.mdx` |
-| Multi-step with error callouts | `retail-media/docs/retailer-budgets.mdx` |
-| Legacy rewrite (before/after) | `retail-media/docs/retailer-search.mdx` |
-
 **Key rules:**
 - Guides document workflows, not endpoints. The API Reference covers individual endpoints — do not duplicate field tables here.
 - One curl example per guide (the most important request in the flow). Requests only — no response examples.
+- Every endpoint mentioned in a step must link to its API Reference page using the pattern `[→ \`METHOD /path\`](/retail-media/reference/[operation-id])`.
 - Verify section is required: name the specific field and value that confirms success.
 - Prerequisites section is required: auth scope, required IDs, and any resource that must exist before the first call.

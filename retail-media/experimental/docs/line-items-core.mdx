@@ -1,6 +1,6 @@
 ---
 title: Line Item Core
-description: Create and manage the line items that control how a campaign delivers ads.
+description: Create, retrieve, and manage the line items that control how a campaign delivers ads.
 ---
 
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
@@ -14,7 +14,7 @@ The line item core endpoints are shared across campaign types. They expose commo
 The referenced `campaignId` determines the line-item type. Type-specific fields are carried in a matching details object alongside the common attributes. Include only the details object supported by the campaign type.
 
 <Info>
-  The long-term goal is to support line-item core operations across campaign types. Initial documented support targets Onsite Display Auction campaigns and uses `onsiteDisplayDetails`. Additional details objects will be documented as support is added.
+  The long-term goal is to support line-item core operations across campaign types. Creation supports Onsite Display Auction and Sponsored Products Auction campaigns that use automatic budgets. Other operations currently target Onsite Display Auction campaigns. Additional details objects will be documented as support is added.
 </Info>
 
 This endpoint replaces the following type-specific creation routes, which remain available in the meantime:
@@ -27,12 +27,187 @@ This endpoint replaces the following type-specific creation routes, which remain
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
+| `GET` | `/line-items/{lineItemId}` | Retrieve a consolidated view of a line item. |
 | `POST` | `/line-items` | Create a line-item core entity. |
 | `PATCH` | `/line-items/{lineItemId}` | Update an existing line item. |
+
+## Get a Line Item
+
+Retrieves a consolidated view of a line item: its core fields, targeting, ad content (products and creatives), and bidding settings.
+
+<EndpointBadge method="get">
+```http
+https://api.criteo.com/experimental/retail-media/line-items/{line-item-id}
+```
+</EndpointBadge>
+
+### Path Parameters
+
+| Parameter | Description |
+| --- | --- |
+| `line-item-id` | The unique identifier of the line item to retrieve. |
+
+### Response Attributes
+
+All attributes below are nested under `data.attributes`.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `core` | object | Core line item fields. Same shape as the `line-item` resource attributes returned by [Create](#create-a-line-item-core) and [Update](#update-a-line-item-core), always present when the request succeeds. |
+| `targeting` | object or null | Targets configured for the line item. See [Targeting](/retail-media/experimental/docs/line-item-targets#target-attributes) for the `targets[]` field descriptions. |
+| `adContent` | object or null | Ad content associated with the line item. Null only when both `products` and `creatives` are unavailable. |
+| `adContent.products` | object or null | Products in the line item's product pool. Same shape as the resource described in [Line Item Products](/retail-media/experimental/docs/line-item-products#request-attributes), with `approvalStatus` populated on each product. |
+| `adContent.creatives` | object or null | Creatives associated with the line item. |
+| `adContent.creatives.mediaType` | string or null | `Display` or `Video`. Null when not yet known. |
+| `adContent.creatives.creatives` | array | The line item's associated creatives. Empty when none are associated. |
+| `adContent.creatives.creatives[].creative.id` | string | ID of the creative. |
+| `adContent.creatives.creatives[].creative.modifiedAt` | string | When the creative revision currently associated with the line item was associated. |
+| `adContent.creatives.creatives[].approvalStatus` | string | Approval status of the creative associated to the line item. |
+| `adContent.creatives.creatives[].creativePreviewCode` | string or null | The Creative Live Demo preview code. Null if the retailer does not support this feature. |
+| `adContent.creatives.creatives[].creativeProductCollections` | array | The ordered product collections of the associated creative. See [Fetch Line Item Creatives](/retail-media/experimental/docs/line-item-creatives#fetch-line-item-creatives) for the collection and product field descriptions. |
+| `bidding` | object or null | Bidding configuration for the line item. See [Line Item Bidding](/retail-media/experimental/docs/line-item-bidding#response-attributes) for the `cpm` field descriptions. |
+
+**Sample Request**
+
+```bash
+curl -L -X GET \
+  'https://api.criteo.com/experimental/retail-media/line-items/112233445566778899' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+**Sample Response** — `200 OK`
+
+```json
+{
+  "data": {
+    "id": "112233445566778899",
+    "type": "LineItemDetails",
+    "attributes": {
+      "core": {
+        "lineItemId": "112233445566778899",
+        "type": "OnsiteDisplay",
+        "name": "Back-to-school display",
+        "isPaused": false,
+        "budgetStatus": "BudgetAvailable",
+        "retailerId": "12345",
+        "campaignId": "987654321",
+        "effectiveFlightDates": {
+          "startDate": "2026-09-01T00:00:00Z",
+          "endDate": "2026-09-30T23:59:59Z"
+        },
+        "serveToOptOutUser": false,
+        "onsiteDisplayDetails": {
+          "auctionDetails": {
+            "isDynamicMatch": true
+          }
+        }
+      },
+      "targeting": {
+        "targets": [
+          {
+            "targetType": "Category",
+            "negative": false,
+            "bidMultiplier": 1.5,
+            "approvalStatus": "Approved",
+            "categoryTargetDetails": {
+              "categoryId": "1001",
+              "includeChildren": true
+            }
+          }
+        ]
+      },
+      "adContent": {
+        "products": {
+          "productType": "DisplayProduct",
+          "displayProductDetails": [
+            {
+              "productId": "sku-12345",
+              "approvalStatus": "Approved"
+            }
+          ]
+        },
+        "creatives": {
+          "mediaType": "Display",
+          "creatives": [
+            {
+              "creative": {
+                "id": "123",
+                "modifiedAt": "2026-08-13T14:30:00Z"
+              },
+              "approvalStatus": "Approved",
+              "creativePreviewCode": "preview-code",
+              "creativeProductCollections": [
+                {
+                  "isMandatory": false,
+                  "products": [
+                    {
+                      "id": "sku-12345",
+                      "approvalStatus": "Approved"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "bidding": {
+        "cpm": {
+          "bidStrategy": "Adaptive",
+          "standardBiddingSettings": {
+            "auctionBids": [
+              {
+                "pageType": "Search",
+                "bid": 1.25
+              }
+            ]
+          },
+          "adaptiveBiddingSettings": {
+            "maxBid": 3.5
+          }
+        }
+      }
+    }
+  },
+  "warnings": []
+}
+```
+
+### Partial Availability
+
+`core` is always required: if it cannot be retrieved, the endpoint returns a non-`200` response with no `data`, forwarding the downstream error and status code unchanged.
+
+`targeting`, `adContent.products`, `adContent.creatives`, and `bidding` are independently optional:
+
+- If one of these is temporarily unavailable (for example, a downstream dependency failure), the response still returns `200 OK` with that attribute set to `null` and a warning appended to the top-level `warnings` array.
+- `adContent` itself is `null` only when both `products` and `creatives` are unavailable; if either succeeds, `adContent` is present with the other field set to `null`.
+- If a scope does not apply to the line item's type (for example, requesting creatives for a line item type that does not support them), the attribute is `null` **without** a warning, since the scope does not apply rather than being unavailable.
+
+| Warning Code | `instance` | Meaning |
+| --- | --- | --- |
+| `line-item-targeting-unavailable` | `@data/attributes/targeting` | Targeting could not be retrieved. |
+| `line-item-ad-content-products-unavailable` | `@data/attributes/adContent/products` | Products could not be retrieved. |
+| `line-item-ad-content-creatives-unavailable` | `@data/attributes/adContent/creatives` | Creatives could not be retrieved. |
+| `line-item-bidding-unavailable` | `@data/attributes/bidding` | Bidding settings could not be retrieved. |
+
+Clients should always inspect the `warnings` array, even on a `200 OK` response, since it can indicate that part of the consolidated view is incomplete.
+
+### Errors
+
+| HTTP status | Description |
+| --- | --- |
+| `401` | The caller is not authenticated. |
+| `403` | The line item does not exist, or the caller cannot access it. |
+| `5xx` | The core line item could not be retrieved; the error and status code are forwarded from the underlying service unchanged. |
+
+---
 
 ## Create a Line Item Core
 
 Creates a line-item core entity under an existing campaign.
+
+The campaign must be an Onsite Display Auction or Sponsored Products Auction campaign that uses automatic budgets. The line item takes its flight dates from the campaign schedule, and default line-item budgets are set up along with it.
 
 <EndpointBadge method="post">
 ```http
@@ -47,14 +222,13 @@ https://api.criteo.com/experimental/retail-media/line-items
 | `name` | Yes | Display name of the line item. It must be unique within the campaign and contain 2–255 characters after trimming. |
 | `retailerId` | Yes | External ID of the retailer associated with the line item. If the campaign specifies a retailer, the line-item retailer must match it. |
 | `campaignId` | Yes | External ID of the existing campaign that owns the line item and determines which type-specific details object is accepted. |
-| `isPaused` | No | Whether the line item is paused. Defaults to `false`. |
 | `serveToOptOutUser` | No | Whether ads can serve to users who opted out of personalization. |
-| `onsiteDisplayDetails.frequencyCapping` | No | Limits how often one user may be shown this Onsite Display line item's ads. Omit it to leave the line item uncapped. |
-| `onsiteDisplayDetails.frequencyCapping.cappingCount` | Required when `frequencyCapping` is supplied | Maximum number of times the ads may be shown within the selected duration. Must be from `1` to `20`. |
-| `onsiteDisplayDetails.frequencyCapping.cappingDurationType` | Required when `frequencyCapping` is supplied | Period the count applies to: `Session` or `Day`. |
+| `onsiteDisplayDetails.isPaused` | No | Whether the Onsite Display line item is created paused. Defaults to `false`. |
 | `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | No | Initial Onsite Display Auction-specific setting. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
 
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `fundingStatus`, `effectiveFlightDates`, or `conquestingSettings` inside `attributes`.
+The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
+
+Omit `onsiteDisplayDetails` for Sponsored Products campaigns.
 
 **Sample Request**
 
@@ -64,15 +238,11 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
     "type": "line-item",
     "attributes": {
       "name": "Back-to-school display",
-      "isPaused": false,
       "retailerId": "12345",
       "campaignId": "987654321",
       "serveToOptOutUser": false,
       "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Day"
-        },
+        "isPaused": false,
         "auctionDetails": {
           "isDynamicMatch": true
         }
@@ -81,6 +251,15 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
   }
 }
 ```
+
+### Response Attributes
+
+All attributes below are nested under `data.attributes`. Alongside the attributes accepted on creation, the response carries read-only fields such as the following enum fields.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `type` | string | Type of line item: `SponsoredProduct` or `OnsiteDisplay`. |
+| `budgetStatus` | string | Whether the line item has budget headroom to serve ads: `BudgetAvailable`, `DailyBudgetReached`, `MonthlyBudgetReached`, `TotalBudgetReached` or `Unknown`. `Unknown` means the status could not be determined. |
 
 **Sample Response**
 
@@ -94,7 +273,7 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
       "type": "OnsiteDisplay",
       "name": "Back-to-school display",
       "isPaused": false,
-      "fundingStatus": "Funded",
+      "budgetStatus": "BudgetAvailable",
       "retailerId": "12345",
       "campaignId": "987654321",
       "effectiveFlightDates": {
@@ -102,17 +281,7 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
         "endDate": "2026-09-30T23:59:59Z"
       },
       "serveToOptOutUser": false,
-      "conquestingSettings": {
-        "conquestingAdStrategyEnabled": false,
-        "neutralAdStrategyEnabled": true,
-        "defensiveAdStrategyEnabled": true,
-        "isAdStrategyLocked": false
-      },
       "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Day"
-        },
         "auctionDetails": {
           "isDynamicMatch": true
         }
@@ -131,10 +300,11 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
 | `400` | `invalid-campaign-schedule` | The campaign has no schedule from which the API can derive the line item's flight dates. |
 | `400` | `invalid-retailer-id` | The retailer ID is improperly formatted or, when the campaign specifies a retailer, does not match it. |
 | `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
-| `400` | `invalid-frequency-capping` | The duration is not `Session` or `Day`, the count is outside `1`–`20`, or the parent campaign already has frequency capping. |
-| `400` | `unsupported-campaign-type` | The campaign type is not supported by the current implementation. |
+| `400` | `unsupported-campaign-type` | The campaign is not an Auction campaign with automatic budgets, or its type is not supported by the current implementation. |
 | `401` | `unauthorized` | The caller is not authenticated. |
 | `403` | `forbidden` | The caller cannot create a line item for the target campaign and retailer. |
+
+If the default budgets cannot be set up after the line item is created, the request returns the budget error and the line item is renamed with a `[FAILED]` prefix. Do not configure that line item further.
 
 ---
 
@@ -163,12 +333,9 @@ https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}
 | `name` | New display name. Must be unique within the campaign and contain 2–255 characters after trimming. |
 | `isPaused` | Set to `true` to pause the line item or `false` to unpause it. |
 | `serveToOptOutUser` | Whether ads can serve to users who opted out of personalization. |
-| `onsiteDisplayDetails.frequencyCapping` | Frequency-cap setting for an Onsite Display line item. Omit it to leave the cap unchanged; send `{ "value": null }` to remove the cap. |
-| `onsiteDisplayDetails.frequencyCapping.value.cappingCount` | Maximum number of times the ads may be shown within the selected duration. Must be from `1` to `20`; required when setting a cap. |
-| `onsiteDisplayDetails.frequencyCapping.value.cappingDurationType` | Period the count applies to: `Session` or `Day`. Required when setting a cap. |
 | `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | Onsite Display Auction-specific. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
 
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `fundingStatus`, `effectiveFlightDates`, or `conquestingSettings` inside `attributes`.
+The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
 
 **Sample Request**
 
@@ -180,17 +347,16 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
       "name": "Back-to-school display — extended",
       "isPaused": false,
       "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "value": {
-            "cappingCount": 5,
-            "cappingDurationType": "Session"
-          }
+        "auctionDetails": {
+          "isDynamicMatch": true
         }
       }
     }
   }
 }
 ```
+
+The response attributes are the same as for [Create](#create-a-line-item-core).
 
 **Sample Response**
 
@@ -204,7 +370,7 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
       "type": "OnsiteDisplay",
       "name": "Back-to-school display — extended",
       "isPaused": false,
-      "fundingStatus": "Funded",
+      "budgetStatus": "BudgetAvailable",
       "retailerId": "12345",
       "campaignId": "987654321",
       "effectiveFlightDates": {
@@ -212,17 +378,7 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
         "endDate": "2026-09-30T23:59:59Z"
       },
       "serveToOptOutUser": false,
-      "conquestingSettings": {
-        "conquestingAdStrategyEnabled": false,
-        "neutralAdStrategyEnabled": true,
-        "defensiveAdStrategyEnabled": true,
-        "isAdStrategyLocked": false
-      },
       "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Session"
-        },
         "auctionDetails": {
           "isDynamicMatch": true
         }
@@ -238,7 +394,6 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
 | --- | --- | --- |
 | `400` | `invalid-name` | The name is blank or outside the supported length. |
 | `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
-| `400` | `invalid-frequency-capping` | The duration is not `Session` or `Day`, the count is outside `1`–`20`, or the parent campaign already has frequency capping. |
 | `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the line item's campaign or buy type. |
 | `400` | `invalid-dynamic-match` | `isDynamicMatch` cannot be changed once the line item is approved, or set to `false` once set to `true`. |
 | `401` | `unauthorized` | The caller is not authenticated. |

@@ -1,0 +1,295 @@
+---
+title: "Product Reporting"
+---
+
+## Overview
+
+The Product Reporting API provides product performance data for Marketplace Performance Outcomes (MPO). Use it to analyze individual products across sellers and ad sets, or export product data for business intelligence and data warehouse workflows.
+
+The API reports impressions, clicks, and cost. It does not provide conversion metrics or time-based breakdowns, and reports do not include the current day.
+
+For seller-level or campaign-level aggregated reporting, use the [MPO Standard Reporting API](https://developers.criteo.com/marketing-solutions/docs/mpo-standard-reporting-api). For lower-latency product monitoring, use the [Real-Time Monitoring API](https://developers.criteo.com/marketing-solutions/experimental/docs/mpo-real-time-asynchronous-api).
+
+## Comparing product and standard reporting
+
+Product reports include `impressions`, `clicks`, and `cost`.
+
+- `clicks` and `cost` values reconcile with the [MPO Standard Reporting API](https://developers.criteo.com/marketing-solutions/docs/mpo-standard-reporting-api).
+- `impressions` values may differ between the two APIs.
+
+Expect this difference when comparing product-level and standard reports.
+
+## Before you start
+
+- **Availability:** This API is currently in the experimental release.
+- **Supported campaigns:** The API supports Multi-Seller and Single-Seller campaigns.
+- **Workflow:** The API uses an asynchronous export workflow. You create a report job, check its status, and download the report when it is ready.
+- **Report scope:** Reports include impressions, clicks, and cost. Conversion metrics and time-based breakdowns are not supported. The current day is not included.
+- **Required scope:** `MarketingSolutions_Analytics_Read`
+- **Data availability:** The API supports data from August 28, 2026. Requests with a `startDate` before August 28, 2026 are rejected with `invalid-query`.
+
+### Response identifier
+
+In the experimental release, the response returns the report identifier as `exportId`. Use that value as the `reportId` path parameter in the status and download URLs.
+
+At release candidate and in subsequent stable releases, the response field will change to `reportId`. This is a breaking change.
+
+## When to use this API
+
+Use the Product Reporting API to:
+
+- Analyze performance for individual products across sellers and ad sets.
+- Export product data for downstream reporting and analytics.
+- Review product impressions, clicks, and cost.
+- Filter performance by advertiser or ad set. You can also filter by marketing campaign; this filter is primarily useful for MPO Pro.
+
+For seller-level or campaign-level aggregated reporting, use the [MPO Standard Reporting API](https://developers.criteo.com/marketing-solutions/docs/mpo-standard-reporting-api).
+
+For lower-latency product monitoring, use the [Real-Time Monitoring API](https://developers.criteo.com/marketing-solutions/experimental/docs/mpo-real-time-asynchronous-api).
+
+## How it works
+
+1. Create a report job with `POST /product-reports/export`.
+2. Check the job status with `GET /report-jobs/{reportId}`.
+3. Download the report with `GET /product-reports/{reportId}` when the status is `Done`.
+
+Report jobs may be reused when an identical request was recently processed. In that case, the initial response may already have a `Done` status.
+
+## Endpoint reference
+
+### 1. Create a report job
+
+```text
+POST https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/product-reports/export
+```
+
+Creates an asynchronous product-level report job.
+
+#### Request body
+
+```json
+{
+  "data": {
+    "type": "ProductReportJob",
+    "attributes": {
+      "fileFormat": "csv",
+      "advertiserIds": [
+        "2914"
+      ],
+      "adSetIds": [
+        "106509"
+      ],
+      "dimensions": [
+        "advertiserId",
+        "adSetId",
+        "sellerId",
+        "productId"
+      ],
+      "metrics": [
+        "impressions",
+        "clicks",
+        "cost"
+      ],
+      "startDate": "2026-09-01T00:00:00Z",
+      "endDate": "2026-09-30T00:00:00Z"
+    }
+  }
+}
+```
+
+#### Request parameters
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `fileFormat` | string | Yes | Report format: `csv` or `json`. |
+| `advertiserIds` | string array | Yes | Advertiser account IDs. Maximum five values. Values must be numeric. |
+| `campaignIds` | string array | No | Filters by marketing campaign. This filter is primarily useful for MPO Pro. Maximum 10 values. |
+| `adSetIds` | string array | No | Filters by ad set. Maximum 10 values. For Multi-Seller and Single-Seller, these are the IDs that legacy APIs call `campaignId`. |
+| `dimensions` | string array | No | Dimensions to group by. Defaults to `["advertiserId", "adSetId", "sellerId", "productId"]`. Duplicates are not allowed. Time dimensions are not supported. |
+| `metrics` | string array | No | Metrics to include. Defaults to `["clicks", "impressions", "cost"]`. Duplicates are not allowed. |
+| `startDate` | string | Yes | Start of the reporting interval in ISO 8601 UTC format. It cannot be more than one year in the past or earlier than August 28, 2026. |
+| `endDate` | string | No | End of the reporting interval in ISO 8601 UTC format. Defaults to the last complete day. The current day is not included. |
+
+### 2. Get report status
+
+```text
+GET https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/report-jobs/{reportId}
+```
+
+Returns the current status of a report job. In the experimental release, use the value returned in the response’s `exportId` field as the `reportId` path value.
+
+#### Response
+
+```json
+{
+  "data": {
+    "type": "ExportJobStatus",
+    "attributes": {
+      "exportId": "e0893b6b-be25-477f-9ca3-e6e8c8ec9e30",
+      "status": "Pending",
+      "message": null
+    }
+  }
+}
+```
+
+#### Status values
+
+| Status | Meaning |
+| --- | --- |
+| `Pending` | The report job is queued or processing. |
+| `Done` | The report is ready to download. |
+| `Failure` | The report job failed. |
+| `Expired` | The report has expired and is no longer available. Submit a new report job. |
+
+#### Completed response
+
+```json
+{
+  "data": {
+    "type": "ExportJobStatus",
+    "attributes": {
+      "exportId": "e0893b6b-be25-477f-9ca3-e6e8c8ec9e30",
+      "status": "Done",
+      "message": "rows_count=3"
+    }
+  }
+}
+```
+
+### 3. Download the report
+
+```text
+GET https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/product-reports/{reportId}
+```
+
+Downloads the completed report file. The report is available only when the job status is `Done`.
+
+In the experimental release, use the value returned in the response’s `exportId` field as the `reportId` path value.
+
+#### CSV response
+
+```csv
+advertiserId,adSetId,sellerId,productId,impressions,clicks,cost
+2914,106509,515151,"847392011",220,45,4400
+2914,106509,515151,"847392012",800,4,400
+2914,106509,131313,"564656664",1832,3,450
+```
+
+`productId` values are returned as strings.
+
+#### JSON response
+
+```json
+{
+  "data": {
+    "type": "ProductReportData",
+    "attributes": {
+      "columns": [
+        "advertiserId",
+        "adSetId",
+        "sellerId",
+        "productId",
+        "impressions",
+        "clicks",
+        "cost"
+      ],
+      "data": [
+        [
+          2914,
+          106509,
+          515151,
+          "847392011",
+          220,
+          45,
+          4400
+        ],
+        [
+          2914,
+          106509,
+          515151,
+          "847392012",
+          800,
+          4,
+          400
+        ],
+        [
+          2914,
+          106509,
+          131313,
+          "564656664",
+          1832,
+          3,
+          450
+        ]
+      ],
+      "rows": 3
+    }
+  }
+}
+```
+
+## Dimensions
+
+| Dimension | Description |
+| --- | --- |
+| `advertiserId` | Advertiser ID. |
+| `partnerId` | Partner ID. |
+| `campaignId` | Marketing campaign ID. Campaign filtering is available for supported campaigns, but is primarily useful for MPO Pro. |
+| `adSetId` | Ad set ID. For Multi-Seller and Single-Seller, this is the ID that legacy APIs call `campaignId`. |
+| `sellerId` | Seller ID. |
+| `productId` | Product ID as provided in the catalog feed. This value is a string. |
+
+Duplicate dimension values are not allowed. Time dimensions are not supported. Reports contain totals for the requested interval, with one row for each combination of the requested dimensions.
+
+## Metrics
+
+| Metric | Type | Description |
+| --- | --- | --- |
+| `clicks` | integer | Clicks generated on the product during the reporting interval. Values reconcile with the MPO Standard Reporting API. |
+| `impressions` | integer | Number of impressions for the product during the reporting interval. Values may differ from the MPO Standard Reporting API. |
+| `cost` | double | Click-attributed cost in the advertiser’s local currency. Values reconcile with the MPO Standard Reporting API. |
+
+## Errors and HTTP status codes
+
+| Code | Description | Recommended action |
+| --- | --- | --- |
+| `400` | Bad request. Invalid syntax or validation error. | Correct the request before retrying. |
+| `401` | Authentication failed. The access token is missing or expired. | Refresh the access token before retrying. |
+| `403` | Insufficient permissions, no campaign in scope, or report job not found. | Check access to the advertiser or report before retrying. |
+| `429` | Throttling limit reached. | Retry later according to the API’s rate-limit guidance. |
+| `500` | Internal server error. | Retry with backoff. |
+
+## Domain errors
+
+| Code | Description |
+| --- | --- |
+| `insufficient-account-permissions` | The caller does not have the required rights for the specified advertisers. |
+| `invalid-query` | The request contains missing or unsupported fields, duplicate dimensions or metrics, invalid IDs, or a start date outside the available data depth. |
+| `export-not-found` | The requested export job does not exist or is not accessible to the caller. |
+| `unsupported-file-format` | The requested format is not supported. Supported formats are CSV and JSON. |
+
+## Integration pattern
+
+1. Call `POST /product-reports/export` with the required dimensions, metrics, and date range.
+2. Store the identifier returned in the response’s `exportId` field.
+3. Use that value as the `reportId` path parameter when polling `GET /report-jobs/{reportId}`.
+4. When the status is `Done`, call `GET /product-reports/{reportId}` to download the report.
+5. If the status is `Failure`, check the request parameters and retry.
+6. If the status is `Expired`, submit a new report job.
+
+## Data availability and limitations
+
+- The current day is not included in the report.
+- Reports contain impressions, clicks, and cost. Conversion metrics are not supported.
+- Time-based breakdowns are not supported. Reports contain totals for the requested date range.
+- Data is available from August 28, 2026 for this release.
+- Requests with a `startDate` before August 28, 2026 are rejected with `invalid-query`.
+- Product IDs come from the catalog feed.
+
+## Related documentation
+
+- [MPO Standard Reporting API](https://developers.criteo.com/marketing-solutions/docs/mpo-standard-reporting-api) — For aggregated campaign and seller reporting.
+- [MPO reporting](https://developers.criteo.com/marketing-solutions/docs/reporting) — For reporting concepts, identifiers, time grains, and metric definitions.
+- [Latency in MPO](https://developers.criteo.com/marketing-solutions/docs/mpo-latency#standard-reporting) — For reporting data latency and processing delays.
+- [Authentication](https://developers.criteo.com/marketing-solutions/docs/authentication) — For generating and using API access tokens.

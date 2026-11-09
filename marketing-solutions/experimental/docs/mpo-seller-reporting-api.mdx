@@ -1,0 +1,213 @@
+---
+title: Standard Reporting v2
+sidebarTitle: Standard Reporting v2
+---
+
+## Overview
+
+The Standard Reporting API v2 provides aggregated performance data for Marketplace Performance Outcomes (MPO). Use it to create seller-facing performance reports, support billing and reporting workflows, and analyze performance by campaign, ad set, seller, or time period.
+
+The API returns reports in CSV or JSON format and includes performance, sales, revenue, and return on ad spend metrics. Seller audience metrics are not available in the initial release.
+
+## Before you start
+
+- **Supported activations:** The API supports Multi-Seller and Single-Seller campaigns.
+- **Endpoint type:** This version provides synchronous reporting and returns the report in the same request.
+- **Row limit:** The synchronous endpoint supports up to 100,000 rows.
+- **Attribution windows:** The API provides predefined attribution windows. You cannot enter a custom attribution window.
+- **Data availability:** You can set `startDate` up to one year in the past. However, data for the new attribution-window metrics is available only from September 15, 2026. Requests covering dates before September 15, 2026 do not return data for these metrics.
+- **Required scope:** `MarketingSolutions_Analytics_Read`
+
+> **Important:** When you compare this API with Product stats, clicks and cost reconcile for overlapping metrics. Impression counts may differ for Native placements because not all Native impressions are currently reported.
+
+## When to use this API
+
+Use the Standard Reporting API v2 to:
+
+- Generate seller-facing performance reports and support billing workflows.
+- Analyze performance by campaign, ad set, seller, or time period.
+- Apply predefined sales attribution windows.
+- Retrieve metrics such as impressions, clicks, cost, sales, revenue, and return on ad spend.
+- Export reporting data for dashboards, analytics workflows, or data warehouses.
+
+## Endpoint
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/marketing-solutions/marketplace-performance-outcomes/stats/report` | Generate and download a report synchronously. |
+
+The base URL is:
+
+```text
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/
+```
+
+## Request model
+
+The synchronous report endpoint uses the `SellerReportRequest` request body.
+
+### Request fields
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `advertiserId` | string | Yes | Advertiser for which to generate the report. |
+| `startDate` | string | Yes | Start of the reporting interval, inclusive, in `yyyy-MM-dd` format. |
+| `endDate` | string | Yes | End of the reporting interval, inclusive, in `yyyy-MM-dd` format. |
+| `dimensions` | string array | Yes | Dimension identifiers used to aggregate the report. At least one dimension is required. |
+| `metrics` | string array | Yes | Metric identifiers to include in the report. At least one metric is required. |
+| `campaignIds` | string array | No | Filters the report by marketing campaign. Limited to 10 values. |
+| `adSetIds` | string array | No | Filters the report by ad set. Limited to 10 values. |
+| `sellerIds` | string array | No | Filters the report by seller. Limited to 10 values. |
+| `timezone` | string | No | IANA time zone used for daily aggregation. Defaults to `UTC`. |
+| `format` | enum | No | Report format: `csv` or `json`. Defaults to `json`. |
+
+## Dimensions
+
+| Dimension | Description |
+| --- | --- |
+| `campaignId` | Marketing campaign identifier. |
+| `adSetId` | Ad set identifier. |
+| `sellerId` | Seller identifier. |
+| `hour` | Hour of the reporting interval. |
+| `day` | Day of the reporting interval. |
+| `month` | Month of the reporting interval. |
+| `year` | Year of the reporting interval. |
+
+## Metrics
+
+Attribution metrics follow this naming pattern:
+
+```text
+{Type}Pc{N}d[Pv{M}d]{SameSeller|AnySeller}
+```
+
+- `Pc{N}d` is the post-click attribution window: one, seven, or 30 days.
+- `Pv{M}d` is the post-view attribution window: one or seven days, combined with the post-click window.
+- `SameSeller` attributes the event to the same seller as the promoted ad.
+- `AnySeller` attributes the event to any seller.
+
+| Metric family | Supported values |
+| --- | --- |
+| Core metrics | `impressions`, `clicks`, `cost` |
+| Sales units | `saleUnitsPc1dSameSeller`, `saleUnitsPc1dAnySeller`, `saleUnitsPc7dSameSeller`, `saleUnitsPc7dAnySeller`, `saleUnitsPc30dSameSeller`, `saleUnitsPc30dAnySeller`, and the corresponding `Pc1dPv1d`, `Pc1dPv7d`, `Pc7dPv1d`, `Pc7dPv7d`, `Pc30dPv1d`, and `Pc30dPv7d` variants for both seller scopes. |
+| Revenue | `revenuePc1dSameSeller`, `revenuePc1dAnySeller`, `revenuePc7dSameSeller`, `revenuePc7dAnySeller`, `revenuePc30dSameSeller`, `revenuePc30dAnySeller`, and the corresponding `Pc1dPv1d`, `Pc1dPv7d`, `Pc7dPv1d`, `Pc7dPv7d`, `Pc30dPv1d`, and `Pc30dPv7d` variants for both seller scopes. |
+| Conversion rate | `crPc1dSameSeller`, `crPc1dAnySeller`, `crPc7dSameSeller`, `crPc7dAnySeller`, `crPc30dSameSeller`, `crPc30dAnySeller`, and the corresponding post-view variants for both seller scopes. |
+| Cost per order | `cpoPc1dSameSeller`, `cpoPc1dAnySeller`, `cpoPc7dSameSeller`, `cpoPc7dAnySeller`, `cpoPc30dSameSeller`, `cpoPc30dAnySeller`, and the corresponding post-view variants for both seller scopes. |
+| Cost of sale | `cosPc1dSameSeller`, `cosPc1dAnySeller`, `cosPc7dSameSeller`, `cosPc7dAnySeller`, `cosPc30dSameSeller`, `cosPc30dAnySeller`, and the corresponding post-view variants for both seller scopes. |
+| Return on ad spend | `roasPc1dSameSeller`, `roasPc1dAnySeller`, `roasPc7dSameSeller`, `roasPc7dAnySeller`, `roasPc30dSameSeller`, `roasPc30dAnySeller`, and the corresponding post-view variants for both seller scopes. |
+| Seller audience metrics | `sellerVisits`, `sellerUniqueUsers` — Not available in the initial release. |
+
+## Generate a report synchronously
+
+Use the synchronous endpoint to generate and download a report in a single request. The synchronous endpoint is limited to **100,000 rows**.
+
+```text
+POST https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/report
+```
+
+### Example request
+
+```json
+{
+  "data": {
+    "type": "SellerReportRequest",
+    "attributes": {
+      "advertiserId": "52949",
+      "dimensions": [
+        "campaignId",
+        "adSetId",
+        "sellerId",
+        "day"
+      ],
+      "metrics": [
+        "impressions",
+        "clicks",
+        "cost",
+        "saleUnitsPc7dPv1dSameSeller",
+        "revenuePc7dPv1dSameSeller",
+        "roasPc7dPv1dSameSeller"
+      ],
+      "startDate": "2026-06-01",
+      "endDate": "2026-06-30",
+      "sellerIds": [
+        "1200972"
+      ],
+      "timezone": "UTC",
+      "format": "json"
+    }
+  }
+}
+```
+
+The response format is determined by the `format` value:
+
+- `json` returns `application/json`.
+- `csv` returns `text/csv`.
+
+## JSON response structure
+
+JSON reports use a `columns` array and a `data` array. Each row in `data` follows the same order as the columns.
+
+```json
+{
+  "data": {
+    "type": "SellerReportData",
+    "attributes": {
+      "columns": [
+        "campaignId",
+        "adSetId",
+        "sellerId",
+        "day",
+        "impressions",
+        "clicks",
+        "cost",
+        "saleUnitsPc7dPv1dSameSeller",
+        "revenuePc7dPv1dSameSeller",
+        "roasPc7dPv1dSameSeller"
+      ],
+      "data": [
+        [
+          168423,
+          708171,
+          1200972,
+          "2026-06-01",
+          14542,
+          48,
+          3.36,
+          12,
+          45210.0,
+          13455.4
+        ]
+      ],
+      "rows": 1
+    }
+  }
+}
+```
+
+## Errors and HTTP status codes
+
+| Code | Description |
+| --- | --- |
+| `400` | Invalid syntax or validation error. |
+| `401` | Unauthorized. Authentication credentials are missing or invalid. |
+| `403` | The caller does not have permission to access the requested advertiser or report. |
+| `429` | The request was throttled. |
+| `500` | Internal server error. Retry with backoff. |
+
+## Domain errors
+
+| Code | Description |
+| --- | --- |
+| `insufficient-account-permissions` | The caller does not have the rights required to generate a report for the specified advertiser. |
+| `invalid-query` | The request contains unsupported dimensions or metrics, an invalid time zone, or invalid IDs. |
+| `unsupported-file-format` | The requested report format is not supported. Supported formats are CSV and JSON. |
+| `export-not-found` | The requested report job does not exist or is not available to the caller. |
+| `export-already-expired` | The report job exists, but its result is no longer available. |
+
+## Related documentation
+
+- [Standard Reporting API v2](https://developers.criteo.com/marketing-solutions/experimental/docs/mpo-seller-reporting-api) — For aggregated campaign and seller reporting.
+- [MPO reporting](https://developers.criteo.com/marketing-solutions/docs/reporting) — For reporting concepts, identifiers, time grains, and metric definitions.
+- [Latency in MPO](https://developers.criteo.com/marketing-solutions/docs/mpo-latency#standard-reporting) — For reporting data latency and processing delays.
+- [Authentication](https://developers.criteo.com/marketing-solutions/docs/authentication) — For generating and using API access tokens.
