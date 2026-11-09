@@ -1,0 +1,123 @@
+---
+title: [Action Verb + Object]
+description: [One sentence: what goal this achieves and who does it. E.g. "How to submit and retrieve a campaign performance report as a DSP partner."]
+---
+
+{/*
+  WORKFLOW GUIDE TEMPLATE — not published in the nav (leading underscore).
+
+  Use this for API Workflow guides: pages that walk a developer through a goal
+  end-to-end, as opposed to describing what a resource is (Concepts) or listing
+  all fields on an endpoint (API Reference).
+
+  Title convention: start with an action verb — "Report...", "Create...",
+  "Discover...", "Manage...", "Grant...". Not "Overview of..." or "Introduction to...".
+
+  Sections marked [DELETE IF NOT APPLICABLE] can be removed when they don't apply.
+  Keep the template comment blocks while drafting; remove them before merging.
+*/}
+
+[1–2 sentences. State what this guide walks the developer through and what
+they will have at the end. Do NOT repeat the description frontmatter verbatim.
+Example: "This guide covers the full async reporting flow: submit a request,
+poll for status, and download the result."]
+
+[OPTIONAL — include a tight use-case list when it's non-obvious who should use this:]
+{/*
+**Use this guide if you:**
+- [specific use case]
+- [specific use case]
+*/}
+
+---
+
+## Prerequisites
+
+Before calling these endpoints, ensure the following are in place:
+
+- **Auth scope**: `retail-media:[scope]` — see [Authentication](/retail-media/docs/authentication)
+- **[Required ID]**: a `[campaignId / accountId / lineItemId]` — obtained from [link to where it comes from]
+- **[Other prerequisite]**: [e.g., "a campaign must exist and be in `active` status before creating a line item"]
+
+[DELETE IF NOT APPLICABLE: add a decision callout when the reader may be in the wrong guide]
+{/*
+<Note>
+  If you are a [specific role], you need a different setup. See [Other Guide](/retail-media/docs/other-guide).
+</Note>
+*/}
+
+---
+
+## Steps
+
+{/*
+  Use numbered H3s. Each step should:
+  - name the call with a → link to the API Reference
+  - state what inputs are required (don't copy the full schema — just what matters)
+  - tell the developer which field from the response to carry into the next step
+  - surface gotchas as Warning callouts, not in prose
+
+  For single-step operations (e.g. a synchronous endpoint), use "## Request" and
+  "## Response" instead of numbered steps.
+*/}
+
+### 1. [Action — e.g. "Submit the request"]
+
+[→ `POST /retail-media/[path]`](/retail-media/reference/[operation-id])
+
+[What to provide. Focus on required fields and non-obvious ones.
+Example: "Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`),
+plus `startDate`, `endDate`, `metrics`, and `dimensions`. All five are required."]
+
+[Save what matters:] The response includes `data.id` — this is the `[operationToken / reportId]`
+you will use in the next step.
+
+<Warning>[Non-obvious constraint that causes a 400 or silent failure. Example:
+"`filters` must contain exactly one scope filter. Passing multiple or none returns `400 Bad Request`."]</Warning>
+
+[DELETE IF NOT APPLICABLE:]
+{/*
+<Note>[Edge case or platform-specific behavior worth flagging. Example:
+"The `winRate` metric is meaningful only for Sponsored Products campaigns."]</Note>
+*/}
+
+---
+
+### 2. [Action — e.g. "Poll for status"]
+
+[→ `GET /retail-media/[path]/{operationToken}`](/retail-media/reference/[operation-id])
+
+[What to check in the response. What status values mean proceed vs. retry vs. fail.
+Example: "Poll until `data.attributes.status` is `success`. Retry on `pending` or `running`.
+A `failure` status means the request was invalid — do not retry without changing the parameters."]
+
+<Note>[If this step has a timing note or rate limit implication. Example:
+"This endpoint is counted against your polling rate limit — see [Rate Limits](/retail-media/docs/rate-limits)."]</Note>
+
+---
+
+### 3. [Action — e.g. "Download the result" — DELETE IF NOT APPLICABLE]
+
+[→ `GET /retail-media/[path]/{operationToken}/output`](/retail-media/reference/[operation-id])
+
+[What the response shape looks like. Only call out non-obvious format details.
+Example: "Output defaults to `json-compact` — a `columns`/`data` array shape rather than
+an array of row objects. Set `format: csv` in the original request if you prefer a flat file."]
+
+---
+
+## Constraints [DELETE IF NOT APPLICABLE]
+
+{/* Include whenever there are hard limits a developer will hit in production. */}
+
+| Limit | Value |
+|---|---|
+| [Limit name, e.g. Max date range] | [Value, e.g. 100 days — link to [Hard Limits](/retail-media/docs/hard-limits) if covered there] |
+| [Limit name] | [Value] |
+
+---
+
+## What's Next
+
+- [Related guide — next logical step in the flow](/retail-media/docs/[slug])
+- [Reference page for full field list](/retail-media/reference/[operation-id])
