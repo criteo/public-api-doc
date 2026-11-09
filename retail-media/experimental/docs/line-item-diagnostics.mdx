@@ -1,133 +1,63 @@
 ---
-title: Line Item Diagnostics
-description: Check whether line items can serve and identify the configuration issues that prevent delivery.
+title: Check Line Item Delivery Readiness
+description: How to diagnose configuration issues that prevent a line item from serving ads.
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+This guide covers running delivery checks on a line item or all line items in a campaign, and interpreting the results to fix blocking issues.
 
 <Info>
-  This endpoint is available in the **Experimental** version of the Retail Media API only.
-  Experimental endpoints may change without prior notice. See the [versioning policy](/criteo-apis/docs/versioning-policy) for details.
+  This endpoint is available in the **Experimental** Retail Media API only.
 </Info>
 
-## Overview
+---
 
-Use the Line Item Diagnostics endpoint to check whether a line item is configured correctly. The response reports a status for each evaluated line item and, when requested, the configuration context, evaluated parameters, and issues that require attention.
+## Prerequisites
 
-You can check one line item or a page of line items in one campaign. Your access token must be authorized to view the selected resource. See [Authentication](/retail-media/experimental/docs/authentication).
+- **Auth scope**: `retail-media:read` — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Line item ID** or **campaign ID**: one or the other — not both
 
-## Endpoint
+---
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/diagnostics/line-item-checks` | Get diagnostics for one line item or a page of a campaign's line items. |
+## Steps
 
-## Get Line Item Diagnostics
+### 1. Run diagnostics
 
-<EndpointBadge method="get">
-```http
-https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks
-```
-</EndpointBadge>
+[→ `GET /retail-media/diagnostics/line-item-checks`](/retail-media/experimental/reference/line-item/get-line-item-diagnostics)
 
-Send exactly one resource selector: `line-item-id` or `campaign-id`. A line-item request returns one result. A campaign request returns a paginated result set.
-
-### Query Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `line-item-id` | string | One selector is required | ID of the line item to evaluate. Do not send it with `campaign-id`. |
-| `campaign-id` | string | One selector is required | ID of the campaign whose line items to evaluate. Do not send it with `line-item-id`. |
-| `as-approved` | boolean | No | When `true` (default), evaluates the approved Onsite Display line item when one exists. Set to `false` to evaluate the current proposal. |
-| `fields` | string | No | Comma-separated optional attributes to include: `context`, `issues`, and `parameters`. All three are included when omitted. |
-| `cursor` | string | No | The cursor from the previous campaign response. Only valid with `campaign-id`; it must be a positive integer. |
-| `limit` | integer | No | Maximum results in a campaign page. Only valid with `campaign-id`; from `1` to `25`, default `25`. |
-
-`status` and `systemData` are always included. Do not include them in `fields`; the request succeeds but includes an `invalid-fields` warning.
-
-**Sample Request**
+Send exactly one selector: `line-item-id` for a single check, or `campaign-id` to check all line items in a campaign. Use `fields` to control which details are returned (`context`, `issues`, `parameters`); `status` and `systemData` are always included.
 
 ```bash
-curl -L -X GET \
-  'https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?line-item-id=112233445566778899&fields=context,issues' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+curl -X GET "https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?line-item-id=112233445566778899&fields=context,issues" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Accept: application/json"
 ```
 
-### Response Attributes
+### 2. Interpret the status
 
-Each result is in `data[].attributes`.
+| Status | Meaning |
+|---|---|
+| `CanFullyServe` | No delivery-blocking issues found |
+| `CanPartiallyServe` | Serving in some contexts — check `issues` for what limits it |
+| `CannotServe` | Configuration issues block all delivery — resolve `issues` with `severity: Error` |
+| `Unknown` | Check could not complete — retry; do not interpret as "can serve" |
 
-| Attribute | Type | Description |
-| --- | --- | --- |
-| `status` | string | `CanFullyServe`, `CanPartiallyServe`, `CannotServe`, or `Unknown`. Always included. |
-| `systemData` | object | Check and source timestamps: `checkTime`, `lineItemCreatedTime`, and `lineItemUpdatedTime`. Always included. |
-| `context` | object | IDs and types associated with the check: `accountId`, `campaignId`, `retailerId`, `lineItemId`, `campaignType`, and `buyType`. |
-| `parameters` | object | Name/value pairs used while evaluating rules. |
-| `issues` | array | Issues found in the line item's configuration. Each issue includes `ruleId`, `ruleName`, `code`, `severity`, `tags`, `format`, `outputParameters`, `message`, `id`, and optional `parentId`. |
+### 3. Paginate campaign results
 
-### Status Values
+For `campaign-id` requests, use the `cursor` from the response `metadata` to fetch the next page. Set `limit` (1–25, default 25).
 
-| Status | Description |
-| --- | --- |
-| `CanFullyServe` | The line item is correctly configured, with no identified issues that limit serving. |
-| `CanPartiallyServe` | The line item can serve in some contexts, but one or more issues limit serving. |
-| `CannotServe` | Configuration issues prevent the line item from serving. |
-| `Unknown` | The check could not complete. Inspect `warnings` and retry later. |
+---
 
-For campaign requests, `metadata` contains `cursor` (the next page cursor, or `null`), `limit`, and `count`.
+## Verify
 
-**Sample Response** — `200 OK`
+A successful response returns HTTP `200`. For each line item, confirm `status` is `CanFullyServe`. If `status` is `Unknown`, inspect `warnings` for a `result-unavailable` entry and retry later.
 
-```json
-{
-  "data": [
-    {
-      "attributes": {
-        "status": "CannotServe",
-        "systemData": {
-          "checkTime": "2026-10-21T14:30:00Z",
-          "lineItemCreatedTime": "2026-10-01T09:00:00Z",
-          "lineItemUpdatedTime": "2026-10-21T14:00:00Z"
-        },
-        "context": {
-          "accountId": "12345",
-          "campaignId": "99887766",
-          "retailerId": "54321",
-          "lineItemId": "112233445566778899",
-          "campaignType": "OnsiteDisplay",
-          "buyType": "Auction"
-        },
-        "issues": [
-          {
-            "ruleId": "creative-required",
-            "ruleName": "Creative required",
-            "code": "no-approved-creative",
-            "severity": "Error",
-            "tags": ["creative"],
-            "format": "No approved creative is associated with this line item.",
-            "outputParameters": {},
-            "message": "No approved creative is associated with this line item.",
-            "id": 1,
-            "parentId": null
-          }
-        ]
-      }
-    }
-  ],
-  "warnings": []
-}
-```
+---
 
-### Result Availability
+## Constraints
 
-An unexpected evaluation failure returns `200 OK` with `status` set to `Unknown` and a `result-unavailable` warning. Treat this as an incomplete result and retry later; do not interpret it as confirmation that the line item can serve.
-
-### Errors
-
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `400` | `request-invalid` | Both or neither selector was supplied, or campaign pagination is invalid. |
-| `400` | `invalid-fields` | `fields` contains an unsupported or duplicate optional field. |
-| `401` | — | The caller is not authenticated. |
-| `403` | `not-authorized` | The resource does not exist, has an invalid ID, or the caller cannot access it. |
+| Limit | Value |
+|---|---|
+| Selector | `line-item-id` or `campaign-id` — exactly one, not both |
+| `as-approved` | Defaults to `true` — evaluates the approved OnsiteDisplay line item, not the pending proposal |
+| Campaign page size | 1–25 (default 25) |
+| `fields` | `context`, `issues`, `parameters` — do not include `status` or `systemData` (always returned) |
