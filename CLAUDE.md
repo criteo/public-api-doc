@@ -27,15 +27,6 @@ New API Workflow guides must follow the template at `retail-media/docs/_workflow
 
 **Structure:** frontmatter → one-sentence outcome statement → Prerequisites → numbered Steps (one curl per guide, requests only) → Verify → Constraints
 
-**Reference examples to consult:**
-
-| Pattern | Example file |
-|---|---|
-| Async (submit / poll / download) | `retail-media/docs/performance-report.mdx` |
-| Sync single-step | `retail-media/docs/real-time-performance-api.mdx` |
-| Multi-step with error callouts | `retail-media/docs/retailer-budgets.mdx` |
-| Legacy rewrite (before/after) | `retail-media/docs/retailer-search.mdx` |
-
 **Key rules:**
 - Guides document workflows, not endpoints. The API Reference covers individual endpoints — do not duplicate field tables here.
 - One curl example per guide (the most important request in the flow). Requests only — no response examples.
