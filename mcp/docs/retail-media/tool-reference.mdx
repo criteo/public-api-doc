@@ -1,0 +1,103 @@
+---
+title: Tool Reference
+description: "Complete reference for all Retail Media MCP tools — what each tool does, its endpoint, and when to use it."
+---
+
+## Overview
+
+The Retail Media MCP server exposes read-only tools for media planning, campaign management, and performance measurement. Tools are organized into six capability groups.
+
+The MCP server does not create or modify campaigns, line items, bids, budgets, targeting, keywords, promoted products, or creatives. Some tools use `POST` to submit a search or start an asynchronous export, but those operations do not change configuration.
+
+<Note>
+  Results are limited to the accounts and resources accessible to the API credentials used by the MCP client. A taxonomy match (retailer, brand, category) does not by itself confirm active campaign scope — validate against campaigns, line items, creatives, or reporting when that distinction matters.
+</Note>
+
+***
+
+## Account and retailer discovery
+
+| Tool | Method | Endpoint | Description |
+| ---- | ------ | -------- | ----------- |
+| `ListAccessibleRetailMediaAccounts` | `GET` | `/mcp/retail-media/accounts` | Lists the Retail Media accounts and account IDs accessible to the current credentials. Use this first when account scope is unknown. Returns account scope only, not campaign or performance data. |
+| `SearchRetailersForRetailMediaAccount` | `POST` | `/mcp/retail-media/accounts/{accountId}/retailers/search` | Finds retailers visible through a specific Retail Media account and returns retailer capability context. A visible retailer is not automatically active or in the advertiser's confirmed campaign scope. |
+| `SearchRetailMediaBrands` | `POST` | `/mcp/retail-media/brands/search` | Searches retailer or UC brand taxonomies and returns matching brand identifiers. Taxonomy matches are not automatically account-confirmed brands; validate account scope before presenting them as active. |
+| `SearchRetailerCategories` | `POST` | `/mcp/retail-media/retailers/{retailerId}/categories/search` | Searches one retailer's category taxonomy by text or category identifier. Returns retailer-scoped category IDs and names for planning, reporting, Share of Voice scoping, or category-targeting context. |
+
+***
+
+## Retailer planning and creative context
+
+| Tool | Method | Endpoint | Description |
+| ---- | ------ | -------- | ----------- |
+| `GetRetailMediaRecommendedCategories` | `POST` | `/mcp/retail-media/retailers/{retailerId}/recommend-categories` | Recommends retailer category targets for a supplied set of 1–1,000 product or SKU IDs. Does not search categories by free text or change campaign or line-item targeting. |
+| `GetRetailMediaRecommendedKeywords` | `POST` | `/mcp/retail-media/retailers/{retailerId}/recommend-keywords` | Recommends keyword targets for a supplied set of 1–1,000 product or SKU IDs at one retailer. Does not inspect or modify an existing line item's keywords or bids. |
+| `GetRetailMediaSkuCpcMinimumBidsForRetailer` | `POST` | `/mcp/retail-media/retailers/{retailerId}/cpc-min-bids` | Returns overall and SKU-level CPC minimum-bid amounts for one retailer and a supplied SKU list. Minimum bids are feasibility floors, not optimal-bid recommendations. Does not set bids or modify line items. |
+| `ListRetailerCreativeTemplates` | `GET` | `/mcp/retail-media/retailers/{retailer-id}/templates` | Lists the creative templates available for a retailer so a user can understand supported ad formats and setup options. Use the returned template ID with `GetRetailerCreativeTemplate` for full details. |
+| `GetRetailerCreativeTemplate` | `GET` | `/mcp/retail-media/retailers/{retailer-id}/templates/{template-id}` | Returns the details of one retailer creative template. Use after the retailer and template IDs are known; does not discover existing creatives or prove that a campaign can deliver. |
+| `SearchAccountRetailMediaCreatives` | `POST` | `/mcp/retail-media/accounts/{account-id}/creatives/search` | Finds creatives available within a specific Retail Media account and returns account-scoped creative setup metadata. A creative alone does not prove active delivery; cross-check with campaigns, line items, or reporting. |
+
+***
+
+## Campaign and line-item context
+
+| Tool | Method | Endpoint | Description |
+| ---- | ------ | -------- | ----------- |
+| `ListRetailMediaCampaignsForAccount` | `GET` | `/mcp/retail-media/accounts/{account-id}/campaigns` | Lists campaign metadata for an account before campaign selection, setup validation, or reporting. Returns campaign configuration and IDs, not performance metrics. |
+| `ListRetailMediaLineItemsForAccount` | `GET` | `/mcp/retail-media/accounts/{account-id}/line-items` | Lists line-item metadata and IDs for an account. Configuration can establish scope, but reporting is required to confirm recent delivery. |
+| `GetLineItemDetails` | `GET` | `/mcp/retail-media/line-items/{line-item-id}` | Retrieves one line item's status, campaign association, schedule, budget, bid settings, and other metadata. Use `ListRetailMediaLineItemsForAccount` first when the line-item ID is unknown. |
+| `ListRetailMediaLineItemKeywords` | `GET` | `/mcp/retail-media/line-items/{id}/keywords` | Lists keywords already configured on a line item, including match type, bid, review state, and timestamp metadata. Does not recommend, add, remove, approve, or rebid keywords. |
+| `ListRetailMediaLineItemPromotedProducts` | `GET` | `/mcp/retail-media/line-items/{line-item-id}/products` | Lists the products or SKUs already promoted on a line item. Does not recommend, add, remove, pause, unpause, or rebid products. |
+
+***
+
+## Catalog export
+
+Catalog export is asynchronous. Follow the [async export pattern](#asynchronous-export-pattern).
+
+| Tool | Method | Endpoint | Description |
+| ---- | ------ | -------- | ----------- |
+| `StartRetailMediaBrandCatalogExport` | `POST` | `/mcp/retail-media/accounts/{accountId}/brand-catalog-export` | Starts an asynchronous brand catalog export for an accessible account and returns a catalog export ID. Use the export to retrieve product or SKU data for portfolio discovery, validation, or planning. May require manage-scope permission to create the export request. |
+| `GetRetailMediaCatalogExportStatus` | `GET` | `/mcp/retail-media/catalogs/{catalogId}/status` | Returns the state of an existing catalog export. Use the catalog ID returned by `StartRetailMediaBrandCatalogExport`; download the output only after the export succeeds. |
+| `DownloadRetailMediaCatalogExportOutput` | `GET` | `/mcp/retail-media/catalogs/{catalogId}/output` | Downloads the product or SKU stream from a completed catalog export. Call the catalog status tool first. |
+
+***
+
+## Performance reporting
+
+Performance report export is asynchronous. Follow the [async export pattern](#asynchronous-export-pattern).
+
+| Tool | Method | Endpoint | Description |
+| ---- | ------ | -------- | ----------- |
+| `StartRetailMediaAccountReportExport` | `POST` | `/mcp/retail-media/reports/accounts` | Starts an asynchronous performance report for one or more accessible accounts. The request must include account IDs, inclusive `startDate` and `endDate` in `YYYY-MM-DD` format, metrics, dimensions, attribution settings, timezone, and supported filters. A single request interval must be under 31 days. Subject to report rate limits. |
+| `StartRetailMediaCampaignReportExport` | `POST` | `/mcp/retail-media/reports/campaigns` | Starts an asynchronous performance report for one or more known campaigns. Supply either one campaign ID or a non-empty `ids` array, plus inclusive `YYYY-MM-DD` dates, metrics, dimensions, and timezone. Use account reporting when campaign scope is not known. Subject to report rate limits. |
+| `StartRetailMediaLineItemReportExport` | `POST` | `/mcp/retail-media/reports/line-items` | Starts an asynchronous performance report for known line items. Supply the line-item scope, inclusive `YYYY-MM-DD` dates, metrics, dimensions, and timezone. Subject to report rate limits. |
+| `GetRetailMediaReportExportStatus` | `GET` | `/mcp/retail-media/reports/{reportId}/status` | Returns the state of an account, campaign, or line-item report export. Use the report ID returned by a report-start tool and download the output only after the export completes successfully. |
+| `DownloadRetailMediaReportExportOutput` | `GET` | `/mcp/retail-media/reports/{reportId}/output` | Downloads a successfully completed account, campaign, or line-item report. Call the report status tool first. |
+
+***
+
+## Retail Media insights
+
+Insight export is asynchronous. Follow the [async export pattern](#asynchronous-export-pattern).
+
+| Tool | Method | Endpoint | Description |
+| ---- | ------ | -------- | ----------- |
+| `StartRetailMediaShareOfVoiceInsight` | `POST` | `/mcp/retail-media/insights/share-of-voice` | Starts an asynchronous Share of Voice export for category- or keyword-level competitiveness analysis, including impression share, click share, and under-exposure analysis. Requires an account ID, dimensions, metrics, and inclusive `YYYY-MM-DD` dates. `aggregationLevel` can be `category` or `keyword`. Returns an insight ID. |
+| `StartRetailMediaDigitalShelfIntelligenceInsight` | `POST` | `/mcp/retail-media/insights/digital-shelf-intelligence` | Starts an asynchronous Digital Shelf Intelligence export for brand- or SKU-level analysis. Supported measures include online sales, units sold, PDP views, category sales rank, PDP view rank, consideration index, sales index, and listing price. Requires an account ID, aggregation level, dates, and at least one metric. Returns an insight ID. |
+| `GetRetailMediaInsightReportStatus` | `GET` | `/mcp/retail-media/insights/{insight-id}/status` | Returns the state of a Share of Voice or Digital Shelf Intelligence export: `Pending`, `Success`, `Failure`, `Expired`, `Invalidated`, or `Unknown`. Use the insight ID returned by the corresponding start tool. |
+| `DownloadRetailMediaInsightReportOutput` | `GET` | `/mcp/retail-media/insights/{insight-id}/output` | Downloads the final result of a successful Share of Voice or Digital Shelf Intelligence export. Call the insight status tool first and use this only when status is `Success`. |
+
+***
+
+## Asynchronous export pattern
+
+Catalog, performance report, and insight workflows all follow the same three-step pattern:
+
+1. Call a **Start...** tool to request the export and receive an export ID.
+2. Call the corresponding **Get...Status** tool until the status is `Success`.
+3. Call the corresponding **Download...Output** tool to retrieve the result.
+
+<Warning>
+  Do not call a download tool while an export is `Pending`, `Failed`, `Expired`, `Invalidated`, or `Unknown`.
+</Warning>

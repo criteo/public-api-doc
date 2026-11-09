@@ -1,477 +1,41 @@
 ---
-title: Targeting
-description: Retrieve, create, and update targets for a line item.
+title: Configure Line Item Targets
+description: How to add, update, and remove keyword, page type, and category targets for a line item.
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+This guide covers creating targets that control where and how a line item serves — keywords, page types, and categories. By the end, you will have targeting configured and the targets submitted as part of [line item review](/retail-media/experimental/docs/line-items-core#5-submit-for-retailer-review).
 
-## Overview
+---
 
-Targeting defines where and how a line item can serve. Each target has a target type and type-specific details. The Get Targets endpoint retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for a line item.
+## Prerequisites
 
-Clients should inspect the `errors` array even when the endpoint returns `200 OK`. The endpoint supports partial success by target type: if a target type is unavailable, other available target types can still be included in the response.
+- **Auth scope**: `retail-media:manage` for create/update/delete, `retail-media:read` for fetch — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Line item ID**: an existing `lineItemId` from [Create and Submit a Line Item](/retail-media/experimental/docs/line-items-core)
 
-The Create Targets endpoint creates `ManualKeyword`, `PageType`, and `Category` targets for a line item. The Update Targets endpoint updates those targets in bulk.
+---
 
-<Note>
-  `Geography` targets are supported by the API but not yet documented here.
-</Note>
+## Steps
 
-***
+### 1. Create targets
 
-## Targeting types
+[→ `POST /retail-media/line-items/{lineItemId}/targets/create`](/retail-media/experimental/reference/line-item/create-line-item-targets)
 
-All endpoints use Target resources. A target's `targetType` determines the one target details object it contains. A target must contain exactly one details object that matches its `targetType`.
-
-Bid multipliers are supported only on non-negative targets.
-
-Create and Update requests can contain up to 100 targets, may mix target types, and cannot contain the same target more than once.
-
-### Shared target attributes
-
-| Attribute | Type | Description |
-| :-------- | :--- | :---------- |
-| `targetType` | enum | Target type: `ManualKeyword`, `PageType`, or `Category`. |
-| `negative` | boolean | Whether the target excludes matching inventory. |
-| `bidMultiplier` | number or null | Bid multiplier for a non-negative target. |
-| `approvalStatus` | enum | Response-only approval status: `Unknown`, `Approved`, `AutoApproved`, `InReview`, `Rejected`, `AutoRejected`, or `Unsubmitted`. |
-
-### Target type details
-
-| Target type | Details object | Attributes and options |
-| :---------- | :------------- | :--------------------- |
-| `ManualKeyword` | `manualKeywordTargetDetails` | `keywordInput` (string): manual keyword used for targeting. `matchType` (enum): `Exact` or `Broad`. |
-| `PageType` | `pageTypeTargetDetails` | `pageType` (enum): `Unknown`, `Search`, `Home`, `Browse`, `Checkout`, `Category`, `ProductDetail`, `Confirmation`, `Merchandising`, `Deals`, `Favorites`, `SearchBar`, `CategoryMenu`, or `AiAssistant`. |
-| `Category` | `categoryTargetDetails` | `categoryId` (string): category used for targeting. `includeChildren` (boolean): whether the target includes child categories. |
-
-***
-
-## Endpoints
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| **GET** | `/retail-media/line-items/{lineItemId}/targets` | Retrieves targets for a line item |
-| **POST** | `/retail-media/line-items/{lineItemId}/targets/create` | Creates targets for a line item |
-| **POST** | `/retail-media/line-items/{lineItemId}/targets/update` | Updates targets for a line item |
-
-***
-
-## Get Targets
-
-Retrieves the `ManualKeyword`, `PageType`, and `Category` targets configured for the specified line item. Use `offset` and `limit` to page through the targets retrieved successfully.
-
-**Prerequisites:**
-
-- OAuth 2.0 bearer token with the `RetailMedia_Campaign_Read` scope
-- Access to the requested line item
-
-<EndpointBadge method="get">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}/targets
-```
-</EndpointBadge>
-
-### Request Attributes
-
-| Attribute | Type | Required | Description |
-| :-------- | :--- | :------- | :---------- |
-| `lineItemId` | string | Yes | Line item ID. Provided in the URL path. |
-| `offset` | integer | No | Zero-based offset applied to the targets retrieved successfully. Defaults to `0`. |
-| `limit` | integer | No | Maximum number of targets returned. Defaults to `500`; maximum `50,000`. |
-
-### Response Attributes
-
-| Attribute | Type | Description |
-| :-------- | :--- | :---------- |
-| `metadata.count` | integer | Total number of targets retrieved successfully before pagination is applied. |
-| `metadata.offset` | integer | Zero-based offset applied to the returned targets. |
-| `metadata.limit` | integer | Maximum number of targets requested for the page. |
-| `data` | array | Paginated target resources. |
-| `errors` | array | Errors encountered while retrieving targets. This array is not paginated. |
-| `warnings` | array | Warnings encountered while retrieving targets. This array is not paginated. |
-
-Each resource in `data` is a Target. See [Targeting types](#targeting-types) for its shared attributes and the details object for each target type.
-
-**Sample Request**
+Each target needs a `targetType` and a matching details object. Send up to 100 targets per request; you can mix target types in one call.
 
 ```bash
-curl -L -X GET \
-  'https://api.criteo.com/experimental/retail-media/line-items/1234567890123456789/targets?offset=0&limit=500' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
-```
-
-**Sample Response** — `200 OK`
-
-```json
-{
-  "metadata": {
-    "count": 3,
-    "offset": 0,
-    "limit": 500
-  },
-  "data": [
-    {
-      "type": "Target",
-      "attributes": {
-        "targetType": "ManualKeyword",
-        "negative": false,
-        "bidMultiplier": 1.25,
-        "approvalStatus": "Approved",
-        "manualKeywordTargetDetails": {
-          "keywordInput": "trail running shoes",
-          "matchType": "Exact"
-        }
-      }
-    },
-    {
-      "type": "Target",
-      "attributes": {
-        "targetType": "PageType",
-        "negative": false,
-        "bidMultiplier": null,
-        "approvalStatus": "AutoApproved",
-        "pageTypeTargetDetails": {
-          "pageType": "Search"
-        }
-      }
-    },
-    {
-      "type": "Target",
-      "attributes": {
-        "targetType": "Category",
-        "negative": false,
-        "bidMultiplier": 1.5,
-        "approvalStatus": "Approved",
-        "categoryTargetDetails": {
-          "categoryId": "1001",
-          "includeChildren": true
-        }
-      }
-    }
-  ],
-  "warnings": [],
-  "errors": []
-}
-```
-
-### Responses
-
-| Status | Code | Description |
-| --- | --- | --- |
-| `200 OK` | | All supported target types were retrieved, or the request partially succeeded for the available target types. Always inspect `errors` and `warnings`; a `200` response can contain only a subset of the supported target types. |
-| `400 Bad Request` | `targets-max-page-size-exceeded` | The requested `limit` is greater than `50,000`. Reduce `limit` to `50,000` or less. |
-| `401 Unauthorized` | | The access token is missing, invalid, or expired. Obtain a valid access token and retry the request. |
-| `403 Forbidden` | | The caller lacks Campaign Read permission or access to the requested line item. Verify the bearer token includes the `RetailMedia_Campaign_Read` scope and the caller has access to the requested line item. |
-| `500 Internal Server Error` | | An unexpected internal error prevented the endpoint from completing the request. Retry the request. If the failure persists, use the response trace ID when contacting support. |
-| `502 Bad Gateway` | | Retrieval failed for every supported target type. Retry the request. If the failure persists, use the response trace ID when contacting support. |
-
-### Partial Success
-
-The endpoint supports partial success by target type. If one or more target types are available, it returns `200 OK` with those targets in `data` and describes any unavailable target types in `errors`. If retrieval fails for every supported target type, it returns a non-`200` response with no target data.
-
-The `metadata.count` value is the total number of targets retrieved successfully before pagination. If `offset` is greater than or equal to `metadata.count`, `data` is empty. The `errors` and `warnings` arrays apply to the full response and are not affected by pagination.
-
-The following example shows a successful response when `ManualKeyword` targets are unavailable. The response still includes the available `PageType` and `Category` targets. Clients should process those targets and inspect `errors` before treating the response as complete.
-
-**`ManualKeyword` targets unavailable** — `200 OK`
-
-```json
-{
-  "metadata": {
-    "count": 2,
-    "offset": 0,
-    "limit": 500
-  },
-  "data": [
-    {
-      "type": "Target",
-      "attributes": {
-        "targetType": "PageType",
-        "negative": false,
-        "bidMultiplier": null,
-        "approvalStatus": "AutoApproved",
-        "pageTypeTargetDetails": {
-          "pageType": "Home"
-        }
-      }
-    },
-    {
-      "type": "Target",
-      "attributes": {
-        "targetType": "Category",
-        "negative": false,
-        "bidMultiplier": 1.2,
-        "approvalStatus": "Approved",
-        "categoryTargetDetails": {
-          "categoryId": "1002",
-          "includeChildren": false
-        }
-      }
-    }
-  ],
-  "warnings": [],
-  "errors": [
-    {
-      "traceId": "example-trace-id",
-      "type": "availability",
-      "code": "keyword-targets-unavailable",
-      "detail": "Failed to fetch keyword targets."
-    }
-  ]
-}
-```
-
-***
-
-## Create Targets
-
-Creates `ManualKeyword`, `PageType`, and `Category` targets for the specified line item. A single request can contain targets of more than one supported target type.
-
-**Prerequisites:**
-
-- OAuth 2.0 bearer token with the `RetailMedia_Campaign_Manage` scope
-- Access to the requested line item
-
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}/targets/create
-```
-</EndpointBadge>
-
-### Request Attributes
-
-| Attribute | Type | Required | Description |
-| :-------- | :--- | :------- | :---------- |
-| `lineItemId` | string | Yes | Line item ID. Provided in the URL path. |
-| `data` | array | No | Target resources to create. A request can contain up to 100 targets. |
-| `data[].type` | string | No | Resource type. Set this value to `Target`. |
-| `data[].attributes.targetType` | enum | Yes | Target type to create: `ManualKeyword`, `PageType`, or `Category`. |
-| `data[].attributes.negative` | boolean | Yes | Whether the target excludes matching inventory. |
-| `data[].attributes.bidMultiplier` | number or null | No | Bid multiplier for a non-negative target. |
-| `data[].attributes.<details-object>` | object | Yes | Details object for the selected target type. See [Targeting types](#targeting-types). |
-
-### Examples
-
-**Successful Request**
-
-```bash
-curl -L -X POST \
-  'https://api.criteo.com/experimental/retail-media/line-items/1234567890123456789/targets/create' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-  -H 'Content-Type: application/json' \
-  --data-raw '{
+curl -X POST "https://api.criteo.com/experimental/retail-media/line-items/112233445566778899/targets/create" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
     "data": [
       {
         "type": "Target",
         "attributes": {
           "targetType": "PageType",
           "negative": false,
-          "bidMultiplier": null,
-          "pageTypeTargetDetails": {
-            "pageType": "Search"
-          }
-        }
-      }
-    ]
-  }'
-```
-
-**Successful Response** — `200 OK`
-
-```json
-{
-  "data": [
-    {
-      "type": "Target",
-      "attributes": {
-        "targetType": "PageType",
-        "negative": false,
-        "bidMultiplier": null,
-        "approvalStatus": "AutoApproved",
-        "pageTypeTargetDetails": {
-          "pageType": "Search"
-        }
-      }
-    }
-  ],
-  "warnings": [],
-  "errors": []
-}
-```
-
-### Responses
-
-| Status | Code | Description |
-| --- | --- | --- |
-| `200 OK` | | The request succeeded completely or partially across target types. Process the created targets in `data` and inspect `errors` and `warnings`. |
-| `400 Bad Request` | `targets-max-elements-exceeded` | The request contains more than 100 targets. |
-| `400 Bad Request` | `unknown-target-type` | A target type is not supported. |
-| `401 Unauthorized` | | The access token is missing, invalid, or expired. |
-| `403 Forbidden` | | The caller lacks Campaign Manage permission or access to the requested line item. |
-| `500 Internal Server Error` | | An unexpected internal error prevented the endpoint from completing the request. Retry the request. If the failure persists, contact support. |
-| `502 Bad Gateway` | | The endpoint could not complete target creation. Retry the request. If the failure persists, contact support. |
-
-### Partial Success
-
-Create requests can contain up to 100 targets and can include more than one supported target type. They can return `200 OK` with created targets in `data` and errors for target types that did not succeed. Always inspect `errors` and `warnings` before treating the response as complete.
-
-#### Validation errors in partial-success responses
-
-Create responses can include the following application-level validation errors in `errors`:
-
-| Code | Description |
-| --- | --- |
-| `invalid-external-line-item-id` | The line item ID is invalid. |
-| `target-details-mismatch` | A target's details object does not match its declared target type. |
-| `invalid-category-id` | A Category target's category ID is not a number. |
-| `unknown-page-type` | A PageType target's page type is not supported. |
-| `match-type-keywords-count-above-max` | Creating the targets would exceed the limit for a keyword match type. |
-| `manual-positive-keywords-count-above-max` | Creating the targets would exceed the limit for positive ManualKeyword targets. |
-| `non-exact-match-type-for-onsite-display` | A ManualKeyword target uses a match type not supported for an Onsite Display line item. |
-| `duplicate-target-in-request` | The request contains the same target more than once. |
-| `keyword-input-length-above-max` | A ManualKeyword target's keyword input exceeds the supported length. |
-| `empty-target` | A ManualKeyword target's keyword input is empty or contains only whitespace. |
-| `bid-multiplier-not-supported-on-negative-target` | A negative target includes a bid multiplier. |
-| `bid-multiplier-out-of-range` | A bid multiplier is outside the supported range. |
-| `unknown-match-type` | A ManualKeyword target uses an unsupported match type. |
-| `another-target-in-request-failed-validation` | Another target of the same type failed validation, so this target was not created. |
-| `page-type-not-available-for-retailer` | A PageType target is not supported by the retailer. |
-| `page-type-not-available-for-buy-type` | A PageType target is not supported for the line item's buy type. |
-| `unknown-buy-type` | The line item's buy type cannot be determined for a PageType target. |
-| `negative-category-not-supported` | A Category target cannot be negative on the line item. |
-| `manual-positive-category-not-supported-on-dynamic-match` | A Category target must be negative on a dynamic-match line item. |
-| `category-not-supported-on-line-item-type` | Category targets are not supported for the line item type. |
-| `line-item-has-no-pages` | The line item has no pages to which a Category target can be attached. |
-| `no-category-capable-pages` | No page targeted by the line item supports categories. |
-| `category-not-found-for-retailer` | A Category target does not exist for the retailer. |
-| `category-not-valid-status-for-retailer` | The category exists but does not have a targetable status in the retailer's catalog. |
-
-#### Example
-
-**Partial-Success Request**
-
-```bash
-curl -L -X POST \
-  'https://api.criteo.com/experimental/retail-media/line-items/1234567890123456789/targets/create' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-  -H 'Content-Type: application/json' \
-  --data-raw '{
-    "data": [
-      {
-        "type": "Target",
-        "attributes": {
-          "targetType": "ManualKeyword",
-          "negative": false,
-          "bidMultiplier": null,
-          "manualKeywordTargetDetails": {
-            "keywordInput": "trail running shoes",
-            "matchType": "Broad"
-          }
+          "pageTypeTargetDetails": { "pageType": "Search" }
         }
       },
-      {
-        "type": "Target",
-        "attributes": {
-          "targetType": "PageType",
-          "negative": false,
-          "bidMultiplier": null,
-          "pageTypeTargetDetails": {
-            "pageType": "Search"
-          }
-        }
-      }
-    ]
-  }'
-```
-
-**Partial-Success Response** — `200 OK`
-
-```json
-{
-  "data": [
-    {
-      "type": "Target",
-      "attributes": {
-        "targetType": "PageType",
-        "negative": false,
-        "bidMultiplier": null,
-        "approvalStatus": "AutoApproved",
-        "pageTypeTargetDetails": {
-          "pageType": "Search"
-        }
-      }
-    }
-  ],
-  "warnings": [],
-  "errors": [
-    {
-      "type": "validation",
-      "code": "unknown-match-type",
-      "detail": "Cannot create target [trail running shoes] because positive broad is not a supported match type.",
-      "instance": "@data/0"
-    }
-  ]
-}
-```
-
-The error points to the first requested target, while the valid PageType target was created successfully.
-
-***
-
-## Update Targets
-
-Updates `ManualKeyword`, `PageType`, and `Category` targets for the specified line item. A single request can contain targets of more than one supported target type.
-
-The request has PATCH-like semantics. The immutable target details identify each target, and the mutable fields supplied in the request are updated. Do not use this endpoint to change a target's `targetType` or target details object; identify the existing target with the same `targetType` and exactly one target details object.
-
-**Prerequisites:**
-
-- OAuth 2.0 bearer token with the `RetailMedia_Campaign_Manage` scope
-- Access to the requested line item
-
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}/targets/update
-```
-</EndpointBadge>
-
-### Request Attributes
-
-| Attribute | Type | Required | Description |
-| :-------- | :--- | :------- | :---------- |
-| `lineItemId` | string | Yes | Line item ID. Provided in the URL path. |
-| `data` | array | No | Target resources to update. |
-| `data[].type` | string | No | Resource type. Set this value to `Target`. |
-| `data[].attributes.targetType` | enum | Yes | Target type to update: `ManualKeyword`, `PageType`, or `Category`. |
-| `data[].attributes.negative` | boolean | No | Whether the target excludes matching inventory. |
-| `data[].attributes.bidMultiplier` | number or null | No | Bid multiplier for a non-negative target. Supply this field to update it. |
-| `data[].attributes.<details-object>` | object | Yes | Details object that identifies the existing target. See [Targeting types](#targeting-types). |
-
-### Fields by target type
-
-To update a target, provide its existing `targetType` and matching target details. Those fields identify the target and cannot be changed by this endpoint.
-
-| Target type | Immutable fields | Fields that can be updated |
-| --- | --- | --- |
-| `ManualKeyword` | `targetType`, `manualKeywordTargetDetails.keywordInput`, `manualKeywordTargetDetails.matchType`, and `negative` | `bidMultiplier` |
-| `PageType` | `targetType` and `pageTypeTargetDetails.pageType` | `bidMultiplier` |
-| `Category` | `targetType`, `categoryTargetDetails.categoryId`, and `negative` | `categoryTargetDetails.includeChildren` and `bidMultiplier` |
-
-### Example
-
-**Successful Request**
-
-```bash
-curl -L -X POST \
-  'https://api.criteo.com/experimental/retail-media/line-items/1234567890123456789/targets/update' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
-  -H 'Content-Type: application/json' \
-  --data-raw '{
-    "data": [
       {
         "type": "Target",
         "attributes": {
@@ -488,61 +52,47 @@ curl -L -X POST \
   }'
 ```
 
-**Successful Response** — `200 OK`
+<Warning>
+  Create uses partial success by target type — a `200 OK` response can still contain errors for individual targets. Always inspect both `errors` and `warnings` before treating the response as complete.
+</Warning>
 
-```json
-{
-  "data": [
-    {
-      "type": "Target",
-      "attributes": {
-        "targetType": "ManualKeyword",
-        "negative": false,
-        "bidMultiplier": 1.25,
-        "approvalStatus": "Approved",
-        "manualKeywordTargetDetails": {
-          "keywordInput": "trail running shoes",
-          "matchType": "Exact"
-        }
-      }
-    }
-  ],
-  "warnings": [],
-  "errors": []
-}
-```
+### 2. Retrieve targets
 
-### Responses
+[→ `GET /retail-media/line-items/{lineItemId}/targets`](/retail-media/experimental/reference/line-item/get-line-item-targets)
 
-| Status | Code | Description |
-| --- | --- | --- |
-| `200 OK` | | The request succeeded completely or partially across target types. Process the updated targets in `data` and inspect `errors` and `warnings`. |
-| `400 Bad Request` | `targets-max-elements-exceeded` | The request contains more than 100 targets. |
-| `400 Bad Request` | `unknown-target-type` | A target type is not supported. |
-| `401 Unauthorized` | | The access token is missing, invalid, or expired. |
-| `403 Forbidden` | | The caller lacks Campaign Manage permission or access to the requested line item. |
-| `500 Internal Server Error` | | An unexpected internal error prevented the endpoint from completing the request. Retry the request. If the failure persists, contact support. |
-| `502 Bad Gateway` | | The endpoint could not complete target updates. Retry the request. If the failure persists, contact support. |
+Returns all configured targets with their `approvalStatus`. Use the returned resources as input for update or delete operations.
 
-### Partial Success
+### 3. Update targets
 
-Update requests can contain up to 100 targets and can include more than one supported target type. They can return `200 OK` with updated targets in `data` and errors for target types that did not succeed. Always inspect `errors` and `warnings` before treating the response as complete.
+[→ `POST /retail-media/line-items/{lineItemId}/targets/update`](/retail-media/experimental/reference/line-item/update-line-item-targets)
 
-#### Validation errors in partial-success responses
+Copy the target resources from a GET response and modify only the mutable fields (`bidMultiplier`, `categoryTargetDetails.includeChildren`). The identity fields (keyword text, match type, page type, category ID, `negative`) cannot be changed — delete and recreate to change them.
 
-Update responses can include the following application-level validation errors in `errors`:
+### 4. Delete targets
 
-| Code | Description |
-| --- | --- |
-| `invalid-external-line-item-id` | The line item ID is invalid. |
-| `target-details-mismatch` | A target's details object does not match its declared target type. |
-| `invalid-category-id` | A Category target's category ID is not a number. |
-| `unknown-page-type` | A PageType target's page type is not supported. |
-| `target-not-found` | The target does not exist on the line item. |
-| `duplicate-target-in-request` | The request contains the same target more than once. |
-| `bid-multiplier-not-supported-on-negative-target` | A negative target includes a bid multiplier. |
-| `bid-multiplier-out-of-range` | A bid multiplier is outside the supported range. |
-| `unknown-match-type` | A ManualKeyword target uses an unsupported match type. |
-| `another-target-in-request-failed-validation` | Another target of the same type failed validation, so this target was not updated. |
-| `page-type-not-available-for-retailer` | A PageType target is not supported by the retailer. |
-| `unknown-buy-type` | The line item's buy type cannot be determined for a PageType target. |
+[→ `POST /retail-media/line-items/{lineItemId}/targets/delete`](/retail-media/experimental/reference/line-item/delete-line-item-targets)
+
+Copy the target resources from a GET response without changes and pass them to delete.
+
+<Warning>
+  Deleting a PageType target can cascade-remove any Category targets that were attached only to that page type. The response includes a `category-targets-removed-with-page-type` warning when this happens.
+</Warning>
+
+---
+
+## Verify
+
+A successful create returns HTTP `200` with the created targets in `data` and an empty `errors` array. Confirm each target's `approvalStatus` — newly created targets start as `Unsubmitted` until submitted for retailer review. After submission, they move to `InReview`.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Max targets per request | 100 |
+| `targetType` | `ManualKeyword`, `PageType`, `Category` — `Geography` is supported but not yet documented |
+| Bid multipliers | Supported on non-negative targets only |
+| ManualKeyword OnsiteDisplay | Only `Exact` match type is supported (not `Broad`) |
+| Positive Category targets | Not supported on dynamic-match (`isDynamicMatch: true`) line items — use negative only |
+| Identity fields | Cannot be changed via update — delete and recreate to change keyword text, match type, page type, or category ID |

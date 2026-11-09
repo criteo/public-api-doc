@@ -3,7 +3,7 @@ title: Retrieve Catalog Data
 description: How to retrieve the product catalog available to a Retail Media account.
 ---
 
-A catalog is a daily snapshot of all products an account is eligible to promote. Use it to discover available products, validate SKUs, or build product selection workflows.
+A catalog is a daily snapshot of all products an account is eligible to promote. Use it to discover available products, validate SKUs, or build product selection workflows. By the end of this guide, you will have a working async catalog export request returning product data.
 
 Both endpoints are asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
 
@@ -11,9 +11,22 @@ Both endpoints are asynchronous — see [Async Patterns](/retail-media/docs/asyn
   Output is a [newline-delimited JSON stream](https://en.wikipedia.org/wiki/JSON_streaming) (`application/x-json-stream`), not a JSON array. Parse it line by line.
 </Note>
 
-## Brand Catalog
+## Prerequisites
+
+- Authenticated with scope `retail-media:read`
+- Account ID (`accountId`)
+
+## Steps
+
+### 1. Submit the catalog export request
+
+For brand accounts:
 
 [→ `POST /retail-media/accounts/{accountId}/brand-catalog-export`](/retail-media/reference/create-brand-catalog-export)
+
+For seller accounts:
+
+[→ `POST /retail-media/accounts/{accountId}/seller-catalog-export`](/retail-media/reference/create-seller-catalog-export)
 
 All parameters are optional. Omitting all returns the full catalog for the account.
 
@@ -23,11 +36,37 @@ All parameters are optional. Omitting all returns the full catalog for the accou
 - `modifiedAfter` — return only products modified after this timestamp. Use for incremental pulls on large catalogs.
 - `includeFields` — opt in to optional fields: `Description`, `ImageUrl`, `GoogleCategory`, `RetailerName`, `Category`, `BrandName`, `ExcludedChannels`.
 
-## Seller Catalog
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/accounts/4567891234567891/brand-catalog-export" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "modifiedAfter": "2026-10-01T00:00:00Z",
+        "includeFields": ["ImageUrl", "BrandName"]
+      }
+    }
+  }'
+```
 
-[→ `POST /retail-media/accounts/{accountId}/seller-catalog-export`](/retail-media/reference/create-seller-catalog-export)
+Save `data.id` from the response — this is the export ID used in the next step.
 
-Same shape as the brand catalog. Use `sellers` to restrict to specific seller IDs.
+For seller accounts, pass `sellers` to restrict to specific seller IDs.
+
+---
+
+### 2. Poll and download
+
+Poll `data.id` using the status endpoint, then retrieve the output once status is `success` — see [Async Patterns](/retail-media/docs/async-patterns).
+
+---
+
+## Verify
+
+A successful response has HTTP `200` with `data.attributes.status: success` and a non-empty `data.attributes.outputUri`. Download the URI to retrieve the newline-delimited JSON stream — each line is a valid JSON product object.
+
+---
 
 ## Output notes
 

@@ -3,6 +3,8 @@ title: Performance Report
 description: POST /reports/performance — flexible campaign performance reporting for Retail Media DSP partners.
 ---
 
+import RateLimitsReport from "/snippets/retail-media/RateLimitsReport.mdx";
+
 This endpoint enables Retail Media DSP partners to request flexible performance reporting across any level of granularity. Provide a scope filter under `filters` to define the data returned — the output granularity is then determined by the dimensions you include in the request.
 
 The endpoint supports asynchronous report generation and provides access to the full set of performance metrics and dimensions, including video, new-to-brand, and keyword data. Submit a request, poll for status, and download the output when ready.
@@ -15,6 +17,8 @@ The endpoint supports asynchronous report generation and provides access to the 
 POST /2026-07/retail-media/reports/performance
 ```
 
+<RateLimitsReport />
+
 ### Required fields
 
 `filters` (with exactly one scope filter), `startDate`, `endDate`, `metrics`, and `dimensions` are all required. Requests with no scope filter (or more than one) will return `400 Bad Request`.
@@ -22,9 +26,9 @@ POST /2026-07/retail-media/reports/performance
 | Field | Type | Description |
 |-------|------|-------------|
 | `filters` | object | Required. Must contain exactly one of the scope filters below. |
-| `filters.accountIds[]` | array of strings | Scope the report to all campaigns under this account. Mutually exclusive with `campaignIds` and `lineItemIds`. |
-| `filters.campaignIds[]` | array of strings | Scope the report to all line items under this campaign. Mutually exclusive with `accountIds` and `lineItemIds`. |
-| `filters.lineItemIds[]` | array of strings | Scope the report to this line item. Mutually exclusive with `accountIds` and `campaignIds`. |
+| `filters.accountIds[]` | array of strings | Scope the report to all campaigns under this account. Up to **5** IDs. Mutually exclusive with `campaignIds` and `lineItemIds`. |
+| `filters.campaignIds[]` | array of strings | Scope the report to all line items under this campaign. Up to **100** IDs. Mutually exclusive with `accountIds` and `lineItemIds`. |
+| `filters.lineItemIds[]` | array of strings | Scope the report to this line item. Up to **100** IDs. Mutually exclusive with `accountIds` and `campaignIds`. |
 | `startDate` | string | Start of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
 | `endDate` | string | End of the reporting period. ISO 8601 date (`YYYY-MM-DD`). |
 | `metrics` | array of strings | One or more metric names. See [Metrics](#metrics) below. |
@@ -256,12 +260,17 @@ For the full list of status and error codes for this endpoint — including `404
 | `searchTerm` | Keyword or phrase searched by the shopper on the retailer site. |
 | `searchTermType` | Match type: `Entered`, `Searched`, or `Unknown`. |
 | `searchTermTargeting` | Targeting strategy — see note below. |
-| `creativeId` | Creative ID. Onsite display only. |
+| `creativeId` | Creative ID, matching the creative IDs shown in the UI and returned by the creatives endpoints. Onsite display only. |
+| `legacyCreativeId` | Legacy creative ID. **To be decommissioned** — use `creativeId` instead. Onsite display only. |
 | `creativeName` | Creative name. Onsite display only. |
 | `creativeType` | Creative type: Commerce Display, Commerce Video, Standard Display, Standard Video. Onsite display only. |
 | `creativeTemplateId` | Creative template ID. Onsite display only. |
 | `creativeTemplateName` | Ad format: Flagship, Showcase, SponsoredProducts, Butterfly, BundleBoost, IAB, DisplayPanel, DigitalShelfTalker, CommerceVideoSpotlight, Custom. |
 | `targetedKeywordType` | Conquesting strategy: `Conquesting`, `Branded`, or `Generic`. Returns `null` when not applicable. |
+
+<Warning>
+  **`creativeId` values have changed.** Starting in this version, `creativeId` returns the same creative IDs available in the UI and from the creatives endpoints, so report data can be matched directly to your creatives. The previous values are temporarily available in `legacyCreativeId`, which is scheduled to be decommissioned.
+</Warning>
 
 <Note>
   **`searchTermTargeting` output values pending confirmation.** Live testing has observed `ManualTargeting`, `AutomaticTargeting`, `Unknown`, and `UnknownTargeting` — two distinct strings for what should be a single "unknown" state. This is being checked with engineering before the exact output value list is finalized here.

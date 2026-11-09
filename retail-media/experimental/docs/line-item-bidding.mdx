@@ -1,0 +1,80 @@
+---
+title: Set Line Item Bidding Strategy
+description: How to retrieve minimum bid guidance and configure the CPM bidding strategy for an Onsite Display Auction line item.
+---
+
+This guide covers checking the minimum bid requirements for a line item, then setting the Standard or Adaptive CPM bidding strategy.
+
+<Info>
+  This endpoint is available in the **Experimental** Retail Media API only. Only Onsite Display Auction line items are supported.
+</Info>
+
+---
+
+## Prerequisites
+
+- **Auth scope**: `retail-media:manage` for set, `retail-media:read` for get/min-bids — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Line item ID**: an existing OnsiteDisplay Auction `lineItemId` with at least one creative (required for minimum bid guidance)
+- **Page types configured**: the line item must have page type targets before minimum bid guidance is meaningful
+
+---
+
+## Steps
+
+### 1. Get minimum bid guidance
+
+[→ `GET /retail-media/line-items/{line-item-id}/min-bids`](/retail-media/experimental/reference/line-item/get-line-item-min-bids)
+
+Returns `minBid` (the inclusive floor) and `recommendedMinBid` (the highest retailer rate across creative formats and category targets) per page type. Setting bids at or above `recommendedMinBid` meets all applicable retailer rates for that page type.
+
+### 2. Set the bidding strategy
+
+[→ `POST /retail-media/line-items/{line-item-id}/set-bidding-strategy`](/retail-media/experimental/reference/line-item/set-line-item-bidding-strategy)
+
+Choose `Standard` (manual bids per page type) or `Adaptive` (automated bidding with an optional maximum). `auctionBids` replaces all existing Standard bids on each call.
+
+```bash
+curl -X POST "https://api.criteo.com/experimental/retail-media/line-items/112233445566778899/set-bidding-strategy" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "BiddingSettings",
+      "attributes": {
+        "cpm": {
+          "bidStrategy": "Standard",
+          "standardBiddingSettings": {
+            "auctionBids": [
+              { "pageType": "Search", "bid": 1.50 },
+              { "pageType": "Browse", "bid": 1.25 }
+            ]
+          }
+        }
+      }
+    }
+  }'
+```
+
+### 3. Retrieve current bidding configuration
+
+[→ `GET /retail-media/line-items/{line-item-id}/bidding-strategy`](/retail-media/experimental/reference/line-item/get-line-item-bidding-strategy)
+
+Returns the active strategy and both Standard and Adaptive settings. The inactive strategy's settings are preserved in the response — both fields being present does not mean both strategies are active.
+
+---
+
+## Verify
+
+A successful set returns HTTP `200` with the updated `cpm.bidStrategy` and the new settings. Confirm `cpm.bidStrategy` matches what you sent. Inspect `errors` and `warnings` even on `200 OK`.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| `bidStrategy` | `Standard` or `Adaptive` |
+| Standard `auctionBids` | Replaces all existing bids — not merged |
+| Adaptive requirements | Line item must have an end date AND a capped budget |
+| Minimum bid guidance | Requires at least one creative on the line item |
+| `adaptiveMinBid` | Returns `0` when no positive minimum exists |

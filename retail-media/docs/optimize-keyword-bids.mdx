@@ -1,6 +1,125 @@
 ---
 title: Optimize Keyword Bids
-description: How to retrieve keywords, calculate bids, and update them programmatically.
+description: How to retrieve keyword recommendations, add keywords to a line item, and update bids programmatically.
 ---
 
-<Info>This guide is coming soon.</Info>
+Keywords control which shopper search phrases trigger your Sponsored Products line item. By the end of this guide, you will have keywords added to a line item with per-keyword bid overrides set.
+
+**Use this guide if you** are setting up keyword targeting on a Sponsored Products auction line item, or programmatically updating bids across a large keyword set.
+
+## Prerequisites
+
+- Authenticated with scope `retail-media:read` and `retail-media:write`
+- Line item ID (`lineItemId`) and retailer ID (`retailerId`)
+- `keywordStrategy` set on the line item at creation or via PATCH — controls which keyword types are served (`conquesting`, `genericAndBranded`, `genericBrandedAndConquesting`)
+
+## Steps
+
+### 1. Get keyword recommendations
+
+**From your promoted product SKUs:**
+
+[→ `POST /retail-media/retailers/{retailerId}/recommend-keywords`](/retail-media/reference/recommend-keywords)
+
+Pass up to 1000 SKU IDs. Returns a flat list of recommended keyword phrases based on those products.
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/retailers/1141/recommend-keywords" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "productIds": ["SKU-12345", "SKU-67890"]
+      }
+    }
+  }'
+```
+
+Returns `data.attributes.recommendedKeywords` — an array of phrase strings.
+
+**From an existing line item (includes suggested bids):**
+
+[→ `GET /retail-media/line-items/{externalLineItemId}/keywords/recommended`](/retail-media/reference/get-recommended-keywords-by-line-item)
+
+<Note>This endpoint uses the retailer-assigned external line item ID, not the Criteo internal `lineItemId`.</Note>
+
+---
+
+### 2. Add keywords to the line item
+
+[→ `POST /retail-media/line-items/{lineItemId}/keywords/add-remove`](/retail-media/reference/add-remove-line-item-keywords)
+
+Send each keyword with a `phrase`, its `matchType`, and `isDeleted: false` to add. Set `isDeleted: true` to remove an existing keyword.
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/line-items/9876543210987654/keywords/add-remove" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "keywords": [
+          {
+            "phrase": "camping tent",
+            "matchType": "PositiveExactMatch",
+            "isDeleted": false
+          },
+          {
+            "phrase": "cheap tent",
+            "matchType": "NegativeExactMatch",
+            "isDeleted": false
+          }
+        ]
+      }
+    }
+  }'
+```
+
+| Match type | Behavior |
+|---|---|
+| `PositiveExactMatch` | Triggers the ad when the shopper searches this exact phrase |
+| `NegativeExactMatch` | Excludes this exact phrase |
+| `NegativeBroadMatch` | Excludes variants and close matches |
+
+---
+
+### 3. Set bid overrides
+
+[→ `POST /retail-media/line-items/{lineItemId}/keywords/set-bid`](/retail-media/reference/set-line-item-keyword-bids)
+
+Set a per-keyword bid by phrase. Setting `bid: null` removes the override and falls back to the line item's default bid.
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/line-items/9876543210987654/keywords/set-bid" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "keywords": [
+          { "phrase": "camping tent", "bid": 1.50 },
+          { "phrase": "outdoor tent", "bid": 1.20 }
+        ]
+      }
+    }
+  }'
+```
+
+---
+
+### 4. Handle keyword review
+
+Some retailers require keyword approval before keywords go live. Check which line items have keywords pending review:
+
+[→ `GET /retail-media/accounts/{accountId}/keywords/in-review-report`](/retail-media/reference/get-keywords-in-review-report)
+
+To approve or reject keywords on a specific line item:
+
+[→ `POST /retail-media/line-items/{lineItemId}/keywords/review`](/retail-media/reference/review-line-item-keywords)
+
+---
+
+## Verify
+
+Call `GET /retail-media/line-items/{lineItemId}/keywords` — each keyword appears as a key in `data.attributes.keywords` with its current `bid` and input phrases by match type. Keywords pending retailer review will not serve until approved.

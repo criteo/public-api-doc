@@ -3,6 +3,8 @@ title: Missed Opportunities Report
 description: POST /reports/missed-opportunities — diagnose budget cap-out and estimate missed delivery for Retail Media DSP campaigns.
 ---
 
+import RateLimitsReport from "/snippets/retail-media/RateLimitsReport.mdx";
+
 This endpoint enables Retail Media DSP partners to diagnose budget cap-out and estimate missed delivery for their campaigns and line items. Cap-out occurs when a line item exhausts its daily budget before the day ends, causing it to stop participating in eligible auctions. Missed traffic is reported for any line item that did not participate in all eligible auctions during the day.
 
 The response is aggregated — one row per day per line item (or per combination of dimensions you specify). All metrics relate to delivery shortfalls; no performance metrics (impressions served, clicks, revenue) are included. For performance metrics, use [`POST /reports/performance`](/retail-media/v2027.01-rc/docs/performance-report).
@@ -19,6 +21,8 @@ The endpoint supports asynchronous report generation. Submit a request, poll for
 POST /2026-07/retail-media/reports/missed-opportunities
 ```
 
+<RateLimitsReport />
+
 ### Required fields
 
 `startDate`, `endDate`, `filters`, `dimensions`, and `metrics` are all required. `filters` must contain exactly one scope filter (`filters.accountIds[]`, `filters.campaignIds[]`, or `filters.lineItemIds[]`).
@@ -28,9 +32,9 @@ POST /2026-07/retail-media/reports/missed-opportunities
 | `startDate` | string | Inclusive report start date. ISO 8601 date (`YYYY-MM-DD`). |
 | `endDate` | string | Inclusive report end date. ISO 8601 date (`YYYY-MM-DD`). Must be ≥ `startDate`. Dates are interpreted in UTC. |
 | `filters` | object | Required. Must contain exactly one of the scope filters below. |
-| `filters.accountIds[]` | array of strings | Scope to all line items under this account. Mutually exclusive with `campaignIds` and `lineItemIds`. |
-| `filters.campaignIds[]` | array of strings | Scope to all line items under this campaign. Mutually exclusive with `accountIds` and `lineItemIds`. |
-| `filters.lineItemIds[]` | array of strings | Scope to this line item. Mutually exclusive with `accountIds` and `campaignIds`. |
+| `filters.accountIds[]` | array of strings | Scope to all line items under this account. Up to **5** IDs. Mutually exclusive with `campaignIds` and `lineItemIds`. |
+| `filters.campaignIds[]` | array of strings | Scope to all line items under this campaign. Up to **100** IDs. Mutually exclusive with `accountIds` and `lineItemIds`. |
+| `filters.lineItemIds[]` | array of strings | Scope to this line item. Up to **100** IDs. Mutually exclusive with `accountIds` and `campaignIds`. |
 | `dimensions` | array of strings | Required. Output grouping fields. See [Dimensions](#dimensions) below. |
 | `metrics` | array of strings | Required. Output measure fields. See [Metrics](#metrics) below. |
 

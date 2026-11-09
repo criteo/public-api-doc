@@ -1,278 +1,63 @@
 ---
 title: Search Line Items
-description: Query line items accessible from demand or supply accounts.
+description: How to retrieve line items in bulk from demand or supply accounts using the experimental Line Item Search API.
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
-
-## Overview
-
-The search endpoints let you retrieve line items in bulk by filtering on account, campaign, retailer, or line item IDs. Two variants are available depending on the account type you are operating from:
-
-- **Demand search** — query line items accessible from one or more demand accounts.
-- **Supply search** — query line items accessible from a supply account and its retailers.
-
-Both endpoints are paginated and return the same line item shape in the response.
-
-Both endpoints require the `RetailMedia_Campaign_Read` scope.
-
-## Endpoints
-
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `POST` | `/line-items/demand-search` | Search line items from demand accounts. |
-| `POST` | `/line-items/supply-search` | Search line items from a supply account. |
+This guide covers searching for line items across accounts — from either a demand or supply perspective. By the end, you will have a paginated list of line items with their core fields and budget status.
 
 ---
 
-## Search Line Items — Demand
+## Prerequisites
 
-Returns line items accessible from the specified demand accounts, with optional filters on campaign and line item IDs.
+- **Auth scope**: `retail-media:read` — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Account ID**: a demand `accountId` for demand search, or a `supplyAccountId` + `retailerIds` for supply search
 
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/demand-search
-```
-</EndpointBadge>
+---
 
-### Request Attributes
+## Steps
 
-| Attribute | Required | Type | Description |
-| --- | --- | --- | --- |
-| `accountIds` | Yes | array of strings | One or more demand account IDs to search from. |
-| `includeChildrenAccounts` | No | boolean | When `true`, includes line items from child or sub-accounts of the specified accounts. |
-| `campaignIds` | No | array of strings | Filter results to line items belonging to these campaigns. Maximum 1,000 IDs. |
-| `lineItemIds` | No | array of strings | Filter results to these specific line item IDs. Maximum 1,000 IDs. |
-| `limit` | No | integer | Maximum number of results to return per page. Maximum 10,000. |
-| `offset` | No | integer | Zero-based offset for pagination. |
+### 1. Search line items from a demand account
 
-**Sample Request**
+[→ `POST /retail-media/line-items/demand-search`](/retail-media/experimental/reference/line-item/demand-search-line-items)
 
-```json
-{
-  "data": {
-    "type": "DemandSearch",
-    "attributes": {
-      "accountIds": ["111222333"],
-      "campaignIds": ["987654321"],
-      "limit": 50,
-      "offset": 0
-    }
-  }
-}
-```
+Provide one or more `accountIds`. Optionally filter by `campaignIds` or `lineItemIds` (up to 1,000 each). Set `includeChildrenAccounts: true` to include sub-accounts.
 
-### Response Attributes
-
-Results are returned as a paginated array under `data`. Each item contains:
-
-| Attribute | Type | Description |
-| --- | --- | --- |
-| `lineItemId` | string | Unique identifier of the line item. |
-| `name` | string | Display name of the line item. |
-| `accountId` | string | The demand account the line item belongs to. |
-| `campaignId` | string | The campaign the line item belongs to. |
-| `retailerId` | string | The retailer associated with the line item. |
-| `lineItemType` | string | Type of line item: `SponsoredProduct` or `OnsiteDisplay`. |
-| `buyType` | string | Buy model: `Auction`, `PreferredDeals`, or `Sponsorship`. |
-| `isPaused` | boolean | Indicates whether the line item is paused. |
-| `flightDates.startDate` | string | When the line item becomes active. |
-| `flightDates.endDate` | string | When the line item expires. |
-| `serveToOptOutUser` | boolean | Whether ads serve to users who opted out of personalization. |
-| `conquestingSettings` | object | Keyword bidding strategy flags. See [Create a Line Item Core](/retail-media/experimental/docs/line-items-core#create-a-line-item-core) for field descriptions. |
-| `onsiteDisplay.frequencyCapping` | object | Frequency cap for an Onsite Display line item. It is `null` when the line item is uncapped. |
-| `onsiteDisplay.frequencyCapping.cappingCount` | integer | Maximum number of times the ads may be shown within the selected duration, from `1` to `20`. |
-| `onsiteDisplay.frequencyCapping.cappingDurationType` | string | Period the count applies to: `Session` or `Day`. |
-| `onsiteDisplay.auction.isDynamicMatch` | boolean | Onsite Display Auction: whether dynamic matching is enabled. |
-| `sponsoredProducts.auction.allInventory` | boolean | Sponsored Products Auction: whether all inventory is targeted. |
-| `activationStatus` | string | Current activation status of the line item. Nullable. |
-| `fundingStatus` | string | Current funding status of the line item. Nullable. |
-
-The response also includes a `metadata` object with pagination fields:
-
-| Field | Description |
-| --- | --- |
-| `count` | Total number of line items matching the search. |
-| `limit` | Page size used for this response. |
-| `offset` | Offset used for this response. |
-
-**Sample Response**
-
-```json
-{
-  "data": [
-    {
-      "id": "112233445566778899",
-      "type": "LineItem",
+```bash
+curl -X POST "https://api.criteo.com/experimental/retail-media/line-items/demand-search" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "DemandSearch",
       "attributes": {
-        "lineItemId": "112233445566778899",
-        "name": "Back-to-school display",
-        "accountId": "111222333",
-        "campaignId": "987654321",
-        "retailerId": "12345",
-        "lineItemType": "OnsiteDisplay",
-        "buyType": "Auction",
-        "fundingStatus": "Funded",
-        "isPaused": false,
-        "flightDates": {
-          "startDate": "2026-09-01T00:00:00Z",
-          "endDate": "2026-09-30T23:59:59Z"
-        },
-        "serveToOptOutUser": false,
-        "conquestingSettings": {
-          "conquestingAdStrategyEnabled": false,
-          "neutralAdStrategyEnabled": true,
-          "defensiveAdStrategyEnabled": true,
-          "isAdStrategyLocked": false
-        },
-        "onsiteDisplay": {
-          "frequencyCapping": {
-            "cappingCount": 5,
-            "cappingDurationType": "Day"
-          },
-          "auction": {
-            "isDynamicMatch": true
-          }
-        },
-        "activationStatus": null,
-        "fundingStatus": null
+        "accountIds": ["4567891234567891"],
+        "campaignIds": ["987654321"],
+        "limit": 50,
+        "offset": 0
       }
     }
-  ],
-  "metadata": {
-    "count": 1,
-    "limit": 50,
-    "offset": 0
-  }
-}
+  }'
 ```
 
-### Errors
+### 2. Search line items from a supply account
 
-| HTTP Status | Code | Description |
-| --- | --- | --- |
-| `400` | `missing-request-body` | The request body is missing. |
-| `400` | `invalid-campaign-id` | A campaign ID is invalid. |
-| `400` | `invalid-line-item-id` | A line item ID is invalid. |
-| `400` | `too-many-campaign-ids` | More than 1,000 campaign IDs were supplied. |
-| `400` | `too-many-line-item-ids` | More than 1,000 line item IDs were supplied. |
-| `400` | `invalid-offset` | `offset` is less than `0`. |
-| `400` | `invalid-limit` | `limit` is outside the allowed range. |
-| `401` | `unauthorized` | The caller is not authenticated. |
-| `403` | `forbidden` | The caller does not have access to the requested accounts. |
+[→ `POST /retail-media/line-items/supply-search`](/retail-media/experimental/reference/line-item/supply-search-line-items)
+
+Provide `supplyAccountId` and at least one `retailerId`. Optionally filter by `relationship` to scope results to a specific supply relationship type.
 
 ---
 
-## Search Line Items — Supply
+## Verify
 
-Returns line items accessible from a supply account and its retailers, with optional filters on retailer, campaign, line item, and supply relationship.
+A successful response returns HTTP `200` with a `data` array and a `metadata` object containing `count` (total matches), `limit`, and `offset`. Each item includes `lineItemId`, `name`, `lineItemType`, `budgetStatus`, `isPaused`, and `flightDates`.
 
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/supply-search
-```
-</EndpointBadge>
+---
 
-### Request Attributes
+## Constraints
 
-| Attribute | Required | Type | Description |
-| --- | --- | --- | --- |
-| `supplyAccountId` | Yes | string | The supply account ID to search from. |
-| `retailerIds` | Yes | array of strings | One or more retailer IDs to filter results by. At least one is required. Maximum 1,000 IDs. |
-| `relationship` | No | string | Filter by supply relationship. Accepted values: `Direct`, `PrivateMarket`, `Network`, `AnyIndirect`. When omitted, all relationships are returned. |
-| `campaignIds` | No | array of strings | Filter results to line items belonging to these campaigns. Maximum 1,000 IDs. |
-| `lineItemIds` | No | array of strings | Filter results to these specific line item IDs. Maximum 1,000 IDs. |
-| `limit` | No | integer | Maximum number of results to return per page. Maximum 10,000. |
-| `offset` | No | integer | Zero-based offset for pagination. |
-
-**Sample Request**
-
-```json
-{
-  "data": {
-    "type": "SupplySearch",
-    "attributes": {
-      "supplyAccountId": "444555666",
-      "retailerIds": ["12345"],
-      "relationship": "Direct",
-      "limit": 50,
-      "offset": 0
-    }
-  }
-}
-```
-
-### Response Attributes
-
-Same shape as the [demand search response](#response-attributes). The `metadata` pagination object is also included.
-
-**Sample Response**
-
-```json
-{
-  "data": [
-    {
-      "id": "112233445566778899",
-      "type": "LineItem",
-      "attributes": {
-        "lineItemId": "112233445566778899",
-        "name": "Back-to-school display",
-        "accountId": "111222333",
-        "campaignId": "987654321",
-        "retailerId": "12345",
-        "lineItemType": "OnsiteDisplay",
-        "buyType": "Auction",
-        "fundingStatus": "Funded",
-        "isPaused": false,
-        "flightDates": {
-          "startDate": "2026-09-01T00:00:00Z",
-          "endDate": "2026-09-30T23:59:59Z"
-        },
-        "serveToOptOutUser": false,
-        "conquestingSettings": {
-          "conquestingAdStrategyEnabled": false,
-          "neutralAdStrategyEnabled": true,
-          "defensiveAdStrategyEnabled": true,
-          "isAdStrategyLocked": false
-        },
-        "onsiteDisplay": {
-          "frequencyCapping": {
-            "cappingCount": 5,
-            "cappingDurationType": "Day"
-          },
-          "auction": {
-            "isDynamicMatch": true
-          }
-        },
-        "activationStatus": null,
-        "fundingStatus": null
-      }
-    }
-  ],
-  "metadata": {
-    "count": 1,
-    "limit": 50,
-    "offset": 0
-  }
-}
-```
-
-### Errors
-
-| HTTP Status | Code | Description |
-| --- | --- | --- |
-| `400` | `missing-request-body` | The request body is missing. |
-| `400` | `missing-supply-account-id` | `supplyAccountId` is missing from the request. |
-| `400` | `invalid-supply-account-id` | `supplyAccountId` is not a valid ID. |
-| `400` | `missing-retailer-ids` | `retailerIds` is missing or empty. |
-| `400` | `invalid-retailer-id` | A retailer ID is invalid. |
-| `400` | `invalid-relationship` | `relationship` is not an accepted value. |
-| `400` | `invalid-campaign-id` | A campaign ID is invalid. |
-| `400` | `invalid-line-item-id` | A line item ID is invalid. |
-| `400` | `too-many-retailer-ids` | More than 1,000 retailer IDs were supplied. |
-| `400` | `too-many-campaign-ids` | More than 1,000 campaign IDs were supplied. |
-| `400` | `too-many-line-item-ids` | More than 1,000 line item IDs were supplied. |
-| `400` | `invalid-offset` | `offset` is less than `0`. |
-| `400` | `invalid-limit` | `limit` is outside the allowed range. |
-| `401` | `unauthorized` | The caller is not authenticated. |
-| `403` | `forbidden` | The caller does not have access to the requested supply account. |
+| Limit | Value |
+|---|---|
+| Max `campaignIds` / `lineItemIds` / `retailerIds` per request | 1,000 each |
+| Max page size (`limit`) | 10,000 |
+| `relationship` values | `Direct`, `PrivateMarket`, `Network`, `AnyIndirect` |
+| Supply search | `retailerIds` is required — at least one must be provided |

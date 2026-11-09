@@ -1,245 +1,99 @@
 ---
-title: Line Item Core
-description: Create and manage the line items that control how a campaign delivers ads.
+title: Create and Submit a Line Item
+description: How to create, configure, update, and submit a line item for retailer review using the unified Line Item Core API.
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
-
-## Overview
-
-A line item is a unit within a campaign that controls how ads are delivered. It identifies the retailer where ads can run and holds delivery settings for its campaign type. A campaign can contain multiple line items.
-
-The line item core endpoints are shared across campaign types. They expose common fields through one contract instead of separate Sponsored Products and Onsite Display routes.
-
-The referenced `campaignId` determines the line-item type. Type-specific fields are carried in a matching details object alongside the common attributes. Include only the details object supported by the campaign type.
-
-<Info>
-  The long-term goal is to support line-item core operations across campaign types. Initial documented support targets Onsite Display Auction campaigns and uses `onsiteDisplayDetails`. Additional details objects will be documented as support is added.
-</Info>
-
-This endpoint replaces the following type-specific creation routes, which remain available in the meantime:
-
-- [Onsite Display Line Items](/retail-media/experimental/docs/onsite-display-line-items)
-- [Onsite Sponsored Products Line Items](/retail-media/experimental/docs/onsite-sponsored-products-line-items)
-- [Preferred Deals Line Items](/retail-media/experimental/docs/preferred-deals-line-items)
-
-## Endpoints
-
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `POST` | `/line-items` | Create a line-item core entity. |
-| `PATCH` | `/line-items/{lineItemId}` | Update an existing line item. |
-
-## Create a Line Item Core
-
-Creates a line-item core entity under an existing campaign.
-
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items
-```
-</EndpointBadge>
-
-### Request Attributes
-
-| Attribute | Required | Description |
-| --- | --- | --- |
-| `name` | Yes | Display name of the line item. It must be unique within the campaign and contain 2–255 characters after trimming. |
-| `retailerId` | Yes | External ID of the retailer associated with the line item. If the campaign specifies a retailer, the line-item retailer must match it. |
-| `campaignId` | Yes | External ID of the existing campaign that owns the line item and determines which type-specific details object is accepted. |
-| `isPaused` | No | Whether the line item is paused. Defaults to `false`. |
-| `serveToOptOutUser` | No | Whether ads can serve to users who opted out of personalization. |
-| `onsiteDisplayDetails.frequencyCapping` | No | Limits how often one user may be shown this Onsite Display line item's ads. Omit it to leave the line item uncapped. |
-| `onsiteDisplayDetails.frequencyCapping.cappingCount` | Required when `frequencyCapping` is supplied | Maximum number of times the ads may be shown within the selected duration. Must be from `1` to `20`. |
-| `onsiteDisplayDetails.frequencyCapping.cappingDurationType` | Required when `frequencyCapping` is supplied | Period the count applies to: `Session` or `Day`. |
-| `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | No | Initial Onsite Display Auction-specific setting. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
-
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `fundingStatus`, `effectiveFlightDates`, or `conquestingSettings` inside `attributes`.
-
-**Sample Request**
-
-```json
-{
-  "data": {
-    "type": "line-item",
-    "attributes": {
-      "name": "Back-to-school display",
-      "isPaused": false,
-      "retailerId": "12345",
-      "campaignId": "987654321",
-      "serveToOptOutUser": false,
-      "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Day"
-        },
-        "auctionDetails": {
-          "isDynamicMatch": true
-        }
-      }
-    }
-  }
-}
-```
-
-**Sample Response**
-
-```json
-{
-  "data": {
-    "id": "112233445566778899",
-    "type": "line-item",
-    "attributes": {
-      "lineItemId": "112233445566778899",
-      "type": "OnsiteDisplay",
-      "name": "Back-to-school display",
-      "isPaused": false,
-      "fundingStatus": "Funded",
-      "retailerId": "12345",
-      "campaignId": "987654321",
-      "effectiveFlightDates": {
-        "startDate": "2026-09-01T00:00:00Z",
-        "endDate": "2026-09-30T23:59:59Z"
-      },
-      "serveToOptOutUser": false,
-      "conquestingSettings": {
-        "conquestingAdStrategyEnabled": false,
-        "neutralAdStrategyEnabled": true,
-        "defensiveAdStrategyEnabled": true,
-        "isAdStrategyLocked": false
-      },
-      "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Day"
-        },
-        "auctionDetails": {
-          "isDynamicMatch": true
-        }
-      }
-    }
-  }
-}
-```
-
-### Errors
-
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the campaign or buy type, or auction attributes were supplied for a non-auction campaign. |
-| `400` | `invalid-name` | The name is blank or outside the supported length. |
-| `400` | `invalid-campaign-schedule` | The campaign has no schedule from which the API can derive the line item's flight dates. |
-| `400` | `invalid-retailer-id` | The retailer ID is improperly formatted or, when the campaign specifies a retailer, does not match it. |
-| `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
-| `400` | `invalid-frequency-capping` | The duration is not `Session` or `Day`, the count is outside `1`–`20`, or the parent campaign already has frequency capping. |
-| `400` | `unsupported-campaign-type` | The campaign type is not supported by the current implementation. |
-| `401` | `unauthorized` | The caller is not authenticated. |
-| `403` | `forbidden` | The caller cannot create a line item for the target campaign and retailer. |
+This guide covers creating a line item under a campaign, updating its settings, and submitting it for retailer review before it can serve ads. By the end, you will have a line item in review status ready to go live once approved.
 
 ---
 
-## Update a Line Item Core
+## Prerequisites
 
-Updates an existing line item. This is a partial update: only the fields included in the request body are changed. Omitted fields keep their current values.
+- **Auth scope**: `retail-media:manage` — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Campaign ID**: an existing campaign ID (`SponsoredProducts Auction` or `OnsiteDisplay Auction` with automatic budgets)
+- **Retailer ID**: must match the campaign's retailer if one is set
+- Before submitting: at least one product, one creative, and one page type must be configured on the line item
 
-`campaignId` and `retailerId` cannot be changed after creation.
+---
 
-<EndpointBadge method="patch">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}
-```
-</EndpointBadge>
+## Steps
 
-### Path Parameters
+### 1. Create a line item
 
-| Parameter | Description |
-| --- | --- |
-| `line-item-id` | The unique identifier of the line item to update. |
+[→ `POST /retail-media/line-items`](/retail-media/experimental/reference/line-item/create-line-item)
 
-### Request Attributes
+Provide `name`, `retailerId`, and `campaignId`. The line item inherits its flight dates from the campaign schedule. For OnsiteDisplay, include `onsiteDisplayDetails`; omit it for SponsoredProducts.
 
-| Attribute | Description |
-| --- | --- |
-| `name` | New display name. Must be unique within the campaign and contain 2–255 characters after trimming. |
-| `isPaused` | Set to `true` to pause the line item or `false` to unpause it. |
-| `serveToOptOutUser` | Whether ads can serve to users who opted out of personalization. |
-| `onsiteDisplayDetails.frequencyCapping` | Frequency-cap setting for an Onsite Display line item. Omit it to leave the cap unchanged; send `{ "value": null }` to remove the cap. |
-| `onsiteDisplayDetails.frequencyCapping.value.cappingCount` | Maximum number of times the ads may be shown within the selected duration. Must be from `1` to `20`; required when setting a cap. |
-| `onsiteDisplayDetails.frequencyCapping.value.cappingDurationType` | Period the count applies to: `Session` or `Day`. Required when setting a cap. |
-| `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | Onsite Display Auction-specific. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
-
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `fundingStatus`, `effectiveFlightDates`, or `conquestingSettings` inside `attributes`.
-
-**Sample Request**
-
-```json
-{
-  "data": {
-    "type": "line-item",
-    "attributes": {
-      "name": "Back-to-school display — extended",
-      "isPaused": false,
-      "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "value": {
-            "cappingCount": 5,
-            "cappingDurationType": "Session"
+```bash
+curl -X POST "https://api.criteo.com/experimental/retail-media/line-items" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "line-item",
+      "attributes": {
+        "name": "Back-to-school display",
+        "retailerId": "1141",
+        "campaignId": "987654321",
+        "serveToOptOutUser": false,
+        "onsiteDisplayDetails": {
+          "isPaused": false,
+          "auctionDetails": {
+            "isDynamicMatch": true
           }
         }
       }
     }
-  }
-}
+  }'
 ```
 
-**Sample Response**
+Save `data.id` from the response — this is the `lineItemId` used in all subsequent calls.
 
-```json
-{
-  "data": {
-    "id": "112233445566778899",
-    "type": "line-item",
-    "attributes": {
-      "lineItemId": "112233445566778899",
-      "type": "OnsiteDisplay",
-      "name": "Back-to-school display — extended",
-      "isPaused": false,
-      "fundingStatus": "Funded",
-      "retailerId": "12345",
-      "campaignId": "987654321",
-      "effectiveFlightDates": {
-        "startDate": "2026-09-01T00:00:00Z",
-        "endDate": "2026-09-30T23:59:59Z"
-      },
-      "serveToOptOutUser": false,
-      "conquestingSettings": {
-        "conquestingAdStrategyEnabled": false,
-        "neutralAdStrategyEnabled": true,
-        "defensiveAdStrategyEnabled": true,
-        "isAdStrategyLocked": false
-      },
-      "onsiteDisplayDetails": {
-        "frequencyCapping": {
-          "cappingCount": 5,
-          "cappingDurationType": "Session"
-        },
-        "auctionDetails": {
-          "isDynamicMatch": true
-        }
-      }
-    }
-  }
-}
-```
+<Warning>
+  If default budgets fail to set up after creation, the line item is renamed with a `[FAILED]` prefix and returns a budget error. Do not configure a `[FAILED]` line item further — delete and recreate it.
+</Warning>
 
-### Errors
+### 2. Configure targets, products, and creatives
 
-| HTTP Status | Code | Description |
-| --- | --- | --- |
-| `400` | `invalid-name` | The name is blank or outside the supported length. |
-| `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
-| `400` | `invalid-frequency-capping` | The duration is not `Session` or `Day`, the count is outside `1`–`20`, or the parent campaign already has frequency capping. |
-| `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the line item's campaign or buy type. |
-| `400` | `invalid-dynamic-match` | `isDynamicMatch` cannot be changed once the line item is approved, or set to `false` once set to `true`. |
-| `401` | `unauthorized` | The caller is not authenticated. |
-| `403` | `forbidden` | The caller cannot update this line item. |
+Add targeting, products, and creatives to the line item before submitting. See:
+- [Configure Line Item Targets](/retail-media/experimental/docs/line-item-targets)
+- [Manage Line Item Products](/retail-media/experimental/docs/line-item-products)
+- [Manage Line Item Creatives](/retail-media/experimental/docs/line-item-creatives)
+
+### 3. Update the line item
+
+[→ `PATCH /retail-media/line-items/{lineItemId}`](/retail-media/experimental/reference/line-item/update-line-item)
+
+PATCH is partial — include only the fields to change. `campaignId` and `retailerId` cannot be changed after creation.
+
+### 4. Retrieve the full line item view
+
+[→ `GET /retail-media/line-items/{lineItemId}`](/retail-media/experimental/reference/line-item/get-line-item)
+
+Returns a consolidated view including `core`, `targeting`, `adContent`, and `bidding`. Inspect the top-level `warnings` array even on `200 OK` — a dependency failure sets the affected attribute to `null` and adds a warning rather than failing the whole request.
+
+### 5. Submit for retailer review
+
+[→ `POST /retail-media/line-items/{lineItemId}/submit`](/retail-media/experimental/reference/line-item/submit-line-item)
+
+Sends the line item's reviewable configuration (keywords, categories, products, creatives) to the retailer's Line Item Review Center. Include an optional `comment` to give the retailer context.
+
+After submission, reviewable fields show status `In Review`. The retailer approves or rejects them. Only approved line items can serve ads.
+
+---
+
+## Verify
+
+A successful create returns HTTP `200` with the new `lineItemId` in `data.id`. A successful submit returns HTTP `204` with no body. After submission, `data.attributes.core` from a GET will reflect the pending approval status on each reviewable field.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| `campaignId`, `retailerId` | Immutable after creation |
+| `isDynamicMatch` | Cannot revert from `true` to `false`; cannot change once the line item is approved |
+| Submit requirements | At least one product, one creative, and one page type must be configured |
+| `name` | 2–255 characters after trimming, unique within the campaign |
+| `onsiteDisplayDetails` | OnsiteDisplay campaigns only — omit for SponsoredProducts |

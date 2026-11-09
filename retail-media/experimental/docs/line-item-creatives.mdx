@@ -1,91 +1,47 @@
 ---
-title: Line Item Creatives
-description: Manage the creatives associated with an Onsite Display line item.
+title: Manage Line Item Creatives
+description: How to associate, update, and remove creatives from an Onsite Display Auction line item.
 ---
 
-import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+This guide covers linking creatives and their product collections to a line item, and removing them. By the end, creatives will be associated and submitted as part of [line item review](/retail-media/experimental/docs/line-items-core#5-submit-for-retailer-review).
 
-## Overview
+---
 
-Line Item Creatives associate a Creative to a line item. If a creative support product mappings, the creative's product collections define product placements within the creative.
+## Prerequisites
 
-For more information on creative discovery (including product collection requirements), see [Creative Search](/retail-media/experimental/docs/search-for-creatives).
+- **Auth scope**: `retail-media:manage` for upsert/delete, `retail-media:read` for fetch — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Line item ID**: an existing OnsiteDisplay Auction `lineItemId` from [Create and Submit a Line Item](/retail-media/experimental/docs/line-items-core)
+- **Creative IDs**: creatives accessible to the line item's account and retailer — from [Search for Creatives](/retail-media/experimental/docs/search-for-creatives)
 
-## Endpoints
+---
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/line-items/{lineItemId}/creatives` | Retrieve the creatives and creative product collections associated with a line item. |
-| `POST` | `/line-items/{lineItemId}/creatives/upsert` | Link creatives and creative product collections to a line item. |
-| `POST` | `/line-items/{lineItemId}/creatives/delete` | Remove linked creatives and their creative product collections from a line item. |
+## Steps
 
-## Fetch Line Item Creatives
+### 1. Associate creatives
 
-Retrieve the creatives and associated creative product collections on an Onsite Display Auction line item.
+[→ `POST /retail-media/line-items/{line-item-id}/creatives/upsert`](/retail-media/experimental/reference/line-item/upsert-line-item-creatives)
 
-<EndpointBadge method="get">
-    ```http
-    https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}/creatives
-    ```
-</EndpointBadge>
+Provide `creativeType: AuctionCreative` and an array of `auctionCreativeDetails.lineItemCreatives`. Each entry needs a `creative.id` and a `creativeProductCollections` array — send an empty array when using Dynamic Match.
 
-### Path parameters
-
-| Parameter | Required | Description |
-| --- | --- | --- |
-| `line-item-id` | Yes | The ID of the line item whose creatives and product collections will be returned. |
-
-### Response attributes
-
-The resource `type` is `LineItemCreatives`.
-
-| Attribute | Description |
-| --- | --- |
-| `mediaType` | The line item's media type. Possible values are `Display`, `Video` or `null`. Creatives associated to the line item match this value. |
-| `lineItemCreatives` | Creatives associated with the line item. The array is empty when the line item has no creatives. |
-| `lineItemCreatives[].creative.id` | ID of the creative. |
-| `lineItemCreatives[].creative.modifiedAt` | Indicates when the associated creative revision was created. |
-| `lineItemCreatives[].approvalStatus` | Approval status of the creative. Possible values are `Unknown`, `Approved`, `AutoApproved`, `InReview`, `Rejected`, `AutoRejected`, and `Unsubmitted`. |
-| `lineItemCreatives[].creativePreviewCode` | Creative Live Demo preview code. It is `null` when a preview code is not available. |
-| `lineItemCreatives[].creativeProductCollections` | Ordered creative product collections. |
-| `lineItemCreatives[].creativeProductCollections[].isMandatory` | Whether the collection is mandatory for serving. |
-| `lineItemCreatives[].creativeProductCollections[].products` | Ordered products in the collection. |
-| `lineItemCreatives[].creativeProductCollections[].products[].id` | ID of the product. |
-| `lineItemCreatives[].creativeProductCollections[].products[].approvalStatus` | Approval status of the product. Possible values are `Unknown`, `Approved`, `AutoApproved`, `InReview`, `Rejected`, `AutoRejected`, and `Unsubmitted`. |
-
-
-
-### Sample response
-A successful response returns a `200 OK`.
-
-<Accordion title="Example response (200)">
-
-    ```json
-    {
-      "data": {
-        "type": "LineItemCreatives",
-        "attributes": {
-          "mediaType": "Display",
+```bash
+curl -X POST "https://api.criteo.com/experimental/retail-media/line-items/112233445566778899/creatives/upsert" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "UpsertLineItemCreativesInput",
+      "attributes": {
+        "creativeType": "AuctionCreative",
+        "auctionCreativeDetails": {
           "lineItemCreatives": [
             {
-              "creative": {
-                "id": "creative-a",
-                "modifiedAt": "2026-08-20T12:00:00Z"
-              },
-              "approvalStatus": "Approved",
-              "creativePreviewCode": null,
+              "creative": { "id": "creative-123" },
               "creativeProductCollections": [
                 {
-                  "isMandatory": true,
+                  "isMandatory": false,
                   "products": [
-                    {
-                      "id": "product-1",
-                      "approvalStatus": "Approved"
-                    },
-                    {
-                      "id": "product-2",
-                      "approvalStatus": "InReview"
-                    }
+                    { "id": "sku-12345" },
+                    { "id": "sku-67890" }
                   ]
                 }
               ]
@@ -94,371 +50,39 @@ A successful response returns a `200 OK`.
         }
       }
     }
-    ```
-
-</Accordion>
-
-When the line item has no associated creatives, `lineItemCreatives` is empty and `mediaType` is `null`:
-
-<Accordion title="Example response (200)">
-
-    ```json
-    {
-      "data": {
-        "type": "LineItemCreatives",
-        "attributes": {
-          "mediaType": null,
-          "lineItemCreatives": []
-        }
-      }
-    }
-    ```
-
-</Accordion>
-
-### Caveat
+  }'
+```
 
 <Warning>
-    The response can contain the same `creative.id` more than once when approved and proposed revisions of that creative are associated with the line item. Use `creative.modifiedAt` to distinguish the revisions.
+  Products listed in `creativeProductCollections` are automatically added to the line item's product pool if not already present — subject to the same catalog validation as [adding products directly](/retail-media/experimental/docs/line-item-products). The `creativeProductCollections` array **replaces** the existing collections for each creative on every upsert call.
 </Warning>
 
-For example, the response below contains approved and proposed revisions of the same creative:
+### 2. Fetch line item creatives
 
-<Accordion title="Example response (200)">
+[→ `GET /retail-media/line-items/{line-item-id}/creatives`](/retail-media/experimental/reference/line-item/get-line-item-creatives)
 
-    ```json
-    {
-      "data": {
-        "type": "LineItemCreatives",
-        "attributes": {
-          "mediaType": "Video",
-          "lineItemCreatives": [
-            {
-              "creative": {
-                "id": "creative-a",
-                "modifiedAt": "2026-08-20T12:00:00Z"
-              },
-              "approvalStatus": "Approved",
-              "creativePreviewCode": null,
-              "creativeProductCollections": [
-                {
-                  "products": [
-                    {
-                      "id": "product-1",
-                      "approvalStatus": "Approved"
-                    }
-                  ],
-                  "isMandatory": true
-                }
-              ]
-            },
-            {
-              "creative": {
-                "id": "creative-a",
-                "modifiedAt": "2026-08-22T17:00:00Z"
-              },
-              "approvalStatus": "InReview",
-              "creativePreviewCode": null,
-              "creativeProductCollections": [
-                {
-                  "products": [
-                    {
-                      "id": "product-1",
-                      "approvalStatus": "Approved"
-                    }
-                  ],
-                  "isMandatory": true
-                }
-              ]
-            }
-          ]
-        }
-      }
-    }
-    ```
+Returns all associated creatives with their `approvalStatus` and product collections. The same `creative.id` may appear twice when both an approved and a proposed revision are associated — use `creative.modifiedAt` to distinguish them.
 
-</Accordion>
+### 3. Remove creatives
 
-### Errors
+[→ `POST /retail-media/line-items/{line-item-id}/creatives/delete`](/retail-media/experimental/reference/line-item/delete-line-item-creatives)
 
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `400` | `unsupported-line-item-type` | The target is not an Onsite Display Auction line item. |
-| `401` | `unauthenticated` | The caller is not authenticated. |
-| `403` | `forbidden` | The caller cannot access the target line item, or the line item does not exist. |
-| `503` | `service-unavailable` | A service required to process the request is temporarily unavailable. Retry the request later. |
+Pass up to 20 `creativeIds`. Removing a creative disassociates it from the line item — it does not delete the creative resource. IDs not associated with the line item generate an `unmatched-creative-id` warning but the request still removes matched IDs.
 
+---
 
-## Upsert Line Item Creatives
+## Verify
 
-Associate one or more creatives to a line item, and define the creative's product collections. If the creative is already mapped to the line item, the association will be updated instead of duplicated.
+A successful upsert returns HTTP `200` with the associated creatives in `auctionCreativeDetails.lineItemCreatives` and their `approvalStatus: Unsubmitted`. After retailer approval, `approvalStatus` becomes `Approved`. A successful delete returns HTTP `200` — use a fetch to confirm the resulting state.
 
-Existing line item creatives that are omitted from the request are unmodified.
+---
 
+## Constraints
 
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}/creatives/upsert
-```
-</EndpointBadge>
-
-### Path parameters
-
-| Parameter | Required | Description |
-| --- | --- | --- |
-| `line-item-id` | Yes | The ID of the line item to associate the creatives and product collections. |
-
-### Request attributes
-
-The resource `type` is `Creatives`.
-
-| Attribute | Required | Description |
-| --- | --- | --- |
-| `creativeType` | Yes | Type of creative being added or updated. Currently, the only accepted value is `AuctionCreative`. It must match the buy type of the target line item. |
-| `auctionCreativeDetails` | Required when `creativeType` is `AuctionCreative`, otherwise it is rejected. | Auction-specific creative configuration. |
-| `auctionCreativeDetails.lineItemCreatives` | Required when `creativeType` is `AuctionCreative`, otherwise it is rejected. | Array of [Line Item Creative](#line-item-creative-attributes) objects to add or update. An auction line item can have at most 20 associated creatives. |
-
-
-#### Line Item Creative Attributes
-
-| Attribute | Required | Description |
-| --- | --- | --- |
-| `creative.id` | Yes | ID of an existing creative available to the line item's account and retailer. <br/><br/> If the creative id is already mapped to the line item, then the line item creative is updated instead of duplicated. |
-| `creativeProductCollections` | Yes | Complete ordered array of creative product collections for the creative. The supplied array replaces the existing collections. <br/><br/> Send an empty array to remove all collections or when the line item uses Dynamic Match. |
-| `creativeProductCollections[].isMandatory` | Required for each collection | Whether the collection is mandatory for serving. |
-| `creativeProductCollections[].products` | Required for each collection | Ordered products in the collection. A product cannot appear more than once in the same collection. |
-| `creativeProductCollections[].products[].id` | Required for each product | ID of a product in the retailer catalog. Products that are not already in the line item's product pool are added automatically. <br/><br/> Products added are subject to the same validation as when using the [Line Item Products](/retail-media/experimental/docs/line-item-products) endpoints. |
-
-### Sample Auction Creative request
-
-<Accordion title="Example request">
-
-```json
-{
-  "data": {
-    "type": "Creatives",
-    "attributes": {
-      "creativeType": "AuctionCreative",
-      "auctionCreativeDetails": {
-        "lineItemCreatives": [
-          {
-            "creative": {
-              "id": "123"
-            },
-            "creativeProductCollections": [
-              {
-                "isMandatory": false,
-                "products": [
-                  {
-                    "id": "product-1"
-                  },
-                  {
-                    "id": "product-2"
-                  }
-                ]
-              },
-              {
-                "isMandatory": false,
-                "products": [
-                  {
-                    "id": "product-2"
-                  },
-                  {
-                    "id": "product-3"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-</Accordion>
-
-### Response attributes
-
-| Attribute | Description |
-| --- | --- |
-| `mediaType` | `Display` or `Video`. The line item media type is set based on the creative provided. Creatives associated to the line item must have the same media type. |
-| `auctionCreativeDetails.lineItemCreatives` | Contains the accepted auction creatives from the request. The other creatives associated to the line item are not included in the response. |
-| `creative.id` | ID of the creative. |
-| `creative.modifiedAt` | Indicates when the associated creative was last modified. |
-| `approvalStatus` | The approval status of the creative associated to the line item. |
-| `creativePreviewCode` | The Creative Live Demo preview code of the associated creative. Will be null if the retailer does not support this feature. |
-| `creativeProductCollections` | The ordered product collections of the associated creative. |
-| `creativeProductCollections[].isMandatory` | Whether the collection is mandatory for serving. |
-| `creativeProductCollections[].products` | The ordered products in the collection. |
-| `creativeProductCollections[].products[].id` | ID of the product. |
-| `creativeProductCollections[].products[].approvalStatus` | The approval status of the product. |
-
-### Sample Auction Creative response
-
-A successful Upsert request returns a `200 OK`
-
-<Accordion title="Example response (200)">
-
-```json
-{
-  "data": {
-    "type": "Creatives",
-    "attributes": {
-      "mediaType": "Display",
-      "auctionCreativeDetails": {
-        "lineItemCreatives": [
-          {
-            "creative": {
-              "id": "123",
-              "modifiedAt": "2026-08-13T14:30:00Z"
-            },
-            "approvalStatus": "Unsubmitted",
-            "creativePreviewCode": "preview-code",
-            "creativeProductCollections": [
-              {
-                "isMandatory": false,
-                "products": [
-                  {
-                    "id": "product-1",
-                    "approvalStatus": "Approved"
-                  },
-                  {
-                    "id": "product-2",
-                    "approvalStatus": "Rejected"
-                  }
-                ]
-              },
-              {
-                "isMandatory": false,
-                "products": [
-                  {
-                    "id": "product-2",
-                    "approvalStatus": "Rejected"
-                  },
-                  {
-                    "id": "product-3",
-                    "approvalStatus": "Approved"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-</Accordion>
-
-### Errors
-
-This endpoint does not support partial success. When one or more creative fail validation, the response will contain entries in the `errors` array.
-
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `400` | `creatives-required` | No creative was supplied for the selected `creativeType`. |
-| `400` | `invalid-creative-id` | A creative ID is missing or invalid. |
-| `400` | `duplicate-creative-id` | The same creative ID appears more than once in the request. |
-| `400` | `invalid-creative-type` | The requested `creativeType` does not match the line item buy type, or its corresponding details object was not supplied. |
-| `400` | `creative-unavailable` | A creative is not available to the line item's account or retailer. |
-| `400` | `invalid-media-type` | The submitted creatives have different media types or do not match the line item's media type. |
-| `400` | `invalid-creative-product-collections` | creative product collections must be empty when the line item uses Dynamic Match. |
-| `400` | `invalid-product-collection` | A Creative Product Collection contains the same product ID more than once. |
-| `400` | `invalid-product-id` | A Creative Product Collection contains a product that is not available in the retailer catalog. |
-| `400` | `too-many-products` | Adding the referenced products would exceed the line item's 1,500-product limit. |
-| `400` | `too-many-creatives` | Adding the submitted creatives would exceed the line item's creative limit. Up to 20 creatives can be attached to an Onsite Display Auction line item. |
-| `400` | `unsupported-line-item-type` | The line item buy type is not currently supported. |
-| `401` | `unauthenticated` | The caller is not authenticated. |
-| `403` | `forbidden` | The caller cannot modify the target line item, or the line item does not exist. |
-| `500` | `internal-error` | An unexpected error occurred. |
-| `503` | `service-unavailable` | A service required to process the request is temporarily unavailable. Retry the request later. |
-
-## Delete Line Item Creatives
-
-Remove one or more creative, and associated creative product collections, from an Onsite Display Auction line item. Removing the creative's association from a line item does not delete the Creative resource itself.
-
-<EndpointBadge method="post">
-```http
-https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}/creatives/delete
-```
-</EndpointBadge>
-
-### Path parameters
-
-| Parameter | Required | Description |
-| --- | --- | --- |
-| `line-item-id` | Yes | The ID of the line item from which to remove the creatives and product collections. |
-
-### Request attributes
-
-The resource `type` is `Creatives`.
-
-| Attribute | Required | Description |
-| --- | --- | --- |
-| `creativeIds` | Yes | IDs of the creatives to remove from the line item. At least one ID is required, and a single request accepts at most 20 IDs. Creatives will be removed regardless of approval status. |
-
-### Sample request
-
-<Accordion title="Example request">
-
-```json
-{
-  "data": {
-    "type": "Creatives",
-    "attributes": {
-      "creativeIds": [
-        "creativeId1",
-        "creativeId3"
-      ]
-    }
-  }
-}
-```
-
-</Accordion>
-
-### Sample responses
-
-When all requested creative associations are removed without warnings, the endpoint returns `204 No Content`.
-```
-(no content)
-```
-
-When one or more creative IDs are not associated with the line item, the endpoint returns `200 OK` with a warning for each unmatched ID. The matching associations are still removed.
-
-<Accordion title="Example response (200)">
-
-```json
-{
-  "warnings": [
-    {
-      "type": "validation",
-      "traceId": "unique-request-id",
-      "instance": "@data/attributes/creativeIds/1",
-      "code": "unmatched-creative-id",
-      "title": "Unmatched line item creative",
-      "detail": "Creative creativeId3 is not currently associated with this line item."
-    }
-  ]
-}
-```
-
-</Accordion>
-
-### Errors and warnings
-
-This endpoint does not support partial success. Errors are returned in the `errors` array.
-
-| HTTP status | Code | Description |
-| --- | --- | --- |
-| `200` | `unmatched-creative-id` | A requested creative ID is not associated with the line item. Returned as a warning; matching creative associations are still removed. |
-| `400` | `unsupported-line-item-type` | The line item buy type is not currently supported. Only Onsite Display Auction line items are supported. |
-| `400` | `too-many-creatives` | More than 20 creative IDs were supplied. No creative associations are removed. |
-| `401` | `unauthenticated` | The caller is not authenticated. |
-| `403` | `forbidden` | The caller cannot modify the target line item, cannot access its account, or the line item does not exist. |
-| `500` | `internal-error` | An unexpected error occurred. |
-| `503` | `service-unavailable` | A service required to process the request is temporarily unavailable. Retry the request later. |
+| Limit | Value |
+|---|---|
+| Max creatives per line item | 20 |
+| `creativeType` | `AuctionCreative` only — must match the line item buy type |
+| Media type | All creatives on a line item must share the same media type (`Display` or `Video`) |
+| Upsert behavior | Updates existing association if `creative.id` already linked; does not duplicate |
+| Product collections | The supplied array replaces existing collections per creative — not appended |

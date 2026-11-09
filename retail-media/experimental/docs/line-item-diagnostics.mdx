@@ -1,0 +1,63 @@
+---
+title: Check Line Item Delivery Readiness
+description: How to diagnose configuration issues that prevent a line item from serving ads.
+---
+
+This guide covers running delivery checks on a line item or all line items in a campaign, and interpreting the results to fix blocking issues.
+
+<Info>
+  This endpoint is available in the **Experimental** Retail Media API only.
+</Info>
+
+---
+
+## Prerequisites
+
+- **Auth scope**: `retail-media:read` — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Line item ID** or **campaign ID**: one or the other — not both
+
+---
+
+## Steps
+
+### 1. Run diagnostics
+
+[→ `GET /retail-media/diagnostics/line-item-checks`](/retail-media/experimental/reference/line-item/get-line-item-diagnostics)
+
+Send exactly one selector: `line-item-id` for a single check, or `campaign-id` to check all line items in a campaign. Use `fields` to control which details are returned (`context`, `issues`, `parameters`); `status` and `systemData` are always included.
+
+```bash
+curl -X GET "https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?line-item-id=112233445566778899&fields=context,issues" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Accept: application/json"
+```
+
+### 2. Interpret the status
+
+| Status | Meaning |
+|---|---|
+| `CanFullyServe` | No delivery-blocking issues found |
+| `CanPartiallyServe` | Serving in some contexts — check `issues` for what limits it |
+| `CannotServe` | Configuration issues block all delivery — resolve `issues` with `severity: Error` |
+| `Unknown` | Check could not complete — retry; do not interpret as "can serve" |
+
+### 3. Paginate campaign results
+
+For `campaign-id` requests, use the `cursor` from the response `metadata` to fetch the next page. Set `limit` (1–25, default 25).
+
+---
+
+## Verify
+
+A successful response returns HTTP `200`. For each line item, confirm `status` is `CanFullyServe`. If `status` is `Unknown`, inspect `warnings` for a `result-unavailable` entry and retry later.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Selector | `line-item-id` or `campaign-id` — exactly one, not both |
+| `as-approved` | Defaults to `true` — evaluates the approved OnsiteDisplay line item, not the pending proposal |
+| Campaign page size | 1–25 (default 25) |
+| `fields` | `context`, `issues`, `parameters` — do not include `status` or `systemData` (always returned) |
