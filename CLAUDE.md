@@ -46,5 +46,6 @@ New API Workflow guides must follow the template at `retail-media/docs/_workflow
 **Key rules:**
 - Guides document workflows, not endpoints. The API Reference covers individual endpoints — do not duplicate field tables here.
 - One curl example per guide (the most important request in the flow). Requests only — no response examples.
+- Every endpoint mentioned in a step must link to its API Reference page using the pattern `[→ \`METHOD /path\`](/retail-media/reference/[operation-id])`.
 - Verify section is required: name the specific field and value that confirms success.
 - Prerequisites section is required: auth scope, required IDs, and any resource that must exist before the first call.
