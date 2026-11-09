@@ -23,6 +23,8 @@ Criteo Retail Media API releases twice a year: end of January and end of July.
 
 ## Workflow Guide Template
 
+We are replacing encyclopedic endpoint guides that duplicate the API Reference with API Workflow guides that are goal-oriented and actionable — one guide per developer job-to-be-done, not one guide per endpoint.
+
 New API Workflow guides must follow the template at `retail-media/docs/_workflow-template.mdx`. The leading underscore keeps it out of the published nav.
 
 **Structure:** frontmatter → one-sentence outcome statement → Prerequisites → numbered Steps (one curl per guide, requests only) → Verify → Constraints
