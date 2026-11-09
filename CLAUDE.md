@@ -33,6 +33,8 @@ The dev portal nav is organized into three layers:
 
 The API Reference (auto-generated from OAS) sits below these three layers.
 
+**Ownership:** Reference Pages for LLMs are owned and maintained by the documentation team. API contributors should only create or edit content in **Concepts** and **API Workflows**.
+
 ## Workflow Guide Template
 
 We are replacing encyclopedic endpoint guides that duplicate the API Reference with API Workflow guides that are goal-oriented and actionable — one guide per developer job-to-be-done, not one guide per endpoint.
