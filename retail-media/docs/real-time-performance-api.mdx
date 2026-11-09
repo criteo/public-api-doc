@@ -3,7 +3,7 @@ title: Report Real-Time Performance
 description: Retrieve near real-time campaign performance data synchronously.
 ---
 
-Synchronous reporting endpoint for near real-time campaign performance data. Unlike the async reporting endpoints, this returns data immediately with no polling step.
+Synchronous reporting endpoint for near real-time campaign performance data. Unlike the async reporting endpoints, this returns data immediately with no polling step. By the end of this guide, you will have a working synchronous report call returning near real-time performance data.
 
 **Designed for:**
 - Real-time monitoring during major retail events (Black Friday, Prime Day, etc.)
@@ -34,13 +34,42 @@ Synchronous reporting endpoint for near real-time campaign performance data. Unl
 
 Provide `startDate`, at least one dimension, at least one metric, and exactly one entity filter (`accountIds`, `campaignIds`, or `lineItemIds`).
 
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/reports/sync/real-time-performance" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "filters": {
+          "accountIds": ["4567891234567891"]
+        },
+        "startDate": "2026-10-31",
+        "endDate": "2026-10-31",
+        "metrics": ["impressions", "clicks", "spend"],
+        "dimensions": ["date", "campaignId"]
+      }
+    }
+  }'
+```
+
 <Warning>Exactly one entity filter must be provided. Passing multiple or none returns `400 Bad Request`.</Warning>
 
 Returns data immediately — no polling required.
 
+---
+
 ### 2. Read the response
 
 The response includes a `meta.dataCompleteThrough` field indicating the timestamp up to which data is complete in the requested timezone. Use this to understand the freshness boundary of the returned data.
+
+---
+
+## Verify
+
+A successful response has HTTP `200` with a non-empty `data` array. Check `meta.dataCompleteThrough` — if this timestamp is earlier than your requested period, data for the gap is not yet available.
+
+---
 
 ## Constraints
 
