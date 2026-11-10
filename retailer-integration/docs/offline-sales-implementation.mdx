@@ -42,11 +42,11 @@ Optionally, send the **store ID** where the purchase happened. It should match t
 
 Criteo supports three identifiers. Send at least one, and use the same one you already send with your onsite tracking so offline sales can be matched to ad exposure.
 
-| Identifier | Meaning | Flat file `user_key_type` |
-| ---------- | ------- | ------------------------- |
-| `retailer_visitor_id` | An unauthenticated ID that persists across sessions on the same device | `media_source_user_id` |
-| `customer_id` | The ID of the logged-in shopper, consistent across sessions | `authenticated_user_id` |
-| Email | The shopper's email, hashed | `email` |
+| Identifier | Meaning | Delivery API parameter |
+| ---------- | ------- | ---------------------- |
+| `retailer_visitor_id` | An unauthenticated ID that persists across sessions on the same device | [`retailer-visitor-id`](/retailer-integration/docs/api-parameters-1#retailer-visitor-id) |
+| `customer_id` | The ID of the logged-in shopper, consistent across sessions | [`customer-id`](/retailer-integration/docs/api-parameters-1#customer-id) |
+| Email | The shopper's email, hashed | [`email`](/retailer-integration/docs/api-parameters-1#email) |
 
 ### Hashing emails
 
@@ -75,8 +75,7 @@ Product IDs must match the IDs in your online product catalog. Offline sales for
 
 | Field | Required | Description | Example |
 | ----- | -------- | ----------- | ------- |
-| `user_key` | Yes | The shopper identifier. | `1a2b3c4d` |
-| `user_key_type` | Yes | The type of identifier in `user_key`: `media_source_user_id`, `authenticated_user_id` or `email`. If the same type applies to every row, you can leave this column out and Criteo will set it for you during onboarding. | `authenticated_user_id` |
+| `user_key` | Yes | The shopper identifier: the same value you send as [`retailer-visitor-id`](/retailer-integration/docs/api-parameters-1#retailer-visitor-id), [`customer-id`](/retailer-integration/docs/api-parameters-1#customer-id) or [`email`](/retailer-integration/docs/api-parameters-1#email) in your delivery API calls. | `1a2b3c4d` |
 | `event_id` | Yes | The transaction ID. It must use the same format as the transaction IDs you log online. | `B1c2A3d4h6` |
 | `event_time` | Yes | The time of the transaction, in UTC or with a UTC offset. | `2026-06-02T13:25:15+01:00` |
 | `content_ids` | Yes | The product ID of the item purchased (one per row). | `12345` |
@@ -88,10 +87,10 @@ Product IDs must match the IDs in your online product catalog. Offline sales for
 ### Example
 
 ```csv
-user_key,user_key_type,event_id,event_time,content_ids,product_value,product_quantity,currency,store_id
-1a2b3c4d,authenticated_user_id,B1c2A3d4h6,2026-06-02T13:25:15+01:00,12345,1.25,3,USD,987
-1a2b3c4d,authenticated_user_id,B1c2A3d4h6,2026-06-02T13:25:15+01:00,67890,4.50,1,USD,987
-9z8y7x6w,authenticated_user_id,C7d8E9f0g1,2026-06-02T14:02:44+01:00,12345,1.25,2,USD,412
+user_key,event_id,event_time,content_ids,product_value,product_quantity,currency,store_id
+1a2b3c4d,B1c2A3d4h6,2026-06-02T13:25:15+01:00,12345,1.25,3,USD,987
+1a2b3c4d,B1c2A3d4h6,2026-06-02T13:25:15+01:00,67890,4.50,1,USD,987
+9z8y7x6w,C7d8E9f0g1,2026-06-02T14:02:44+01:00,12345,1.25,2,USD,412
 ```
 
 The first two rows are one purchase with two products. The last row is a separate purchase.
@@ -117,8 +116,6 @@ Content-Type: application/json
 ```
 
 `unique_name_logs` is used for logging only. Use the format `clientname_offlinesales`.
-
-For the full parameter reference, see [Offline Sales Ingestion using API](/retailer-integration/docs/offline-sales-ingestion-using-api).
 
 ## Request body
 
