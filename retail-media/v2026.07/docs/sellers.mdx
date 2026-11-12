@@ -1,0 +1,416 @@
+---
+title: Sellers
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/account/sellers.md
+---
+
+## Introduction
+
+A seller represents an external entity that sells products in the retailers' environment (marketplace).
+
+Sellers entities are, initially, available through retailers' catalogs and can aggregate different products offered by them in the retailer marketplace.
+
+A demand account can be associated with multiple sellers (across multiple retailers) and be willing to serve ads across them.
+
+This endpoint provides a programmatic way to identify all sellers (and, consequently, retailers) associated with the respective account, so that campaigns can be set up accordingly.
+
+***
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <b>
+      POST
+     </b>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /accounts/sellers/search
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Search for Sellers, associated with retailers, given an account ID
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Sellers Accounts Search Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      accountId
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/docs/account">
+      Account
+     </a>
+     ID, to consider in the search for Seller accounts
+    </p>
+    <p>
+     Accepted values: int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      includeDetails
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     boolean
+    </p>
+   </td>
+   <td>
+    <p>
+     Flag indicating to include accounts' details in the response, such as
+     <code>
+      name
+     </code>
+     .
+    </p>
+    <p>
+     It may improve performance when set to
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Accepted values:
+     <code>
+      true
+     </code>
+     /
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Default:
+     <code>
+      false
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      sellerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Seller ID, specific to the associated Retailer
+    </p>
+    <p>
+     Accepted values: int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     integer
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="docs:retailers">
+      Retailer
+     </a>
+     ID which the seller account is associated with
+    </p>
+    <p>
+     Accepted values: int32
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      name
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     Seller name
+    </p>
+    <p>
+     Accepted values: string
+    </p>
+    <p>
+     Writeable? N / Nullable? Y
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_* Required_
+
+***
+
+## Search for Sellers associated with Account
+
+This endpoint returns a list of Seller IDs (each associated with a different retailer) available for the given account ID:
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/{version}/retail-media/accounts/sellers/search' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json' \
+    -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+    -d '{
+            "data": {
+                "type": "<string>",
+                "attributes": {
+                    "accountIds": [
+                        "100000002342852933"
+                    ],
+                    "includeDetails": false
+                }
+            }
+        }'
+```
+
+**Sample Response**
+
+```json
+{
+    "data": [
+        {
+            "type": "SellerSearchResult",
+            "attributes": {
+                "accountId": "100000002342852933",
+                "sellers": [
+                    {
+                        "sellerId": "xxxxxxxxxxxxxxxxxxxxxxxx",
+                        "retailerId": 123,
+                        "name": null
+                    }
+                ]
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Error
+    </p>
+   </th>
+   <th>
+    <p>
+     Message
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>
+    <p>
+     Call completed successfully
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Validation Error
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Error deserializing request
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     One of the parameters provided in the request does not match the format accepted. Check the error details and the parameters informed in the call
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      403
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Authorization Error
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      Resource access forbidden: does not have permissions
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     API user does not have the authorization to make requests to the account ID. For an authorization request, follow the
+     <a href="/criteo-apis/docs/authorization-requests">
+      authorization request
+     </a>
+     steps
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+<br />
+
+## What's next
+
+* [Retailers](/retail-media/v2025.07/docs/retailers)

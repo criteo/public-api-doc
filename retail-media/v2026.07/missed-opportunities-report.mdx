@@ -1,0 +1,92 @@
+---
+title: Analyze Missed Opportunities
+description: Diagnose budget cap-out and estimate missed delivery for DSP campaigns.
+---
+
+This report identifies when line items exhaust their daily budget before the day ends, causing them to stop participating in eligible auctions. Use it to quantify delivery shortfalls and decide whether to increase budgets or adjust pacing. By the end of this guide, you will have a working async report request returning missed delivery data.
+
+<Info>
+  This is a diagnostic report — it covers delivery shortfalls only. For impressions, clicks, and revenue, use the [Performance Report](/retail-media/docs/performance-report).
+</Info>
+
+## Prerequisites
+
+- Authenticated with scope `retail-media:read`
+- Account, campaign, or line item ID to scope the report (exactly one required)
+
+## Steps
+
+### 1. Submit the report request
+
+[→ `POST /retail-media/reports/missed-opportunities`](/retail-media/reference/generate-async-missed-opportunities-report)
+
+This endpoint is asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
+
+Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`), plus `startDate`, `endDate`, `dimensions`, and `metrics`. All five are required.
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/reports/missed-opportunities" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "filters": {
+          "campaignIds": ["9876543210987654"]
+        },
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-31",
+        "metrics": ["missedImpressions", "eligibleImpressions"],
+        "dimensions": ["date", "lineItemId"]
+      }
+    }
+  }'
+```
+
+Save `data.id` from the response — this is the `reportId` used in steps 2 and 3.
+
+<Warning>`filters` must contain exactly one scope filter. Passing multiple or none returns `400 Bad Request`.</Warning>
+
+---
+
+### 2. Poll for status
+
+Poll `data.id` using the status endpoint — see [Async Patterns](/retail-media/docs/async-patterns).
+
+Retry on `pending` or `running`. A `failure` status means the request was invalid — do not retry without changing the parameters.
+
+---
+
+### 3. Download the result
+
+Once status is `success`, retrieve the output — see [Async Patterns](/retail-media/docs/async-patterns).
+
+---
+
+## Verify
+
+A successful response has HTTP `200` with `data.attributes.status: success` and a non-empty `data.attributes.outputUri`. If `outputUri` is null, the report ran but returned no data — the line items may not have hit budget cap during the requested period.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Max date range | 100 days — [Hard Limits](/retail-media/docs/hard-limits) |
+| Data retention | 3 years |
+| File availability | 72 hours after generation |
+
+## Metrics & Dimensions
+
+See [Metrics & Dimensions Reference](/retail-media/docs/metrics-dimensions-reference) for the full list of available fields for this report.
+
+## Common errors
+
+| Error | Cause | Fix |
+|---|---|---|
+| `400` | Multiple or missing scope filter | Use exactly one of `accountIds`, `campaignIds`, or `lineItemIds` |
+| `400` | Date range exceeds 100 days | Reduce the range to 100 days or fewer |
+| `400` | `startDate` older than 3 years | Use a more recent start date |
+| `404` | Invalid `reportId` | Check the ID returned from step 1 |
+| `410` | Report expired | Files expire after 72 hours — resubmit |

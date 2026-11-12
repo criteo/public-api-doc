@@ -1,0 +1,79 @@
+---
+title: Manage Retailer Budgets
+description: How to create and manage campaigns funded by the retailer rather than the advertiser.
+---
+
+In the Retailer Budgets buying model, campaign budgets are funded by the retailer rather than the advertiser. By the end of this guide, you will have a retailer-scoped campaign linked to a retailer-budgets balance and a line item targeting the correct retailer.
+
+The API enforces retailer consistency across balance → campaign → line item — all three must reference the same `retailerId`.
+
+## Prerequisites
+
+- API version `2026-01` or later — retailer-budgets balances are hidden on prior versions
+- Use the **supply account ID** when querying balances to discover retailer-budgets balances
+- Retailer-budgets balances cannot be created via API — they must be retrieved
+
+<Warning>
+  **Breaking change in `2026-01`:** The `poNumber` field on balance responses is removed and replaced by two separate fields: `retailerPoNumber` and `criteoPoNumber`. This affects any integration reading `GET /balances` on a prior version.
+</Warning>
+
+## Steps
+
+### 1. Check retailer support
+
+[→ `POST /retail-media/accounts/{accountId}/retailers/search`](/retail-media/reference/search-account-retailers)
+
+The response includes `campaignAvailabilities[].budgetModel` — check that `retailerBudgets` is listed before proceeding.
+
+### 2. Discover the retailer-budgets balance
+
+[→ `GET /retail-media/accounts/{accountId}/balances`](/retail-media/reference/get-balances-by-account-id)
+
+Use the supply account ID. Retailer-budgets balances have a non-null `retailerId` in the response. Note the `id` — you'll need it in step 4.
+
+### 3. Create a campaign with retailer scoping
+
+[→ `POST /retail-media/accounts/{accountId}/campaigns`](/retail-media/reference/create-campaigns-by-account-id)
+
+Pass `retailerId` in the request body. This must match the `retailerId` on the balance you intend to link.
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/accounts/4567891234567891/campaigns" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "RetailMediaCampaign",
+      "attributes": {
+        "name": "My Retailer-Budget Campaign",
+        "retailerId": "1141"
+      }
+    }
+  }'
+```
+
+Save `data.id` from the response — this is the `campaignId` used in steps 4 and 5.
+
+<Warning>`retailerId` on the campaign must match the `retailerId` on the balance. Mismatch returns `400 RetailerMismatchWithBalance`.</Warning>
+
+### 4. Link the campaign to the balance
+
+[→ `POST /retail-media/balances/{balanceId}/campaigns/append`](/retail-media/reference/append-campaigns-by-balance-id)
+
+Only campaigns scoped to the same retailer as the balance can be appended. Passing a non-matching campaign returns `400`.
+
+<Note>Retailer-budgets balances cannot be unlinked from a campaign. `DELETE /balances/{balanceId}/campaigns` returns `400 RetailerBilledBalanceImmutable`.</Note>
+
+### 5. Create a line item
+
+[→ `POST /retail-media/campaigns/{campaignId}/auction-line-items`](/retail-media/reference/create-auction-line-item)
+
+Pass `targetRetailerId` matching the campaign's `retailerId`. Only one retailer per retailer-budgets campaign.
+
+<Warning>`targetRetailerId` must match the campaign's `retailerId`. Mismatch returns `400 RetailerMismatchWithCampaign`.</Warning>
+
+---
+
+## Verify
+
+After step 4, confirm the balance-campaign link by calling `GET /retail-media/balances/{balanceId}/campaigns` — the campaign ID should appear in the response. After step 5, the line item creation returns `HTTP 201` with the new line item's `id`.

@@ -1,0 +1,248 @@
+---
+title: What the API Can Do
+description: "Every endpoint in the stable Retail Media API, organized by what you want to build."
+---
+
+## Overview
+
+The Retail Media API exposes capabilities across ten domains. Use this page to find the right endpoint for what you want to build, or to understand the full scope of what the API supports.
+
+All endpoints below are available in the stable `2026-07` version of the API. Replace `/2026-07/` with the version prefix for your target version.
+
+- [Account management](#account-management) — access and configure accounts, brands, and sellers
+- [Audiences](#audiences) — build and manage audience segments for targeting
+- [Balances and billing](#balances-and-billing) — fund campaigns and pull billing reports
+- [Campaigns](#campaigns) — create and manage campaigns and their budgets
+- [Catalog and retailer planning](#catalog-and-retailer-planning) — explore retailers, browse categories, and export product data
+- [Creatives and assets](#creatives-and-assets) — build display ads from retailer templates
+- [Keywords](#keywords) — manage keyword targeting and bids for Sponsored Products
+- [Line items](#line-items) — set up ad placements for Sponsored Products and Onsite Display
+- [Performance reporting](#performance-reporting) — measure campaign results with async and sync reports
+- [Promoted products](#promoted-products) — control which products are advertised on a line item
+
+<Note>
+  These sections match the grouping in the [API Reference](/retail-media/v2026.07/reference).
+</Note>
+
+---
+
+## Account management
+
+Discover and configure the accounts, brands, and sellers that campaigns run under. Start here to find account IDs, set up brand and seller relationships, manage platform fees, and verify the identity of the calling API credentials.
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List accessible accounts | `GET` | `/retail-media/accounts` |
+| Search brands | `POST` | `/retail-media/brands/search` |
+| Search sellers | `POST` | `/retail-media/accounts/sellers/search` |
+| List brands on an account | `GET` | `/retail-media/accounts/{accountId}/brands` |
+| Add brands to an account | `POST` | `/retail-media/account-management/accounts/{accountId}/brands/add` |
+| Remove brands from an account | `POST` | `/retail-media/account-management/accounts/{accountId}/brands/remove` |
+| Create a brand account | `POST` | `/retail-media/account-management/accounts/{accountId}/create-brand-account` |
+| Create a seller account | `POST` | `/retail-media/account-management/accounts/{accountId}/create-seller-account` |
+| List private market child accounts | `GET` | `/retail-media/account-management/accounts/{accountId}/private-market-child-accounts` |
+| Update seller settings | `PUT` | `/retail-media/account-management/accounts/{accountId}/sellers` |
+| Grant consent | `POST` | `/retail-media/accounts/{accountId}/grant-consent` |
+| Search account fees | `POST` | `/retail-media/accounts/fees/search` |
+| Update account fees | `POST` | `/retail-media/accounts/fees/update` |
+| Check API identity | `GET` | `/retail-media/me` |
+
+---
+
+## Audiences
+
+Build and manage audience segments used to target Onsite Display line items. Create segments from contact lists, update membership in bulk, and search available audiences for an account.
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| Search audience segments | `POST` | `/retail-media/accounts/{accountId}/audience-segments/search` |
+| Create an audience segment | `POST` | `/retail-media/accounts/{accountId}/audience-segments/create` |
+| Update audience segments | `PATCH` | `/retail-media/accounts/{accountId}/audience-segments` |
+| Delete audience segments | `POST` | `/retail-media/accounts/{accountId}/audience-segments/delete` |
+| Get contact list for a segment | `GET` | `/retail-media/accounts/{accountId}/audience-segments/{audienceSegmentId}/contact-list` |
+| Add or remove contacts from a segment | `POST` | `/retail-media/audience-segments/{audienceSegmentId}/contact-list/add-remove` |
+| Clear a contact list | `POST` | `/retail-media/audience-segments/{audienceSegmentId}/contact-list/clear` |
+| Search audiences | `POST` | `/retail-media/accounts/{accountId}/audiences/search` |
+
+---
+
+## Balances and billing
+
+Manage the budget pools that campaigns draw from. Create balances, add funds, adjust dates, and link or unlink campaigns. Pull billing reports to reconcile spend.
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List balances for an account | `GET` | `/retail-media/accounts/{accountId}/balances` |
+| Get a balance | `GET` | `/retail-media/balances/{balanceId}` |
+| Create a balance | `POST` | `/retail-media/accounts/{accountId}/balances` |
+| Update a balance | `PATCH` | `/retail-media/accounts/{accountId}/balances/{balanceId}` |
+| Get a balance | `GET` | `/retail-media/accounts/{accountId}/balances/{balanceId}` |
+| Add funds to a balance | `POST` | `/retail-media/accounts/{accountId}/balances/{balanceId}/add-funds` |
+| Change balance dates | `POST` | `/retail-media/accounts/{accountId}/balances/{balanceId}/change-dates` |
+| List campaigns linked to a balance | `GET` | `/retail-media/balances/{balanceId}/campaigns` |
+| Get balance history | `GET` | `/retail-media/balances/{balanceId}/history` |
+| Start a billing partner report | `POST` | `/retail-media/billing/partner-report` |
+| Get billing report status | `GET` | `/retail-media/billing/partner-report/{requestId}/status` |
+| Download billing report output | `GET` | `/retail-media/billing/partner-report/{requestId}/output` |
+
+---
+
+## Campaigns
+
+Create and manage campaigns — the containers that group line items and hold shared attribution settings, flight dates, and budget. A campaign must exist and be linked to at least one balance before any line item can deliver.
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List campaigns for an account | `GET` | `/retail-media/accounts/{accountId}/campaigns` |
+| Create a campaign | `POST` | `/retail-media/accounts/{accountId}/campaigns` |
+| Get a campaign | `GET` | `/retail-media/campaigns/{campaignId}` |
+| Update a campaign | `PUT` | `/retail-media/campaigns/{campaignId}` |
+| Get campaign budget overrides | `GET` | `/retail-media/campaigns/{campaignId}/campaign-budget-overrides` |
+| Update campaign budget overrides | `PUT` | `/retail-media/campaigns/{campaignId}/campaign-budget-overrides` |
+| Link campaigns to a balance | `POST` | `/retail-media/balances/{balanceId}/campaigns/append` |
+| Unlink campaigns from a balance | `POST` | `/retail-media/balances/{balanceId}/campaigns/delete` |
+
+---
+
+## Catalog and retailer planning
+
+Explore the retailer landscape before building campaigns. Browse categories, get keyword and category recommendations for your SKUs, check minimum bids, and export your product catalog to identify what's available to promote.
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| Search retailers for an account | `POST` | `/retail-media/accounts/{accountId}/retailers/search` |
+| Search categories for a retailer | `POST` | `/retail-media/retailers/{retailerId}/categories/search` |
+| Browse categories | `GET` | `/retail-media/categories` |
+| Get a category | `GET` | `/retail-media/categories/{categoryId}` |
+| Get retailer page types | `GET` | `/retail-media/retailers/{retailerId}/pages` |
+| Get category recommendations for SKUs | `POST` | `/retail-media/retailers/{retailerId}/recommend-categories` |
+| Get keyword recommendations for SKUs | `POST` | `/retail-media/retailers/{retailerId}/recommend-keywords` |
+| Get CPC minimum bids for SKUs | `POST` | `/retail-media/retailers/{retailerId}/cpc-min-bids` |
+| Start a brand catalog export | `POST` | `/retail-media/accounts/{accountId}/brand-catalog-export` |
+| Start a seller catalog export | `POST` | `/retail-media/accounts/{accountId}/seller-catalog-export` |
+| Get catalog export status | `GET` | `/retail-media/catalogs/{catalogId}/status` |
+| Download catalog export output | `GET` | `/retail-media/catalogs/{catalogId}/output` |
+| Request account catalog | `POST` | `/retail-media/accounts/{accountId}/catalogs` |
+| Request seller catalog | `POST` | `/retail-media/accounts/{accountId}/catalogs/sellers` |
+| Upsert store inventory | `POST` | `/retail-media/catalog/merchants/{merchantId}/store-inventory/upsert` |
+| Delete store inventory | `POST` | `/retail-media/catalog/merchants/{merchantId}/store-inventory/delete` |
+
+---
+
+## Creatives and assets
+
+Build the display ads used in Onsite Display campaigns. Upload image assets, create creatives from the retailer's available templates, and manage the creative library for an account.
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List creatives for an account | `GET` | `/retail-media/accounts/{accountId}/creatives` |
+| Create a creative | `POST` | `/retail-media/accounts/{accountId}/creatives` |
+| Search creatives | `POST` | `/retail-media/accounts/{accountId}/creatives/search` |
+| Get a creative | `GET` | `/retail-media/accounts/{accountId}/creatives/{creativeId}` |
+| Update a creative | `PUT` | `/retail-media/accounts/{accountId}/creatives/{creativeId}` |
+| Upload an asset | `POST` | `/retail-media/assets` |
+| List creative templates for a retailer | `GET` | `/retail-media/retailers/{retailerId}/templates` |
+| Get a creative template | `GET` | `/retail-media/retailers/{retailerId}/templates/{templateId}` |
+
+---
+
+## Keywords
+
+Add and manage keyword targets for Sponsored Products line items. Set individual bids per keyword, add or remove keywords in bulk, and submit them for retailer review before they can serve.
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List keywords on a line item | `GET` | `/retail-media/line-items/{id}/keywords` |
+| Add or remove keywords | `POST` | `/retail-media/line-items/{id}/keywords/add-remove` |
+| Set keyword bids | `POST` | `/retail-media/line-items/{id}/keywords/set-bid` |
+| Submit keywords for review | `POST` | `/retail-media/line-items/{lineItemId}/keywords/review` |
+| Get keywords in-review report | `GET` | `/retail-media/accounts/{accountId}/keywords/in-review-report` |
+
+---
+
+## Line items
+
+Configure the individual ad placements within a campaign. Sponsored Products line items compete in auction and target by keyword or category; Onsite Display line items run on preferred deals and target by audience, add-to-basket behavior, or store. Both types share endpoints for budget overrides and bid multipliers.
+
+### Sponsored Products (auction)
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List auction line items for a campaign | `GET` | `/retail-media/campaigns/{campaignId}/auction-line-items` |
+| Create an auction line item | `POST` | `/retail-media/campaigns/{campaignId}/auction-line-items` |
+| Get an auction line item | `GET` | `/retail-media/auction-line-items/{lineItemId}` |
+| Update an auction line item | `PUT` | `/retail-media/auction-line-items/{lineItemId}` |
+| Get bid multipliers | `GET` | `/retail-media/line-items/{lineItemId}/bid-multipliers` |
+| Update bid multipliers | `PUT` | `/retail-media/line-items/{lineItemId}/bid-multipliers` |
+| Get line item budget overrides | `GET` | `/retail-media/line-items/{lineItemId}/line-item-budget-overrides` |
+| Update line item budget overrides | `PUT` | `/retail-media/line-items/{lineItemId}/line-item-budget-overrides` |
+
+### Onsite Display (preferred deals)
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List preferred line items for a campaign | `GET` | `/retail-media/campaigns/{campaignId}/preferred-line-items` |
+| Create a preferred line item | `POST` | `/retail-media/campaigns/{campaignId}/preferred-line-items` |
+| Get a preferred line item | `GET` | `/retail-media/preferred-line-items/{lineItemId}` |
+| Update a preferred line item | `PUT` | `/retail-media/preferred-line-items/{lineItemId}` |
+| Get add-to-basket targeting | `GET` | `/retail-media/preferred-line-items/{lineItemId}/targeting/add-to-basket` |
+| Replace add-to-basket targeting | `PUT` | `/retail-media/preferred-line-items/{lineItemId}/targeting/add-to-basket` |
+| Add to add-to-basket targeting | `POST` | `/retail-media/preferred-line-items/{lineItemId}/targeting/add-to-basket/append` |
+| Remove from add-to-basket targeting | `POST` | `/retail-media/preferred-line-items/{lineItemId}/targeting/add-to-basket/delete` |
+| Get audience targeting | `GET` | `/retail-media/preferred-line-items/{lineItemId}/targeting/audiences` |
+| Replace audience targeting | `PUT` | `/retail-media/preferred-line-items/{lineItemId}/targeting/audiences` |
+| Add to audience targeting | `POST` | `/retail-media/preferred-line-items/{lineItemId}/targeting/audiences/append` |
+| Remove from audience targeting | `POST` | `/retail-media/preferred-line-items/{lineItemId}/targeting/audiences/delete` |
+| Get store targeting | `GET` | `/retail-media/preferred-line-items/{lineItemId}/targeting/stores` |
+| Replace store targeting | `PUT` | `/retail-media/preferred-line-items/{lineItemId}/targeting/stores` |
+| Add to store targeting | `POST` | `/retail-media/preferred-line-items/{lineItemId}/targeting/stores/append` |
+| Remove from store targeting | `POST` | `/retail-media/preferred-line-items/{lineItemId}/targeting/stores/delete` |
+
+### Shared
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List all line items for an account | `GET` | `/retail-media/accounts/{accountId}/line-items` |
+| Get a line item | `GET` | `/retail-media/line-items/{lineItemId}` |
+
+---
+
+## Performance reporting
+
+Measure what your campaigns delivered. Async reports cover the full range of metrics and dimensions; submit a report, poll for completion, then download the output. Sync reports return results immediately for lightweight real-time checks.
+
+### Asynchronous reports
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| Start a performance report | `POST` | `/retail-media/reports/performance` |
+| Start an attributed transactions report | `POST` | `/retail-media/reports/attributed-transactions` |
+| Start a fill rate report | `POST` | `/retail-media/reports/fillrate` |
+| Start a missed opportunities report | `POST` | `/retail-media/reports/missed-opportunities` |
+| Start a revenue report | `POST` | `/retail-media/reports/revenue` |
+| Start an unfilled placements report | `POST` | `/retail-media/reports/unfilled-placements` |
+| Get report status | `GET` | `/retail-media/reports/{reportId}/status` |
+| Download report output | `GET` | `/retail-media/reports/{reportId}/output` |
+
+### Synchronous reports
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| Sync campaign report | `POST` | `/retail-media/reports/sync/campaigns` |
+| Sync line item report | `POST` | `/retail-media/reports/sync/line-items` |
+| Sync attributed transactions report | `POST` | `/retail-media/reports/sync/attributed-transactions` |
+| Sync real-time performance report | `POST` | `/retail-media/reports/sync/real-time-performance` |
+
+---
+
+## Promoted products
+
+Specify which products appear on a line item and control their active state. Each product can carry its own bid; a line item supports up to 500 promoted products.
+
+| Capability | Method | Endpoint |
+| ---------- | ------ | -------- |
+| List promoted products on a line item | `GET` | `/retail-media/line-items/{lineItemId}/products` |
+| Add products to a line item | `POST` | `/retail-media/line-items/{lineItemId}/products/append` |
+| Remove products from a line item | `POST` | `/retail-media/line-items/{lineItemId}/products/delete` |
+| Pause products on a line item | `POST` | `/retail-media/line-items/{lineItemId}/products/pause` |
+| Unpause products on a line item | `POST` | `/retail-media/line-items/{lineItemId}/products/unpause` |

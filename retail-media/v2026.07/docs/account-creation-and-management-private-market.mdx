@@ -1,0 +1,242 @@
+---
+title: Create and Manage Demand Accounts
+description: Create and manage brand and seller demand accounts under a private market supply account.
+---
+
+import CalloutDigitalServiceActDSA from "/snippets/retail-media/CalloutDigitalServiceActDSA.mdx";
+
+Account creation endpoints enable private market retailers to create demand brand and marketplace seller accounts within the private market, and manage brand and seller mappings for each account type.
+
+<Warning>
+  **Limited Access** — Private Market account creation and management is currently only available for a selected group of API users. Contact Criteo to have the correct permissions enabled.
+</Warning>
+
+<CalloutDigitalServiceActDSA />
+
+## Prerequisites
+
+- Authenticated as a supply (retailer) account with `retail-media:manage_accounts` scope
+- Parent supply account ID (`parentAccountId`)
+- Brand IDs or seller IDs to associate with new accounts
+
+## Steps
+
+### 1. List your accounts
+
+[→ `GET /retail-media/accounts`](/retail-media/reference/get-accounts)
+
+Returns all accounts accessible via your credentials. Results are paginated via `pageIndex` and `pageSize` (defaults: `0` and `25`).
+
+```bash
+curl "https://api.criteo.com/2026-07/retail-media/accounts?pageIndex=0&pageSize=25" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+**Sample response:**
+
+```json
+{
+  "metadata": {
+    "totalItemsAcrossAllPages": 4,
+    "currentPageSize": 25,
+    "currentPageIndex": 0,
+    "totalPages": 1
+  },
+  "data": [
+    {
+      "id": "425730879617900544",
+      "type": "RetailMediaAccount",
+      "attributes": {
+        "name": "Supply Private Market TEST Account",
+        "type": "supply",
+        "subtype": null,
+        "countries": ["US"],
+        "currency": "USD",
+        "parentAccountLabel": "Supply Private Market TEST Account",
+        "timeZone": "America/New_York"
+      }
+    },
+    {
+      "id": "568182612169883648",
+      "type": "RetailMediaAccount",
+      "attributes": {
+        "name": "Demand Brand Account US",
+        "type": "demand",
+        "subtype": "brand",
+        "countries": ["US"],
+        "currency": "USD",
+        "parentAccountLabel": "Supply Private Market TEST Account",
+        "timeZone": "America/New_York"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 2. List private market child accounts
+
+[→ `GET /retail-media/account-management/accounts/{parentAccountId}/private-market-child-accounts`](/retail-media/reference/get-private-market-child-accounts)
+
+Returns all private market child accounts (brand or seller) under a supply account. Results are paginated via `offset` and `limit` (defaults: `0` and `500`).
+
+```bash
+curl "https://api.criteo.com/2026-07/retail-media/account-management/accounts/425730879617900544/private-market-child-accounts?offset=0&limit=25" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+---
+
+### 3. Create a demand account
+
+**Brand account:**
+
+[→ `POST /retail-media/account-management/accounts/{parentAccountId}/create-brand-account`](/retail-media/reference/create-brand-account)
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/account-management/accounts/425730879617900544/create-brand-account" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "AccountCreationDemandBrand",
+      "attributes": {
+        "name": "Demand Brand Account US",
+        "companyName": "Brand ABC Corp.",
+        "onBehalfCompanyName": "Brand ABC Corp.",
+        "brands": ["2151767311"]
+      }
+    }
+  }'
+```
+
+**Sample response:**
+
+```json
+{
+  "data": {
+    "id": "569225726270857216",
+    "type": "RetailMediaAccount",
+    "attributes": {
+      "name": "Demand Brand Account US",
+      "type": "Demand",
+      "subType": "Brand",
+      "countryIds": ["US"],
+      "currencyId": "USD",
+      "parentAccountLabel": "Supply Private Market TEST Account",
+      "timeZone": "America/New_York"
+    }
+  }
+}
+```
+
+Save `data.id` — this is the new demand account ID.
+
+**Seller account:**
+
+[→ `POST /retail-media/account-management/accounts/{parentAccountId}/create-seller-account`](/retail-media/reference/create-seller-account)
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/account-management/accounts/425730879617900544/create-seller-account" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "Demand",
+      "attributes": {
+        "name": "Town Supplies (seller)",
+        "companyName": "Seller Test",
+        "onBehalfCompanyName": "Seller Test LLC",
+        "sellers": [
+          {
+            "sellerId": "62a0871ffad67c541xxxxxxxxx",
+            "retailerId": "1141"
+          }
+        ]
+      }
+    }
+  }'
+```
+
+---
+
+### 4. Manage brand mappings
+
+**Add brands:**
+
+[→ `POST /retail-media/account-management/accounts/{accountId}/brands/add`](/retail-media/reference/add-brands-to-account)
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/account-management/accounts/568182612169883648/brands/add" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "MapBrandstoDemandAccount",
+      "attributes": {
+        "brandIds": ["2151768660"]
+      }
+    }
+  }'
+```
+
+**Remove brands:**
+
+[→ `POST /retail-media/account-management/accounts/{accountId}/brands/remove`](/retail-media/reference/remove-brands-from-account)
+
+<Warning>Only one brand can be removed per request. The `brandIds` array must contain exactly one ID.</Warning>
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/account-management/accounts/568182612169883648/brands/remove" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "type": "RemoveBrandfromDemandAccount",
+      "attributes": {
+        "brandIds": ["2151768660"]
+      }
+    }
+  }'
+```
+
+---
+
+### 5. Manage seller mappings
+
+[→ `PUT /retail-media/account-management/accounts/{accountId}/sellers`](/retail-media/reference/map-sellers-to-account)
+
+<Warning>PUT replaces all existing seller mappings. Only the seller IDs in the payload will remain associated with the account after the call.</Warning>
+
+```bash
+curl -X PUT "https://api.criteo.com/2026-07/retail-media/account-management/accounts/569185968379719680/sellers" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": [
+      {
+        "type": "MapSellertoAccount",
+        "attributes": {
+          "sellerId": "5ed6ad7b0b2a9xxxxxxxxxxx",
+          "retailerId": "1141"
+        }
+      },
+      {
+        "type": "MapSellertoAccount",
+        "attributes": {
+          "sellerId": "640a20bbc63745xxxxxxxxxxx",
+          "retailerId": "1141"
+        }
+      }
+    ]
+  }'
+```
+
+---
+
+## Verify
+
+Account creation (step 3) returns `HTTP 201` with the new account's `id` in `data.id`. Brand/seller mapping calls (steps 4–5) return `HTTP 200` with the updated list of associated IDs in `data.attributes`. Confirm the account appears in the child accounts list (step 2) after creation.

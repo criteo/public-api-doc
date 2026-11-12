@@ -1,0 +1,83 @@
+---
+title: Analyze Fill Rate
+description: Supply-side fill rate and unfilled placement reporting for retailers.
+---
+
+Measures how many ad placements were successfully filled versus the total number of delivered placements. Use this to identify supply/demand gaps by placement, page type, category, or ad server.
+
+Two companion reports cover different angles of the same inventory:
+
+- **Fill Rate** — aggregated fill rate, coverage, and revenue metrics per placement
+- **Unfilled Placements** — breakdown of *why* placements went unfilled (no demand, blocked, uncovered search terms, etc.)
+
+## Prerequisites
+
+- Authenticated as a supply account with scope `retail-media:read`
+- Supply account ID
+
+Both endpoints are asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
+
+---
+
+## Fill Rate Report
+
+### 1. Submit the fill rate request
+
+[→ `POST /retail-media/reports/fillrate`](/retail-media/reference/generate-async-fill-rate-report)
+
+Provide `supplyAccountIds`, `startDate`, `endDate`, `dimensions`, and `metrics`. Use `adServerType` to filter by ad server: `all`, `gam`, or `criteo`. Defaults to `all` if omitted.
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/reports/fillrate" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "supplyAccountIds": ["4567891234567891"],
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-31",
+        "metrics": ["fillRate", "filledImpressions", "unfilledImpressions"],
+        "dimensions": ["date", "pageType"]
+      }
+    }
+  }'
+```
+
+Save `data.id` from the response — this is the `reportId` for steps 2 and 3.
+
+### 2. Poll and download
+
+Poll `data.id` using the status endpoint, then retrieve the output once status is `success` — see [Async Patterns](/retail-media/docs/async-patterns).
+
+---
+
+## Unfilled Placements Report
+
+### 1. Submit the unfilled placements request
+
+[→ `POST /retail-media/reports/unfilled-placements`](/retail-media/reference/generate-async-unfilled-placements-report)
+
+Same shape as the fill rate report. Returns a breakdown of unfilled reasons per placement.
+
+<Info>
+  See [Metrics & Dimensions (SSP)](/retail-media/docs/metrics-and-dimensions-ssp#fill-rate-unfilled-reasons) for the full list of supported unfilled reason metrics.
+</Info>
+
+### 2. Poll and download
+
+Poll `data.id` using the status endpoint, then retrieve the output once status is `success` — see [Async Patterns](/retail-media/docs/async-patterns).
+
+---
+
+## Verify
+
+A successful response has HTTP `200` with `data.attributes.status: success` and a non-empty `data.attributes.outputUri`. If `outputUri` is null, the report ran but returned no data for the requested date range and supply account.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Max date range | 100 days |

@@ -1,0 +1,514 @@
+---
+title: Minimum Bid
+original_file: to-migrate/criteo-dev-portal-full-export/merged_export/Retail_Media/v2026_01/docs/Guides for Retail Media API/line-items/onsite-sponsored-products/minimum-bid.md
+---
+
+## Introduction
+
+1. An [Onsite Sponsored Products](/retail-media/docs/onsite-sponsored-products) line item holds promoted products to advertise on a single retailer.
+2. Line items have bid settings, start & end dates, and optional budgeting & pacing controls.
+3. Target & maximum bid settings must respect minimum bid (`minBid`), that can be set at product SKU level, to start delivering ads
+4. Products SKU IDs are available through [Catalog](/retail-media/docs/catalogs) endpoints.
+
+***
+
+## Endpoints
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Verb
+    </p>
+   </th>
+   <th>
+    <p>
+     Endpoint
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      POST
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <code>
+      /retailers/&#123;retailerId&#125;/cpc-min-bids
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Search for min bid CPC defined by collection of SKU IDs
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+## Minimum Bid Attributes
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Attribute
+    </p>
+   </th>
+   <th>
+    <p>
+     Data Type
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     <code>
+      retailerId
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     <a href="/retail-media/v2025.07/docs/retailers">
+      Retailer
+     </a>
+     ID where the line item will serve ads on
+    </p>
+    <p>
+     Accepted values: int64
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      skuIds
+     </code>
+     <span>*</span>
+    </p>
+   </td>
+   <td>
+    <p>
+     list
+     <code>
+      &lt;string&gt;
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     List of SKU IDs in which the minimum bid is requested (usually, the SKUs promoted by the line item).
+    </p>
+    <p>
+     Values are available through
+     <a href="/retail-media/docs/catalogs">
+      Catalog
+     </a>
+     endpoints
+    </p>
+    <p>
+     Accepted values: at least, an empty list
+     <code>
+      []
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      skuId
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     string
+    </p>
+   </td>
+   <td>
+    <p>
+     SKU ID respective to the
+     <code>
+      minBid
+     </code>
+     in the response
+    </p>
+    <p>
+     Accepted values: SKU IDs from catalog
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      overallMinBid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Overall minimum bid resulted from the list of SKUs requested, that the line item should respect to, effectively, deliver ads
+    </p>
+    <p>
+     Acceptable values: at least
+     <code>
+      0.01
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     <code>
+      minBid
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     decimal
+    </p>
+   </td>
+   <td>
+    <p>
+     Minimum bid for the respective SKU
+    </p>
+    <p>
+     Acceptable values: at least
+     <code>
+      0.01
+     </code>
+    </p>
+    <p>
+     Writeable? N / Nullable? N
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+_*Required_
+
+***
+
+## Retrieve Minimum Bid from SKU IDs
+
+**Sample Request**
+
+<CodeGroup>
+
+```bash cURL
+curl -L -X POST "https://api.criteo.com/{version}/retail-media/retailers/12345/cpc-min-bids" \
+    -H 'Accept: application/json' \
+    -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{
+            "data": {
+                "type": "<string>",
+                "attributes": {
+                    "skuIds": [
+                        "a1b2c3",
+                        "d4e5f6",
+                        "g7h8i9"
+                    ]
+                }
+            }
+        }'
+```
+
+```python Python
+import requests
+import json
+
+url = "https://api.criteo.com/{version}/retail-media/retailers/12345/cpc-min-bids"
+
+payload = json.dumps({
+    "data": {
+        "type": "<string>",
+        "attributes": {
+            "skuIds": [
+                "a1b2c3",
+                "d4e5f6",
+                "g7h8i9"
+            ]
+        }
+    }
+})
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <MY_ACCESS_TOKEN>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```java Java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  .build();
+
+MediaType mediaType = MediaType.parse("application/json");
+
+RequestBody body = RequestBody.create(mediaType, "{\"data\":{\"type\":\"<string>\",\"attributes\":{\"skuIds\":[\"a1b2c3\",\"d4e5f6\",\"g7h8i9\"]}}}");
+
+Request request = new Request.Builder()
+  .url("https://api.criteo.com/{version}/retail-media/retailers/12345/cpc-min-bids")
+  .method("POST", body)
+  .addHeader("Content-Type", "application/json")
+  .addHeader("Accept", "application/json")
+  .addHeader("Authorization", "Bearer <MY_ACCESS_TOKEN>")
+  .build();
+
+Response response = client.newCall(request).execute();
+```
+
+```php PHP
+<?php
+require_once 'HTTP/Request2.php';
+$request = new HTTP_Request2();
+$request->setUrl('https://api.criteo.com/{version}/retail-media/retailers/12345/cpc-min-bids');
+$request->setMethod(HTTP_Request2::METHOD_POST);
+$request->setConfig(array(
+  'follow_redirects' => TRUE
+));
+$request->setHeader(array(
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json',
+  'Authorization' => 'Bearer <MY_ACCESS_TOKEN>'
+));
+$request->setBody('{"data":{"type":"<string>","attributes":{"skuIds": ["a1b2c3","d4e5f6","g7h8i9"]}}}');
+try {
+  $response = $request->send();
+  if ($response->getStatus() == 200) {
+    echo $response->getBody();
+  }
+  else {
+    echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+    $response->getReasonPhrase();
+  }
+}
+catch(HTTP_Request2_Exception $e) {
+  echo 'Error: ' . $e->getMessage();
+}
+```
+</CodeGroup>
+
+**Sample Response**
+
+```json expandable
+{
+    "data": [
+        {
+            "type": "DisplayAuctionMinBidResult",
+            "attributes": {
+                "minBid": 10.00,
+                "pageType": "Home",
+                "creativeId": "758332652442947584"
+            }
+        },
+        {
+            "type": "DisplayAuctionMinBidResult",
+            "attributes": {
+                "minBid": 2.50,
+                "pageType": "Search",
+                "creativeId": "758332652442947584"
+            }
+        },
+        {
+            "type": "DisplayAuctionMinBidResult",
+            "attributes": {
+                "minBid": 2.50,
+                "pageType": "ProductDetail",
+                "creativeId": "758332652442947584"
+            }
+        },
+      
+        // ...
+
+        {
+            "type": "DisplayAuctionMinBidResult",
+            "attributes": {
+                "minBid": 2.50,
+                "pageType": "Confirmation",
+                "creativeId": "758332652442947584"
+            }
+        },
+        {
+            "type": "DisplayAuctionMinBidResult",
+            "attributes": {
+                "minBid": 10.00,
+                "pageType": "Home",
+                "creativeId": "735093382380679168"
+            }
+        },
+        {
+            "type": "DisplayAuctionMinBidResult",
+            "attributes": {
+                "minBid": 2.50,
+                "pageType": "Search",
+                "creativeId": "735093382380679168"
+            }
+        },
+        {
+            "type": "DisplayAuctionMinBidResult",
+            "attributes": {
+                "minBid": 2.50,
+                "pageType": "ProductDetail",
+                "creativeId": "735093382380679168"
+            }
+        },
+        {
+            "type": "DisplayAuctionMinBidResult",
+            "attributes": {
+                "minBid": 2.50,
+                "pageType": "Confirmation",
+                "creativeId": "735093382380679168"
+            }
+        }
+    ],
+    "warnings": [],
+    "errors": []
+}
+```
+
+***
+
+## Responses
+
+<table>
+ <thead>
+  <tr>
+   <th>
+    <p>
+     Response
+    </p>
+   </th>
+   <th>
+    <p>
+     Description
+    </p>
+   </th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>
+    <p>
+     🟢
+     <code>
+      200
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     Call executed with success
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      400
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      json-serialization-error
+     </b>
+    </p>
+    <p>
+     Required attribute missing or with unexpected format in request's body
+    </p>
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <p>
+     🔴
+     <code>
+      404
+     </code>
+    </p>
+   </td>
+   <td>
+    <p>
+     <b>
+      Not Found
+     </b>
+    </p>
+    <p>
+     Retailer ID informed in request's path was not found
+    </p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+***
+
+<br />
+
+## What's next
+
+* [Demand Side Analytics (DSP)](/retail-media/docs/analytics)
+* [Supply Side Analytics (SSP)](/retail-media/docs/supply-side-reporting-ssp)

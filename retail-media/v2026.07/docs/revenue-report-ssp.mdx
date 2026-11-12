@@ -1,0 +1,94 @@
+---
+title: Report Revenue
+description: Supply-side revenue reporting for retailers across all advertisers, media platforms, and sales channels.
+---
+
+Revenue visibility for supply account owners (retailers) across all advertisers, media platforms, and sales channels — including direct, indirect, and private market revenue. By the end of this guide, you will have a working async report request returning revenue data.
+
+## Prerequisites
+
+- Authenticated as a supply account with scope `retail-media:read`
+- Supply account ID
+
+## Steps
+
+### 1. Submit the report request
+
+[→ `POST /retail-media/reports/revenue`](/retail-media/reference/generate-async-revenue-report)
+
+This endpoint is asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
+
+Provide a supply account `id`, `startDate`, `endDate`, plus `metrics` and `dimensions`.
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/reports/revenue" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "id": "4567891234567891",
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-31",
+        "metrics": ["revenue", "impressions", "clicks"],
+        "dimensions": ["date", "advertiserName", "mediaChannel"]
+      }
+    }
+  }'
+```
+
+Save `data.id` from the response — this is the `reportId` used in steps 2 and 3.
+
+<Note>
+  When `metrics` and `dimensions` arrays are provided, the `reportType` field is ignored.
+</Note>
+
+<Note>
+  When using `clickMatchLevel` and `viewMatchLevel`, include the `attributionSettings`, `activityType`, and `skuRelation` dimensions for a clearer breakdown of click and view events by attribution window and SKU relationship.
+</Note>
+
+---
+
+### 2. Poll for status
+
+Poll `data.id` using the status endpoint — see [Async Patterns](/retail-media/docs/async-patterns).
+
+Retry on `pending` or `running`. A `failure` status means the request was invalid — do not retry without changing the parameters.
+
+---
+
+### 3. Download the result
+
+Once status is `success`, retrieve the output — see [Async Patterns](/retail-media/docs/async-patterns).
+
+---
+
+## Verify
+
+A successful response has HTTP `200` with `data.attributes.status: success` and a non-empty `data.attributes.outputUri`. If `outputUri` is null, the report ran but returned no data for the requested date range and account.
+
+---
+
+## UI default attribution settings
+
+To match the default view in the CMax UI, use these attribution parameters:
+
+**Onsite Sponsored Products:**
+- `clickAttributionWindow`: `30D`
+- `clickMatchLevel`: `sameCategory`
+- `viewAttributionWindow`: `1D`
+- `viewMatchLevel`: `sameSku`
+
+**Onsite Display:**
+- `clickAttributionWindow`: `14D`
+- `clickMatchLevel`: `sameCategory`
+- `viewAttributionWindow`: `14D`
+- `viewMatchLevel`: `sameCategory`
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Max date range | 100 days |

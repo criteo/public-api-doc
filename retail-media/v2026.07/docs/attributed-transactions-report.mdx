@@ -1,0 +1,118 @@
+---
+title: Pull Attributed Transactions
+description: Transaction-level log of every purchase event attributed to Retail Media DSP campaigns.
+---
+
+Transaction-level log of every purchase event attributed to your campaigns. Each row represents a single attributed transaction and captures the product advertised, the product purchased, the attribution rule applied, and the time elapsed between ad delivery and purchase. By the end of this guide, you will have a working async report request returning attributed transaction data.
+
+<Info>
+  **This is not a performance report.** Aggregated metrics — impressions, clicks, spend, attributed sales totals — are not available here. Use the [Performance Report](/retail-media/docs/performance-report) for those.
+</Info>
+
+**Primary audience:** Data scientists and analysts auditing attribution methodology, understanding cross-sell and halo effects, or analyzing purchase behavior at the transaction level.
+
+## Prerequisites
+
+- Authenticated with scope `retail-media:read`
+- Account, campaign, or line item ID to scope the report
+
+## Steps
+
+### 1. Submit the report request
+
+[→ `POST /retail-media/reports/attributed-transactions`](/retail-media/reference/generate-async-attributed-transactions-report)
+
+This endpoint is asynchronous — see [Async Patterns](/retail-media/docs/async-patterns).
+
+Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`), plus `startDate`, `endDate`, `dimensions`, and `metrics`. All five are required.
+
+```bash
+curl -X POST "https://api.criteo.com/2026-07/retail-media/reports/attributed-transactions" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "filters": {
+          "accountIds": ["4567891234567891"]
+        },
+        "startDate": "2026-10-01",
+        "endDate": "2026-10-31",
+        "metrics": ["sales", "units"],
+        "dimensions": ["advertisedProductId", "purchasedProductId", "advertisedToPurchasedProductRelationship"]
+      }
+    }
+  }'
+```
+
+Save `data.id` from the response — this is the `reportId` used in steps 2 and 3.
+
+<Warning>`filters` must contain exactly one scope filter. Passing multiple or none returns `400 Bad Request`.</Warning>
+
+<Note>`startDate`/`endDate` filter on the **transaction date**, not the ad delivery date. Because attribution spans several days, `advertisedDate` values in the output can fall outside the requested range.</Note>
+
+---
+
+### 2. Poll for status
+
+Poll `data.id` using the status endpoint — see [Async Patterns](/retail-media/docs/async-patterns).
+
+Retry on `pending` or `running`. A `failure` status means the request was invalid — do not retry without changing the parameters.
+
+---
+
+### 3. Download the result
+
+Once status is `success`, retrieve the output — see [Async Patterns](/retail-media/docs/async-patterns).
+
+---
+
+## Verify
+
+A successful response has HTTP `200` with `data.attributes.status: success` and a non-empty `data.attributes.outputUri`. If `outputUri` is null, the report ran but no transactions were attributed in the requested date range.
+
+---
+
+## Understanding advertised vs. purchased product fields
+
+The `advertisedProduct*` and `purchasedProduct*` fields are often the same — but not always. When the attribution rule is `same brand`, `same taxonomy`, or `same seller`, the ad may have driven a purchase of a related product rather than the exact item advertised.
+
+**Example:** An ad for a camping jacket is served. The shopper purchases a different jacket from the same brand. The row will show:
+- `advertisedProductId`: the advertised jacket
+- `purchasedProductId`: the purchased jacket
+- `advertisedToPurchasedProductRelationship`: `same brand`
+
+This bilateral product structure makes this report useful for cross-sell and halo analysis — you can see exactly which advertised products drove purchases of which other products, and under which attribution rule.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Max date range | 100 days — [Hard Limits](/retail-media/docs/hard-limits) |
+| Data retention | 3 years |
+
+## Metrics & Dimensions
+
+See [Metrics & Dimensions Reference](/retail-media/docs/metrics-dimensions-reference) for the full list of available fields for this report.
+
+## Migrating from `reportType: attributedTransactions`
+
+Replace your existing call on `/reports/campaigns` or `/reports/line-items` with a call to this endpoint.
+
+**Endpoint change:**
+
+```
+POST /reports/campaigns   →   POST /reports/attributed-transactions
+POST /reports/line-items  →   POST /reports/attributed-transactions
+```
+
+**Request shape changes:**
+
+- Replace the top-level `accountId` / `campaignId` / `lineItemId` fields with a `filters` object containing `accountIds[]`, `campaignIds[]`, or `lineItemIds[]` arrays (exactly one scope filter)
+- Add required `dimensions[]` and `metrics[]` arrays to select output columns
+- `startDate` and `endDate` are required (`YYYY-MM-DD` only — timestamps are rejected)
+- Remove `reportType: attributedTransactions` — it is not accepted on this endpoint
+
+**Field renames:** `adv`-prefixed fields are now spelled out as `advertised*` (e.g. `advProductId` → `advertisedProductId`, `advDate` → `advertisedDate`). `pageTypeName` → `pageType`.

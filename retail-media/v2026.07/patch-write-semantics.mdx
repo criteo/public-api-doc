@@ -1,0 +1,36 @@
+---
+title: PATCH / Write Semantics
+description: How PUT, PATCH, and POST behave across the Retail Media API, and how null vs omit affects field values.
+---
+
+## HTTP Verb Behavior
+
+| Verb | Behavior |
+|---|---|
+| `PUT` | Replaces the full resource. Fields not included in the request body are cleared. |
+| `PATCH` | Merges. Only fields included in the request are updated. Omitted fields are unchanged. |
+| `POST` (on a collection) | Appends to the collection. Existing items are not affected. |
+
+## Null vs Omit
+
+| Action | Effect |
+|---|---|
+| Field set to `null` explicitly | Clears the field value on the resource. |
+| Field omitted from request | Leaves the current field value unchanged (PATCH only). |
+
+## Sentinel Values
+
+Some fields use a specific value to signal removal rather than `null`:
+
+| Field | Sentinel | Effect |
+|---|---|---|
+| `bidOverride` | `0.0` | Removes the bid override and falls back to the line item's `targetBid`. Not equivalent to setting no bid — `0.0` is a special removal signal. |
+| `endDate` | `{"value": null}` | Clears the end date (open-ended). Omitting `endDate` in a PATCH leaves the current value intact. |
+
+## Common Mistakes
+
+| Mistake | What happens |
+|---|---|
+| Sending a partial body to a `PUT` endpoint | Missing fields are cleared on the resource. |
+| Omitting a field in `PATCH` expecting it to clear | Field is left unchanged. Use explicit `null` to clear. |
+| Setting `bidOverride` to `null` instead of `0.0` | Behavior differs from removal — use `0.0` to remove a bid override. |

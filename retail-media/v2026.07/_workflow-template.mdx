@@ -1,0 +1,139 @@
+---
+title: [Action Verb + Object]
+sidebarTitle: [Shorter label if title is long — DELETE if title fits as-is]
+description: [One sentence: what goal this achieves and who does it. E.g. "How to submit and retrieve a campaign performance report as a DSP partner."]
+---
+
+{/*
+  WORKFLOW GUIDE TEMPLATE — not published in the nav (leading underscore).
+
+  Use this for API Workflow guides: pages that walk a developer through a goal
+  end-to-end, as opposed to describing what a resource is (Concepts) or listing
+  all fields on an endpoint (API Reference).
+
+  Title convention: start with an action verb — "Report...", "Create...",
+  "Discover...", "Manage...", "Grant...". Not "Overview of..." or "Introduction to...".
+
+  Every endpoint mentioned in a step must link to its API Reference page. Use the
+  pattern: [→ `METHOD /path`](/retail-media/reference/[operation-id]). The API
+  Reference covers field-level detail — do not duplicate it in the guide.
+
+  Sections marked [DELETE IF NOT APPLICABLE] can be removed when they don't apply.
+  Remove all template instruction text (square brackets, this comment block) before merging.
+*/}
+
+[1–2 sentences. State what this guide walks the developer through. End with an explicit
+outcome: what the developer will have when done.
+Example: "This guide covers the full async reporting flow: submit a request, poll for
+status, and download the result. By the end, you will have a working report request
+returning campaign performance data."]
+
+[DELETE IF NOT APPLICABLE — include when it's non-obvious who should use this guide:]
+**Use this guide if you:**
+- [specific use case]
+- [specific use case]
+
+---
+
+## Prerequisites
+
+Before calling these endpoints, ensure the following are in place:
+
+- **Auth scope**: `retail-media:[scope]` — see [Authentication](/retail-media/docs/authentication)
+- **[Required ID]**: a `[campaignId / accountId / lineItemId]` — obtained from [link to where it comes from]
+- **[Other prerequisite]**: [e.g., "a campaign must exist and be in `active` status before creating a line item"]
+
+[DELETE IF NOT APPLICABLE — add when the reader may be in the wrong guide:]
+<Note>
+  If you are a [specific role], you need a different setup. See [Other Guide](/retail-media/docs/other-guide).
+</Note>
+
+---
+
+## Steps
+
+{/*
+  Use numbered H3s. Each step should:
+  - name the call with a → link to the API Reference
+  - state what inputs are required (don't copy the full schema — just what matters for this workflow)
+  - show a minimal curl example for the most important call in the flow (one per guide is enough)
+  - tell the developer which field from the response to carry into the next step
+  - surface gotchas as Warning callouts, not in prose
+
+  For single-step operations (synchronous endpoint), replace the numbered steps with
+  "## Request" and "## Response" sections instead.
+*/}
+
+### 1. [Action — e.g. "Submit the report request"]
+
+[→ `POST /retail-media/[path]`](/retail-media/reference/[operation-id])
+
+[What to provide. Focus on required fields and non-obvious ones. Example:
+"Provide exactly one scope filter (`accountIds`, `campaignIds`, or `lineItemIds`),
+plus `startDate`, `endDate`, `metrics`, and `dimensions`. All five are required."]
+
+```bash
+curl -X POST "https://api.criteo.com/[version]/retail-media/[path]" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "[requiredField]": "[value]",
+        "[requiredField]": "[value]"
+      }
+    }
+  }'
+```
+
+Save `data.id` from the response — this is the `[operationToken / resourceId]` used in the next step.
+
+<Warning>[Non-obvious constraint that causes a 400 or silent failure. Example:
+"`filters` must contain exactly one scope filter. Passing multiple or none returns `400 Bad Request`."]</Warning>
+
+[DELETE IF NOT APPLICABLE:]
+<Note>[Edge case or platform-specific behavior. Example:
+"The `winRate` metric is meaningful only for Sponsored Products campaigns."]</Note>
+
+---
+
+### 2. [Action — e.g. "Poll for status"]
+
+[→ `GET /retail-media/[path]/{operationToken}`](/retail-media/reference/[operation-id])
+
+[What to check. What status values mean proceed vs. retry vs. fail. Example:
+"Poll until `data.attributes.status` is `success`. Retry on `pending` or `running`.
+A `failure` status means the request was invalid — do not retry without changing the parameters."]
+
+[DELETE IF NOT APPLICABLE:]
+<Note>[Timing or rate limit implication. Example:
+"This endpoint counts against your polling rate limit — see [Rate Limits](/retail-media/docs/rate-limits)."]</Note>
+
+---
+
+### 3. [Action — e.g. "Download the result" — DELETE IF NOT APPLICABLE]
+
+[→ `GET /retail-media/[path]/{operationToken}/output`](/retail-media/reference/[operation-id])
+
+[Non-obvious format details only. Example: "Output defaults to `json-compact` — a `columns`/`data`
+array shape rather than an array of row objects. Set `format: csv` in the original request
+if you prefer a flat file."]
+
+---
+
+## Verify
+
+[How to confirm the integration worked. State the specific field and value that indicates success.
+Example: "A successful response has HTTP `200` with `data.attributes.status: success` and a
+non-empty `data.attributes.outputUri`. If `outputUri` is null, the report ran but returned no
+data for the requested date range and filters."]
+
+---
+
+## Constraints [DELETE IF NOT APPLICABLE]
+
+| Limit | Value |
+|---|---|
+| [Limit name, e.g. Max date range] | [Value — link to [Hard Limits](/retail-media/docs/hard-limits) if covered there] |
+| [Limit name] | [Value] |
+
