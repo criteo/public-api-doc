@@ -17,19 +17,23 @@ Additional details about the individual attributes of Ad Sets can be found below
 ```json Example Ad Set expandable
 {
   "data": {
-    "type": "ReadAdSet",
+    "type": "ReadAdSetV26Q1",
     "id": "123467",
     "attributes": {
       "name": "Campaign A",
       "advertiserId": "12345",
       "objective": "conversions",
-      "destinationEnvironment": "app",
-      "mediaType": "Display",
+      "destinationEnvironment": "web",
+      "mediaType": "display",
       "datasetId": "6789",
       "campaignId": "1485",
       "schedule": {
-        "startDate": "2018-07-04T00:00:00Z",
-        "endDate": "2018-07-26T00:00:00Z",
+        "startDate": {
+          "value": "2026-11-13T00:00:00Z"
+        },
+        "endDate": {
+          "value": null
+        },
         "activationStatus": "on",
         "deliveryStatus": "live"
       },
@@ -45,11 +49,11 @@ Additional details about the individual attributes of Ad Sets can be found below
         "geoLocation": {
           "countries": {"values": ["FR"], "operand": "in"},
           "subdivisions":  {"values": ["FR-01", "FR-38"], "operand": "notIn"},
-          "zipCodes":  null
+          "zipCodes": null
         },
         "deliveryLimitations": {
-          "devices": ["mobile", "tablet"],
-          "operatingSystems": ["ios"],
+          "devices": ["mobile", "tablet", "desktop"],
+          "operatingSystems": [],
           "environments": []
         }
       },
@@ -61,10 +65,14 @@ Additional details about the individual attributes of Ad Sets can be found below
         "budgetAmount": 123.45,
         "pacingBehavior": "targetFullBudget"
       },
-      "attributionConfiguration": { 
-        "attributionMethod": "criteoAttribution", 
-        "lookbackWindow": null 
-      } 
+      "scheduledBudgets": [],
+      "videoChannel": null,
+      "attributionConfiguration": {
+        "attributionMethod": "criteoAttribution",
+        "lookbackWindow": null
+      },
+      "adSetType": "standard",
+      "serverToServerTrackings": null
     }
   },
   "warnings": [],
@@ -87,16 +95,29 @@ Supported values are `customAction`, `clicks`, `conversions`, `displays`, `appPr
 
 An objective is not necessarily supported for every media type and cost controller. The API validates `objective`, `mediaType`, and `bidding.costController` together. See [Cost-controller compatibility](#cost-controller-compatibility) before creating an Ad Set.
 
-`videoViews` is supported only when `mediaType` is `Video`. `revenue` is not supported when `mediaType` is `Video` and `bidding.costController` is `dailyBudget`.
+`videoViews` is supported only when `mediaType` is `video`. `revenue` is not supported when `mediaType` is `video` and `bidding.costController` is `dailyBudget`.
 
 **`mediaType`**  
-The type of media the ad set will deliver on. Can be `Display` or `Video`
+The type of media the ad set will deliver on. Can be `display` or `video`
 
 **`datasetId`**  
 Data Set Id associated with the specified advertiser ID. See [Datasets](/marketing-solutions/v2026-preview/docs/datasets)  for how to find datasets associated to advertisers.
 
 **`campaignId`**  
 Id of the marketing campaign associated to the ad set. See [Search for Campaigns](/marketing-solutions/docs/campaign#searching-campaigns) for how to search for campaigns.
+
+**`adSetType`**  
+The type of the Ad Set. Can be:
+- `standard`: a regular Ad Set. This is the default when `adSetType` is omitted on creation.
+- `appRetargeting`: an App Retargeting Ad Set, which retargets users of an Android or iOS app. See [Create an App Retargeting Ad Set](#create-an-app-retargeting-ad-set).
+- `unknown`: read-only value, only returned when retrieving Ad Sets, for any other type of Ad Set. It is rejected on creation.
+
+The type is set at creation and cannot be changed via the `PATCH` endpoint.
+
+**`serverToServerTrackings`**  
+Optional and only supported on `appRetargeting` Ad Sets. List of server-to-server (MMP) tracking URLs of the Ad Set. Each entry contains a `url` of at most 1024 characters. The number of trackings per Ad Set is limited, currently to 5. If the limit is exceeded, the error returned gives the current limit.  
+The app environment of the tracking (Android or iOS app) is derived from the operating system targeted by the Ad Set.  
+Returned only when retrieving a single Ad Set by ID, where it is `null` if the Ad Set has no tracking, is not an App Retargeting Ad Set, or if its trackings cannot be retrieved. It is never returned by the search endpoint.
 
 ### Ad Set Schedule
 
@@ -134,11 +155,11 @@ For budget-controlled performance Ad Sets, the following combinations are suppor
 
 | `mediaType` | `objective` | `bidding.costController` | Optimization behavior |
 |---|---|---|---|
-| `Display` | `visits` | `dailyBudget` | Maximize qualified visits while delivering toward the budget. |
-| `Display` | `conversions` | `dailyBudget` | Maximize attributed conversions while delivering toward the budget. |
-| `Display` | `revenue` | `dailyBudget` | Maximize attributed revenue or order value while delivering toward the budget. |
-| `Video` | `visits` | `dailyBudget` | Maximize attributed post-view visits while delivering toward the budget. |
-| `Video` | `conversions` | `dailyBudget` | Maximize attributed post-view conversions while delivering toward the budget. |
+| `display` | `visits` | `dailyBudget` | Maximize qualified visits while delivering toward the budget. |
+| `display` | `conversions` | `dailyBudget` | Maximize attributed conversions while delivering toward the budget. |
+| `display` | `revenue` | `dailyBudget` | Maximize attributed revenue or order value while delivering toward the budget. |
+| `video` | `visits` | `dailyBudget` | Maximize attributed post-view visits while delivering toward the budget. |
+| `video` | `conversions` | `dailyBudget` | Maximize attributed post-view conversions while delivering toward the budget. |
 
 <Warning>
   **Video revenue optimization is not supported**
@@ -212,11 +233,11 @@ Controls how a standard capped budget is paced. Nullable. Possible values:
 
 **`attributionConfiguration.attributionMethod`**
 
-The attribution method that defines how sales will be attributed to the marketing campaign. Can be `CriteoAttribution`, `GoogleAnalyticsLastClick`, `GoogleAnalyticsDataDriven`, `LastClick`, `PostClick`.
+The attribution method that defines how sales will be attributed to the marketing campaign. Can be `criteoAttribution` (default), `lastClick`, `postClick`, `sftp`, or `googleAnalytics`.
 
 **`attributionConfiguration.lookbackWindow`**
 
-The lookback window specifies the time frame during which purchases are attributed to an ad interaction. Can be `30M (Same Session)`, `24H`, `7D`, `30D`. It is filled when the `PostClick` or `LastClick` attribution method is selected, or else it should not be filled, and would return an error.
+The lookback window specifies the time frame during which purchases are attributed to an ad interaction. Can be `30M (Same Session)`, `24H`, `7D`, `30D`. It is filled when the `postClick` or `lastClick` attribution method is selected, or else it should not be filled, and would return an error.
 
 ## **Searching Ad Sets**
 
@@ -251,23 +272,30 @@ The API will return an array of Ad Sets that match the provided filters:
 {
     "data": [
         {
-            "type": "ReadAdSet",
+            "type": "ReadAdSetV26Q1",
             "id": "12345",
             "attributes": { ... }
         },
-            "type": "ReadAdSet",
+            "type": "ReadAdSetV26Q1",
             "id": "67890",
             "attributes": { ... }
         }
     ],
+    "warnings": [],
     "errors": []
 }
 ```
 
 The response above is truncated for clarity.
 
-Note: the _type_ field is the type of entity e.g. ReadAdSet and the _id_ field is the unique id of the Adset
+Note: the _type_ field is the type name of the entity, which can change between API versions (for example `ReadAdSetV26Q1` in version 2026.07), and the _id_ field is the unique id of the Ad Set.
 
+<Info>
+  **`adSetType` and `serverToServerTrackings` in search results**
+
+  `adSetType` is returned in search results, except when the request uses field projection (`meta.fields`).
+  `serverToServerTrackings` is never returned by the search endpoint. To retrieve it, [retrieve the Ad Set by its ID](#retrieving-one-specific-ad-set).
+</Info>
 ### Retrieving All Ad Sets
 
 When no filters are specified in the JSON payload, all Ad Sets in your portfolio will be returned, as in the example below:
@@ -302,14 +330,14 @@ The response `data` will be a single object containing the Ad Set details.
 ```json Sample Response
 {
     "data": {
-        "type": "ReadAdSet",
+        "type": "ReadAdSetV26Q1",
         "id": "12345",
         "attributes": { ... }
     },
+    "warnings": [],
     "errors": []
 }
 ```
-
 ## **Create an Ad Set**
 
 A new ad set can be created for a specific advertiser by making a POST call to the ad set endpoint. The request body should specify the type (`Adset`) and the ad set attributes.
@@ -337,7 +365,7 @@ For example, the following call would create a new Ad Set targeting lookalike au
       "datasetId": "56789",
       "objective": "conversions",
       "campaignId": "12789",
-      "mediaType": "Display",
+      "mediaType": "display",
       "schedule": {
         "startDate": "2018-07-04T00:00:00Z",
         "endDate": "2018-07-26T00:00:00Z"
@@ -356,28 +384,24 @@ For example, the following call would create a new Ad Set targeting lookalike au
             "values": [
               "FR"
             ],
-            "operand": "In"
+            "operand": "in"
           },
           "subdivisions": {
             "values": [
               "FR-01",
               "FR-38"
             ],
-            "operand": "NotIn"
+            "operand": "notIn"
           },
-          "zipCodes": {
-            "values": [],
-            "operand": "NotIn"
-          }
+          "zipCodes": null
         },
         "deliveryLimitations": {
           "devices": [
-            "Mobile",
-            "Tablet"
+            "mobile",
+            "tablet",
+            "desktop"
           ],
-          "operatingSystems": [
-            "iOS"
-          ],
+          "operatingSystems": [],
           "environments": []
         }
       },
@@ -390,7 +414,7 @@ For example, the following call would create a new Ad Set targeting lookalike au
         "pacingBehavior": "targetFullBudget"
       },
       "attributionConfiguration": {
-         "attributionMethod": "PostClick",
+         "attributionMethod": "postClick",
          "lookbackWindow": "24H"
        }
     }
@@ -399,31 +423,71 @@ For example, the following call would create a new Ad Set targeting lookalike au
 ```
 </CodeGroup>
 
-The API will return an array of the ID and attributes of the new ad set. The ad set attributes include the name, data set ID, campaign ID, advertiser ID, destination environment, activation status, delivery status, bid strategy and cost controller. If attributionConfiguration is not filled, then a default value of attributionMethod: CriteoAttribution, will be set.
+The API will return the ID and attributes of the new Ad Set, in the same format as the [Ad Set example](#ad-set-example). A newly created Ad Set has an `activationStatus` of `off` and a `deliveryStatus` of `draft`. If `attributionConfiguration` is not filled, then a default value of `attributionMethod`: `criteoAttribution` will be set.
 
-```json
+```json Sample Response expandable
 {
   "data": {
-    "type": "AdSet",
+    "type": "ReadAdSetV26Q1",
     "id": "987634",
     "attributes": {
       "name": "API created Ad Set",
+      "advertiserId": "456",
       "objective": "conversions",
+      "destinationEnvironment": "web",
+      "mediaType": "display",
       "datasetId": "56789",
       "campaignId": "12789",
-      "advertiserId": "456",
-      "destinationEnvironment": "web",
       "schedule": {
+        "startDate": {
+          "value": "2018-07-04T00:00:00Z"
+        },
+        "endDate": {
+          "value": "2018-07-26T00:00:00Z"
+        },
         "activationStatus": "off",
         "deliveryStatus": "draft"
       },
       "bidding": {
+        "bidAmount": 0.9,
         "costController": "MaxCPC"
-      }
+      },
+      "targeting": {
+        "frequencyCapping": {
+          "frequency": "daily",
+          "maximumImpressions": 3
+        },
+        "geoLocation": {
+          "countries": {"values": ["FR"], "operand": "in"},
+          "subdivisions": {"values": ["FR-01", "FR-38"], "operand": "notIn"},
+          "zipCodes": null
+        },
+        "deliveryLimitations": {
+          "devices": ["mobile", "tablet", "desktop"],
+          "operatingSystems": [],
+          "environments": []
+        }
+      },
+      "budget": {
+        "budgetStrategy": "capped",
+        "budgetRenewal": "weekly",
+        "budgetDeliverySmoothing": "standard",
+        "budgetDeliveryWeek": "mondayToSunday",
+        "budgetAmount": 123.5,
+        "pacingBehavior": "targetFullBudget"
+      },
+      "scheduledBudgets": [],
+      "videoChannel": null,
+      "attributionConfiguration": {
+        "attributionMethod": "postClick",
+        "lookbackWindow": "24H"
+      },
+      "adSetType": "standard",
+      "serverToServerTrackings": null
     }
   },
-  "errors": [ ],    /* omitted if no errors */
-	"warnings": [ ]    /* omitted if no warnings*/
+  "warnings": [],
+  "errors": []
 }
 ```
 
@@ -440,6 +504,94 @@ Required. Click URL parameters. Query string syntax without "?" (eg. _utm_source
   Newly created Ad Sets will not be linked to any audience.
   To create an audience, refer to the [Create an Audience](/marketing-solutions/docs/audience#create-audiences) guide.
   You can link existing audiences following the steps in the [Update Ad Set Audience](/marketing-solutions/docs/ad-set#update-adset-audience) guide.
+</Warning>
+
+### Create an App Retargeting Ad Set
+
+App Retargeting Ad Sets retarget users of your Android or iOS app. They are created with the same endpoint as other Ad Sets. To create one:
+
+* Set `adSetType` to `appRetargeting`.
+* Target exactly one operating system in `targeting.deliveryLimitations.operatingSystems`: `android` or `ios`.
+* Target `mobile`, `tablet`, or both in `targeting.deliveryLimitations.devices`. No other device type is allowed.
+
+The recommended value for `targeting.deliveryLimitations.environments` is `inApp` and `web`.
+
+App Retargeting Ad Sets also have the following constraints:
+
+* An app homepage deeplink must be configured for the targeted operating system.
+* `attributionConfiguration.attributionMethod` can only be `criteoAttribution`, `sftp`, or `googleAnalytics`. `sftp` is only available if SFTP attribution is enabled and set up for the advertiser. `googleAnalytics` is only available if Google Analytics attribution is enabled for App Retargeting for the advertiser.
+
+Optionally, you can attach one or several server-to-server (MMP) trackings to the Ad Set by setting `serverToServerTrackings` in the request `attributes`.
+
+<EndpointBadge method="post">
+```http
+/marketing-solutions/ad-sets
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```json Sample Request Body expandable
+{
+  "data": {
+    "type": "AdSet",
+    "attributes": {
+      "name": "API created App Retargeting Ad Set",
+      "datasetId": "56789",
+      "objective": "conversions",
+      "campaignId": "12789",
+      "mediaType": "display",
+      "adSetType": "appRetargeting",
+      "schedule": {
+        "startDate": "2026-11-16T00:00:00Z"
+      },
+      "bidding": {
+        "costController": "dailyBudget"
+      },
+      "targeting": {
+        "geoLocation": {
+          "countries": {
+            "values": ["FR", "IT"],
+            "operand": "in"
+          }
+        },
+        "deliveryLimitations": {
+          "devices": ["mobile", "tablet"],
+          "operatingSystems": ["android"],
+          "environments": ["inApp", "web"]
+        }
+      },
+      "budget": {
+        "budgetStrategy": "capped",
+        "budgetRenewal": "weekly",
+        "budgetDeliverySmoothing": "standard",
+        "budgetDeliveryWeek": "mondayToSunday",
+        "budgetAmount": 100,
+        "pacingBehavior": "targetFullBudget"
+      },
+      "attributionConfiguration": {
+        "attributionMethod": "criteoAttribution"
+      },
+      "serverToServerTrackings": [
+        {
+          "url": "https://app.appsflyer.com/v2.0/s2s/com.example.app?pid=criteonew_int&advertising_id={device_id}&af_c_id={campaignid}&redirect=false&af_ip={user_ip}&af_ua={user_agent_enc}&af_os_version={os_version}&c={adset_name_enc}&af_lang=(|default(language,\"en\")|)&af_siteid={bundle_id}{domain_enc}&is_retargeting=true&af_reengagement_window=30d"
+        }
+      ]
+    }
+  }
+}
+```
+</CodeGroup>
+
+<Warning>
+  **Server-to-server trackings never block the Ad Set creation**
+
+  The Ad Set is always created and returned with its ID, even if its trackings have issues. Any issue is reported in the `warnings` array of the response:
+
+  * If the trackings fail validation, or if the validation cannot be performed, the trackings are still saved. Trackings that fail validation may not work as expected.
+  * The trackings are not saved only if the `campaign--ad-set-creation-check--server-to-server-tracking-save-failed` warning is returned.
+
+  Do not retry the creation, as it would create a duplicate Ad Set: [update the trackings](#update-server-to-server-trackings) of the created Ad Set instead.
 </Warning>
 
 ## **Update Ad Sets**
@@ -462,7 +614,7 @@ The bid amount value supports a maximum of 4 decimal digits. If more digits are 
 {
     "data": [
         {
-            "type": "PatchAdSet",
+            "type": "PatchAdSetV26Q1",
             "id": "12345",
             "attributes": {
               	"name": "Updated Ad Set Name",
@@ -485,7 +637,7 @@ The bid amount value supports a maximum of 4 decimal digits. If more digits are 
                     "pacingBehavior": "targetFullBudget"
                 },
                 "attributionConfiguration": { 
-                    "attributionMethod": "LastClick", 
+                    "attributionMethod": "lastClick", 
                     "lookbackWindow":  "30D" 
                 } 
             }
@@ -501,7 +653,7 @@ The API will return an array of Ad Sets that have been updated successfully in t
 {
     "data": [
         {
-            "type": "AdSetId",
+            "type": "AdSetIdV26Q1",
             "id": "12345"
         }
     ],
@@ -514,6 +666,71 @@ The API will return an array of Ad Sets that have been updated successfully in t
   **Ad Set Patch Limit**
 
   Note that there is a limit of 50 ad sets per single request. If you are updating more than 50 ad sets, please split them into chunks of 50 and make multiple requests.
+</Warning>
+
+### Update an App Retargeting Ad Set
+
+App Retargeting Ad Sets are updated with the same endpoint as other Ad Sets, and the same constraints as on creation apply. In addition:
+
+* `adSetType` cannot be changed.
+* `targeting.deliveryLimitations.operatingSystems` cannot be changed.
+* `targeting.deliveryLimitations.devices` can be changed, but must still contain `mobile`, `tablet`, or both. It cannot be cleared.
+
+#### Update Server-to-Server Trackings
+
+The `serverToServerTrackings` attribute of an App Retargeting Ad Set can be updated via the `PATCH` endpoint:
+
+* **Omitted or set to `null`**: the trackings are left unchanged.
+* **Set to a list**: the trackings are fully replaced by the provided list. This is not a partial update: to change one tracking out of several, provide all of them again, or the ones not provided will be removed.
+* **Set to an empty list** (`[]`): all trackings are removed.
+
+<EndpointBadge method="patch">
+```http
+/marketing-solutions/ad-sets
+```
+</EndpointBadge>
+
+<CodeGroup>
+
+```json Replace trackings
+{
+    "data": [
+        {
+            "type": "PatchAdSetV26Q1",
+            "id": "12345",
+            "attributes": {
+                "serverToServerTrackings": [
+                    { "url": "https://app.appsflyer.com/v2.0/s2s/com.example.app?pid=criteonew_int&advertising_id={device_id}&af_c_id={campaignid}&redirect=false&af_ip={user_ip}&af_ua={user_agent_enc}&af_os_version={os_version}&c={adset_name_enc}&af_lang=(|default(language,\"en\")|)&af_siteid={bundle_id}{domain_enc}&is_retargeting=true&af_reengagement_window=30d" },
+                    { "url": "https://app.appsflyer.com/v2.0/s2s/com.example.app?pid=criteonew_int&advertising_id={device_id}&af_c_id={campaignid}&redirect=false&af_ip={user_ip}&af_ua={user_agent_enc}&af_os_version={os_version}&c={adset_name_enc}&af_lang=(|default(language,\"en\")|)&af_siteid={bundle_id}{domain_enc}&is_retargeting=true&af_reengagement_window=7d" }
+                ]
+            }
+        }
+    ]
+}
+```
+
+```json Clear trackings
+{
+    "data": [
+        {
+            "type": "PatchAdSetV26Q1",
+            "id": "12345",
+            "attributes": {
+                "serverToServerTrackings": []
+            }
+        }
+    ]
+}
+```
+</CodeGroup>
+
+<Warning>
+  **Server-to-server trackings never block the Ad Set update**
+
+  A failure on the trackings does not fail the update of the other fields of the Ad Set, and does not roll them back. Any issue is reported in the `warnings` array of the response:
+
+  * If the new trackings fail validation, or if the validation cannot be performed, the new trackings are still saved. Trackings that fail validation may not work as expected.
+  * The new trackings are not saved only if the `campaign--ad-set-update-check--server-to-server-tracking-save-failed` warning is returned.
 </Warning>
 
 ### Update AdSet Audience
@@ -593,11 +810,11 @@ One or more Ad Sets can be set to start delivery by making a `POST` call to the 
 {
     "data": [
         {
-            "type": "AdSetId",
+            "type": "AdSetIdV26Q1",
             "id": "12345"
         },
       	{
-            "type": "AdSetId",
+            "type": "AdSetIdV26Q1",
             "id": "67890"
         }
     ]
@@ -611,11 +828,11 @@ The API will return an array of Ad Sets representing those Ad Sets which were st
 {
     "data": [
         {
-            "type": "AdSetId",
+            "type": "AdSetIdV26Q1",
             "id": "12345"
         },
         {
-            "type": "AdSetId",
+            "type": "AdSetIdV26Q1",
             "id": "67890"
         }
     ],
@@ -689,7 +906,7 @@ For instance, for this payload which intends to update two Ad Sets:
 {
     "data": [
         {
-            "type": "PatchAdSet",
+            "type": "PatchAdSetV26Q1",
             "id": "12345",
             "attributes": {
                 "bidding": {
@@ -698,7 +915,7 @@ For instance, for this payload which intends to update two Ad Sets:
             }
         },
         {
-            "type": "PatchAdSet",
+            "type": "PatchAdSetV26Q1",
             "id": "67890",
             "attributes": {
                 "bidding": {
@@ -717,7 +934,7 @@ The response might look like:
 {
     "data": [
         {
-            "type": "AdSetId",
+            "type": "AdSetIdV26Q1",
             "id": "12345"
         }
     ],
@@ -753,6 +970,9 @@ Below is a list of error codes for Ad Set validation and a more detailed descrip
 
 **`cannot-expose-specific-adsets`**  
 The configuration of the Ad Set prevents the retrieval via this API endpoint.
+
+**`campaign--ad-set-read--server-to-server-tracking-unavailable`**  
+The server-to-server trackings of the Ad Set could not be retrieved. `serverToServerTrackings` is returned as `null`.
 
 **Ad Set Creation Validation Errors:**  
 **`campaign--ad-set-creation-check--invalid-data`**  
@@ -797,16 +1017,68 @@ The Ad Set is configured with an invalid spend strategy. To create this Ad Set, 
 **`campaign--ad-set-creation-check--invalid-bidding-configuration`**  
 The combination of `objective`, `mediaType`, and `bidding.costController` is not supported.
 
-For example, `mediaType: Video`, `objective: revenue`, and `bidding.costController: dailyBudget` is invalid because no budget-based video revenue optimization model is available. Review the [cost-controller compatibility](#cost-controller-compatibility) guidance and select a supported combination.
+For example, `mediaType: video`, `objective: revenue`, and `bidding.costController: dailyBudget` is invalid because no budget-based video revenue optimization model is available. Review the [cost-controller compatibility](#cost-controller-compatibility) guidance and select a supported combination.
 
 **`campaign--ad-set-creation-check--invalid-attribution-configuration`**
 
 The Ad Set has an invalid attribution configuration set up.
 
 * Attribution Method should not be null or unknown
-* Lookback window should not be unknown, and it should only be defined for Attribution Methods: `PostClick` and `LastClick`
-* When Google Analytics is not configured, it is not possible to select as attribution method: `GoogleAnalyticsLastClick`, `GoogleAnalyticsDataDriven`
+* Lookback window should not be unknown, and it should only be defined for Attribution Methods: `postClick` and `lastClick`
+* When Google Analytics is not configured, it is not possible to select `googleAnalytics` as attribution method
 * If defined, the lookback window for an Optimum Ad Set must be `30D`
+
+**`campaign--ad-set-creation-check--in-app-ad-set-cannot-use-video-ctv-media-type`**  
+The `video` media type cannot be combined with CTV targeting for an App Retargeting Ad Set.
+
+**`campaign--ad-set-creation-check--in-app-ad-set-cannot-use-conversion-events`**  
+An App Retargeting Ad Set cannot use conversion events.
+
+**`campaign--ad-set-creation-check--in-app-ad-set-cannot-use-forbidden-device-types`**  
+An App Retargeting Ad Set cannot target `desktop` or `other` devices.
+
+**`campaign--ad-set-creation-check--in-app-ad-set-should-have-at-least-one-device-type`**  
+An App Retargeting Ad Set must target at least one device type: `mobile`, `tablet`, or both.
+
+**`campaign--ad-set-creation-check--in-app-ad-set-should-have-one-valid-os-type`**  
+An App Retargeting Ad Set must target exactly one operating system: `android` or `ios`.
+
+**`campaign--ad-set-creation-check--in-app-ad-set-partner-missing-homepage-deeplink-for-os`**  
+An App Retargeting Ad Set cannot be created for the targeted operating system because no app homepage deeplink is configured for it.
+
+**`campaign--ad-set-creation-check--in-app-ad-set-cannot-use-forbidden-attribution-methods`**  
+An App Retargeting Ad Set can only use the `criteoAttribution`, `sftp`, or `googleAnalytics` attribution methods. `sftp` and `googleAnalytics` must be enabled for the advertiser.
+
+**`campaign--ad-set-creation-check--in-app-ad-set-cannot-use-automated-budget`**  
+The campaign of the App Retargeting Ad Set uses automated budget, but automated budget for App Retargeting is not enabled for this advertiser.
+
+**`invalid-field`**  
+The `adSetType` or `serverToServerTrackings` attribute is invalid. This error can be returned on creation and on update. The `detail` field gives the reason:
+* The ad set type `unknown` is read-only and cannot be used to create an Ad Set.
+* Server-to-server trackings can only be set on App Retargeting Ad Sets.
+* Server-to-server tracking URLs must be at most 1024 characters long.
+* Too many server-to-server trackings are set. The `detail` field gives the current limit.
+
+**Ad Set Creation Server-to-Server Tracking Warnings:**  
+These warnings never block the creation of the Ad Set. The trackings are saved in all cases, except when `campaign--ad-set-creation-check--server-to-server-tracking-save-failed` is returned.
+
+**`campaign--ad-set-creation-check--server-to-server-tracking-save-failed`**  
+The Ad Set was created, but its server-to-server trackings could not be saved. Update the trackings of the Ad Set to retry.
+
+**`campaign--ad-set-creation-check--server-to-server-tracking-validation-issues`**  
+The content check of the server-to-server trackings returned issues. The trackings are still saved, but may not work as expected if errors were found. The `detail` field lists, for each tracking URL, its status and the errors and warnings found. Fix the trackings and update the Ad Set to make sure they work.
+
+**`campaign--ad-set-creation-check--server-to-server-tracking-not-validated`**  
+The content check of the server-to-server trackings could not be performed. The trackings are still saved. This happens when the app integration provider of the dataset is `S2S`, is not set, or cannot be retrieved.
+
+**`campaign--ad-set-creation-check--invalid-ctv-configuration`**  
+CTV targeting is disabled or its configuration is invalid.
+
+**`campaign--ad-set-creation-check--ctv-partner-cross-device-blacklisted`**  
+The partner of the CTV Ad Set is blacklisted for cross-device targeting.
+
+**`campaign--ad-set-creation-check--programmatic-guaranteed-not-supported`**  
+Ad Sets cannot be created under a programmatic guaranteed campaign.
 
 **Ad Set Update Validation Errors:**  
 **`campaign--ad-set-update-check--ad-set-invalid-geolocation`**  
@@ -841,6 +1113,60 @@ The frequency capping configuration is not valid.
 
 **`campaign--ad-set-update-check--too-many-entities`**  
 There are too many ad sets to be updated. A maximum of 50 ad sets can be updated per single request
+
+**`campaign--ad-set-update-check--ad-set-in-app-cannot-use-video-ctv-media-type`**  
+The `video` media type cannot be combined with CTV targeting for an App Retargeting Ad Set.
+
+**`campaign--ad-set-update-check--ad-set-in-app-cannot-use-conversion-events`**  
+An App Retargeting Ad Set cannot use conversion events.
+
+**`campaign--ad-set-update-check--ad-set-in-app-cannot-use-forbidden-device-types`**  
+An App Retargeting Ad Set cannot be updated to target `desktop` or `other` devices.
+
+**`campaign--ad-set-update-check--ad-set-in-app-should-have-at-least-one-device-type`**  
+An App Retargeting Ad Set must still target at least one device type: `mobile`, `tablet`, or both.
+
+**`campaign--ad-set-update-check--ad-set-in-app-should-have-one-valid-os-type`**  
+An App Retargeting Ad Set must target exactly one operating system: `android` or `ios`.
+
+**`campaign--ad-set-update-check--ad-set-in-app-cannot-change-os-type`**  
+The operating system of an App Retargeting Ad Set cannot be changed once set. This error has the `authorization` type.
+
+**`campaign--ad-set-update-check--ad-set-in-app-partner-missing-homepage-deeplink-for-os`**  
+An App Retargeting Ad Set cannot be updated for the targeted operating system because no app homepage deeplink is configured for it.
+
+**`campaign--ad-set-update-check--ad-set-in-app-cannot-use-forbidden-attribution-methods`**  
+An App Retargeting Ad Set can only be updated to use the `criteoAttribution`, `sftp`, or `googleAnalytics` attribution methods. `sftp` and `googleAnalytics` must be enabled for the advertiser.
+
+**`campaign--ad-set-update-check--ad-set-in-app-cannot-use-automated-budget`**  
+The App Retargeting Ad Set cannot be updated because its campaign uses automated budget, and automated budget for App Retargeting is not enabled for this advertiser.
+
+**`campaign--ad-set-update-check--invalid-ctv-configuration`**  
+The resulting CTV configuration is invalid. This includes removing CTV targeting from an Ad Set that uses the CTV channel.
+
+**`campaign--ad-set-update-check--ctv-partner-cross-device-blacklisted`**  
+The partner of the resulting CTV Ad Set is blacklisted for cross-device targeting.
+
+**`campaign--ad-set-update-check--invalid-attribution-configuration`**
+
+This Ad Set has an invalid attribution configuration set up:
+
+* Attribution Method should not be null or unknown
+* Lookback window should not be unknown, and it should only be defined for Attribution Methods: `postClick` and `lastClick`
+* When Google Analytics is not configured, it is not possible to select `googleAnalytics` as attribution method
+* If defined, the lookback window for an Optimum Ad Set must be `30D`
+
+**Ad Set Update Server-to-Server Tracking Warnings:**  
+These warnings never block the update of the Ad Set. The trackings are saved in all cases, except when `campaign--ad-set-update-check--server-to-server-tracking-save-failed` is returned.
+
+**`campaign--ad-set-update-check--server-to-server-tracking-save-failed`**  
+The Ad Set was updated, but its server-to-server trackings could not be saved. Update the trackings of the Ad Set to retry.
+
+**`campaign--ad-set-update-check--server-to-server-tracking-validation-issues`**  
+The content check of the server-to-server trackings returned issues. The trackings are still saved, but may not work as expected if errors were found. The `detail` field lists, for each tracking URL, its status and the errors and warnings found. Fix the trackings and update the Ad Set to make sure they work.
+
+**`campaign--ad-set-update-check--server-to-server-tracking-not-validated`**  
+The content check of the server-to-server trackings could not be performed. The trackings are still saved. This happens when the app integration provider of the dataset is `S2S`, is not set, or cannot be retrieved.
 
 **Ad Set Start and Stop Validation Errors:**  
 **`campaign--ad-set-start-check--cannot-activate-archived-ad-set`**  
@@ -930,45 +1256,6 @@ This Ad Set has invalid configuration or missing parameters. To launch this Ad S
 **`campaign--ad-set-start-check--ad-set-requiring-an-audience`**  
 This Ad Set is not linked to an audience. Check the section [Update Ad Set Audience](/marketing-solutions/docs/ad-set#update-adset-audience).
 
-**`campaign--ad-set-update-check--invalid-attribution-configuration `**
-
-This Ad Set has an invalid attribution configuration set up:
-
-* Attribution Method should not be null or unknown
-* Lookback window should not be unknown, and it should only be defined for Attribution Methods: `PostClick` and `LastClick`
-* When Google Analytics is not configured, it is not possible to select as attribution method: `GoogleAnalyticsLastClick`, `GoogleAnalyticsDataDriven`
-* If defined, the lookback window for an Optimum Ad Set must be `30D`
-
-**Ad Set Creation Validation Errors (continued):**  
-**`campaign--ad-set-creation-check--invalid-ctv-configuration`**  
-CTV targeting is disabled or its configuration is invalid.
-
-**`campaign--ad-set-creation-check--ctv-partner-cross-device-blacklisted`**  
-The partner of the CTV Ad Set is blacklisted for cross-device targeting.
-
-**`campaign--ad-set-creation-check--programmatic-guaranteed-not-supported`**  
-Ad Sets cannot be created under a programmatic guaranteed campaign.
-
-**`campaign--ad-set-creation-check--in-app-ad-set-cannot-use-video-ctv-media-type`**  
-An App Retargeting Ad Set cannot combine the Video media type with CTV targeting.
-
-**`campaign--ad-set-creation-check--in-app-ad-set-cannot-use-forbidden-device-types`**  
-An App Retargeting Ad Set cannot target Desktop or CTV devices.
-
-**Ad Set Update Validation Errors (continued):**  
-**`campaign--ad-set-update-check--invalid-ctv-configuration`**  
-The resulting CTV configuration is invalid. This includes removing CTV targeting from an Ad Set that uses the CTV channel.
-
-**`campaign--ad-set-update-check--ctv-partner-cross-device-blacklisted`**  
-The partner of the resulting CTV Ad Set is blacklisted for cross-device targeting.
-
-**`campaign--ad-set-update-check--ad-set-in-app-cannot-use-video-ctv-media-type`**  
-An App Retargeting Ad Set cannot be updated to use the Video media type with CTV targeting.
-
-**`campaign--ad-set-update-check--ad-set-in-app-cannot-use-forbidden-device-types`**  
-An App Retargeting Ad Set cannot be updated to target Desktop or CTV devices.
-
-**Ad Set Start and Stop Validation Errors (continued):**  
 **`campaign--ad-set-start-check--ad-set-requiring-a-deal`**  
 A programmatic guaranteed Ad Set must have a deal to be started, and this one has none.
 
