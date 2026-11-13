@@ -62,7 +62,7 @@ Array parameters use repeated query keys. For example: `event-types=lineItemCrea
 
 ### Response Attributes
 
-All attributes below are nested under each `data[]` item's `attributes` object.
+Each `data[]` item has a `type` field (`ChangeHistoryEntryResponse`) and an `attributes` object:
 
 | Attribute | Type | Description |
 | --- | --- | --- |
@@ -154,7 +154,7 @@ Same as the [account endpoint](#get-change-history-entries) above.
 Same shape as the [account endpoint](#get-change-history-entries) above.
 
 <Note>
-  Offsite campaign-level changes are not returned by this endpoint. Offsite line-item changes are included.
+  Campaign-level changes are not returned by this endpoint — only line-item and other retailer-scoped entity changes are included. This applies to both onsite and offsite campaign changes.
 </Note>
 
 **Sample Request**
@@ -212,6 +212,14 @@ curl -L -X GET 'https://api.criteo.com/experimental/retail-media/retailers/{reta
 
 ## Error Codes
 
-| `errors[].code` | HTTP Status | When It Occurs |
-| --- | --- | --- |
-| `Forbidden` | `403` | The account or retailer does not exist or the caller does not have access to it. |
+| HTTP Status | `errors[].code` | `errors[].type` | When it occurs |
+| --- | --- | --- | --- |
+| `400` | `model-validation-error` | `validation` | Malformed dates or non-integer/out-of-range pagination parameters. `limit` must be 1–100 and `offset` must be nonnegative. |
+| `400` | `invalid-time-range` | `validation` | The effective `start-time` is later than `end-time`, including when one bound uses its default. |
+| `400` | `invalid-pagination` | `validation` | `offset + limit` exceeds 10,000. Narrow the time range to retrieve more history. |
+| `401` | `authorization-token-invalid` or `authorization-token-expired` | `authorization` | Missing, invalid, or expired bearer token. |
+| `403` | `missing-scope` | `authorization` | The app lacks `RetailMedia_Campaign_Read`. |
+| `403` | `not-authorized` | `access-control` | The requested account or retailer is unknown or inaccessible. These cases are intentionally indistinguishable. |
+| `429` | — | — | Request rate limit exceeded. |
+
+Unknown `event-types` or `entity-types` values are not validation errors — they match no entries and return `200` with an empty result.
