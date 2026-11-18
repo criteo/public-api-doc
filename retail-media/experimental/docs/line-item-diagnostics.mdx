@@ -5,22 +5,17 @@ description: Check whether line items can serve and identify the configuration i
 
 import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
 
-<Info>
-  This endpoint is available in the **Experimental** version of the Retail Media API only.
-  Experimental endpoints may change without prior notice. See the [versioning policy](/criteo-apis/docs/versioning-policy) for details.
-</Info>
-
 ## Overview
 
 Use the Line Item Diagnostics endpoint to check whether a line item is configured correctly. The response reports a status for each evaluated line item and, when requested, the configuration context, evaluated parameters, and issues that require attention.
 
-You can check one line item or a page of line items in one campaign. Your access token must be authorized to view the selected resource. See [Authentication](/retail-media/experimental/docs/authentication).
+Your access token must be authorized to view the selected resource. See [Authentication](/retail-media/experimental/docs/authentication).
 
 ## Endpoint
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| `GET` | `/diagnostics/line-item-checks` | Get diagnostics for one line item or a page of a campaign's line items. |
+| `GET` | `/diagnostics/line-item-checks` | Diagnose line item configuration for a single line item or all line items in a campaign. |
 
 ## Get Line Item Diagnostics
 
@@ -30,7 +25,7 @@ https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks
 ```
 </EndpointBadge>
 
-Send exactly one resource selector: `line-item-id` or `campaign-id`. A line-item request returns one result. A campaign request returns a paginated result set.
+Send exactly one resource selector: `line-item-id` or `campaign-id`. A line-item request returns one result. A campaign request returns results for all line items, paginated.
 
 ### Query Parameters
 
@@ -38,21 +33,10 @@ Send exactly one resource selector: `line-item-id` or `campaign-id`. A line-item
 | --- | --- | --- | --- |
 | `line-item-id` | string | One selector is required | ID of the line item to evaluate. Do not send it with `campaign-id`. |
 | `campaign-id` | string | One selector is required | ID of the campaign whose line items to evaluate. Do not send it with `line-item-id`. |
-| `as-approved` | boolean | No | When `true` (default), evaluates the approved Onsite Display line item when one exists. Set to `false` to evaluate the current proposal. |
-| `fields` | string | No | Comma-separated optional attributes to include: `context`, `issues`, and `parameters`. All three are included when omitted. |
-| `cursor` | string | No | The cursor from the previous campaign response. Only valid with `campaign-id`; it must be a positive integer. |
-| `limit` | integer | No | Maximum results in a campaign page. Only valid with `campaign-id`; from `1` to `25`, default `25`. |
-
-`status` and `systemData` are always included. Do not include them in `fields`; the request succeeds but includes an `invalid-fields` warning.
-
-**Sample Request**
-
-```bash
-curl -L -X GET \
-  'https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?line-item-id=112233445566778899&fields=context,issues' \
-  -H 'Accept: application/json' \
-  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
-```
+| `use-approved-targeting` | boolean | No | When `true` (default), this checks the line item's approved targeting. When `false`, it checks the targeting changes awaiting approval. |
+| `fields` | string | No | Comma-separated optional attributes to return: `context`, `issues`, and `parameters`. When omitted, all three are returned. `status` and `systemData` are always returned; requesting them produces an `invalid-fields` warning. |
+| `cursor` | string | No | Continuation token from the previous campaign response's `meta.cursor`. Only valid with `campaign-id`. Omit it for the first page; for subsequent pages, pass the returned value unchanged without interpreting its format. |
+| `limit` | integer | No | Maximum results in a campaign page. Applies only to `campaign-id` requests. Accepts values from `1` to `25` and defaults to `25`. |
 
 ### Response Attributes
 
@@ -75,14 +59,45 @@ Each result is in `data[].attributes`.
 | `CannotServe` | Configuration issues prevent the line item from serving. |
 | `Unknown` | The check could not complete. Inspect `warnings` and retry later. |
 
-For campaign requests, `metadata` contains `cursor` (the next page cursor, or `null`), `limit`, and `count`.
+### Campaign Pagination
 
-**Sample Response** — `200 OK`
+For campaign requests, the top-level `meta` object contains:
+
+| Field | Description |
+| --- | --- |
+| `cursor` | Continuation token for the next page, or `null` when no next page is available. |
+| `limit` | Maximum number of results per page. |
+| `count` | Total number of line items in the campaign result set. |
+
+The top-level `links` object provides URLs for navigating campaign results:
+
+| Link | Description |
+| --- | --- |
+| `first` | URL for the first page, without a cursor. |
+| `prev` | URL for the previous page, or `null` when unavailable. |
+| `next` | URL for the next page, or `null` when traversal is complete. |
+| `last` | URL for the last page, or `null` when unavailable without traversing the collection. |
+
+### Line Item Example
+
+<Accordion title="Example request">
+
+```bash
+curl -L -X GET \
+  'https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?line-item-id=112233445566778899&fields=context,issues,parameters' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+</Accordion>
+
+<Accordion title="Example response (200 OK)">
 
 ```json
 {
   "data": [
     {
+      "type": "LineItemCheck",
       "attributes": {
         "status": "CannotServe",
         "systemData": {
@@ -98,16 +113,20 @@ For campaign requests, `metadata` contains `cursor` (the next page cursor, or `n
           "campaignType": "OnsiteDisplay",
           "buyType": "Auction"
         },
+        "parameters": {
+          "TargetIdParameter": "112233445566778899",
+          "TargetNameParameter": "Example line item"
+        },
         "issues": [
           {
-            "ruleId": "creative-required",
-            "ruleName": "Creative required",
-            "code": "no-approved-creative",
+            "ruleId": "LineItemMustHaveValidCreatives",
+            "ruleName": "line item must have valid creatives",
+            "code": "LineItemHasNoCreatives",
             "severity": "Error",
-            "tags": ["creative"],
-            "format": "No approved creative is associated with this line item.",
+            "tags": ["Creative", "LineItem"],
+            "format": "Line item has no creatives",
             "outputParameters": {},
-            "message": "No approved creative is associated with this line item.",
+            "message": "Line item has no creatives",
             "id": 1,
             "parentId": null
           }
@@ -115,19 +134,141 @@ For campaign requests, `metadata` contains `cursor` (the next page cursor, or `n
       }
     }
   ],
-  "warnings": []
+  "warnings": [],
+  "errors": []
 }
 ```
 
+</Accordion>
+
+### Campaign Pagination Example
+
+Use `campaign-id` to check a campaign's line items. This example requests up to 25 results per page and includes only `context` among the optional attributes.
+
+<Accordion title="Example request">
+
+```bash
+curl -L -X GET \
+  'https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?campaign-id=99887766&limit=25&fields=context' \
+  -H 'Accept: application/json' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>'
+```
+
+</Accordion>
+
+<Accordion title="Example response (200 OK)">
+
+The response below shows one of the 25 results on the first page of a campaign with 50 line items; the other results are omitted for brevity. The cursor value is illustrative. Use the actual cursor or navigation URL returned by the API.
+
+```json
+{
+  "data": [
+    {
+      "type": "LineItemCheck",
+      "attributes": {
+        "status": "CanFullyServe",
+        "systemData": {
+          "checkTime": "2026-10-21T14:30:00Z",
+          "lineItemCreatedTime": "2026-10-01T09:00:00Z",
+          "lineItemUpdatedTime": "2026-10-21T14:00:00Z"
+        },
+        "context": {
+          "accountId": "12345",
+          "campaignId": "99887766",
+          "retailerId": "54321",
+          "lineItemId": "112233445566778899",
+          "campaignType": "OnsiteDisplay",
+          "buyType": "Auction"
+        }
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": [],
+  "meta": {
+    "cursor": "4A2FF_12",
+    "limit": 25,
+    "count": 50
+  },
+  "links": {
+    "first": "https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?campaign-id=99887766&limit=25&fields=context",
+    "prev": null,
+    "next": "https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?campaign-id=99887766&limit=25&fields=context&cursor=4A2FF_12",
+    "last": "https://api.criteo.com/experimental/retail-media/diagnostics/line-item-checks?campaign-id=99887766&limit=25&fields=context&cursor=4A2FF_12"
+  }
+}
+```
+
+</Accordion>
+
+Here, `meta.count` is the total number of line items in the campaign result set, while `meta.limit` is the page size. Follow `links.next` to retrieve the next page, using the same authorization header. Continue until `links.next` is `null`. Alternatively, pass `meta.cursor` unchanged in the next request's `cursor` query parameter, retaining the other query parameters.
+
 ### Result Availability
 
-An unexpected evaluation failure returns `200 OK` with `status` set to `Unknown` and a `result-unavailable` warning. Treat this as an incomplete result and retry later; do not interpret it as confirmation that the line item can serve.
+A recoverable dependency failure during a line item check returns `200 OK` with `status` set to `Unknown` and a `result-unavailable` warning. Treat this as an incomplete result and retry later; do not interpret it as confirmation that the line item can serve.
+
+<Accordion title="Example response with Unknown status (200 OK)">
+
+The following example shows a check that could not complete because a dependent service was unavailable. Optional attributes are omitted for brevity; source timestamps use their default values because the line item data could not be retrieved.
+
+```json
+{
+  "data": [
+    {
+      "type": "LineItemCheck",
+      "attributes": {
+        "status": "Unknown",
+        "systemData": {
+          "checkTime": "2026-10-21T14:30:00Z",
+          "lineItemCreatedTime": "0001-01-01T00:00:00",
+          "lineItemUpdatedTime": "0001-01-01T00:00:00"
+        }
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "code": "result-unavailable",
+      "type": "availability",
+      "title": "The result could not be determined",
+      "detail": "The result for line item 112233445566778899 could not be determined because a dependent service was unavailable."
+    }
+  ],
+  "errors": []
+}
+```
+
+</Accordion>
+
+<Accordion title="Example error response (400)">
+
+A campaign request with an invalid or malformed `cursor` returns `400 Bad Request`:
+
+```json
+{
+  "warnings": [],
+  "errors": [
+    {
+      "code": "invalid-cursor",
+      "type": "validation",
+      "title": "The request couldn't be validated.",
+      "detail": "The cursor is invalid or malformed. Request the first page again to obtain a new cursor."
+    }
+  ]
+}
+```
+
+Retry the campaign request without `cursor` to retrieve the first page and obtain a new continuation token.
+
+</Accordion>
 
 ### Errors
 
 | HTTP status | Code | Description |
 | --- | --- | --- |
-| `400` | `request-invalid` | Both or neither selector was supplied, or campaign pagination is invalid. |
+| `400` | `request-invalid` | Both or neither selector was supplied. |
+| `400` | `invalid-limit` | The requested campaign page size is outside the supported range of `1` to `25`. |
+| `400` | `invalid-cursor` | The cursor is malformed or does not represent a valid continuation position. Request the first page again to obtain a new cursor. |
 | `400` | `invalid-fields` | `fields` contains an unsupported or duplicate optional field. |
 | `401` | — | The caller is not authenticated. |
 | `403` | `not-authorized` | The resource does not exist, has an invalid ID, or the caller cannot access it. |
