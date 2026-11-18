@@ -1,0 +1,120 @@
+---
+title: Upload a Product Catalog
+description: How to submit a batch of product updates to Criteo Retail Media and monitor ingestion status.
+---
+
+This guide walks through the Product Importer API: submit a batch of product upserts or deletes, then retrieve the ingestion report to verify results. By the end, you will have product data live in Criteo's catalog and confirmed through the ingestion summary.
+
+---
+
+## Prerequisites
+
+- **Auth scope**: `retail-media:read` for reporting, `retail-media:write` for upload — see [Authentication](/retail-media/v2027.01-rc/docs/authentication)
+- **Merchant ID**: the identifier of the merchant whose catalog you are updating — obtainable from your Criteo account team
+- **Product data**: a list of products to upsert or delete, each identified by a unique `id`
+
+---
+
+## Steps
+
+### 1. Submit a product batch
+
+```http
+POST /2027-01/retail-media/catalog/products/batch
+```
+
+Send an `entries` array. Each entry must include a `merchantId`, a `method` (`upsert` or `delete`), and for upserts a `product` object with the catalog fields.
+
+Request bodies and catalog data are identical to the Preview version — no changes to product fields or entry structure.
+
+```bash
+curl -X POST "https://api.criteo.com/2027-01/retail-media/catalog/products/batch" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "entries": [
+      {
+        "merchantId": "12345",
+        "method": "upsert",
+        "batchId": 1,
+        "product": {
+          "id": "PROD-001",
+          "itemGroupId": "GROUP-001",
+          "title": "Running Shoes",
+          "description": "Lightweight trail running shoes",
+          "link": "https://example.com/products/PROD-001",
+          "imageLink": "https://example.com/images/PROD-001.jpg",
+          "price": "99.99 USD",
+          "availability": "in stock",
+          "googleProductCategory": "Apparel & Accessories > Shoes"
+        }
+      }
+    ]
+  }'
+```
+
+The response returns the ingestion identifier in `data.id`. Save this value — it is the `ingestion-id` used in the next step.
+
+```json
+{
+  "data": {
+    "id": "ing-a1b2c3d4"
+  }
+}
+```
+
+<Warning>
+  Do not send multiple updates of the same product in a single batch — the batch will be rejected. Only send entries for products whose data has actually changed.
+</Warning>
+
+<Note>
+  Products that are not updated expire after 30 days. Use the `expirationDate` field to extend the lifespan up to one year.
+</Note>
+
+---
+
+### 2. Retrieve the ingestion summary
+
+[→ `GET /2027-01/retail-media/catalog/ingestion/{ingestion-id}/reports/summary`](/retail-media/v2027.01-rc/reference/GetCatalogIngestionReportSummary)
+
+Poll this endpoint using the `ingestion-id` from step 1. It returns the ingestion status, counts of products upserted, deleted, and errored, and data quality indicators.
+
+```bash
+curl "https://api.criteo.com/2027-01/retail-media/catalog/ingestion/ing-a1b2c3d4/reports/summary" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+Retry with backoff while `data.attributes.status` is `pending` or `running`. Stop when it reaches `success` or `failure`.
+
+---
+
+### 3. List recent ingestions for a merchant (optional)
+
+[→ `GET /2027-01/retail-media/catalog/merchants/{merchant-id}/ingestion/reports`](/retail-media/v2027.01-rc/reference/GetCatalogIngestionReports)
+
+Returns the most recent ingestions for a merchant, in descending order, with their type, status, and timing. Use this to audit ingestion history or investigate recurring issues without needing a specific `ingestion-id`.
+
+---
+
+### 4. Inspect quality issues (optional)
+
+[→ `GET /2027-01/retail-media/catalog/ingestion/{ingestion-id}/reports/quality`](/retail-media/v2027.01-rc/reference/GetCatalogIngestionQualityIssuesReport)
+
+Returns per-product data quality issues for a completed ingestion. Use this when the summary reports warnings or errors but you need field-level detail.
+
+---
+
+## Verify
+
+A successful upload returns HTTP `200` with a non-empty `data.id`. A successful ingestion has `data.attributes.status` of `success` in the summary report and a `numberOfProductsWithErrors` of `0`. If errors are present, inspect the quality report for field-level details per product.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Product lifespan without update | 30 days |
+| Maximum `expirationDate` | 1 year from last update |
+| Duplicate product in a single batch | Not allowed — batch is rejected |
+| Batch processing time | Up to 1 hour |
