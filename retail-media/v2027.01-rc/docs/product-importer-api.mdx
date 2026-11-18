@@ -122,3 +122,16 @@ A successful upload returns HTTP `200` with a non-empty `data.id`. A successful 
 | Maximum `expirationDate` | 1 year from last update |
 | Duplicate product in a single batch | Not allowed — batch is rejected |
 | Batch processing time | Up to 1 hour |
+
+---
+
+## Best practices
+
+- **Only update changed products.** This API is not a feed ingestion mechanism — submit requests only for new, updated, or deleted products.
+- **Send updates immediately after a change.** Do not hold updates to group them into a larger batch — send them as soon as the product data changes.
+- **Submit a deletion immediately when a product is removed from your store.** Do not rely on the expiration date — a product approaching expiry may still be displayed even if it is no longer available.
+- **Do not send multiple updates for the same product in a single batch.** The entire batch is rejected if it contains duplicates.
+- **Do not send updates for unchanged products**, unless the product is approaching its expiration date.
+- **`id` and `itemGroupId` must be different.** Use `id` to uniquely identify a single product and `itemGroupId` to group products as variants.
+- **`itemGroupId` must be outside the `id` range.** If a product shares an `id` with an existing `itemGroupId` or vice versa, the behavior is undefined and updates may be silently ignored.
+- **Include `itemGroupId` when deleting a product variant** to avoid catalog inconsistencies.
