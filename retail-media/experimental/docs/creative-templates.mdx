@@ -1,0 +1,62 @@
+---
+title: Get Creative Templates
+description: How to retrieve the templates available to a retailer and their field requirements before creating a creative.
+---
+
+Use these endpoints to look up which creative templates a retailer supports and what fields each template requires. Every creative must reference a template — the template determines which fields are available, which are required, and what dimension and file size constraints apply.
+
+<Info>
+  These endpoints are available in the **Experimental** version of the Retail Media API.
+  Experimental endpoints may change without prior notice. See the [versioning policy](/criteo-apis/docs/versioning-policy) for details.
+</Info>
+
+---
+
+## Prerequisites
+
+- **Auth scope**: `RetailMedia_Campaign_Read` — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Retailer ID**: the ID of the retailer whose templates to retrieve. Use `POST /retail-media/accounts/{account-id}/retailers/search` to look up retailer IDs for your account.
+
+---
+
+## Steps
+
+### 1. List templates for a retailer
+
+[→ `GET /retail-media/retailers/{retailer-id}/templates`](<!-- TODO: add reference link when Dec 10 OAS lands -->)
+
+Returns all templates available to the retailer, with the full list of fields (keys) and their constraints.
+
+```bash
+curl -X GET "https://api.criteo.com/experimental/retail-media/retailers/1141/templates" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+Each template in the response includes a `templateId` and a list of element definitions. Each element specifies whether it is required, the accepted media type (image, text, URL), and the dimension and file size constraints.
+
+### 2. Get a specific template
+
+[→ `GET /retail-media/retailers/{retailer-id}/templates/{template-id}`](<!-- TODO: add reference link when Dec 10 OAS lands -->)
+
+Retrieve the full field definition for one template. Use this before calling Create Creative to confirm which fields you must supply and what asset dimensions are required.
+
+---
+
+## Verify
+
+A successful response returns HTTP `200`. Each template object includes:
+- `templateId` — pass this to Create Creative
+- A list of elements, each with its key name, whether it is required, accepted dimensions, and maximum file size
+
+An empty `data` array means the retailer has no templates configured. Contact your Criteo representative if templates are expected but missing.
+
+---
+
+## Constraints
+
+| Constraint | Detail |
+|---|---|
+| Templates are retailer-specific | A template available for one retailer is not usable for another |
+| Template must be in retailer's inventory | You cannot create a creative using a format not assigned to the retailer |
+| Field requirements vary per template | Always fetch template details before building the create creative request |
+| Legacy template endpoints | These endpoints currently serve the 2026-07 contract and are being updated Dec 10, 2026 — the response schema may change |

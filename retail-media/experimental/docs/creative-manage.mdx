@@ -1,0 +1,94 @@
+---
+title: Create and Manage Creatives
+description: How to create, modify, retrieve, and preview image creatives using stable creative IDs.
+---
+
+Use these endpoints to build creatives programmatically and attach them to line items. Every creative is based on a template that defines its fields and asset requirements. Created creatives receive a stable ID that persists across edits — use this ID for all subsequent operations and when associating creatives to line items.
+
+<Info>
+  These endpoints are available in the **Experimental** version of the Retail Media API and are planned for the 2027.01 stable release.
+  Experimental endpoints may change without prior notice. See the [versioning policy](/criteo-apis/docs/versioning-policy) for details.
+</Info>
+
+---
+
+## Prerequisites
+
+- **Auth scope**: `RetailMedia_Campaign_Write` — see [Authentication](/retail-media/experimental/docs/authentication)
+- **Account ID**: the account in which to create the creative
+- **Retailer ID**: the retailer the creative is for — see [Get Creative Templates](/retail-media/experimental/docs/creative-templates)
+- **Template ID**: the template to use — fetch it from [Get Creative Templates](/retail-media/experimental/docs/creative-templates) and confirm required fields and asset dimensions
+- **Asset ID**: upload your image using `POST /retail-media/assets` and save the returned asset ID. Video is not supported until Q1 2027.
+
+---
+
+## Steps
+
+### 1. Create a creative
+
+[→ `POST /retail-media/accounts/{account-id}/creatives/create`](<!-- TODO: add reference link when Dec 10 OAS lands -->)
+
+Provide the `retailerId`, `templateId`, and all required fields defined by the template. The endpoint validates asset dimensions and file size against the template's constraints and returns an error if they are not met.
+
+```bash
+curl -X POST "https://api.criteo.com/experimental/retail-media/accounts/4567891234567891/creatives/create" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": {
+      "attributes": {
+        "retailerId": "1141",
+        "templateId": "305",
+        "name": "My creative name",
+        "fields": {
+          <!-- TODO: replace with actual template field names and values from the template response -->
+          "imageAssetId": "<ASSET_ID>",
+          "destinationUrl": "https://example.com"
+        }
+      }
+    }
+  }'
+```
+
+Save the stable creative `id` from the response — this ID does not change when the creative is later modified.
+
+### 2. Retrieve a creative
+
+[→ `GET /retail-media/accounts/{account-id}/creatives/{creative-id}`](<!-- TODO: add reference link when Dec 10 OAS lands -->)
+
+Pass the stable creative ID. Always returns the latest version of the creative with all field values.
+
+### 3. Modify a creative
+
+[→ `PUT /retail-media/accounts/{account-id}/creatives/{creative-id}`](<!-- TODO: add reference link when Dec 10 OAS lands -->)
+
+Pass the stable creative ID. Supply the full set of fields — `PUT` replaces the creative content. The stable creative ID does not change after a modification.
+
+### 4. Preview a creative
+
+[→ `GET /retail-media/accounts/{account-id}/creatives/{creative-id}/preview`](<!-- TODO: add reference link when Dec 10 OAS lands -->)
+
+Returns an iFrame of the creative in its latest state. Use this to verify the visual output before associating the creative to a line item.
+
+---
+
+## Verify
+
+A successful create returns HTTP `201` with the stable creative `id`. Retrieve the creative (`GET`) and confirm all fields match what you submitted. Use the preview endpoint to visually confirm the ad renders correctly.
+
+To associate the creative with a line item, pass the stable `id` to [Manage Line Item Creatives](/retail-media/experimental/docs/line-item-creatives).
+
+---
+
+## Constraints
+
+| Constraint | Detail |
+|---|---|
+| Image only | Video creatives are not supported until Q1 2027 |
+| Asset upload | Use the legacy `POST /retail-media/assets` endpoint to upload images until the new asset endpoints ship in Q1 2027 |
+| Dimension validation | Assets must match the dimensions required by the template element — the endpoint returns `400` if they do not |
+| File size limit | Default maximum is 300 KB per asset at the template level — the endpoint returns `400` if exceeded |
+| Legacy formats blocked | Format IDs 1, 2, 3, 6, 7, 9, 18, 19 (Flagship, Butterfly, Showcase, Display Panel, Digital Shelf Talker) cannot be created through these endpoints |
+| Retailer inventory | The template must be assigned to the retailer — creating a creative with an out-of-inventory template returns `400` |
+| Stable creative ID | The `id` returned at creation remains constant across all subsequent edits — always use it for modify, retrieve, preview, and line item associations |
+| Retailer review required | Creatives attached to a line item must be reviewed and approved by the retailer before they can serve |
