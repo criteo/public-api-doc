@@ -519,6 +519,7 @@ The recommended value for `targeting.deliveryLimitations.environments` is `inApp
 App Retargeting Ad Sets also have the following constraints:
 
 * An app homepage deeplink must be configured for the targeted operating system.
+* The Ad Set can only be linked to a retargeting or customizable audience. See [Update AdSet Audience](#update-adset-audience).
 * `attributionConfiguration.attributionMethod` can only be `criteoAttribution`, `sftp`, or `googleAnalytics`. `sftp` is only available if SFTP attribution is enabled and set up for the advertiser. `googleAnalytics` is only available if Google Analytics attribution is enabled for App Retargeting for the advertiser.
 
 Optionally, you can attach one or several server-to-server (MMP) trackings to the Ad Set by setting `serverToServerTrackings` in the request `attributes`.
@@ -745,6 +746,12 @@ Use this endpoint if you want to link an Audience to an AdSet. Both need to exis
   If you have created an Audience Segment and would like to link it to an existing AdSet, first include it within an Audience, and later use that Audience with this endpoint.
 </Info>
 
+<Warning>
+  **App Retargeting Ad Sets**
+
+  An `appRetargeting` Ad Set can only be linked to a retargeting or a customizable audience. If you link any other type of audience, the call fails with a `400` error and the `app-retargeting-ad-set-must-be-linked-to-retargeting-or-customizable-audience` code.
+</Warning>
+
 <EndpointBadge method="put">
 ```http
 /marketing-solutions/ad-sets/{ad-set-id}/audience
@@ -789,6 +796,24 @@ Use this endpoint if you want to link an Audience to an AdSet. Both need to exis
     ],
     "warnings": [	/* omitted if no warnings */
         ...
+    ]
+}
+```
+
+```json Response Body - Failure (App Retargeting)
+{
+    "data": null,
+    "warnings": [],
+    "errors": [
+        {
+            "traceId": "0123456789abcdef0123456789abcdef",
+            "traceIdentifier": "0123456789abcdef0123456789abcdef",
+            "type": "validation",
+            "code": "app-retargeting-ad-set-must-be-linked-to-retargeting-or-customizable-audience",
+            "instance": "/ad-sets/1001/audience",
+            "title": "App Retargeting ad set must be linked to a retargeting or customizable audience",
+            "detail": "An app retargeting ad set can only be linked to a retargeting or a customizable audience"
+        }
     ]
 }
 ```
