@@ -5,7 +5,12 @@ description: How to send in-store (offline) sales to Criteo Retail Media so they
 
 # Introduction
 
-Offline sales are purchases made in your physical stores that can be attributed to an ad a shopper saw or clicked online. Sending them to Criteo lets Retail Media measure the full effect of a campaign, not only the online orders.
+Offline sales are purchases made in your physical stores that can be attributed to an ad a shopper saw or clicked online. Sending them to Criteo lets Retail Media measure the full effect of a campaign, not only the online orders:
+
+- **Measure impact.** Understand how digital campaigns influence in-store purchases and give brands a holistic view.
+- **Boost revenue.** Offer brands the value of combined online and in-store attribution to maximize campaign performance and budget allocation.
+
+To learn more about what offline sales are, see [our Help Center](https://help.retailmedia.criteo.com/kb/guide/en/offline-sales-reporting-LTjBTYw7r3/Steps/3511218?1650461144505&lang=en).
 
 Once offline sales reach Criteo, the platform handles attribution. The attribution windows set on each campaign also apply to offline sales, and advertisers can see online sales, offline sales, or both combined for metrics such as ROAS, sales, units, assisted sales and assisted units.
 
@@ -46,11 +51,11 @@ Criteo supports three identifiers. Send at least one, and use the same one you a
 | ---------- | ------- | ---------------------- |
 | `retailer_visitor_id` | An unauthenticated ID that persists across sessions on the same device | [`retailer-visitor-id`](/retailer-integration/docs/api-parameters-1#retailer-visitor-id) |
 | `customer_id` | The ID of the logged-in shopper, consistent across sessions | [`customer-id`](/retailer-integration/docs/api-parameters-1#customer-id) |
-| Email | The shopper's email, hashed | [`email`](/retailer-integration/docs/api-parameters-1#email) |
+| Email | The shopper's email, SHA-256 hashed | [`email`](/retailer-integration/docs/api-parameters-1#email) |
 
 ### Hashing emails
 
-Criteo expects emails hashed as a SHA-256 hash of an MD5 hash. If you cannot produce that format, you can send a raw or MD5-hashed email and Criteo will hash it on ingestion. Before hashing:
+The hashed email you send must be **identical** to the one you send in the [`email`](/retailer-integration/docs/api-parameters-1#email) parameter of your delivery API (ad server) calls, otherwise offline sales cannot be matched to ad exposure. We recommend a plain **SHA-256** hash. Before hashing:
 
 1. **Trim** all spaces before and after the address.
 2. **Clean** it by removing commas, semicolons, quotes and double quotes.
@@ -129,7 +134,7 @@ Content-Type: application/json
 | `user_segment` | Yes | integer | Always `19` for in-store data. |
 | `retailer_visitor_id` | One identifier required | string | An unauthenticated ID persistent across sessions on the same device. |
 | `customer_id` | One identifier required | string | The authenticated shopper ID. |
-| `id.email` | One identifier required | object | The shopper's email, in one of `raw`, `md5`, `sha256_md5` or `sha256`. |
+| `id.email.sha256` | One identifier required | string | The shopper's SHA-256 hashed email, identical to the [`email`](/retailer-integration/docs/api-parameters-1#email) parameter sent in your delivery API calls. |
 
 If you hold several identifiers for the same shopper, you can add them in `alternate_ids`, each with a `type`, a `value` and, for hashed values, a `hash_method`.
 
@@ -186,6 +191,16 @@ If you hold several identifiers for the same shopper, you can add them in `alter
 | SFTP file | Within 74 hours of the sale timestamp |
 
 Offline sales are updated in the platform overnight. The maximum ingestion delay is 48 hours, so any transaction older than that is rejected.
+
+<Frame caption="Offline sales data attribution timeline">
+  <img src="/images/retailer-integration/docs/75293e91cf05a63a22d1bf2426bed203356ed0ab1a17244419698f833746a4ab-image.png" alt="Offline sales data attribution timeline" />
+</Frame>
+
+## Where to see offline sales
+
+Offline attribution results are available in the Commerce Yield Supply Metrics, the Commerce Max Demand-Brand Activity Dashboard and the Attributed Transaction log. Use the **offline sales channel filter** to show offline sales only, online only, or both.
+
+To learn more about where offline sales appear, see [our Help Center](https://help.retailmedia.criteo.com/kb/guide/en/offline-sales-reporting-LTjBTYw7r3/Steps/3511218,3511253).
 
 # Test and validate
 
