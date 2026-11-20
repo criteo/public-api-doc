@@ -11,6 +11,8 @@ import Headervaluesareillustrative from "/snippets/retailer-integration/Headerva
 
 A product details page (PDP) shows the details of a single product or multiple products under the same parent ID.
 
+For a PDP (`viewItem`) request, send at least one of `item` or `parent-item`. Send `item` whenever the viewed SKU is known; `parent-item` can supplement it or serve as a fallback.
+
 ***
 
 # Parameters
@@ -44,23 +46,23 @@ A product details page (PDP) shows the details of a single product or multiple p
 
 **Example (multiple products)**: `123-ab|456-cd|789-ef`
 
-**Required**: Yes
+**Required**: At least one of `item` or `parent-item` is required. `item` is recommended for SKU-level detail.
 
 ***
 
 ## `parent-item`
 
-**Description**: Only use this if parent SKUs are being passed. If so, this value should match what is being sent in the `item_group_id` field of the product feed.
+**Description**: Parent SKU ID for the product on the PDP. It should match the `item_group_id` in the product feed. This parameter is accepted in place of `item` or can be sent alongside it.
 
 **Example**: `123`
 
-**Required**: Recommended if the eCommerce platform uses parent items
+**Required**: Required if `item` is omitted; otherwise recommended when the eCommerce platform uses parent items.
 
 ***
 
 ## `price`
 
-**Description**: Current price of the product (with discount, if any). When sending multiple products, provide one price per product separated by a pipe (`|`), in the same order as `item`.
+**Description**: Current price of the product (with discount, if any). When sending multiple products, provide one price per product separated by a pipe (`|`), in the same order as `item`. Price is still required when using `parent-item` instead of `item`.
 
 **Example (single product)**: `34.99`
 
@@ -72,7 +74,7 @@ A product details page (PDP) shows the details of a single product or multiple p
 
 ## `availability`
 
-**Description**: Stock status of the product. Send `1` if in stock, `0` if out of stock. When sending multiple products, provide one value per product separated by a pipe (`|`), in the same order as `item`.
+**Description**: Stock status of the product. Send `1` if in stock, `0` if out of stock. When sending multiple products, provide one value per product separated by a pipe (`|`), in the same order as `item`. Availability is still required when using `parent-item` instead of `item`.
 
 **Example (single product)**: `1`
 
@@ -85,6 +87,8 @@ A product details page (PDP) shows the details of a single product or multiple p
 ## `category`
 
 **Description**: For PDP calls, this parameter passes an explicit category used for both ad-serving and Served Category reporting. If this field is not present, Criteo will default to the primary taxonomy of the SKU passed in the `item` parameter. If passed, this value should match the `product_type_key` value in the product feed. See more details [here](/retailer-integration/docs/product-feed-parameters#product_type_key).
+
+When sending only `parent-item`, include `category` if available. The taxonomy fallback described above relies on an `item` SKU.
 
 <Warning>
   Without this parameter, all PDP ad activity is grouped under **Page Without Category** in UI reporting. While ad-serving still works, Served Category reporting will not reflect the actual page categories for PDPs.
@@ -104,6 +108,21 @@ A product details page (PDP) shows the details of a single product or multiple p
   * Spaces between the separator (`>`) are ignored.
 
 **Required**: No
+
+***
+
+# Choosing `item` and `parent-item`
+
+Send `item` to identify the exact SKU viewed. You can also send `parent-item` to identify its parent group. If only the parent ID is available, a request with `parent-item`, `price`, and `availability` is accepted as PDP traffic and still contributes to product keyword modeling using the parent ID.
+
+A parent-only request has less product detail:
+
+* It identifies the parent group, not the exact variant viewed.
+* Product name, taxonomy, and brand enrichment may be unavailable unless the parent ID also resolves in the product catalog.
+* The page-view beacon does not receive a brand ID from `parent-item` alone.
+* Real-time price and availability updates cannot be tied to a specific SKU.
+
+Prefer `item` when the exact SKU is known. Use `parent-item` as a supplement or fallback.
 
 ***
 
@@ -147,6 +166,27 @@ curl -X GET "https://d.eu.criteo.com/delivery/retailmedia" \
 -H "Referer: https://www.criteo.com" \
 -H "X-Forwarded-For: 123.456.789.012" \
 -H "User-Agent: app_ios 1.2.3"
+```
+
+***
+
+## Parent-only fallback
+
+If the viewed SKU is unavailable, send its parent ID in `parent-item` with the required `price` and `availability`. The request does not need an `item` value.
+
+```bash
+curl -X GET "https://d.us.criteo.com/delivery/retailmedia" \
+--data-urlencode "criteo-partner-id=12345" \
+--data-urlencode "retailer-visitor-id=a1b2c3d4e5" \
+--data-urlencode "customer-id=123456789" \
+--data-urlencode "page-id=viewItem_API_desktop" \
+--data-urlencode "event-type=viewItem" \
+--data-urlencode "parent-item=123" \
+--data-urlencode "price=34.99" \
+--data-urlencode "availability=1" \
+-H "Referer: https://www.criteo.com" \
+-H "X-Forwarded-For: 123.456.789.012" \
+-H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 ```
 
 ***

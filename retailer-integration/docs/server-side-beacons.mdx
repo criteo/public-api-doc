@@ -109,9 +109,9 @@ To ensure server-side beacons are valid and accepted by our systems, specific HT
 
 The `X-Forwarded-For` header is a comma-separated list of IP addresses that tracks the path of the request through proxies.
 
-* If the header is already present, append the client IP to the list: `X-Forwarded-For: ip-address-1, ip-address-2, client-ip-address`
+* Put the end-user's public IP first, followed by any proxy IPs: `X-Forwarded-For: client-ip-address, proxy-ip-address-1, proxy-ip-address-2`. If the header is already present, preserve this order when adding addresses. Do not start the list with a public proxy IP: Criteo reads the list from left to right and uses the first public IP.
 
-* If the header is not present, create it with just the client IP: `X-Forwarded-For: client-ip-address`
+* If the header is not present, create it with just the end-user's public IP: `X-Forwarded-For: client-ip-address`
 
 <Info>
   Read more on `X-Forwarded-For` [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For) (Mozilla Developer documentation).
@@ -165,12 +165,12 @@ If you're implementing both ad delivery and beacon tracking server-side, ensure 
 
 ## Example
 
-Here is an API call example including the `X-Forwarded-For`, a `User-Agent` and a `Referer` in the header.
+Here is an API call example including the `X-Forwarded-For`, a `User-Agent` and a `Referer` in the header. In the `X-Forwarded-For` value, `185.235.84.0` is the end-user's public IP and `187.44.99.113` is a proxy IP.
 
 ```bash
 curl -X POST \
   "https://b.us5.us.criteo.com/rm?rm_e=Gd_ceALPvoRY3bVY9-28TDhyVYwW5MUBgE8qBLTqDRORt4q1N7hHDiVm8KO4W-qG2bdCV9GvhNO1wySddekW7j7CF6Z8qIE3ihszU3ZJjFkfKxnmD7_8fhkzmLnZMmjFALzDlUgAyrXYhHx1tArrrLxMuzgOjBdk84q1VXthksSJufRof3a4cj1zqUY9c4PF2pF4kkDfqrOD1Z91UnzdaeLLzI_Hm7Zw47iL8p3_SEcDxCOD9Q4MBpjbE7YTRbNEt1Tr5fbLpY4v-raBDn33yQQzJS3F7tl5cedSJ0XK07f_iQHA2I_XGlVGPvubbmGQqDKlkT2USrc2BwqYb4kImQ&ev=4" \
-  -H "X-Forwarded-For: 185.235.84.0,187.44.99.113" \
+  -H "X-Forwarded-For: 185.235.84.0, 187.44.99.113" \
   -H "User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1" \
   -H "Referer: https://www.example.com" 
 ```

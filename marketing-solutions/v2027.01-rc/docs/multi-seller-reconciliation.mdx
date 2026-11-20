@@ -1,0 +1,350 @@
+---
+title: Multi-Seller Reconciliation
+---
+
+The Multi-Seller Reconciliation report shows gross delivery, overdelivery, and net delivery by seller. Use it to reconcile seller-level delivery with deductions on your Criteo invoice.
+
+Overdelivery is the portion of delivery that Criteo does not invoice. The report helps you understand which sellers, ad sets, and budgets contributed to that amount.
+
+## Before you start
+
+- **Supported activations:** The API supports Multi-Seller campaigns only.
+- **Availability:** Automated seller-level invoice deductions start with the December 2026 invoicing period.
+- **Report coverage:** The report covers seller overdelivery only. A capped spend limit on your campaigns can create a separate invoice deduction, which is not included in this report.
+- **API version:** The endpoint is available from version `2027-01`, first released as a Release Candidate. Use `2027-01` as `{version}`. A Release Candidate can still change before the version becomes stable.
+- **Endpoint type:** The endpoint is synchronous and returns the report in the same request.
+- **Row limit:** A report can contain up to 600,000 rows.
+- **Date range:** A request can cover up to 31 days.
+- **Data history:** Data starts on October 1, 2026. Earlier days are not available.
+- **Data availability:** The report only includes consolidated days, whose amounts are final. A day is usually available about four hours after midnight in the advertiser's timezone.
+- **Currency and timezone:** All amounts are in the advertiser's currency, and all days follow the advertiser's timezone. Every response states both. The Standard Reporting API counts days in UTC unless you set its timezone parameter—`timezone` in v2 or `timeZoneId` in the legacy endpoints—so set it to the advertiser's timezone when you compare the two reports.
+- **Required scope:** `MarketingSolutions_Analytics_Read`
+
+## When to use this API
+
+Use this API when you run Multi-Seller campaigns and need to reconcile seller delivery and overdelivery for billing, especially when sellers use capped total budgets.
+
+Use the report to:
+
+- Reconcile the overdelivery deducted from your monthly Criteo invoice with the sellers it comes from.
+- Support seller billing reconciliation when allocating Criteo costs across sellers.
+- See which sellers, ad sets, and budgets overdeliver, day by day.
+
+For performance metrics such as impressions, clicks, sales, and return on ad spend, use the [Standard Reporting API v2](https://developers.criteo.com/marketing-solutions/experimental/docs/mpo-seller-reporting-api).
+
+## Endpoint
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/marketing-solutions/marketplace-performance-outcomes/stats/seller-delivery-report` | Generate and download a Multi-Seller Reconciliation report synchronously. |
+
+The base URL is:
+
+```
+https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/
+```
+
+## Request model
+
+The endpoint uses the `SellerDeliveryReportSearch` request body.
+
+### Request fields
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `advertiserId` | string | Yes | Advertiser for which to generate the report. |
+| `startDay` | string | Yes | First day of the report, inclusive, in `yyyy-MM-dd` format and the advertiser's timezone. |
+| `endDay` | string | Yes | Last day of the report, inclusive, in `yyyy-MM-dd` format and the advertiser's timezone. The range can cover at most 31 days. |
+| `dimensions` | string array | Yes | Dimensions used to group the report. Must include `sellerId`. |
+| `metrics` | string array | Yes | Metrics to include in the report. At least one metric is required. |
+| `sellerIds` | string array | No | Filters the report by seller. Limited to 500 values. |
+| `adSetIds` | string array | No | Filters the report by ad set. These are the IDs called `campaignId` in the Multi-Seller campaign and budget endpoints. Limited to 500 values. |
+| `budgetIds` | string array | No | Filters the report by budget. Add `"NULL"` to include spend without a budget. Limited to 500 values. |
+| `onlyOverdelivering` | boolean | No | When `true`, returns only rows whose overdelivery is greater than zero. Defaults to `false`. |
+
+### Filter rules
+
+- Leaving a filter out and sending an empty list mean the same thing: no filter.
+- Values within one filter are combined with OR. Different filters are combined with AND.
+- Filters do not add columns. Filtering on one ad set with `dimensions: ["sellerId", "day"]` returns each seller's daily totals for that ad set, without an `adSetId` column.
+- `["3", "4"]` in `budgetIds` returns only these two budgets and excludes spend without a budget. `["NULL"]` returns only spend without a budget. `["3", "NULL"]` returns budget 3 plus spend without a budget.
+- Rows with no spend are never returned, so a day on which a seller did not spend has no row.
+- `onlyOverdelivering` is applied after grouping, to the rows you requested, and works even when `overDelivery` is not among the requested metrics.
+
+## Dimensions
+
+| Dimension | Description |
+| --- | --- |
+| `sellerId` | Seller identifier. Required. |
+| `adSetId` | Ad set identifier. A budget shared by several ad sets appears once per ad set, with its overdelivery split between them. Leave `adSetId` out to get one row per budget. |
+| `budgetId` | Budget identifier. Spend without a budget appears as `"NULL"`. |
+| `day` | Selects a daily time grouping for each row. Without it, the whole date range forms one period. |
+
+You can combine `sellerId` with any of `adSetId`, `budgetId`, and `day`. `day` is the only time dimension available.
+
+## Metrics
+
+| Metric | Description |
+| --- | --- |
+| `grossDelivery` | Total media spend before any overdelivery is deducted. |
+| `overDelivery` | The part of `grossDelivery` that Criteo counts as overdelivery and does not invoice. See [How overdelivery is calculated](#how-overdelivery-is-calculated). |
+| `netDelivery` | `grossDelivery` minus `overDelivery`: the spend that remains billable. |
+
+## How overdelivery is calculated
+Overdelivery has two sources:
+
+- **Spend above a capped budget:** When a seller uses up its capped budget, Criteo stops bidding for that seller, but the stop takes a short time to reach every part of the delivery system. Spend during that time is overdelivery.
+- **Spend without a budget:** Occasionally, spend is recorded that cannot be attached to any budget, such as late spend that arrives after a budget has ended. All of it is overdelivery. The report shows it with `budgetId` set to `"NULL"`.
+
+## Which budgets count
+
+Only a capped total budget creates overdelivery. An uncapped total budget has no ceiling, so spend against it is never overdelivery.
+
+Daily budgets and campaign spend smoothing only pace delivery. Spending above them does not create overdelivery on its own. When a daily budget sits on top of a capped total budget, overdelivery is measured against the total budget only.
+
+| Budget | Gross delivery | Overdelivery | Net delivery |
+| --- | ---: | ---: | ---: |
+| Capped total budget 400, daily budget 300 | 500.00 | 100.00 | 400.00 |
+| Uncapped total budget, daily budget 500 | 510.00 | 0.00 | 510.00 |
+
+### How a capped budget is used up
+
+Overdelivery is calculated for each budget and each day. Each day starts from what is left of the budget after the net delivery of the previous days:
+
+```text
+Remaining budget = max(0, capped budget amount − net delivery on previous days)
+Overdelivery today = max(0, gross delivery today − remaining budget)
+```
+
+For example, a seller has a capped budget of 1,000, and 900 of net delivery has already been recorded on previous days. The remaining budget is 100. If the seller spends 180 today, 100 is billable and 80 is overdelivery. Cumulative net delivery reaches the 1,000 budget amount.
+
+### Budget changes
+
+- **The day's final amount applies:** Overdelivery for a day is calculated after the day ends, against the budget amount at the end of that day. If a seller spends 550 against a budget of 500 and you raise the budget to 700 before the day ends, that day has no overdelivery.
+- **Past days do not change:** Raising a budget does not turn earlier overdelivery into billable spend. Once a day is consolidated, its amounts are final.
+- **Lowering a budget cannot create overdelivery by itself:** A capped budget cannot be set below what it has already spent.
+
+### Budgets shared by several ad sets
+
+A seller budget can be shared by several ad sets. The budget is checked once against their combined spend, and any overdelivery is split between the ad sets in proportion to their gross delivery.
+
+For example, a seller has one capped budget of 200 shared by two ad sets:
+
+| Ad set | Gross delivery | Overdelivery | Net delivery |
+| --- | ---: | ---: | ---: |
+| A | 150.00 | 30.00 | 120.00 |
+| B | 100.00 | 20.00 | 80.00 |
+| **Total** | **250.00** | **50.00** | **200.00** |
+
+Ad set A generated 60% of the gross delivery, so it carries 60% of the overdelivery.
+
+## Effect on your invoice
+
+Your monthly invoice is reduced by the total `overDelivery` of all your sellers over the invoicing period, including spend without a budget.
+
+When a capped spend limit is also set on your campaigns, the total `netDelivery` is not the full invoice calculation. The separate deduction for spend above that limit is not part of this report.
+
+## Data availability
+
+Overdelivery is calculated once a day, after the day has ended. A day is usually available about four hours after midnight in the advertiser's timezone. For example, data for December 1 is available early on December 2.
+
+A day whose overdelivery has been calculated is consolidated. Its amounts are final, will not change, and are the amounts used for your invoice.
+
+Every response returns `meta.lastConsolidatedDay`, the latest consolidated day. Check that field rather than relying on a fixed time.
+
+The report only includes consolidated days. The current day's spend is not included until that day is consolidated. To follow spend during the day, use the [Real-Time Monitoring API](https://developers.criteo.com/marketing-solutions/experimental/docs/mpo-real-time-asynchronous-api).
+
+## Generate a report synchronously
+
+Use the endpoint to generate and download a report in a single request. A report is limited to **600,000 rows**.
+
+```http
+POST https://api.criteo.com/{version}/marketing-solutions/marketplace-performance-outcomes/stats/seller-delivery-report
+```
+
+### Example request
+
+This request returns every seller that overdelivered in December 2026, with one row per seller for the whole month.
+
+```json
+{
+  "data": {
+    "type": "SellerDeliveryReportSearch",
+    "attributes": {
+      "advertiserId": "12345",
+      "startDay": "2026-12-01",
+      "endDay": "2026-12-31",
+      "dimensions": ["sellerId"],
+      "metrics": ["grossDelivery", "overDelivery", "netDelivery"],
+      "onlyOverdelivering": true
+    }
+  }
+}
+```
+
+## JSON response structure
+
+The response uses a `meta.columns` array and a `data` array. Each row in `data` follows the same order as the columns.
+
+```json
+{
+  "type": "SellerDeliveryReport",
+  "meta": {
+    "advertiserId": "12345",
+    "timezoneId": "Europe/Paris",
+    "currency": "EUR",
+    "lastConsolidatedDay": "2026-12-31",
+    "rows": 3,
+    "columns": [
+      "sellerId",
+      "periodStartDay",
+      "grossDelivery",
+      "overDelivery",
+      "netDelivery"
+    ]
+  },
+  "data": [
+    ["123456", "2026-12-01", 1250.40, 42.10, 1208.30],
+    ["234567", "2026-12-01", 830.55, 12.50, 818.05],
+    ["345678", "2026-12-01", 15.00, 15.00, 0.00]
+  ],
+  "errors": [],
+  "warnings": []
+}
+```
+
+The sum of `overDelivery` across all rows—69.60 EUR in this example—is the seller overdelivery deducted from the December invoice.
+
+Seller `345678` had spend that was entirely overdelivery, so none of it is billed. With `onlyOverdelivering` set to `true`, the response stays smaller because most sellers do not overdeliver, and the total remains unchanged.
+
+### Response fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `type` | string | Always `SellerDeliveryReport`. |
+| `meta.advertiserId` | string | Advertiser the report covers. |
+| `meta.timezoneId` | string or null | Advertiser timezone as an IANA name, such as `Europe/Paris`. All days follow this timezone. |
+| `meta.currency` | string | Currency of all amounts as an ISO 4217 code, such as `EUR`. |
+| `meta.lastConsolidatedDay` | string or null | Latest consolidated day in `yyyy-MM-dd` format. Returns `null` if no day is consolidated yet. |
+| `meta.rows` | integer | Number of rows in `data`. |
+| `meta.columns` | string array | Column names, in the order that values appear in each row. Present even when `data` is empty. |
+| `data` | array of arrays | One array per row. An empty array is returned when nothing matches. |
+| `errors` | array | Errors. Empty on success. |
+| `warnings` | array | Warnings, if any. Usually empty. |
+
+### Columns
+
+Columns appear in this order:
+
+1. The requested dimensions other than `day`, in the order you sent them.
+2. `periodStartDay`.
+3. The requested metrics, in the order you sent them.
+
+The columns depend on your request, so read value positions from `meta.columns` instead of hard-coding them.
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `sellerId` | string | Seller. Always present. |
+| `adSetId` | string | Ad set, when requested. |
+| `budgetId` | string | Budget, or `"NULL"` for spend without a budget, when requested. |
+| `periodStartDay` | string | First day of the period the row covers, in `yyyy-MM-dd` format. Always present. With the `day` dimension, it is the day itself; without it, it equals `startDay`. |
+| `grossDelivery`, `overDelivery`, `netDelivery` | number | The requested metrics. |
+
+## Example: daily detail for one seller
+
+This request returns seller `123456` spend for December 1 and 2, split by ad set, budget, and day.
+
+### Request
+
+```json
+{
+  "data": {
+    "type": "SellerDeliveryReportSearch",
+    "attributes": {
+      "advertiserId": "12345",
+      "startDay": "2026-12-01",
+      "endDay": "2026-12-02",
+      "dimensions": ["sellerId", "adSetId", "budgetId", "day"],
+      "metrics": ["grossDelivery", "overDelivery", "netDelivery"],
+      "sellerIds": ["123456"]
+    }
+  }
+}
+```
+
+### Response
+
+```json
+{
+  "type": "SellerDeliveryReport",
+  "meta": {
+    "advertiserId": "12345",
+    "timezoneId": "Europe/Paris",
+    "currency": "EUR",
+    "lastConsolidatedDay": "2026-12-31",
+    "rows": 4,
+    "columns": [
+      "sellerId",
+      "adSetId",
+      "budgetId",
+      "periodStartDay",
+      "grossDelivery",
+      "overDelivery",
+      "netDelivery"
+    ]
+  },
+  "data": [
+    ["123456", "456789", "3", "2026-12-01", 110.00, 10.00, 100.00],
+    ["123456", "456789", "NULL", "2026-12-01", 6.20, 6.20, 0.00],
+    ["123456", "456789", "3", "2026-12-02", 95.40, 0.00, 95.40],
+    ["123456", "456790", "4", "2026-12-02", 40.00, 0.00, 40.00]
+  ],
+  "errors": [],
+  "warnings": []
+}
+```
+
+On December 1, the seller spent 110.00 EUR on budget 3, of which 10.00 EUR was overdelivery. It also spent 6.20 EUR on ad set 456789 with no budget attached, all of it overdelivery. On December 2, there was no overdelivery.
+
+## Recommended integration
+
+- **Reconciliation:** Set `onlyOverdelivering` to `true` when you reconcile overdelivery with your invoice. Rows without overdelivery do not affect the deduction, so leaving them out keeps the response small without changing the total.
+- **Daily:** Once `meta.lastConsolidatedDay` has moved to yesterday, request yesterday with the `day` dimension to update each seller's spend and overdelivery.
+- **Monthly:** After the last day of the month is consolidated, request the full month by seller without a `day` dimension, as shown in the example request, to reconcile with your invoice.
+- **Large marketplaces:** Request the full month in one report rather than one day at a time. The 600,000-row limit is sized to fit a full month split by seller, ad set, and budget, especially with `onlyOverdelivering`. Many smaller requests are more likely to be throttled with `429`.
+- **Retries:** On `429` or `500`, retry with exponential backoff as described in [API Error Codes](https://developers.criteo.com/criteo-apis/docs/api-error-codes). The endpoint only reads data, so retrying is safe.
+
+## Errors and HTTP status codes
+
+HTTP status codes, the error object, and retry rules shared by all Criteo APIs are described in [API Error Codes](https://developers.criteo.com/criteo-apis/docs/api-error-codes).
+
+Authentication errors (`401`), throttling (`429`), and server errors (`500`) follow that shared behavior. The codes below are specific to this endpoint.
+
+| HTTP status | Error code | Description |
+| --- | --- | --- |
+| `400` | `invalid-query`, `report-too-large` | The request is invalid, or the report would exceed 600,000 rows. See [Domain errors](#domain-errors). |
+| `403` | `not-authorized` | The caller does not have permission to access delivery information for the requested advertiser. |
+
+## Domain errors
+
+| Code | Description |
+| --- | --- |
+| `invalid-query` | The request is invalid. The `detail` field explains why. Common causes include a missing `sellerId` in `dimensions`, no metric, `startDay` after `endDay`, a date range longer than 31 days, more than 500 values in a filter, an unknown or repeated dimension or metric, an unsupported time dimension, or a malformed request body. |
+| `report-too-large` | The report would exceed 600,000 rows. Set `onlyOverdelivering` to `true`, remove a dimension, filter on fewer sellers, or shorten the date range. |
+
+## Related documentation
+
+- [Standard Reporting API v2](https://developers.criteo.com/marketing-solutions/experimental/docs/mpo-seller-reporting-api)—for performance metrics by campaign, ad set, and seller.
+- [Real-Time Monitoring API](https://developers.criteo.com/marketing-solutions/experimental/docs/mpo-real-time-asynchronous-api)—for following spend during the day.
+- [Managing Budgets](https://developers.criteo.com/marketing-solutions/docs/multiseller-managing-budgets)—for capped, uncapped, and daily budgets in Multi-Seller campaigns.
+- [Latency in MPO](https://developers.criteo.com/marketing-solutions/docs/mpo-latency)—for reporting data latency and processing delays.
+- [Rate Limits](https://developers.criteo.com/criteo-apis/docs/rate-limits)—for rate limits and retry guidance.
+- [Authentication](https://developers.criteo.com/marketing-solutions/docs/authentication)—for generating and using API access tokens.
+
+
+
+
+
+
+
+
