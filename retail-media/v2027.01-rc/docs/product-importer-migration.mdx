@@ -1,0 +1,103 @@
+---
+title: Migrate the Product Importer API from Preview
+description: What to change in your integration when moving from the Preview Product Importer API to the 2027-01 stable contract.
+---
+
+The Product Importer API is moving from the `preview` contract to the versioned `2027-01` stable contract. **Preview retires on 1 July 2027.** Every client must be migrated and validated on 2027-01 before that date.
+
+Request bodies and catalog data are unchanged — no re-upload of your product catalog is needed. The changes are limited to paths, one response field, and the structure of error and status responses.
+
+---
+
+## Summary of changes
+
+| Endpoint | What changes |
+|---|---|
+| **Upload** `POST .../catalog/products/batch` | Version prefix changes from `preview` to `2027-01`. Response token moves from `operationToken` to `data.id`. |
+| **Report** `GET .../catalog/products/batch/report/{id}` | Path and parameter name change. Response restructured: data envelope, flat error lists, kebab-case codes, camelCase statuses, ISO-8601 timestamps. |
+
+---
+
+## 1. Update the upload call
+
+**Old path:**
+```
+POST https://api.criteo.com/preview/retail-media/catalog/products/batch
+```
+
+**New path****:**
+```
+POST https://api.criteo.com/2027-01/retail-media/catalog/products/batch
+```
+
+**Response change** — read the ingestion token from `data.id` instead of `operationToken`:
+
+```diff
+- { "operationToken": "ing-a1b2c3d4" }
++ { "data": { "id": "ing-a1b2c3d4" } }
+```
+
+The token value itself is unchanged — only the field name and envelope differ.
+
+---
+
+## 2. Update the report call
+
+**Old path:**
+```
+GET https://api.criteo.com/preview/retail-media/catalog/products/batch/report/{operation-token}
+```
+
+**New path****:**
+```
+GET https://api.criteo.com/2027-01/retail-media/catalog/products/batch/report/{id}
+```
+
+The `id` path parameter takes the same token value previously passed as `operation-token`.
+
+**Response restructuring** — the new response wraps results in a `data` envelope and aligns with Criteo's standard API conventions:
+
+| Old | New |
+|---|---|
+| Flat root-level object | `data.attributes` wrapper |
+| `status` values: `Pending`, `Running`, `Success`, `Failure` | `accepted`, `inProgress`, `validated`, `validatedWithErrors`, `failed` |
+| `importRequestTimestamp` as custom string | ISO-8601 timestamp |
+| Nested error objects with custom codes | Flat `errors[]` array with kebab-case `code` values |
+| `warningDetails[]` array | `warnings[]` array in standard envelope |
+
+<Note>
+  The new response also adds `data.attributes.quality` indicators not present in the Preview report. These are optional to consume.
+</Note>
+
+---
+
+## 3. Add the statistics call
+
+This endpoint is new in `2027-01` — it has no `preview` equivalent.
+
+**New path:**
+```
+GET https://api.criteo.com/2027-01/retail-media/catalog/stats/merchants/{merchant-id}
+```
+
+**Query parameter:**
+```
+?last-number-of-hours=24
+```
+
+The parameter accepts values from 1 to 1000 and defaults to 24 when omitted. The response wraps results in a `data` envelope with ISO-8601 timestamps and a `records` array (`MerchantCatalogStatistics` type).
+
+---
+
+## Migration checklist
+
+- [ ] Update the upload path: change `preview` version prefix to `2027-01` (the `/retail-media/` segment is already present)
+- [ ] Read the ingestion token from `data.id` (not `operationToken`)
+- [ ] Update the report path; replace `operation-token` path param with `id`
+- [ ] Update response parsing: data envelope, new status values (`accepted`/`inProgress`/`validated`/`validatedWithErrors`/`failed`), flat errors, ISO-8601 timestamps
+- [ ] Add calls to the new statistics endpoint (`GET /2027-01/retail-media/catalog/stats/merchants/{merchant-id}`)
+- [ ] Test on the RC before the Preview cutoff (1 July 2027)
+
+<Warning>
+  Do not test your migration on Preview after the Stage 1 notice in December 2026 — Preview keeps working until 1 July 2027, but new integrations should target 2027-01 RC directly.
+</Warning>

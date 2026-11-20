@@ -1,0 +1,120 @@
+---
+title: Upload a Product Catalog
+description: How to submit a batch of product updates to Criteo Retail Media and monitor ingestion status.
+---
+
+This guide walks through the Product Importer API: submit a batch of product upserts or deletes, then retrieve the ingestion report to verify results. By the end, you will have product data live in Criteo's catalog and confirmed through the ingestion summary.
+
+---
+
+## Prerequisites
+
+- **Auth scope**: `RetailMedia_Catalog_Manage` (upload), `RetailMedia_Catalog_Read` (report) — see [Authentication](/retail-media/v2027.01-rc/docs/authentication)
+- **Merchant ID**: the identifier of the merchant whose catalog you are updating — obtainable from your Criteo account team
+- **Product data**: a list of products to upsert or delete, each identified by a unique `id`
+
+---
+
+## Steps
+
+### 1. Submit a product batch
+
+[→ `POST /2027-01/retail-media/catalog/products/batch`](/retail-media/v2027.01-rc/reference/SubmitCatalogProductsBatch)
+
+Send an `entries` array. Each entry must include a `merchantId`, a `method` (`upsert` or `delete`), and for upserts a `product` object with the catalog fields.
+
+Request bodies and catalog data are identical to the Preview version — no changes to product fields or entry structure.
+
+```bash
+curl -X POST "https://api.criteo.com/2027-01/retail-media/catalog/products/batch" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "entries": [
+      {
+        "merchantId": "12345",
+        "method": "upsert",
+        "batchId": 1,
+        "product": {
+          "id": "PROD-001",
+          "itemGroupId": "GROUP-001",
+          "title": "Running Shoes",
+          "description": "Lightweight trail running shoes",
+          "link": "https://example.com/products/PROD-001",
+          "imageLink": "https://example.com/images/PROD-001.jpg",
+          "price": "99.99 USD",
+          "availability": "in_stock",
+          "googleProductCategory": "Apparel & Accessories > Shoes"
+        }
+      }
+    ]
+  }'
+```
+
+The response returns the ingestion identifier in `data.id`. Save this value — it is the `id` used in the next step.
+
+```json
+{
+  "data": {
+    "id": "ing-a1b2c3d4"
+  }
+}
+```
+
+<Warning>
+  Do not send multiple updates of the same product in a single batch — the batch will be rejected. Only send entries for products whose data has actually changed.
+</Warning>
+
+<Note>
+  Products that are not updated expire after 30 days. Use the `expirationDate` field to extend the lifespan up to one year.
+</Note>
+
+---
+
+### 2. Retrieve the batch report
+
+[→ `GET /2027-01/retail-media/catalog/products/batch/report/{id}`](/retail-media/v2027.01-rc/reference/GetCatalogProductsBatchReport)
+
+Poll using the `id` from step 1. Returns the ingestion status and product counts.
+
+```bash
+curl "https://api.criteo.com/2027-01/retail-media/catalog/products/batch/report/ing-a1b2c3d4" \
+  -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
+```
+
+Retry with backoff while `data.attributes.status` is `accepted` or `inProgress`. Stop when it reaches `validated`, `validatedWithErrors`, or `failed`. The token is valid for 4 days.
+
+<Note>
+  `validatedWithErrors` is a terminal state — some products were rejected but the remainder are live. The top-level `errors[]` array contains per-product details including `code`, `title`, `detail`, and `source.productId`.
+</Note>
+
+---
+
+## Verify
+
+A successful upload returns HTTP `202` with a non-empty `data.id`. A successful ingestion has `data.attributes.status` of `validated`. A `validatedWithErrors` status indicates partial success — some products were rejected. If `failed`, the entire batch was rejected.
+
+---
+
+## Constraints
+
+| Limit | Value |
+|---|---|
+| Product lifespan without update | 30 days |
+| Maximum `expirationDate` | 1 year from last update |
+| Duplicate product in a single batch | Not allowed — batch is rejected |
+| Batch processing time | Up to 1 hour |
+| Report token lifetime | 4 days |
+
+---
+
+## Best practices
+
+- **Only update changed products.** This API is not a feed ingestion mechanism — submit requests only for new, updated, or deleted products.
+- **Send updates immediately after a change.** Do not hold updates to group them into a larger batch — send them as soon as the product data changes.
+- **Submit a deletion immediately when a product is removed from your store.** Do not rely on the expiration date — a product approaching expiry may still be displayed even if it is no longer available.
+- **Do not send multiple updates for the same product in a single batch.** The entire batch is rejected if it contains duplicates.
+- **Do not send updates for unchanged products**, unless the product is approaching its expiration date.
+- **`id` and `itemGroupId` must be different.** Use `id` to uniquely identify a single product and `itemGroupId` to group products as variants.
+- **`itemGroupId` must be outside the `id` range.** If a product shares an `id` with an existing `itemGroupId` or vice versa, the behavior is undefined and updates may be silently ignored.
+- **Include `itemGroupId` when deleting a product variant** to avoid catalog inconsistencies.
