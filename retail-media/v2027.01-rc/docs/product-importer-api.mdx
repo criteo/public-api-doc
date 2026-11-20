@@ -9,7 +9,7 @@ This guide walks through the Product Importer API: submit a batch of product ups
 
 ## Prerequisites
 
-- **Auth scope**: _To be confirmed when the 2027-01 OAS contract is published. See [Authentication](/retail-media/v2027.01-rc/docs/authentication)._
+- **Auth scope**: `RetailMedia_Catalog_Manage` (upload), `RetailMedia_Catalog_Read` (report) — see [Authentication](/retail-media/v2027.01-rc/docs/authentication)
 - **Merchant ID**: the identifier of the merchant whose catalog you are updating — obtainable from your Criteo account team
 - **Product data**: a list of products to upsert or delete, each identified by a unique `id`
 
@@ -51,7 +51,7 @@ curl -X POST "https://api.criteo.com/2027-01/retail-media/catalog/products/batch
   }'
 ```
 
-The response returns the ingestion identifier in `data.id`. Save this value — it is the `ingestion-id` used in the next step.
+The response returns the ingestion identifier in `data.id`. Save this value — it is the `id` used in the next step.
 
 ```json
 {
@@ -71,40 +71,28 @@ The response returns the ingestion identifier in `data.id`. Save this value — 
 
 ---
 
-### 2. Retrieve the ingestion summary
+### 2. Retrieve the batch report
 
-[→ `GET /2027-01/retail-media/catalog/ingestion/{ingestion-id}/reports/summary`](/retail-media/v2027.01-rc/reference/GetCatalogIngestionReportSummary)
+[→ `GET /2027-01/retail-media/catalog/products/batch/report/{id}`](/retail-media/v2027.01-rc/reference/GetCatalogProductsBatchReport)
 
-Poll this endpoint using the `ingestion-id` from step 1. It returns the ingestion status, counts of products upserted, deleted, and errored, and data quality indicators.
+Poll using the `id` from step 1. Returns the ingestion status and product counts.
 
 ```bash
-curl "https://api.criteo.com/2027-01/retail-media/catalog/ingestion/ing-a1b2c3d4/reports/summary" \
+curl "https://api.criteo.com/2027-01/retail-media/catalog/products/batch/report/ing-a1b2c3d4" \
   -H "Authorization: Bearer <MY_ACCESS_TOKEN>"
 ```
 
-Retry with backoff while `data.attributes.status` is `pending` or `running`. Stop when it reaches `success` or `failure`.
+Retry with backoff while `data.attributes.status` is `accepted` or `inProgress`. Stop when it reaches `validated`, `validatedWithErrors`, or `failed`. The token is valid for 4 days.
 
----
-
-### 3. List recent ingestions for a merchant (optional)
-
-[→ `GET /2027-01/retail-media/catalog/merchants/{merchant-id}/ingestion/reports`](/retail-media/v2027.01-rc/reference/GetCatalogIngestionReports)
-
-Returns the most recent ingestions for a merchant, in descending order, with their type, status, and timing. Use this to audit ingestion history or investigate recurring issues without needing a specific `ingestion-id`.
-
----
-
-### 4. Inspect quality issues (optional)
-
-[→ `GET /2027-01/retail-media/catalog/ingestion/{ingestion-id}/reports/quality`](/retail-media/v2027.01-rc/reference/GetCatalogIngestionQualityIssuesReport)
-
-Returns per-product data quality issues for a completed ingestion. Use this when the summary reports warnings or errors but you need field-level detail.
+<Note>
+  `validatedWithErrors` is a terminal state — some products were rejected but the remainder are live. The top-level `errors[]` array contains per-product details including `code`, `title`, `detail`, and `source.productId`.
+</Note>
 
 ---
 
 ## Verify
 
-A successful upload returns HTTP `202` with a non-empty `data.id`. A successful ingestion has `data.attributes.status` of `success` in the summary report and a `numberOfProductsWithErrors` of `0`. If errors are present, inspect the quality report for field-level details per product.
+A successful upload returns HTTP `202` with a non-empty `data.id`. A successful ingestion has `data.attributes.status` of `validated`. A `validatedWithErrors` status indicates partial success — some products were rejected. If `failed`, the entire batch was rejected.
 
 ---
 
@@ -116,6 +104,7 @@ A successful upload returns HTTP `202` with a non-empty `data.id`. A successful 
 | Maximum `expirationDate` | 1 year from last update |
 | Duplicate product in a single batch | Not allowed — batch is rejected |
 | Batch processing time | Up to 1 hour |
+| Report token lifetime | 4 days |
 
 ---
 
