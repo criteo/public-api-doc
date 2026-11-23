@@ -15,6 +15,7 @@ Request bodies and catalog data are unchanged — no re-upload of your product c
 |---|---|
 | **Upload** `POST .../catalog/products/batch` | Version prefix changes from `preview` to `2027-01`. Response token moves from `operationToken` to `data.id`. |
 | **Report** `GET .../catalog/products/batch/report/{id}` | Path and parameter name change. Response restructured: data envelope, flat error lists, kebab-case codes, camelCase statuses, ISO-8601 timestamps. |
+| **Statistics** `GET .../catalog/stats/merchants/{id}` | New in 2027-01, no Preview equivalent. |
 
 ---
 
@@ -25,7 +26,7 @@ Request bodies and catalog data are unchanged — no re-upload of your product c
 POST https://api.criteo.com/preview/retail-media/catalog/products/batch
 ```
 
-**New path****:**
+**New path:**
 ```
 POST https://api.criteo.com/2027-01/retail-media/catalog/products/batch
 ```
@@ -34,10 +35,10 @@ POST https://api.criteo.com/2027-01/retail-media/catalog/products/batch
 
 ```diff
 - { "operationToken": "ing-a1b2c3d4" }
-+ { "data": { "id": "ing-a1b2c3d4" } }
++ { "data": { "type": "CatalogProductsBatchReport", "id": "ing-a1b2c3d4" } }
 ```
 
-The token value itself is unchanged — only the field name and envelope differ.
+The token value itself is unchanged — only the field name and envelope differ. The token has a 4-day lifetime and works on both Preview and 2027-01: a token issued by either version can be used to query the report on the other.
 
 ---
 
@@ -48,7 +49,7 @@ The token value itself is unchanged — only the field name and envelope differ.
 GET https://api.criteo.com/preview/retail-media/catalog/products/batch/report/{operation-token}
 ```
 
-**New path****:**
+**New path:**
 ```
 GET https://api.criteo.com/2027-01/retail-media/catalog/products/batch/report/{id}
 ```
@@ -60,32 +61,11 @@ The `id` path parameter takes the same token value previously passed as `operati
 | Old | New |
 |---|---|
 | Flat root-level object | `data.attributes` wrapper |
-| `status` values: `Pending`, `Running`, `Success`, `Failure` | `accepted`, `inProgress`, `validated`, `validatedWithErrors`, `failed` |
-| `importRequestTimestamp` as custom string | ISO-8601 timestamp |
-| Nested error objects with custom codes | Flat `errors[]` array with kebab-case `code` values |
-| `warningDetails[]` array | `warnings[]` array in standard envelope |
-
-<Note>
-  The new response also adds `data.attributes.quality` indicators not present in the Preview report. These are optional to consume.
-</Note>
-
----
-
-## 3. Add the statistics call
-
-This endpoint is new in `2027-01` — it has no `preview` equivalent.
-
-**New path:**
-```
-GET https://api.criteo.com/2027-01/retail-media/catalog/stats/merchants/{merchant-id}
-```
-
-**Query parameter:**
-```
-?last-number-of-hours=24
-```
-
-The parameter accepts values from 1 to 1000 and defaults to 24 when omitted. The response wraps results in a `data` envelope with ISO-8601 timestamps and a `records` array (`MerchantCatalogStatistics` type).
+| `status` values: `accepted`, `validated`, `failed` | `accepted`, `inProgress`, `validated`, `validatedWithErrors`, `failed` |
+| `importRequestTimestamp` as epoch milliseconds | ISO-8601 UTC timestamp |
+| `numberOfProducts*` counts as strings | JSON numbers |
+| `errorDetails[]` per product, PascalCase types (e.g. `InvalidProductUrl`) | `errors[]` array; fields: `code`, `title`, `detail`, `type` (`validation` or `unknown`), `traceId`, `instance`, `source.productId` |
+| `warningDetails[]` array | `warnings[]` array; same structure as errors |
 
 ---
 
@@ -95,8 +75,24 @@ The parameter accepts values from 1 to 1000 and defaults to 24 when omitted. The
 - [ ] Read the ingestion token from `data.id` (not `operationToken`)
 - [ ] Update the report path; replace `operation-token` path param with `id`
 - [ ] Update response parsing: data envelope, new status values (`accepted`/`inProgress`/`validated`/`validatedWithErrors`/`failed`), flat errors, ISO-8601 timestamps
-- [ ] Add calls to the new statistics endpoint (`GET /2027-01/retail-media/catalog/stats/merchants/{merchant-id}`)
 - [ ] Test on the RC before the Preview cutoff (1 July 2027)
+
+---
+
+## New in 2027-01: merchant catalog statistics
+
+This endpoint has no Preview equivalent — it is available for the first time in 2027-01. Adopting it is optional and does not affect existing integrations.
+
+```
+GET https://api.criteo.com/2027-01/retail-media/catalog/stats/merchants/{merchant-id}
+```
+
+**Query parameter:**
+```
+?last-number-of-hours=24
+```
+
+The parameter accepts values from 1 to 1000 and defaults to 24 when omitted. The response type is `MerchantCatalogStatistics`: `data.id` is the merchant ID and records are at `data.attributes.records[]` with ISO-8601 UTC timestamps.
 
 <Warning>
   Do not test your migration on Preview after the Stage 1 notice in December 2026 — Preview keeps working until 1 July 2027, but new integrations should target 2027-01 RC directly.
