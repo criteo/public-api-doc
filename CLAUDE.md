@@ -29,11 +29,11 @@ The dev portal nav is organized into three layers:
 |---|---|
 | **Concepts** | Explain what something is — data model, architecture, pricing logic. No curl examples. |
 | **API Workflows** | Goal-oriented guides: one guide per developer job-to-be-done. Curl examples, steps, verify. |
-| **Reference Pages for LLMs** | Dense structured pages for LLM consumption: hard limits, error codes, field matrices, semantic patterns. No prose padding. |
+| **Rules & Limits** | Dense structured pages for LLM consumption: hard limits, error codes, field matrices, semantic patterns. No prose padding. |
 
 The API Reference (auto-generated from OAS) sits below these three layers.
 
-**Ownership:** Reference Pages for LLMs are owned and maintained by the documentation team. API contributors should only create or edit content in **Concepts** and **API Workflows**.
+**Ownership:** Rules & Limits pages are owned and maintained by the documentation team. API contributors should only create or edit content in **Concepts** and **API Workflows**.
 
 ## Workflow Guide Template
 
