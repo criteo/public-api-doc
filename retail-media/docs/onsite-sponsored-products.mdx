@@ -3,41 +3,11 @@ title: Onsite Sponsored Products
 description: Onsite Sponsored Products line items place keyword-targeted ads in retailer search results and category pages, on a CPC auction model.
 ---
 
+Onsite Sponsored Products (SP) is a CPC auction format. Ads appear in retailer search results and category pages, alongside organic product listings. The advertiser bids on keywords; the retailer's auction determines which ads show and in what order.
 
+SP campaigns use the `SponsoredProducts` campaign type. Each line item targets one retailer and promotes one or more products from your catalog.
 
-## Line Items
-
-Each campaign consists of one or several line items. With the Criteo Retail Media API, you can run an ad only after creating a campaign and, at least, one line item.
-
-```mermaid
-graph TD
-    Campaign --> LineItem["Line Item (Onsite SP)"]
-    LineItem --> PromotedProduct["Promoted Product"]
-    LineItem --> Keywords["Keyword Targeting\n(Positive / Negative)"]
-    LineItem -->|"targets 1"| Retailer
-```
-
-A line item is where you will select the products and the retailer you want to advertise. Each line item can consist of multiple featured products but can only run across one retailer. You will need to create multiple line items to run across multiple retailers.
-
-Several line item settings also help you spend your budget wisely and optimize delivery.
-
-To see all of your existing line items, please refer to [Line Items](/retail-media/docs/line-items)
-
-<Info>
-  **Things to Know**
-
-  * A line item holds promoted products to advertise on any single retailer.
-
-  * Line items have bid settings, start & end dates, and optional budgeting & pacing controls.
-
-  * Budgets may additionally be controlled at the campaign level.
-
-  * Several reports are available to measure line item performance.
-
-  * Campaigns are limited to 10,000 non-archived line items.
-
-  * Line items are archived automatically 90 days after their end date.
-</Info>
+**How it differs from Onsite Display:** SP targets shoppers by keyword and runs on a CPC auction. Onsite Display targets shoppers by audience, store, or add-to-basket behavior and runs on preferred deals (fixed CPM).
 
 <Note>
   See the full list of endpoints and parameters in the [→ API Reference](/retail-media/reference/get-auction-line-items-by-campaign)
@@ -47,179 +17,36 @@ To see all of your existing line items, please refer to [Line Items](/retail-med
   Learn more in the [CMax Help Center](https://help.retailmedia.criteo.com/kb/en/create-and-edit-onsite-sponsored-products-line-item-492866)
 </Note>
 
-***
+---
 
 ## Keywords
 
-Criteo API provides the capability to control search placements based on keywords that shoppers may use on a search page. Using a single API call, you can specify which keywords to target or avoid, and optimize your line item by setting bids on the most relevant keywords.
+Keywords are the targeting mechanism for SP line items. You specify which search terms should trigger your ads (positive keywords) and which should suppress them (negative keywords).
 
-### Negative Keyword Targeting
+### Positive keywords
 
-<Info>
-  This endpoint and its capabilities apply **ONLY** to Onsite Sponsored Products Campaigns & Line Items.  
-  Negative keyword targeting allows you to specify keywords on which you do not want your ads to appear (applies to search inventory).
-</Info>
+Submitted (positive) keywords target shoppers based on exact-match search phrases. The API uses `PositiveExactMatch` — the shopper's search term is normalized and compared to your keyword.
 
-Negative keyword targeting helps determine where a line item should or should not serve, based on product keywords that shoppers use in searches or purchases.
+| Match type | Keyword | Ads show for |
+|---|---|---|
+| `PositiveExactMatch` | Women's shoes | Women's shoes, Womens shoes, Womens shoe |
 
-Negative keywords can be specified as either **Broad Match** or **Exact Match**.
+**Keyword normalization** strips stop words, stems remaining words, and sorts them alphabetically before matching. "Runner" becomes "run"; "the" is removed.
 
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Match Type
-    </p>
-   </th>
-   <th>
-    <p>
-     Negative keyword
-    </p>
-   </th>
-   <th>
-    <p>
-     Ads won't show for
-    </p>
-   </th>
-   <th>
-    <p>
-     Ads may show for
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     Broad match
-    </p>
-   </td>
-   <td>
-    <p>
-     Men's shoes
-    </p>
-   </td>
-   <td>
-    <p>
-     Men shoes, Blue men’s shoes, Men's shoe size 9
-    </p>
-   </td>
-   <td>
-    <p>
-     Shoes, Boy’s shoes, Men’s basketball shoes
-    </p>
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <p>
-     Exact match
-    </p>
-   </td>
-   <td>
-    <p>
-     Men’s shoes
-    </p>
-   </td>
-   <td>
-    <p>
-     Men’s shoes, Mens shoes, Mens shoe
-    </p>
-   </td>
-   <td>
-    <p>
-     Shoes, Blue men’s shoes, Mens shoe size 9
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
+### Negative keywords
 
+Negative keywords suppress ads on searches you want to exclude. Two match types are available:
 
-### Submitted Keywords
+| Match type | Keyword | Ads won't show for | Ads may show for |
+|---|---|---|---|
+| `NegativeBroadMatch` | Men's shoes | Men shoes, Blue men's shoes, Men's shoe size 9 | Shoes, Boy's shoes |
+| `NegativeExactMatch` | Men's shoes | Men's shoes, Mens shoes, Mens shoe | Shoes, Blue men's shoes |
 
-Submitted (or Positive) keyword targeting enables targeting based on a pool of search phrases that closely match what shoppers type. The API allows you to specify these phrases using the `PositiveExactMatch` match type, comparing the shopper's search term with your specified keywords for an exact match.
+Negative keywords affect search placements only — they do not suppress ads on non-search pages.
 
-[Submitted Keywords](https://help.retailmedia.criteo.com/kb/guide/en/submitted-keywords-pWrW3V33fn/Steps/1632115) will always be **Exact Match**.
+### Keyword approval workflow
 
-<table>
- <thead>
-  <tr>
-   <th>
-    <p>
-     Submitted keyword match type
-    </p>
-   </th>
-   <th>
-    <p>
-     Positive keyword
-    </p>
-   </th>
-   <th>
-    <p>
-     Ads will show for
-    </p>
-   </th>
-   <th>
-    <p>
-     Ads won’t show for
-    </p>
-   </th>
-  </tr>
- </thead>
- <tbody>
-  <tr>
-   <td>
-    <p>
-     Exact match
-    </p>
-   </td>
-   <td>
-    <p>
-     Women's shoes
-    </p>
-   </td>
-   <td>
-    <p>
-     Women's shoes, Womens shoes, Womens shoe
-    </p>
-   </td>
-   <td>
-    <p>
-     Shoes, Blue women’s shoes, Womens shoe size 9
-    </p>
-   </td>
-  </tr>
- </tbody>
-</table>
-
-#### Keyword Normalization Involves:
-
-* Removing stop words (e.g., "a," "the," "at").
-
-* [Stemming ](https://help.retailmedia.criteo.com/kb/guide/en/keyword-bidding-oBNia2gtXt/Steps/2150023,2150048,2150049) remaining words by trimming prefixes and suffixes ("runner" => "run").
-
-* Sorting remaining words alphabetically.
-
-You can also prune phrases using `NegativeExactMatch` and `NegativeBroadMatch` to remove unwanted matches.
-
-* **Negative exact match**: Removes phrases that match the normalized keyword exactly.
-
-* **Negative broad match**: Removes phrases that match any part of a normalized keyword.
-
-The remaining positive phrases are sent to delivery for bid qualification on search pages, while delivery does not use negative keywords.
-
-#### Submitted Keyword Approval Workflow
-
-When you submit a positive keyword, it enters a pending state. Criteo’s validation system will automatically review and approve or reject the keyword:
-
-* If the keyword is already mapped in the automated keyword model, it is approved.
-
-* If the keyword contains a competitor's brand name, it is rejected and deactivated.
-
-* If the keyword cannot be validated automatically, a Criteo reviewer will manually assess its eligibility.
+Submitted keywords enter a review queue before taking effect:
 
 ```mermaid
 flowchart TD
@@ -232,43 +59,26 @@ flowchart TD
     Manual --> Rejected
 ```
 
-### Keyword Bidding
+- If the keyword is already in Criteo's keyword model, it is auto-approved.
+- If it contains a competitor brand name, it is rejected and deactivated.
+- Otherwise it goes to manual review.
 
-* Keyword bidding offers more granular control over your ad spend by allowing specific bids on keywords.
+Keyword bids only take effect once a keyword is approved. Bids on in-review or rejected keywords have no effect.
 
-* The bid must respect the minimum CPC bid of the line item.
+### Keyword bidding
 
-<Info>
-  If the line item has a maximum CPC bid set, this will always be enforced, even if a keyword bid exceeds it.
-</Info>
+You can set individual CPC bids per keyword for more granular spend control.
 
-**Outcomes Based on Keyword Status:**
-
-* **Approved:** Keyword bids take effect immediately.
-
-* **In Review:**: Bids are not effective until the keyword is approved.
-
-* **Rejected:** Bids have no effect.
-
-<Info>
-  **Additional Resources**
-
-  To learn more about Criteo keyword services, explore these articles:
-
-  * [Criteo Keyword Model](/retail-media/v2024.10/docs/positive-keyword-targeting)
-  * [Keyword Bidding](https://help.retailmedia.criteo.com/kb/guide/en/keyword-bidding-oBNia2gtXt/Steps/2150023,2150048)
-  * [Submitted Keyword](https://help.retailmedia.criteo.com/kb/guide/en/submitted-keywords-pWrW3V33fn/Steps/1632115)
-  * [Negative Keyword](https://help.retailmedia.criteo.com/kb/guide/en/negative-keyword-targeting-zgMmEUbU8V/Steps/1208564)
-</Info>
+- Keyword bids must be at or above the line item's minimum CPC bid.
+- If the line item has a maximum CPC bid set, it is always enforced — even if a keyword bid exceeds it.
 
 ---
 
 ## Constraints
 
-- Each line item targets **one retailer** only. Create separate line items for each retailer.
+- Each line item targets **one retailer** only. Create separate line items to advertise across multiple retailers.
 - Each line item supports up to **500 promoted products**.
-- Keyword bids must respect the line item's **minimum CPC bid**. If the line item has a maximum CPC bid set, it is always enforced — even if a keyword bid exceeds it.
-- Submitted (positive) keywords must pass an approval workflow before taking effect. See the diagram above.
-- Negative keywords suppress ads on matching search queries but do not affect delivery on non-search placements.
-
----
+- Keyword bids must respect the line item's **minimum CPC bid**.
+- Submitted keywords must pass the approval workflow before they can serve.
+- Negative keywords suppress ads on matching search queries but do not affect non-search placements.
+- Campaigns are limited to **10,000 non-archived line items**. Line items are archived automatically 90 days after their end date.
