@@ -3,32 +3,43 @@ title: Conceptual Map
 description: How the core objects in the Retail Media API relate to each other.
 ---
 
+The Retail Media API is organized around a small set of objects. Use this page to understand how they fit together before reading the individual concept pages.
+
 ```mermaid
 graph TD
     Account -->|"owns 1..N"| Campaign
     Account -->|"owns 1..N"| Balance
     Account -->|"has"| Catalog
-    Account -->|"owns"| Audience
-    Account -->|"owns"| Creative
-    Balance -->|"funds N..N"| Campaign
-    Campaign -->|"contains 1..N"| LineItem["Line Item"]
-    LineItem -->|"targets 1"| Retailer
-    LineItem -->|"contains 1..N"| PromotedProduct["Promoted Product"]
-    LineItem -->|"applies"| Audience
-    LineItem -->|"applies"| Targeting["Targeting (Store / ATB)"]
-    LineItem -->|"uses"| Creative
-    Catalog -->|"source for"| PromotedProduct
+    Account -->|"owns 1..N"| Audience
+    Account -->|"owns 1..N"| Creative
+    Balance -->|"funds"| Campaign
+    Campaign -->|"contains 1..N"| LI["Line Item"]
+    LI -->|"targets 1"| Retailer
+    LI -->|"promotes 1..N"| PP["Promoted Product"]
+    LI -->|"targeted by"| Audience
+    LI -->|"displays"| Creative
+    Catalog -->|"source for"| PP
 ```
+
+## Campaign hierarchy
 
 | Object | Role |
 |---|---|
-| Account | Top-level entity. All campaigns, balances, catalogs, audiences, and creatives belong to an account. |
-| Campaign | Groups line items under a shared marketing objective and attribution window. |
-| Balance | Budget object that funds one or more campaigns. A campaign can draw from multiple balances. |
-| Line Item | Executes the campaign at a specific retailer. Controls bid, budget, targeting, and promoted products. |
-| Promoted Product | A product from the catalog assigned to a line item for promotion. |
-| Catalog | The account's product inventory. Multiple catalog types available (brand, seller). Source for selecting promoted products. |
-| Retailer | The retail platform where ads are served. Each line item targets exactly one retailer. |
-| Audience | A named set of users defined by one or more segments. Created at account level, applied to Onsite Display line items as targeting. |
-| Creative | A display ad built from a retailer template. Created at account level, applied to Onsite Display line items. |
-| Targeting | Store lists or add-to-basket rules applied to a line item alongside or instead of audiences. Requires initialization before use. |
+| **Account** | Top-level entity. All campaigns, balances, catalogs, audiences, and creatives belong to an account. |
+| **Campaign** | Groups line items under a shared marketing objective and attribution window. Does not deliver ads directly. |
+| **Balance** | Budget pool that funds one or more campaigns. When exhausted, all linked campaigns stop. |
+| **Line Item** | Delivery unit. Targets one retailer, holds promoted products, controls bid, budget, and targeting. |
+
+## Content and targeting
+
+| Object | Role |
+|---|---|
+| **Promoted Product** | A product from the catalog assigned to a line item. Up to 500 per line item. |
+| **Catalog** | Daily snapshot of the account's eligible products per retailer. Source for selecting promoted products. |
+| **Audience** | Named set of users built from behavioral segments. Created at account level, applied to Onsite Display line items. |
+| **Creative** | Display ad built from a retailer template. Created at account level, applied to Onsite Display line items. |
+| **Retailer** | The retail platform where ads are served. Each line item targets exactly one retailer. |
+
+<Info>
+  Audience and Creative are used by **Onsite Display** line items. **Sponsored Products** line items use keyword targeting instead — see [Onsite Sponsored Products](/retail-media/docs/onsite-sponsored-products).
+</Info>
