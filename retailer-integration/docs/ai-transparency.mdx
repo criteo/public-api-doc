@@ -29,7 +29,7 @@ Criteo tells you **what each asset contains** and **which disclosure rule applie
 Once enabled for a retailer, two new fields are added to Onsite Display placements.
 
 <Info>
-  The two fields are there to **make it easier to read the AI label signals**. They are not the only source of that information. The images and videos Criteo returns already carry their **C2PA manifest**, whether or not the feature is enabled for your retailer, so you can read the manifests yourself if you prefer. When the feature is enabled, Criteo reads them for you and returns the result in the delivery response.
+  The two fields are there to **make it easier to read the AI label signals**. They are not the only source of that information. The images and videos Criteo returns already carry their **C2PA manifest** in their metadata, whether or not the feature is enabled for your retailer, so you can read and parse the manifests yourself if you prefer. When the feature is enabled, Criteo reads them for you and returns the result in the delivery response.
 </Info>
 
 | Field | Where | Type | Description |
@@ -71,18 +71,6 @@ In this example the desktop background has no AI content (`33`), the mobile back
 
 * The keys are the same asset names used elsewhere in `rendering` (`desktop_background_image`, `mobile_logo_image`, and so on).
 * Like the other values in `rendering`, it is a **JSON-encoded string**. Parse it before use.
-* When an asset key holds **several images** (an array of URLs in `rendering`), its entry is an **array of numbers in the same order** as the images:
-
-```json
-{
-  "multiple_images": [
-    "//retailmedia-static.criteo.com/creativeassets-live/AiGenerated.jpg",
-    "//retailmedia-static.criteo.com/creativeassets-live/nonAi.jpg"
-  ],
-  "assets_generation_method": "{\"multiple_images\":[36,0]}"
-}
-```
-
 * The property can be **absent** (for example on a creative with no information about its assets). Treat a missing property, a missing key or a value of `0` as "nothing to disclose".
 
 ## `ai_disclosure_rules`
@@ -165,7 +153,7 @@ A few rules to keep in mind:
 * **One label per ad.** If different assets of the same ad return different values, show a single label: the most restrictive one. For `ai_content`, **AI Generated** wins over **AI Modified**. If a single asset out of three contains a synthetic performer, the synthetic performer label applies to the ad.
 * **Only the label for your rule.** Under `ai_content`, ignore the synthetic performer flag. Under `synthetic_performer`, ignore the AI Generated and AI Modified flags.
 * **Empty `ai_disclosure_rules`: no label**, whatever the values are.
-* **Evaluate the assets you actually display.** Use the entries for the images shown in the current rendering (for example the `mobile_*` assets on a mobile layout), and every item of an array.
+* **Evaluate the assets you actually display.** Use the entries for the images shown in the current rendering (for example the `mobile_*` assets on a mobile layout).
 
 ***
 
@@ -215,9 +203,8 @@ function resolveAiLabel(item, displayedAssets) {
   if (!methods) return null;                            // nothing declared
   if (typeof methods === "string") methods = JSON.parse(methods);
 
-  // Flatten single values and arrays, for the assets you display only
-  const values = displayedAssets
-    .flatMap((key) => [].concat(methods[key] ?? 0));
+  // Values of the assets you display only (a missing key counts as 0)
+  const values = displayedAssets.map((key) => methods[key] ?? 0);
 
   const has = (flag) => values.some((v) => (v & flag) !== 0);
 
