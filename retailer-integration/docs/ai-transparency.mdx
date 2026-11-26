@@ -1,14 +1,14 @@
 ---
-title: AI Transparency Labels
-description: Learn how Criteo flags AI-generated and AI-modified creative assets in the Onsite Display delivery response, what each value means, and how to render the AI label.
+title: "AI Transparency Labels"
+description: "Learn how Criteo flags AI-generated and AI-modified creative assets in the Onsite Display delivery response, what each value means, and how to render the AI label."
 ---
 
 # Context
 
 Some regions require ads that contain AI content to be labelled to shoppers. Depending on the retailer's region, this means one of the following:
 
-* **AI-generated or AI-modified content**: applies to EMEA, Korea, Taiwan, Vietnam and Thailand.
-* **Synthetic performers**: applies to the US states of New York and California.
+- **AI-generated or AI-modified content**: applies to EMEA, Korea, Taiwan, Vietnam and Thailand.
+- **Synthetic performers**: applies to the US states of New York and California.
 
 Criteo records how each creative asset was produced (for example from C2PA content credentials embedded in the file) and returns that information in the delivery response, so that you can show the right label on the right ads.
 
@@ -22,16 +22,42 @@ Criteo tells you **what each asset contains** and **which disclosure rule applie
   This page covers Onsite Display formats. Sponsored Products placements do not carry these fields yet.
 </Note>
 
-***
+---
 
 # What changes in the ad delivery response
 
 Once enabled for a retailer, two new fields are added to Onsite Display placements.
 
-| Field | Where | Type | Description |
-| --- | --- | --- | --- |
-| `ai_disclosure_rules` | On the placement, next to `rendering` | array of strings | Which disclosure rule applies to this retailer. |
-| `assets_generation_method` | Inside `rendering` | JSON-encoded object | For each asset in `rendering`, a number describing whether the asset contains AI content. |
+<table>
+  <colgroup>
+    <col width="211" />
+    <col width="297" />
+    <col width="192" />
+    <col width="325" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Where</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`ai_disclosure_rules`</td>
+      <td>On the placement, next to `rendering`</td>
+      <td>array of strings</td>
+      <td>Which disclosure rule applies to this retailer.</td>
+    </tr>
+    <tr>
+      <td>`assets_generation_method`</td>
+      <td>Inside `rendering`</td>
+      <td>JSON-encoded object</td>
+      <td>For each asset in `rendering`, a number describing whether the asset contains AI content.</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Example
 
@@ -65,9 +91,9 @@ In this example the desktop background has no AI content (`33`), the mobile back
 
 ## `assets_generation_method`
 
-* The keys are the same asset names used elsewhere in `rendering` (`desktop_background_image`, `mobile_logo_image`, and so on).
-* Like the other values in `rendering`, it is a **JSON-encoded string**. Parse it before use.
-* When an asset key holds **several images** (an array of URLs in `rendering`), its entry is an **array of numbers in the same order** as the images:
+- The keys are the same asset names used elsewhere in `rendering` (`desktop_background_image`, `mobile_logo_image`, and so on).
+- Like the other values in `rendering`, it is a **JSON-encoded string**. Parse it before use.
+- When an asset key holds **several images** (an array of URLs in `rendering`), its entry is an **array of numbers in the same order** as the images:
 
 ```json
 {
@@ -79,7 +105,7 @@ In this example the desktop background has no AI content (`33`), the mobile back
 }
 ```
 
-* The property can be **absent** (for example on a creative with no information about its assets). Treat a missing property, a missing key or a value of `0` as "nothing to disclose".
+- The property can be **absent** (for example on a creative with no information about its assets). Treat a missing property, a missing key or a value of `0` as "nothing to disclose".
 
 ## `ai_disclosure_rules`
 
@@ -95,7 +121,7 @@ In this example the desktop background has no AI content (`33`), the mobile back
 
 A retailer receives only one rule: `ai_content` and `synthetic_performer` never apply together.
 
-***
+---
 
 # What each value means
 
@@ -143,7 +169,7 @@ The flags can be combined. For example, `38` = `32 + 4 + 2`: from C2PA, **AI Gen
 | `44` | Synthetic Performer + AI Generated | C2PA |
 | `46` | Synthetic Performer + AI Generated + AI Modified | C2PA |
 
-***
+---
 
 # Which label to show
 
@@ -158,12 +184,12 @@ Combine the rule from `ai_disclosure_rules` with the flags of each asset:
 
 A few rules to keep in mind:
 
-* **One label per ad.** If different assets of the same ad return different values, show a single label: the most restrictive one. For `ai_content`, **AI Generated** wins over **AI Modified**. If a single asset out of three contains a synthetic performer, the synthetic performer label applies to the ad.
-* **Only the label for your rule.** Under `ai_content`, ignore the synthetic performer flag. Under `synthetic_performer`, ignore the AI Generated and AI Modified flags.
-* **Empty `ai_disclosure_rules`: no label**, whatever the values are.
-* **Evaluate the assets you actually display.** Use the entries for the images shown in the current rendering (for example the `mobile_*` assets on a mobile layout), and every item of an array.
+- **One label per ad.** If different assets of the same ad return different values, show a single label: the most restrictive one. For `ai_content`, **AI Generated** wins over **AI Modified**. If a single asset out of three contains a synthetic performer, the synthetic performer label applies to the ad.
+- **Only the label for your rule.** Under `ai_content`, ignore the synthetic performer flag. Under `synthetic_performer`, ignore the AI Generated and AI Modified flags.
+- **Empty `ai_disclosure_rules`: no label**, whatever the values are.
+- **Evaluate the assets you actually display.** Use the entries for the images shown in the current rendering (for example the `mobile_*` assets on a mobile layout), and every item of an array.
 
-***
+---
 
 # How to render the label
 
@@ -173,15 +199,15 @@ A few rules to keep in mind:
 
 ## Recommended label
 
-* **AI Generated / AI Modified**: a **round AI badge**. It is always visible, and its full wording (**AI Generated** or **AI Modified**) appears on hover (desktop) or on click or tap (mobile and app).
-* **Alternative**: a sparkle icon with the text "AI info" is also accepted for AI Generated and AI Modified, in line with the IAB recommendation.
-* **Ad Contains Synthetic Performer**: always show the full text next to a monochrome sparkle. **Never hide it** behind a hover or a tap. A compact version (one line, 10px) is available for narrow formats such as the 160×600.
+- **AI Generated / AI Modified**: a **round AI badge**. It is always visible, and its full wording (**AI Generated** or **AI Modified**) appears on hover (desktop) or on click or tap (mobile and app).
+- **Alternative**: a sparkle icon with the text "AI info" is also accepted for AI Generated and AI Modified, in line with the IAB recommendation.
+- **Ad Contains Synthetic Performer**: always show the full text next to a monochrome sparkle. **Never hide it** behind a hover or a tap. A compact version (one line, 10px) is available for narrow formats such as the 160×600.
 
 ## Placement
 
-* Place the label in the **top-right corner of the branding zone** for most standard Onsite Display formats, for consistency across formats.
-* Inside grids, keep the label **within the boundaries of the format**.
-* When there is free space around a format, the label can sit **outside the format**, close to the content it refers to.
+- Place the label in the **top-right corner of the branding zone** for most standard Onsite Display formats, for consistency across formats.
+- Inside grids, keep the label **within the boundaries of the format**.
+- When there is free space around a format, the label can sit **outside the format**, close to the content it refers to.
 
 ## Color
 
@@ -191,7 +217,7 @@ Legacy Onsite Display and IAB formats do not pass a color mode in the ad respons
   Format-specific implementation details will be added to each format page when the feature is available on all formats.
 </Note>
 
-***
+---
 
 # Reading the response
 
