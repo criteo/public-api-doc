@@ -28,12 +28,12 @@ This endpoint replaces the following type-specific creation routes, which remain
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `GET` | `/line-items/{lineItemId}` | Retrieve a consolidated view of a line item. |
-| `POST` | `/line-items` | Create a line-item core entity. |
-| `PATCH` | `/line-items/{lineItemId}` | Update an existing line item. |
+| `POST` | `/line-items` | Create a line item and optionally set its adaptive default bid. |
+| `PATCH` | `/line-items/{lineItemId}` | Update core settings, the adaptive default bid, or both. |
 
 ## Get a Line Item
 
-Retrieves a consolidated view of a line item: its core fields, targeting, ad content (products and creatives), and bidding settings.
+Retrieves a consolidated view of a line item: its core fields, targeting, and ad content (products and creatives).
 
 <EndpointBadge method="get">
 ```http
@@ -57,15 +57,7 @@ All attributes below are nested under `data.attributes`.
 | `targeting` | object or null | Targets configured for the line item. See [Targeting](/retail-media/experimental/docs/line-item-targets#target-attributes) for the `targets[]` field descriptions. |
 | `adContent` | object or null | Ad content associated with the line item. Null only when both `products` and `creatives` are unavailable. |
 | `adContent.products` | object or null | Products in the line item's product pool. Same shape as the resource described in [Line Item Products](/retail-media/experimental/docs/line-item-products#request-attributes), with `approvalStatus` populated on each product. |
-| `adContent.creatives` | object or null | Creatives associated with the line item. |
-| `adContent.creatives.mediaType` | string or null | `Display` or `Video`. Null when not yet known. |
-| `adContent.creatives.creatives` | array | The line item's associated creatives. Empty when none are associated. |
-| `adContent.creatives.creatives[].creative.id` | string | ID of the creative. |
-| `adContent.creatives.creatives[].creative.modifiedAt` | string | When the creative revision currently associated with the line item was associated. |
-| `adContent.creatives.creatives[].approvalStatus` | string | Approval status of the creative associated to the line item. |
-| `adContent.creatives.creatives[].creativePreviewCode` | string or null | The Creative Live Demo preview code. Null if the retailer does not support this feature. |
-| `adContent.creatives.creatives[].creativeProductCollections` | array | The ordered product collections of the associated creative. See [Fetch Line Item Creatives](/retail-media/experimental/docs/line-item-creatives#fetch-line-item-creatives) for the collection and product field descriptions. |
-| `bidding` | object or null | Bidding configuration for the line item. See [Line Item Bidding](/retail-media/experimental/docs/line-item-bidding#response-attributes) for the `cpm` field descriptions. |
+| `adContent.creatives` | object or null | Creatives associated with the line item. Same shape as the resource described in [Line Item Creatives](/retail-media/experimental/docs/line-item-creatives#response-attributes), with `approvalStatus` populated on each creative. |
 
 **Sample Request**
 
@@ -88,6 +80,7 @@ curl -L -X GET \
         "lineItemId": "112233445566778899",
         "type": "OnsiteDisplay",
         "lineItemName": "Back-to-school display",
+        "defaultBid": 3.5,
         "isPaused": false,
         "budgetStatus": "BudgetAvailable",
         "retailerId": "12345",
@@ -151,22 +144,6 @@ curl -L -X GET \
             }
           ]
         }
-      },
-      "bidding": {
-        "cpm": {
-          "bidStrategy": "Adaptive",
-          "standardBiddingSettings": {
-            "auctionBids": [
-              {
-                "pageType": "Search",
-                "bid": 1.25
-              }
-            ]
-          },
-          "adaptiveBiddingSettings": {
-            "maxBid": 3.5
-          }
-        }
       }
     }
   },
@@ -176,9 +153,11 @@ curl -L -X GET \
 
 ### Partial Availability
 
-`core` is always required: if it cannot be retrieved, the endpoint returns a non-`200` response with no `data`, forwarding the downstream error and status code unchanged.
+`core`, including the adaptive bid lookup, is required: if the core fields or bid cannot be retrieved, the endpoint returns a non-`200` response with no `data`, forwarding the error and status code.
 
-`targeting`, `adContent.products`, `adContent.creatives`, and `bidding` are independently optional:
+When Adaptive bidding does not apply to the line item, `core.defaultBid` is null and the response includes a `line-item-default-bid-not-applicable` warning.
+
+`targeting`, `adContent.products`, and `adContent.creatives` are independently optional:
 
 - If one of these is temporarily unavailable (for example, a downstream dependency failure), the response still returns `200 OK` with that attribute set to `null` and a warning appended to the top-level `warnings` array.
 - `adContent` itself is `null` only when both `products` and `creatives` are unavailable; if either succeeds, `adContent` is present with the other field set to `null`.
@@ -189,7 +168,7 @@ curl -L -X GET \
 | `line-item-targeting-unavailable` | `@data/attributes/targeting` | Targeting could not be retrieved. |
 | `line-item-ad-content-products-unavailable` | `@data/attributes/adContent/products` | Products could not be retrieved. |
 | `line-item-ad-content-creatives-unavailable` | `@data/attributes/adContent/creatives` | Creatives could not be retrieved. |
-| `line-item-bidding-unavailable` | `@data/attributes/bidding` | Bidding settings could not be retrieved. |
+| `line-item-default-bid-not-applicable` | `@data/attributes/core/defaultBid` | Adaptive bidding does not apply; `core.defaultBid` is null. |
 
 Clients should always inspect the `warnings` array, even on a `200 OK` response, since it can indicate that part of the consolidated view is incomplete.
 
@@ -199,13 +178,13 @@ Clients should always inspect the `warnings` array, even on a `200 OK` response,
 | --- | --- |
 | `401` | The caller is not authenticated. |
 | `403` | The line item does not exist, or the caller cannot access it. |
-| `5xx` | The core line item could not be retrieved; the error and status code are forwarded from the underlying service unchanged. |
+| `5xx` | The core line item or adaptive bid could not be retrieved; the error and status code are forwarded from the underlying service. |
 
 ---
 
 ## Create a Line Item Core
 
-Creates a line-item core entity under an existing campaign.
+Creates a line item under an existing campaign and optionally sets its adaptive default bid in the same request.
 
 The campaign must be an Onsite Display Auction or Sponsored Products Auction campaign that uses automatic budgets. The line item takes its flight dates from the campaign schedule, and default line-item budgets are set up along with it.
 
@@ -222,11 +201,12 @@ https://api.criteo.com/experimental/retail-media/line-items
 | `lineItemName` | Yes | Display name of the line item. It must be unique within the campaign and contain 2–255 characters after trimming. |
 | `retailerId` | Yes | External ID of the retailer associated with the line item. If the campaign specifies a retailer, the line-item retailer must match it. |
 | `campaignId` | Yes | External ID of the existing campaign that owns the line item and determines which type-specific details object is accepted. |
+| `defaultBid` | No | The default adaptive bid before targeting multipliers, in the line item's currency. Must be greater than `0` and less than `10000000000`. |
 | `serveToOptOutUser` | No | Whether ads can serve to users who opted out of personalization. |
 | `onsiteDisplayDetails.isPaused` | No | Whether the Onsite Display line item is created paused. Defaults to `false`. |
 | `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | No | Initial Onsite Display Auction-specific setting. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
 
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
+The resource `type` is `LineItem`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
 
 Omit `onsiteDisplayDetails` for Sponsored Products campaigns.
 
@@ -235,11 +215,12 @@ Omit `onsiteDisplayDetails` for Sponsored Products campaigns.
 ```json
 {
   "data": {
-    "type": "line-item",
+    "type": "LineItem",
     "attributes": {
       "lineItemName": "Back-to-school display",
       "retailerId": "12345",
       "campaignId": "987654321",
+      "defaultBid": 3.5,
       "serveToOptOutUser": false,
       "onsiteDisplayDetails": {
         "isPaused": false,
@@ -254,7 +235,7 @@ Omit `onsiteDisplayDetails` for Sponsored Products campaigns.
 
 ### Response Attributes
 
-All attributes below are nested under `data.attributes`. Alongside the attributes accepted on creation, the response carries read-only fields such as the following enum fields.
+All attributes below are nested under `data.attributes`. The response includes the core fields and the configured adaptive default bid. It also carries read-only fields such as the following enum fields.
 
 | Attribute | Type | Description |
 | --- | --- | --- |
@@ -267,11 +248,12 @@ All attributes below are nested under `data.attributes`. Alongside the attribute
 {
   "data": {
     "id": "112233445566778899",
-    "type": "line-item",
+    "type": "LineItem",
     "attributes": {
       "lineItemId": "112233445566778899",
       "type": "OnsiteDisplay",
       "lineItemName": "Back-to-school display",
+      "defaultBid": 3.5,
       "isPaused": false,
       "budgetStatus": "BudgetAvailable",
       "retailerId": "12345",
@@ -287,7 +269,9 @@ All attributes below are nested under `data.attributes`. Alongside the attribute
         }
       }
     }
-  }
+  },
+  "warnings": [],
+  "errors": []
 }
 ```
 
@@ -299,12 +283,13 @@ All attributes below are nested under `data.attributes`. Alongside the attribute
 | `400` | `invalid-name` | The name is blank or outside the supported length. |
 | `400` | `invalid-campaign-schedule` | The campaign has no schedule from which the API can derive the line item's flight dates. |
 | `400` | `invalid-retailer-id` | The retailer ID is improperly formatted or, when the campaign specifies a retailer, does not match it. |
+| `400` | `invalid-default-bid` | `defaultBid` is less than or equal to `0`, or greater than or equal to `10000000000`. |
 | `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
 | `400` | `unsupported-campaign-type` | The campaign is not an Auction campaign with automatic budgets, or its type is not supported by the current implementation. |
 | `401` | `unauthorized` | The caller is not authenticated. |
 | `403` | `forbidden` | The caller cannot create a line item for the target campaign and retailer. |
 
-If the default budgets cannot be set up after the line item is created, the request returns the budget error and the line item is renamed with a `[FAILED]` prefix. Do not configure that line item further.
+If the default bid and/or budgets cannot be set up after the line item is created, the request returns the error(s) and the line item is renamed with a `[FAILED]` prefix. Do not configure that line item further.
 
 ---
 
@@ -332,23 +317,25 @@ https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}
 | --- | --- |
 | `lineItemName` | New display name. Must be unique within the campaign and contain 2–255 characters after trimming. |
 | `isPaused` | Set to `true` to pause the line item or `false` to unpause it. |
+| `defaultBid` | The default adaptive bid before targeting multipliers, in the line item's currency. Must be greater than `0` and less than `10000000000`. |
 | `serveToOptOutUser` | Whether ads can serve to users who opted out of personalization. |
 | `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | Onsite Display Auction-specific. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
 
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
+The resource `type` is `LineItem`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
 
 **Sample Request**
 
 ```json
 {
   "data": {
-    "type": "line-item",
+    "type": "LineItem",
     "attributes": {
       "lineItemName": "Back-to-school display — extended",
-      "isPaused": false,
+      "isPaused": true,
+      "defaultBid": 4.2,
       "onsiteDisplayDetails": {
         "auctionDetails": {
-          "isDynamicMatch": true
+          "isDynamicMatch": false
         }
       }
     }
@@ -364,12 +351,13 @@ The response attributes are the same as for [Create](#create-a-line-item-core).
 {
   "data": {
     "id": "112233445566778899",
-    "type": "line-item",
+    "type": "LineItem",
     "attributes": {
       "lineItemId": "112233445566778899",
       "type": "OnsiteDisplay",
       "lineItemName": "Back-to-school display — extended",
-      "isPaused": false,
+      "defaultBid": 4.2,
+      "isPaused": true,
       "budgetStatus": "BudgetAvailable",
       "retailerId": "12345",
       "campaignId": "987654321",
@@ -384,7 +372,9 @@ The response attributes are the same as for [Create](#create-a-line-item-core).
         }
       }
     }
-  }
+  },
+  "warnings": [],
+  "errors": []
 }
 ```
 
@@ -396,5 +386,8 @@ The response attributes are the same as for [Create](#create-a-line-item-core).
 | `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
 | `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the line item's campaign or buy type. |
 | `400` | `invalid-dynamic-match` | `isDynamicMatch` cannot be changed once the line item is approved, or set to `false` once set to `true`. |
+| `400` | `invalid-default-bid` | `defaultBid` is less than or equal to `0`, or greater than or equal to `10000000000`. |
+| `400` | `unsupported-line-item-type` | `defaultBid` was supplied for a line item type other than Onsite Display Auction or Sponsored Products Auction. |
+| `400` | `unsupported-bid-strategy` | `defaultBid` was supplied for a line item that does not use Adaptive bidding. |
 | `401` | `unauthorized` | The caller is not authenticated. |
 | `403` | `forbidden` | The caller cannot update this line item. |
