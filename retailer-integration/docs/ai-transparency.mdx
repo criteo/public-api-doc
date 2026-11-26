@@ -3,7 +3,7 @@ title: AI Transparency Labels
 description: Learn how Criteo flags AI-generated and AI-modified creative assets in the Onsite Display delivery response, what each value means, and how to render the AI label.
 ---
 
-# Context
+## Context
 
 Some regions require ads that contain AI content to be labelled to shoppers. Depending on the retailer's region, this means one of the following:
 
@@ -24,7 +24,7 @@ Criteo tells you **what each asset contains** and **which disclosure rule applie
 
 ***
 
-# What changes in the ad delivery response
+## What changes in the ad delivery response
 
 Once enabled for a retailer, two new fields are added to Onsite Display placements.
 
@@ -39,7 +39,7 @@ Once enabled for a retailer, two new fields are added to Onsite Display placemen
 
 For the values of `ai_disclosure_rules`, see [ai_disclosure_rules](#ai_disclosure_rules). For the values of `assets_generation_method` and what each number means, see [What each value means](#what-each-value-means) and the [Value reference](#value-reference). To know which label to show for a given combination, see [Which label to show](#which-label-to-show).
 
-## Example
+### Example
 
 ```json
 {
@@ -69,7 +69,7 @@ For the values of `ai_disclosure_rules`, see [ai_disclosure_rules](#ai_disclosur
 
 In this example the desktop background has no AI content (`33`), the mobile background is AI-generated (`36`) and the logo is AI-modified (`34`).
 
-## `assets_generation_method`
+### `assets_generation_method`
 
 * The keys are the same asset names used elsewhere in `rendering` (`desktop_background_image`, `mobile_logo_image`, and so on).
 * Like the other values in `rendering`, it is a **JSON-encoded string**. Parse it before use.
@@ -87,7 +87,7 @@ In this example the desktop background has no AI content (`33`), the mobile back
 
 * The property can be **absent** (for example on a creative with no information about its assets). Treat a missing property, a missing key or a value of `0` as "nothing to disclose".
 
-## `ai_disclosure_rules`
+### `ai_disclosure_rules`
 
 | Value | Meaning | Typical regions |
 | --- | --- | --- |
@@ -103,7 +103,7 @@ A retailer receives only one rule: `ai_content` and `synthetic_performer` never 
 
 ***
 
-# What each value means
+## What each value means
 
 Each value in `assets_generation_method` is a **bitmask**: a sum of the flags below.
 
@@ -126,7 +126,7 @@ The flags can be combined. For example, `38` = `32 + 4 + 2`: from C2PA, **AI Gen
   For the initial rollout, no self declaration is available yet. The values you can receive are `0`, `33`, `34`, `36`, `38`, `40`, `42`, `44` and `46`.
 </Info>
 
-## Value reference
+### Value reference
 
 | Value | Contains | Source |
 | --- | --- | --- |
@@ -158,7 +158,7 @@ The flags can be combined. For example, `38` = `32 + 4 + 2`: from C2PA, **AI Gen
 
 ***
 
-# Which label to show
+## Which label to show
 
 Combine the rule from `ai_disclosure_rules` with the flags of each asset:
 
@@ -176,7 +176,7 @@ A few rules to keep in mind:
 * **Empty `ai_disclosure_rules`: no label**, whatever the values are.
 * **Evaluate the assets you actually display.** Use the entries for the images shown in the current rendering (for example the `mobile_*` assets on a mobile layout), and every item of an array.
 
-## Recommended display
+### Recommended display
 
 For **AI Generated** and **AI Modified**, we recommend showing a compact **"AI"** label that expands to its full wording, **"AI Modified"** or **"AI Generated"**, when the shopper hovers over it (or taps it on touch devices). The **Ad Contains Synthetic Performer** label is different: always show its full text, without any interaction.
 
@@ -184,25 +184,25 @@ For where to place the label and how to style it on each format, see [How to ren
 
 ***
 
-# How to render the label
+## How to render the label
 
-## Recommended label
+### Recommended label
 
 * **AI Generated / AI Modified**: a **round AI badge**, always visible. Its full wording appears on hover (desktop) or on click or tap (mobile and app).
 * **Alternative**: a sparkle icon with the text "AI info" is also accepted for AI Generated and AI Modified, in line with the IAB recommendation.
 * **Ad Contains Synthetic Performer**: always show the full text next to a monochrome sparkle. **Never hide it.** For tight spaces such as the 160×600, use the compact version: one line, 10px.
 
-## Placement
+### Placement
 
 * Place the label in the **top-right corner of the branding zone** for most standard Onsite Display formats, for consistency across formats.
 * Inside grids, keep the label **within the boundaries of the format**.
 * When there is free space around a format, the label can sit **outside the format**, close to the content it refers to.
 
-## Color
+### Color
 
 Legacy Onsite Display and IAB formats do not pass a color mode in the ad response, so the label defaults to the **Dark** mode. You can override it.
 
-## Playground
+### Playground
 
 To preview the label on each Onsite Display format, on desktop and mobile, with your own creative if you want, use the <a href="/retailer-integration/docs/ai-label-playground" target="_blank" rel="noopener noreferrer">AI label playground</a> (opens in a new tab). Your creative stays in your browser and is not sent anywhere.
 
@@ -212,7 +212,7 @@ To preview the label on each Onsite Display format, on desktop and mobile, with 
 
 ***
 
-# Reading the response
+## Reading the response
 
 This function turns a placement into the single label to show. It reads the asset values, applies the rule and returns the most restrictive label, or `null`.
 
