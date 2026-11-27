@@ -1,0 +1,114 @@
+---
+title: Migrate the Product Importer API from Preview
+description: What to change in your integration when moving from the Preview Product Importer API to the 2027-01 stable contract.
+---
+
+The Product Importer API is moving from the `preview` contract to the versioned `2027-01` stable contract. **Preview retires on 1 July 2027.** Every client must be migrated and validated on 2027-01 before that date.
+
+Request bodies and catalog data are unchanged — no re-upload of your product catalog is needed. The changes are limited to paths, one response field, and the structure of error and status responses.
+
+---
+
+## Summary of changes
+
+| Endpoint | What changes |
+|---|---|
+| **Upload** `POST .../catalog/products/batch` | Path gains `/marketing-solutions/` segment. Response token moves from `operationToken` to `data.id`. |
+| **Report** `GET .../catalog/products/batch/report/{id}` | Path and parameter name change. Response restructured: data envelope, flat error lists, kebab-case codes, camelCase statuses, ISO-8601 timestamps. |
+| **Statistics** `GET .../catalog/stats/merchants/{id}` | Path changes. Query parameter renamed. Response restructured: resource envelope, records array moved, string counters become JSON numbers. |
+
+---
+
+## 1. Update the upload call
+
+**Old path:**
+```
+POST https://api.criteo.com/preview/catalog/products/batch
+```
+
+**New path:**
+```
+POST https://api.criteo.com/2027-01/marketing-solutions/catalog/products/batch
+```
+
+**Response change** — read the ingestion token from `data.id` instead of `operationToken`:
+
+```diff
+- { "operationToken": "ing-a1b2c3d4" }
++ { "data": { "type": "CatalogProductsBatchReport", "id": "ing-a1b2c3d4" } }
+```
+
+The token value itself is unchanged — only the field name and envelope differ. The token has a 4-day lifetime and works on both Preview and 2027-01: a token issued by either version can be used to query the report on the other.
+
+---
+
+## 2. Update the report call
+
+**Old path:**
+```
+GET https://api.criteo.com/preview/catalog/products/batch/report/{operation-token}
+```
+
+**New path:**
+```
+GET https://api.criteo.com/2027-01/marketing-solutions/catalog/products/batch/report/{id}
+```
+
+The `id` path parameter takes the same token value previously passed as `operation-token`.
+
+**Response restructuring** — the new response wraps results in a `data` envelope and aligns with Criteo's standard API conventions:
+
+| Old | New |
+|---|---|
+| Flat root-level object | `data.attributes` wrapper |
+| `status` values: `ACCEPTED`, `IN_PROGRESS`, `VALIDATED`, `VALIDATED_WITH_ERRORS`, `FAILED` (uppercase) | `accepted`, `inProgress`, `validated`, `validatedWithErrors`, `failed` (camelCase) |
+| `importRequestTimestamp` as epoch milliseconds | ISO-8601 UTC timestamp |
+| `numberOfProducts*` counts as strings | JSON numbers |
+| `errorDetails[]` per product, PascalCase types (e.g. `InvalidProductUrl`) | `errors[]` array; fields: `code`, `title`, `detail`, `type`, `traceId`, `instance`, `source.productId` |
+| `warningDetails[]` array | `warnings[]` array; same structure as errors |
+
+---
+
+## 3. Update the statistics call
+
+**Old path:**
+```
+GET https://api.criteo.com/preview/catalog/stats/merchants/{merchant-id}
+```
+
+**New path:**
+```
+GET https://api.criteo.com/2027-01/marketing-solutions/catalog/stats/merchants/{merchant-id}
+```
+
+**Query parameter rename:**
+
+```diff
+- ?lastNumHours=24
++ ?last-number-of-hours=24
+```
+
+The parameter accepts values from 1 to 1000 and defaults to 24 when omitted.
+
+**Response restructuring** — the new response wraps results in a `data` envelope:
+
+| Old | New |
+|---|---|
+| `data.statisticsRecordList[]` root array | `data.id` = merchant ID, records at `data.attributes.records[]` |
+| Timestamp as string | ISO-8601 UTC timestamps |
+| String counters (14 count fields) | JSON numbers |
+
+---
+
+## Migration checklist
+
+- [ ] Update the upload path: change `preview` version prefix to `2027-01` and add `/marketing-solutions/` segment
+- [ ] Read the ingestion token from `data.id` (not `operationToken`)
+- [ ] Update the report path; replace `operation-token` path param with `id`
+- [ ] Update response parsing: data envelope, new status values (`accepted`/`inProgress`/`validated`/`validatedWithErrors`/`failed`), flat errors, ISO-8601 timestamps
+- [ ] Update the statistics path from `/preview/catalog/stats/merchants/{id}` to `/2027-01/marketing-solutions/catalog/stats/merchants/{merchant-id}` and rename `lastNumHours` to `last-number-of-hours`
+- [ ] Test on the RC before the Preview cutoff (1 July 2027)
+
+<Warning>
+  Do not test your migration on Preview after the Stage 1 notice in December 2026 — Preview keeps working until 1 July 2027, but new integrations should target 2027-01 RC directly.
+</Warning>
