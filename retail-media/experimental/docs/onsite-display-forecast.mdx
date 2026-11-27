@@ -1,0 +1,416 @@
+---
+title: Onsite Display Budget Forecaster
+description: Estimate budget and impressions a retailer's Onsite Display inventory can deliver before you book a campaign.
+---
+
+import { EndpointBadge } from "/snippets/EndpointBadge.jsx";
+
+<Info>
+  This endpoint is available in the **Experimental** version of the Retail Media API only.
+  Experimental endpoints may change without prior notice. See the [versioning policy](/criteo-apis/docs/versioning-policy) for details.
+</Info>
+
+## Overview
+
+The Onsite Display budget forecaster estimates the inventory and associated costs for a retailer-specific campaign setup. Specify the buy type, date range, page types, keywords or categories, creative formats, and bid level. The endpoint returns estimated available impressions, budget, and average CPM for each page type, broken down by day.
+
+Use the forecast to estimate the budget supported by available inventory, size a proposal, or compare campaign setups before creating a campaign. Forecast results are not saved.
+
+Forecasts use live booking data, so identical requests may return different results over time. Each page type is calculated independently. If a page type fails or isn't supported by the retailer, the endpoint still returns results for the other page types and includes a warning describing the issue.
+
+## Prerequisites
+
+Before calling this endpoint, ensure the following are in place:
+
+- **Authentication**: a valid access token. See [Authentication](/retail-media/experimental/docs/authentication).
+- **App permissions**: the `RetailMedia_Forecasting_Read` scope must be enabled on your app. See [App Scopes](/retail-media/experimental/docs/app-scopes).
+- **Account consent**: your app must have consent on the account in the path, and the `retailerId` in the body must be associated with that account.
+- **Forecasting permission**: the caller must also have the forecasting permission on the account. Without it, the call returns `403` with `forecast-access-denied`.
+
+## Road to Stable
+
+This endpoint is expected to be promoted to a stable version in a future release. The contract may change before then. Monitor the [changelog](/retail-media/docs/whats-new) for updates.
+
+---
+
+## Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/accounts/{account-id}/compute-onsite-display-forecast` | Compute available impressions and budget estimates for a retailer's Onsite Display inventory. |
+
+---
+
+## Compute a Forecast
+
+<EndpointBadge method="post">
+```http
+https://api.criteo.com/experimental/retail-media/accounts/{account-id}/compute-onsite-display-forecast
+```
+</EndpointBadge>
+
+### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account-id` | string | Yes | ID of the account to compute the forecast for. |
+
+### Request Attributes
+
+**Forecast period.** You can forecast from today up to 119 days after today. That is a window of at most 120 calendar days, counting today. The request fails with `invalid-forecast-period` if `endDate` is before `startDate`, or if your period doesn't overlap this window at all. These checks run first, on the dates exactly as you sent them. If the period passes them but extends outside the window, it is trimmed to fit. A `startDate` before today moves to today, and an `endDate` later than today + 119 days moves to that limit. Each trim returns a `forecast-period-adjusted` warning. Because the period must overlap the window, the trimmed period always contains at least one day.
+
+**Pricing and `pageCpm`.** `buyType` defaults to `auction`. In an auction, `pageCpm` is your bid and is required. Placements with a floor price above it are left out of the forecast. For `preferredDeals` and `sponsorship`, `pageCpm` is ignored and the retailer's pricing is used. If you send it anyway, the response includes a `page-cpm-ignored` warning.
+
+All attributes below are nested under `data.attributes`. The resource `type` is `ComputeOnsiteDisplayForecast`.
+
+| Attribute | Type | Required | Description |
+| --- | --- | --- | --- |
+| `retailerId` | string | Yes | Retailer whose inventory you want to forecast. Must be associated with the account. |
+| `buyType` | string | No | `auction`, `preferredDeals`, or `sponsorship`. Defaults to `auction`. |
+| `startDate` | string | Yes | First day of the forecast period, as `YYYY-MM-DD`. |
+| `endDate` | string | Yes | Last day of the forecast period, inclusive, as `YYYY-MM-DD`. Can be the same as `startDate` for a single-day forecast. |
+| `pageSettings` | array of [PageSetting](#pagesetting) | Yes | Page types to forecast. Must contain at least one entry, and each `pageType` can appear only once. |
+| `creativeFormats` | array | No | Limits the forecast to these creative formats. Defaults to all formats. |
+| `frequencyCapping` | [FrequencyCapping](#frequencycapping) | No | Frequency cap to apply. Leave it out to forecast without a cap. |
+
+`creativeFormats` accepts the values below. Available formats depend on the retailer. To see which formats a retailer offers, call [`GET /retailers/{retailerId}/templates`](/retail-media/docs/creative-builder#get-retailer-templates) in the stable API.
+
+| Value | Description |
+| --- | --- |
+| `flagShip` | Flagship. Now named Commerce Display Spotlight. |
+| `showcase` | Showcase. Now named Commerce Display Grid Shelf. |
+| `butterfly` | Butterfly. Now named Commerce Display Grid Duet. |
+| `bundleBoost` | Bundle Boost. |
+| `iab` | IAB standard banners. |
+| `custom` | Retailer-specific custom format. |
+| `displayPanel` | Display Panel. Now named Branding Display Spotlight Solo. |
+| `digitalShelfTalker` | Digital Shelf Talker. Now named Branding Display Grid Solo. |
+| `commerceVideoSpotlight` | Branded video with an interactive product zone. |
+| `brandingVideoStandout` | Branded video with a branded image and a call to action. |
+
+See the [Formats Overview](/retailer-integration/docs/format-overview) for each format's layout.
+
+**Sample Request**
+
+```bash
+curl -L -X POST 'https://api.criteo.com/experimental/retail-media/accounts/151718151066910720/compute-onsite-display-forecast' \
+  -H 'Content-Type: application/vnd.criteo.com+json;version=3.0' \
+  -H 'Authorization: Bearer <MY_ACCESS_TOKEN>' \
+  -d '{
+    "data": {
+      "type": "ComputeOnsiteDisplayForecast",
+      "attributes": {
+        "retailerId": "258",
+        "startDate": "2026-11-17",
+        "endDate": "2026-11-18",
+        "buyType": "preferredDeals",
+        "creativeFormats": ["iab"],
+        "pageSettings": [
+          {
+            "pageType": "search",
+            "keywords": ["coffee"]
+          }
+        ],
+        "frequencyCapping": {
+          "count": 5,
+          "durationType": "day"
+        }
+      }
+    }
+  }'
+```
+
+**Sample Response** — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "type": "OnsiteDisplayForecast",
+      "attributes": {
+        "pageType": "search",
+        "availableImpressions": 194,
+        "budget": { "value": 2.04, "currency": "USD" },
+        "averageCpm": { "value": 10.5, "currency": "USD" },
+        "reservationRate": 0.0,
+        "details": [
+          {
+            "date": "2026-11-17",
+            "creativeFormats": ["iab"],
+            "availableImpressions": 93,
+            "averageCpm": { "value": 10.5, "currency": "USD" },
+            "budget": { "value": 0.98, "currency": "USD" },
+            "placementConfigId": "5203",
+            "keyword": "coffee"
+          },
+          {
+            "date": "2026-11-17",
+            "creativeFormats": ["iab"],
+            "availableImpressions": 5,
+            "averageCpm": { "value": 10.5, "currency": "USD" },
+            "budget": { "value": 0.05, "currency": "USD" },
+            "placementConfigId": "5196",
+            "keyword": "coffee"
+          },
+          {
+            "date": "2026-11-18",
+            "creativeFormats": ["iab"],
+            "availableImpressions": 91,
+            "averageCpm": { "value": 10.5, "currency": "USD" },
+            "budget": { "value": 0.96, "currency": "USD" },
+            "placementConfigId": "5203",
+            "keyword": "coffee"
+          },
+          {
+            "date": "2026-11-18",
+            "creativeFormats": ["iab"],
+            "availableImpressions": 5,
+            "averageCpm": { "value": 10.5, "currency": "USD" },
+            "budget": { "value": 0.05, "currency": "USD" },
+            "placementConfigId": "5196",
+            "keyword": "coffee"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+### Response Attributes
+
+`data` contains one `OnsiteDisplayForecast` item for each requested page type that was computed. If `availableImpressions` is `0` and `details` is empty, the request still succeeded. It means no inventory matched your settings.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `pageType` | string | Page type this forecast applies to. |
+| `availableImpressions` | integer | Estimated available impressions over the whole period. |
+| `budget` | [Money](#money) | Estimated budget over the whole period. |
+| `averageCpm` | [Money](#money) | Average cost per 1,000 impressions over the period, so `budget` is roughly `availableImpressions` × `averageCpm` / 1,000. Omitted or `null` when no inventory data is available. |
+| `reservationRate` | number | Share of eligible inventory not booked by existing Sponsorship or Preferred Deals line items, from `0.0` to `1.0`. |
+| `details` | array of [InventoryForecastDetail](#inventoryforecastdetail) | Daily breakdown. |
+
+In responses, `pageType` and `creativeFormats` can also return `unknown`. This means the service returned a value added after this API version. Treat it as an unrecognised value, not as an error.
+
+---
+
+## Definitions
+
+### `Money`
+
+Amounts use a Money object with a `value` (number) and a `currency` (ISO 4217 code). This applies to `pageCpm` in the request, and to `budget` and `averageCpm` in the response. All amounts are in the account's currency, and `pageCpm.currency` must match it.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `value` | number | Amount. |
+| `currency` | string | ISO 4217 currency code, such as `USD`. |
+
+### `PageSetting`
+
+One entry of `pageSettings`.
+
+| Attribute | Type | Required | Description |
+| --- | --- | --- | --- |
+| `pageType` | string | Yes | Page type to forecast. |
+| `keywords` | array | Conditional | Keywords to filter inventory, up to 100. Required for `search` and `searchBar`. To get recommended keywords, call `POST /retail-media/retailers/{retailerId}/recommend-keywords`. |
+| `taxonomyIds` | array | Conditional | Retail Media category IDs to filter inventory, up to 100. Required for `category`, `productDetail`, `categoryMenu`, and `merchandising`. Use the `id` values returned by `POST /retail-media/retailers/{retailerId}/categories/search`. |
+| `pageCpm` | [Money](#money) | Conditional | Bid per 1,000 impressions. Required and used only when `buyType` is `auction`. `value` must be greater than 0. |
+
+`pageType` accepts the values below. Available page types depend on the retailer. A page type the retailer does not support is left out of `data`, and the response includes a `page-type-not-supported` warning. To see which page types a retailer offers, call [`POST /accounts/{accountId}/retailers/search`](/retail-media/experimental/reference/campaign/experimentalretail-mediaaccounts-retailerssearch) and read `validCombinations` for `onsiteDisplay`.
+
+| Value | Description | Required filter |
+| --- | --- | --- |
+| `search` | Search results page. | `keywords` |
+| `searchBar` | Search bar suggestions. | `keywords` |
+| `category` | Category listing page. | `taxonomyIds` |
+| `productDetail` | Product detail page. | `taxonomyIds` |
+| `categoryMenu` | Category navigation menu. | `taxonomyIds` |
+| `merchandising` | Merchandising page. | `taxonomyIds` |
+| `home` | Home page. | None |
+| `browse` | Browse page. | None |
+| `checkout` | Cart and checkout pages. | None |
+| `confirmation` | Order confirmation page. | None |
+| `deals` | Deals and promotions page. | None |
+| `favorites` | Favorites or saved items page. | None |
+
+### `FrequencyCapping`
+
+| Attribute | Type | Required | Description |
+| --- | --- | --- | --- |
+| `count` | integer | Yes | Maximum impressions per user in each window. Must be at least 1. |
+| `durationType` | string | Yes | Window the cap applies to: `session` or `day`. |
+
+### `InventoryForecastDetail`
+
+One row of the `details` daily breakdown. Each row has a unique key that depends on the page type. No two entries in the array have the same key.
+
+| Page type | Unique key |
+| --- | --- |
+| `search`, `searchBar` | `date` + `placementConfigId` + `keyword` |
+| `category`, `productDetail`, `categoryMenu`, `merchandising` | `date` + `placementConfigId` + `taxonomyId` |
+| All others | `date` + `placementConfigId` |
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `date` | string | Forecast day, as `YYYY-MM-DD`. |
+| `creativeFormats` | array | Creative formats available on this placement configuration, limited to the formats you requested. Impressions are combined, not split by format. This field is not part of the key because `placementConfigId` determines it. |
+| `availableImpressions` | integer | Estimated available impressions for this day. |
+| `averageCpm` | [Money](#money) | Average CPM for this day. |
+| `budget` | [Money](#money) | Estimated available budget for this day. |
+| `placementConfigId` | string | Placement configuration for this row. |
+| `keyword` | string | Keyword for this row. Present only for `search` and `searchBar`. |
+| `taxonomyId` | string | Category ID for this row. Present only for `category`, `productDetail`, `categoryMenu`, and `merchandising`. |
+
+---
+
+## Rate limits
+
+This endpoint has its own rate limit, which depends on the OAuth method your application uses. It is much lower than the default Retail Media limit.
+
+| OAuth method | Rate limit |
+| --- | --- |
+| Client Credentials | 20 calls per minute |
+| Authorization Code | 5 calls per minute |
+
+These are the default limits. An individual application can be granted a different limit by your Criteo contact.
+
+Exceeding the limit returns `429` with a `Retry-After` header. See [Rate Limits](/criteo-apis/docs/rate-limits) for the full policy and how to handle `429` responses.
+
+---
+
+## Warnings
+
+Warnings appear in a `warnings` array next to `data` in a `200 OK` response. If a warning points to specific request fields, its `source` lists them.
+
+| Warning code | When It Occurs |
+| --- | --- |
+| `page-type-computation-failed` | The forecast could not be computed for this page type. It has been omitted from the results. |
+| `forecast-period-adjusted` | The requested period was adjusted to the supported range. A `startDate` before today is set to today. `endDate` is capped at today + 119 days. |
+| `page-type-not-supported` | This page type is not available for this retailer. It has been omitted from the results. |
+| `page-cpm-ignored` | You sent `pageCpm` but `buyType` is not `auction`. The retailer's pricing was used instead. |
+
+A page type that is left out of `data` always has a warning that explains why.
+
+**Warning example**
+
+```json
+{
+  "data": [
+    {
+      "type": "OnsiteDisplayForecast",
+      "attributes": {
+        "pageType": "search",
+        "availableImpressions": 324,
+        "budget": { "value": 3.24, "currency": "USD" },
+        "averageCpm": { "value": 10.0, "currency": "USD" },
+        "reservationRate": 0.0,
+        "details": []
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+      "type": "unknown",
+      "code": "page-type-computation-failed",
+      "instance": "/experimental/retail-media/accounts/151718151066910720/compute-onsite-display-forecast",
+      "title": "Page type computation failed",
+      "detail": "Could not compute forecast for page type `home`. It has been omitted from the results.",
+      "source": {
+        "pageType": "data/attributes/pageSettings/1/pageType"
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Known Limitations
+
+- Calls are synchronous and can take up to 150 seconds (usually 2–5), so set your HTTP client timeout accordingly.
+- Each forecast covers at most 120 days, from today to today + 119 days.
+- Each page setting accepts up to 100 keywords and up to 100 taxonomy IDs.
+- Results come from live inventory data, so repeated calls can return different values.
+- The response is not paginated. The full daily breakdown is returned in a single response.
+
+---
+
+## Error Codes
+
+The endpoint returns errors from three layers. The service checks the forecast. The SDK handles JSON and authentication. The Gateway checks routing and scope.
+
+Each error has a `code`, a `type`, and a `source`. Include the `traceId` when you contact support.
+
+### Errors from the forecast service
+
+| Code | HTTP Status | When It Occurs |
+| --- | --- | --- |
+| `invalid-forecast-period` | `400` | `endDate` is before `startDate`, or the period does not overlap the window from today to today + 119 days. |
+| `missing-required-keywords` | `400` | `keywords` is missing for `search` or `searchBar`. |
+| `missing-required-taxonomy-ids` | `400` | `taxonomyIds` is missing for `category`, `productDetail`, `categoryMenu`, or `merchandising`. |
+| `too-many-keywords` | `400` | `keywords` has more than 100 entries. |
+| `too-many-taxonomy-ids` | `400` | `taxonomyIds` has more than 100 entries. |
+| `missing-required-page-cpm` | `400` | `pageCpm` is missing and `buyType` is `auction`. |
+| `invalid-page-cpm` | `400` | `pageCpm.value` is not greater than 0. |
+| `internal-error` | `500` | An unexpected server error prevented the forecast from being computed. No results were returned. |
+| `forecast-access-denied` | `403` | The caller does not have permission to access forecasting data for this account. |
+| `invalid-frequency-cap-count` | `400` | `frequencyCapping.count` is less than 1. Omit `frequencyCapping` to disable capping. |
+| `invalid-currency` | `400` | `pageCpm.currency` does not match the account's currency. |
+| `retailer-not-associated` | `400` | `retailerId` is not associated with the account. |
+| `invalid-id-format` | `400` | A value is not a valid identifier. Applies to `account-id` in the path, `retailerId`, and `taxonomyIds`. |
+| `duplicate-page-type` | `400` | The same `pageType` appears more than once in `pageSettings`. |
+| `invalid-enum` | `400` | A value is not one of the documented values for its field. It also applies to arrays of enums. |
+| `missing-required-field` | `400` | A required field is absent. |
+| `invalid-value` | `400` | A field has a value of the wrong type or out of range. For example, a string for an integer field, or a number above the integer limit. A `null` item in `pageSettings` also returns this code. |
+| `missing-page-setting` | `400` | `pageSettings` is absent or empty. |
+| `unknown-field` | `400` | The request has a field that the contract does not define. This includes a field in the envelope. |
+| `invalid-request-body` | `400` | The request body is not valid JSON. No `source` is returned. |
+
+### Errors from the SDK
+
+These errors come from the shared Criteo SDK, not from the forecast service.
+
+| Code | HTTP Status | When It Occurs |
+| --- | --- | --- |
+| `unexpected-error` | `500` | An unhandled exception escaped to the error middleware. This is the sibling of the service's own `internal-error`. |
+| `service-unavailable` | `503` | The service cannot serve the request. |
+| `authorization-token-missing` | `401` | The request has no `Authorization` header. |
+| `authorization-token-invalid` | `401` | The token value is bad or tampered with. |
+| `authorization-token-expired` | `401` | The authentication layer judged the token expired. A garbage token also returns this code today. |
+| `authorization-issuer-invalid` | `401` | The token issuer is not recognised. |
+| `authorization-unknown` | `401` | Authentication failed and no reason matched. |
+| `not-authorized` | `403` | The SDK denies access to the resource. |
+| `endpoint-deprecated` | — | Not an error. It is emitted as a warning when a route is marked obsolete. |
+
+### Errors from the Gateway
+
+The Gateway rejects a request before the forecast service receives it. These errors do not include a `traceId` from the service.
+
+| Code | HTTP Status | When It Occurs |
+| --- | --- | --- |
+| `authentication-required` | `401` | No usable caller identity reached the Gateway. |
+| `resource-permission-denied` | `403` | The app's token does not have the Retail Media Forecasting scope. |
+| `openapi-validation-failed` | `400` | The request body does not match the published contract. The Gateway uses this code only when validation is enforced for the route. |
+| `unexpected-error` | `500` | An unhandled exception in the Gateway itself. |
+
+### Error example
+
+```json
+{
+  "errors": [
+    {
+      "traceId": "56ed4096-f96a-4944-8881-05468efe0ec9",
+      "type": "validation",
+      "code": "invalid-forecast-period",
+      "instance": "/experimental/retail-media/accounts/151718151066910720/compute-onsite-display-forecast",
+      "title": "Invalid forecast period",
+      "detail": "The requested period does not overlap the supported window (today to today + 119 days).",
+      "source": {
+        "startDate": "data/attributes/startDate",
+        "endDate": "data/attributes/endDate"
+      }
+    }
+  ]
+}
+```
