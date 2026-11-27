@@ -11,7 +11,7 @@ A line item is a unit within a campaign that controls how ads are delivered. It 
 
 The line item core endpoints are shared across campaign types. They expose common fields through one contract instead of separate Sponsored Products and Onsite Display routes.
 
-The referenced `campaignId` determines the line-item type. Type-specific fields are carried in a matching details object alongside the common attributes. Include only the details object supported by the campaign type.
+The referenced `campaignId` determines the line-item type. Create and update requests must also declare that type in `lineItemType`: the declaration confirms the type, it never selects or changes it, so a value that differs from the campaign's type is rejected. Type-specific fields are carried in a matching details object alongside the common attributes. Include only the details object that matches the declared type.
 
 <Info>
   The long-term goal is to support line-item core operations across campaign types. Creation supports Onsite Display Auction and Sponsored Products Auction campaigns that use automatic budgets. Other operations currently target Onsite Display Auction campaigns. Additional details objects will be documented as support is added.
@@ -219,16 +219,18 @@ https://api.criteo.com/experimental/retail-media/line-items
 
 | Attribute | Required | Description |
 | --- | --- | --- |
+| `lineItemType` | Yes | Type of the line item: `SponsoredProduct` or `OnsiteDisplay`. It must match the type of the campaign referenced by `campaignId`. |
 | `lineItemName` | Yes | Display name of the line item. It must be unique within the campaign and contain 2–255 characters after trimming. |
 | `retailerId` | Yes | External ID of the retailer associated with the line item. If the campaign specifies a retailer, the line-item retailer must match it. |
 | `campaignId` | Yes | External ID of the existing campaign that owns the line item and determines which type-specific details object is accepted. |
 | `serveToOptOutUser` | No | Whether ads can serve to users who opted out of personalization. |
+| `onsiteDisplayDetails` | Conditional | Onsite Display settings. Required when `lineItemType` is `OnsiteDisplay`; must be omitted when `lineItemType` is `SponsoredProduct`. |
 | `onsiteDisplayDetails.isPaused` | No | Whether the Onsite Display line item is created paused. Defaults to `false`. |
 | `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | No | Initial Onsite Display Auction-specific setting. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
 
-The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
+The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`. The request declares the line item type in `lineItemType`; the response returns it in `type`.
 
-Omit `onsiteDisplayDetails` for Sponsored Products campaigns.
+`lineItemType` accepts only `SponsoredProduct` and `OnsiteDisplay`. Any other value, including `Unknown`, is rejected with `400` before validation runs.
 
 **Sample Request**
 
@@ -237,6 +239,7 @@ Omit `onsiteDisplayDetails` for Sponsored Products campaigns.
   "data": {
     "type": "line-item",
     "attributes": {
+      "lineItemType": "OnsiteDisplay",
       "lineItemName": "Back-to-school display",
       "retailerId": "12345",
       "campaignId": "987654321",
@@ -295,7 +298,9 @@ All attributes below are nested under `data.attributes`. Alongside the attribute
 
 | HTTP status | Code | Description |
 | --- | --- | --- |
-| `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the campaign or buy type, or auction attributes were supplied for a non-auction campaign. |
+| `400` | `missing-line-item-type` | `lineItemType` was omitted. |
+| `400` | `line-item-type-mismatch` | `lineItemType` does not match the type of the campaign. |
+| `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the declared type, campaign or buy type: `onsiteDisplayDetails` is missing for an `OnsiteDisplay` line item, is present for a `SponsoredProduct` line item, or auction attributes were supplied for a non-auction campaign. |
 | `400` | `invalid-name` | The name is blank or outside the supported length. |
 | `400` | `invalid-campaign-schedule` | The campaign has no schedule from which the API can derive the line item's flight dates. |
 | `400` | `invalid-retailer-id` | The retailer ID is improperly formatted or, when the campaign specifies a retailer, does not match it. |
@@ -310,9 +315,9 @@ If the default budgets cannot be set up after the line item is created, the requ
 
 ## Update a Line Item Core
 
-Updates an existing line item. This is a partial update: only the fields included in the request body are changed. Omitted fields keep their current values.
+Updates an existing line item. This is a partial update: only the fields included in the request body are changed. Omitted fields keep their current values. `lineItemType` is the exception: it is required on every update request.
 
-`campaignId` and `retailerId` cannot be changed after creation.
+`campaignId`, `retailerId`, and the line item type cannot be changed after creation.
 
 <EndpointBadge method="patch">
 ```http
@@ -328,14 +333,18 @@ https://api.criteo.com/experimental/retail-media/line-items/{lineItemId}
 
 ### Request Attributes
 
-| Attribute | Description |
-| --- | --- |
-| `lineItemName` | New display name. Must be unique within the campaign and contain 2–255 characters after trimming. |
-| `isPaused` | Set to `true` to pause the line item or `false` to unpause it. |
-| `serveToOptOutUser` | Whether ads can serve to users who opted out of personalization. |
-| `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | Onsite Display Auction-specific. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `lineItemType` | Yes | Type of the line item: `SponsoredProduct` or `OnsiteDisplay`. It must match the line item's existing type. |
+| `lineItemName` | No | New display name. Must be unique within the campaign and contain 2–255 characters after trimming. |
+| `isPaused` | No | Set to `true` to pause the line item or `false` to unpause it. |
+| `serveToOptOutUser` | No | Whether ads can serve to users who opted out of personalization. |
+| `onsiteDisplayDetails` | No | Onsite Display settings to change. Allowed only when `lineItemType` is `OnsiteDisplay`; omit it to leave those settings unchanged. |
+| `onsiteDisplayDetails.auctionDetails.isDynamicMatch` | No | Onsite Display Auction-specific. Determines whether to replace manual SKU curation by serving only products relevant to the page context. |
 
 The resource `type` is `line-item`. Do not send response-only fields such as `lineItemId`, `type`, `budgetStatus`, or `effectiveFlightDates` inside `attributes`.
+
+`lineItemType` is validated before any change is applied. As on creation, values other than `SponsoredProduct` and `OnsiteDisplay`, including `Unknown`, are rejected with `400`.
 
 **Sample Request**
 
@@ -344,6 +353,7 @@ The resource `type` is `line-item`. Do not send response-only fields such as `li
   "data": {
     "type": "line-item",
     "attributes": {
+      "lineItemType": "OnsiteDisplay",
       "lineItemName": "Back-to-school display — extended",
       "isPaused": false,
       "onsiteDisplayDetails": {
@@ -394,7 +404,9 @@ The response attributes are the same as for [Create](#create-a-line-item-core).
 | --- | --- | --- |
 | `400` | `invalid-name` | The name is blank or outside the supported length. |
 | `400` | `duplicate-name` | A line item with the same name already exists under the campaign. |
-| `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the line item's campaign or buy type. |
+| `400` | `missing-line-item-type` | `lineItemType` was omitted. |
+| `400` | `line-item-type-mismatch` | `lineItemType` does not match the line item's existing type. |
+| `400` | `invalid-line-item-attributes` | The type-specific attributes do not match the declared type, the line item's campaign, or its buy type — for example, `onsiteDisplayDetails` sent for a `SponsoredProduct` line item. |
 | `400` | `invalid-dynamic-match` | `isDynamicMatch` cannot be changed once the line item is approved, or set to `false` once set to `true`. |
 | `401` | `unauthorized` | The caller is not authenticated. |
 | `403` | `forbidden` | The caller cannot update this line item. |
