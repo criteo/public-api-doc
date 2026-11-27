@@ -193,6 +193,8 @@ For example, the response below contains approved and proposed revisions of the 
 
 Associate one or more creatives to a line item, and define the creative's product collections. If the creative is already mapped to the line item, the association will be updated instead of duplicated.
 
+This endpoint supports Onsite Display Auction line items and requires the `RetailMedia_Campaign_Manage` scope.
+
 Existing line item creatives that are omitted from the request are unmodified.
 
 
@@ -214,10 +216,15 @@ The resource `type` is `UpsertLineItemCreativesInput`.
 
 | Attribute | Required | Description |
 | --- | --- | --- |
-| `creativeType` | Yes | Type of creative being added or updated. Currently, the only accepted value is `AuctionCreative`. It must match the buy type of the target line item. |
-| `auctionCreativeDetails` | Required when `creativeType` is `AuctionCreative`, otherwise it is rejected. | Auction-specific creative configuration. |
-| `auctionCreativeDetails.lineItemCreatives` | Required when `creativeType` is `AuctionCreative`, otherwise it is rejected. | Array of [Line Item Creative](#line-item-creative-attributes) objects to add or update. An auction line item can have at most 20 associated creatives. |
+| `lineItemCreatives` | Yes | Array of [Line Item Creative](#line-item-creative-attributes) objects to add or update. An auction line item can have at most 20 associated creatives. |
 
+#### Migrate from the V1 payload
+
+Keep using `POST /experimental/retail-media/line-items/{line-item-id}/creatives/upsert` and remove `creativeType` from the request.
+
+- For auction payloads, move `auctionCreativeDetails.lineItemCreatives` directly under `data.attributes`.
+- If your client builds the legacy Preferred Deal payload, move `preferredDealsCreativeDetails.lineItemCreative` into the same list as a single entry. The V2 endpoint currently accepts Onsite Display Auction line items.
+- Read the returned list from `data.attributes.lineItemCreatives`.
 
 #### Line Item Creative Attributes
 
@@ -238,40 +245,37 @@ The resource `type` is `UpsertLineItemCreativesInput`.
   "data": {
     "type": "UpsertLineItemCreativesInput",
     "attributes": {
-      "creativeType": "AuctionCreative",
-      "auctionCreativeDetails": {
-        "lineItemCreatives": [
-          {
-            "creative": {
-              "id": "123"
+      "lineItemCreatives": [
+        {
+          "creative": {
+            "id": "901824531607457792"
+          },
+          "creativeProductCollections": [
+            {
+              "isMandatory": false,
+              "products": [
+                {
+                  "id": "SHOE-TRAIL-BLK-42"
+                },
+                {
+                  "id": "SHOE-TRAIL-BLK-43"
+                }
+              ]
             },
-            "creativeProductCollections": [
-              {
-                "isMandatory": false,
-                "products": [
-                  {
-                    "id": "product-1"
-                  },
-                  {
-                    "id": "product-2"
-                  }
-                ]
-              },
-              {
-                "isMandatory": false,
-                "products": [
-                  {
-                    "id": "product-2"
-                  },
-                  {
-                    "id": "product-3"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
+            {
+              "isMandatory": false,
+              "products": [
+                {
+                  "id": "SHOE-TRAIL-BLK-43"
+                },
+                {
+                  "id": "SHOE-TRAIL-GRY-42"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -284,7 +288,7 @@ The resource `type` is `UpsertLineItemCreativesInput`.
 | Attribute | Description |
 | --- | --- |
 | `mediaType` | `Display` or `Video`. The line item media type is set based on the creative provided. Creatives associated to the line item must have the same media type. |
-| `auctionCreativeDetails.lineItemCreatives` | Contains the accepted auction creatives from the request. The other creatives associated to the line item are not included in the response. |
+| `lineItemCreatives` | Contains the accepted auction creatives from the request. The other creatives associated to the line item are not included in the response. |
 | `creative.id` | ID of the creative. |
 | `creative.modifiedAt` | Indicates when the associated creative was last modified. |
 | `approvalStatus` | The approval status of the creative associated to the line item. |
@@ -307,46 +311,44 @@ A successful Upsert request returns a `200 OK`
     "type": "UpsertLineItemCreatives",
     "attributes": {
       "mediaType": "Display",
-      "auctionCreativeDetails": {
-        "lineItemCreatives": [
-          {
-            "creative": {
-              "id": "123",
-              "modifiedAt": "2026-08-13T14:30:00Z"
+      "lineItemCreatives": [
+        {
+          "creative": {
+            "id": "901824531607457792",
+            "modifiedAt": "2026-08-13T14:30:00Z"
+          },
+          "approvalStatus": "Unsubmitted",
+          "creativePreviewCode": "preview-code",
+          "creativeProductCollections": [
+            {
+              "isMandatory": false,
+              "products": [
+                {
+                  "id": "SHOE-TRAIL-BLK-42",
+                  "approvalStatus": "Approved"
+                },
+                {
+                  "id": "SHOE-TRAIL-BLK-43",
+                  "approvalStatus": "Rejected"
+                }
+              ]
             },
-            "approvalStatus": "Unsubmitted",
-            "creativePreviewCode": "preview-code",
-            "creativeProductCollections": [
-              {
-                "isMandatory": false,
-                "products": [
-                  {
-                    "id": "product-1",
-                    "approvalStatus": "Approved"
-                  },
-                  {
-                    "id": "product-2",
-                    "approvalStatus": "Rejected"
-                  }
-                ]
-              },
-              {
-                "isMandatory": false,
-                "products": [
-                  {
-                    "id": "product-2",
-                    "approvalStatus": "Rejected"
-                  },
-                  {
-                    "id": "product-3",
-                    "approvalStatus": "Approved"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
+            {
+              "isMandatory": false,
+              "products": [
+                {
+                  "id": "SHOE-TRAIL-BLK-43",
+                  "approvalStatus": "Rejected"
+                },
+                {
+                  "id": "SHOE-TRAIL-GRY-42",
+                  "approvalStatus": "Approved"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -360,10 +362,9 @@ This endpoint does not support partial success. When one or more creative fail v
 
 | HTTP status | Code | Description |
 | --- | --- | --- |
-| `400` | `creatives-required` | No creative was supplied for the selected `creativeType`. |
+| `400` | `creatives-required` | The `lineItemCreatives` array is empty. |
 | `400` | `invalid-creative-id` | A creative ID is missing or invalid. |
 | `400` | `duplicate-creative-id` | The same creative ID appears more than once in the request. |
-| `400` | `invalid-creative-type` | The requested `creativeType` does not match the line item buy type, or its corresponding details object was not supplied. |
 | `400` | `creative-unavailable` | A creative is not available to the line item's account or retailer. |
 | `400` | `invalid-media-type` | The submitted creatives have different media types or do not match the line item's media type. |
 | `400` | `invalid-product-collection-products` | A Creative Product Collection contains the same product ID more than once. |
